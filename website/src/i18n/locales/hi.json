@@ -23217,5 +23217,20 @@
         "label_is_open_in_its_own_window_focus_it": "{{label}} अपनी अलग विंडो में खुला है — उस पर फ़ोकस करो"
       }
     }
+  },
+  "simpleLayout": {
+    "recent": "हाल के",
+    "no_chats": "अभी कोई चैट नहीं",
+    "all_chats": "सभी चैट",
+    "more": "अधिक",
+    "suggestions_label": "सुझाए गए कार्य",
+    "layout_label": "लेआउट",
+    "layout_hint": "सरल लेआउट में चैट सबसे आगे है: एक साइडबार, एक शांत शीर्ष पट्टी और नई चैट में बीच में संदेश बॉक्स। उन्नत लेआउट पूरा वर्कस्पेस शेल है। दोनों में हर सुविधा उपलब्ध है।",
+    "layout_simple": "सरल",
+    "layout_advanced": "उन्नत",
+    "switch_to_simple": "सरल लेआउट पर जाओ",
+    "switch_to_advanced": "उन्नत लेआउट पर जाओ",
+    "switch_to_simple_hint": "चैट पहले: एक साइडबार और एक शांत शीर्ष पट्टी",
+    "switch_to_advanced_hint": "पूरा वर्कस्पेस शेल"
   }
 }

@@ -23217,5 +23217,20 @@
         "label_is_open_in_its_own_window_focus_it": "{{label}} ist in einem eigenen Fenster geöffnet — dieses fokussieren"
       }
     }
+  },
+  "simpleLayout": {
+    "recent": "Kürzlich",
+    "no_chats": "Noch keine Chats",
+    "all_chats": "Alle Chats",
+    "more": "Mehr",
+    "suggestions_label": "Vorgeschlagene Aufgaben",
+    "layout_label": "Layout",
+    "layout_hint": "Einfach stellt den Chat in den Mittelpunkt: eine Seitenleiste, eine ruhige obere Leiste und ein zentriertes Nachrichtenfeld in einem neuen Chat. Erweitert ist die vollständige Arbeitsbereichsoberfläche. Beide erreichen jede Funktion.",
+    "layout_simple": "Einfach",
+    "layout_advanced": "Erweitert",
+    "switch_to_simple": "Zum einfachen Layout wechseln",
+    "switch_to_advanced": "Zum erweiterten Layout wechseln",
+    "switch_to_simple_hint": "Chat im Mittelpunkt: eine Seitenleiste und eine ruhige obere Leiste",
+    "switch_to_advanced_hint": "Die vollständige Arbeitsbereichsoberfläche"
   }
 }

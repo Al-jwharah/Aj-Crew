@@ -23761,5 +23761,20 @@
         "label_is_open_in_its_own_window_focus_it": "L'application {{label}} est ouverte dans sa propre fenêtre — l'activer"
       }
     }
+  },
+  "simpleLayout": {
+    "recent": "Récentes",
+    "no_chats": "Aucun chat pour le moment",
+    "all_chats": "Tous les chats",
+    "more": "Plus",
+    "suggestions_label": "Tâches suggérées",
+    "layout_label": "Disposition",
+    "layout_hint": "Simple donne la priorité au chat : une barre latérale, une barre supérieure discrète et une zone de message centrée dans un nouveau chat. Avancée est l’espace de travail complet. Les deux donnent accès à toutes les fonctionnalités.",
+    "layout_simple": "Simple",
+    "layout_advanced": "Avancée",
+    "switch_to_simple": "Passer à la disposition simple",
+    "switch_to_advanced": "Passer à la disposition avancée",
+    "switch_to_simple_hint": "Le chat d’abord : une barre latérale et une barre supérieure discrète",
+    "switch_to_advanced_hint": "L’espace de travail complet"
   }
 }

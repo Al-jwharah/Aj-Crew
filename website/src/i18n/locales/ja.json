@@ -22673,5 +22673,20 @@
         "label_is_open_in_its_own_window_focus_it": "{{label}}は別ウィンドウで開いています — そこにフォーカス"
       }
     }
+  },
+  "simpleLayout": {
+    "recent": "最近",
+    "no_chats": "チャットはまだありません",
+    "all_chats": "すべてのチャット",
+    "more": "その他",
+    "suggestions_label": "おすすめのタスク",
+    "layout_label": "レイアウト",
+    "layout_hint": "シンプルはチャット中心です。サイドバーは 1 つ、上部バーは控えめで、新しいチャットではメッセージ欄が中央に表示されます。詳細はワークスペース全体を表示します。どちらでもすべての機能を使えます。",
+    "layout_simple": "シンプル",
+    "layout_advanced": "詳細",
+    "switch_to_simple": "シンプルレイアウトに切り替え",
+    "switch_to_advanced": "詳細レイアウトに切り替え",
+    "switch_to_simple_hint": "チャット中心: サイドバー 1 つと控えめな上部バー",
+    "switch_to_advanced_hint": "ワークスペース全体を表示"
   }
 }

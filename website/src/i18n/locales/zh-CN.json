@@ -22673,5 +22673,20 @@
         "label_is_open_in_its_own_window_focus_it": "{{label}} 已在独立窗口中打开 — 聚焦它"
       }
     }
+  },
+  "simpleLayout": {
+    "recent": "最近",
+    "no_chats": "还没有聊天",
+    "all_chats": "全部聊天",
+    "more": "更多",
+    "suggestions_label": "建议的任务",
+    "layout_label": "布局",
+    "layout_hint": "简洁布局以聊天为先：一个侧边栏、精简的顶栏，新聊天中的消息框居中显示。高级布局是完整的工作区界面。两种布局都能使用全部功能。",
+    "layout_simple": "简洁",
+    "layout_advanced": "高级",
+    "switch_to_simple": "切换到简洁布局",
+    "switch_to_advanced": "切换到高级布局",
+    "switch_to_simple_hint": "聊天为先：一个侧边栏和精简的顶栏",
+    "switch_to_advanced_hint": "完整的工作区界面"
   }
 }
