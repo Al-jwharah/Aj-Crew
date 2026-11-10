@@ -8,12 +8,11 @@ How maintainers are added, how they step down, and how decisions get made are co
 
 | Name | GitHub |
 |---|---|
-| Bolin Chen | [@bolichen97](https://github.com/bolichen97) |
-| Joe Guo | [@iamwhatever](https://github.com/iamwhatever) |
-| Ray Xu | [@buluoray](https://github.com/buluoray) |
-| Zezhen Xu | [@CrysisDeu](https://github.com/CrysisDeu) |
+| Al-jwharah | [@Al-jwharah](https://github.com/Al-jwharah) |
 
-Every path in this repository is owned by `@kirodotdev/kirocrew-pr-review` and the `@KiroCrewCaptain` automation account in [CODEOWNERS](.github/CODEOWNERS), so reviewers are requested automatically and you do not need to pick one by hand.
+Every path in this repository is owned by `@Al-jwharah` in [CODEOWNERS](.github/CODEOWNERS), so a review is requested automatically and you do not need to pick a reviewer by hand.
+
+Aj Crew is a fork of [Kiro Crew](https://github.com/kirodotdev/KiroCrew). The people who maintain that project are listed in its own `MAINTAINERS.md`; they do not maintain this repository and should not be asked about it.
 
 ## Emeritus
 
