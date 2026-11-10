@@ -227,16 +227,23 @@ def added_lines(scope_label: str) -> dict[str, set[int]] | None:
     base branch's own later commits as this change's added lines. The two merge
     labels are CI checkout shapes with a clean tree and keep their committed
     endpoints; ``merge parents`` has no working-tree form at all.
+
+    ``-M -l0`` asks for rename detection with git's rename limit lifted. Past
+    that limit git drops inexact rename detection (a warning on stderr) and
+    prints a moved file as a new one, every line of it added, so a change that
+    moves a directory would have each line a baseline already records in it
+    read as added by this change. A moved file adds the lines it changed.
     """
+    diff = ["diff", "--unified=0", "-M", "-l0"]
     if scope_label == "merge HEAD^1..HEAD":
-        args = ["diff", "--unified=0", "HEAD^1", "HEAD"]
+        args = [*diff, "HEAD^1", "HEAD"]
     elif scope_label == "merge parents":
-        args = ["diff", "--unified=0", "HEAD^1", "HEAD^2"]
+        args = [*diff, "HEAD^1", "HEAD^2"]
     elif scope_label.endswith("...HEAD"):
         base = base_ref(scope_label)
         if base is None:
             return None
-        args = ["diff", "--unified=0", base]
+        args = [*diff, base]
     else:
         return None
     proc = subprocess.run(

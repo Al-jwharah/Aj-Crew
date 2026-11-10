@@ -328,6 +328,34 @@ class TestWholeTreeOverride:
         )
 
 
+#: One pair past git's default rename limit (1000 sources x 1000 destinations).
+_PAST_THE_RENAME_LIMIT = 1001
+
+
+def _commit_a_directory(root: Path) -> None:
+    """Commit ``old/f<n>.txt``, one file past git's rename limit, each with its own text."""
+    (root / "old").mkdir()
+    for index in range(_PAST_THE_RENAME_LIMIT):
+        body = "".join(f"file {index} line {line}\n" for line in range(8))
+        (root / "old" / f"f{index}.txt").write_text(body, encoding="utf-8")
+    _git(root, "add", "-A")
+    _git(root, "commit", "-q", "-m", "a directory")
+
+
+def _move_and_edit_that_directory(root: Path) -> None:
+    """Move every file to ``new/g<n>.txt`` and append one line to it.
+
+    The new basename and the edit keep git's exact and by-basename pairing out of it:
+    each pair comes from the inexact search, which the rename limit switches off.
+    """
+    (root / "new").mkdir()
+    for index in range(_PAST_THE_RENAME_LIMIT):
+        moved = (root / "old" / f"f{index}.txt").rename(root / "new" / f"g{index}.txt")
+        with moved.open("a", encoding="utf-8") as handle:
+            handle.write("edited\n")
+    _git(root, "add", "-A")
+
+
 class TestDirtyTree:
     """``added_lines`` must describe the file state the consuming gates scan.
 
@@ -349,6 +377,19 @@ class TestDirtyTree:
 
         assert added is not None
         assert 2 in added["feature.py"]
+
+    def test_a_file_moved_past_gits_rename_limit_adds_only_what_it_changed(
+        self, repo: Path
+    ) -> None:
+        # Past its rename limit git prints a moved file as a new one, all of it added.
+        _git(repo, "checkout", "feature")
+        _commit_a_directory(repo)
+        _git(repo, "update-ref", "refs/remotes/origin/main", "HEAD")
+        _move_and_edit_that_directory(repo)
+
+        added = scope.added_lines("origin/main...HEAD")
+
+        assert added == {f"new/g{index}.txt": {9} for index in range(_PAST_THE_RENAME_LIMIT)}
 
     def test_a_shifted_preexisting_line_is_not_counted_as_added(self, repo: Path) -> None:
         # The reproduction from the comment-history gate: `victim.py` exists on
@@ -926,28 +967,15 @@ class TestChangeFilesAndShowAt:
         assert (None, "untracked.txt") in pairs
 
     def test_a_move_larger_than_gits_rename_limit_is_still_paired(self, repo: _RepoHelper) -> None:
-        # Past its rename limit git drops inexact rename detection and reports each
-        # moved file as a deletion plus a new file. 1001 sources against 1001
-        # destinations is one pair over the default limit (1000 x 1000); a new
-        # basename and an edited line keep git's cheaper exact and basename pairing
-        # out of it, so every pair below comes from the unlimited search.
-        count = 1001
-        (repo / "old").mkdir()
-        for index in range(count):
-            body = "".join(f"file {index} line {line}\n" for line in range(8))
-            (repo / "old" / f"f{index}.txt").write_text(body, encoding="utf-8")
-        repo.git("add", "-A")
-        repo.git("commit", "-q", "-m", "a directory")
+        # Past its rename limit git reports each moved file as a deletion plus a new file.
+        _commit_a_directory(repo.root)
         repo.git("branch", "-f", "main")
-        (repo / "new").mkdir()
-        for index in range(count):
-            moved = (repo / "old" / f"f{index}.txt").rename(repo / "new" / f"g{index}.txt")
-            with moved.open("a", encoding="utf-8") as handle:
-                handle.write("edited\n")
-        repo.git("add", "-A")
+        _move_and_edit_that_directory(repo.root)
         pairs = scope.change_files(self._base(repo), cwd=repo.root)
-        assert len(pairs) == count
-        assert set(pairs) == {(f"old/f{index}.txt", f"new/g{index}.txt") for index in range(count)}
+        assert len(pairs) == _PAST_THE_RENAME_LIMIT
+        assert set(pairs) == {
+            (f"old/f{index}.txt", f"new/g{index}.txt") for index in range(_PAST_THE_RENAME_LIMIT)
+        }
 
     def test_show_at_reads_bytes_at_the_base_and_returns_none_for_absent(
         self, repo: _RepoHelper
