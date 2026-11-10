@@ -124,14 +124,14 @@ Aj Crew apps should default to the host visual language. Colors come
 from the theme tokens (`var(--accent)` and friends) — see "Don't Reinvent the
 Dashboard" below, which is the normative rule. The hex values here are the legacy
 palette, kept for apps that predate the tokens and as the fallback inside
-`var(--accent, #7c3aed)`; a hardcoded hex breaks every custom palette, so reach for
+`var(--accent, #0f766e)`; a hardcoded hex breaks every custom palette, so reach for
 one only when a deliberate custom style is the point.
 
 | Element | Style |
 |---------|-------|
 | **Styling method** | Prefer `@ajcrew/app-sdk/ui` components and theme tokens; CSS, host utility classes, or inline styles are all valid. |
-| **Primary accent** | `var(--accent)` (legacy: `#7c3aed`) |
-| **Light accent bg** | legacy `#e8d5f5` |
+| **Primary accent** | `var(--accent)` (legacy: `#0f766e`) |
+| **Light accent bg** | legacy `#ccfbf1` |
 | **Success color** | `#047857` (green) |
 | **Warning color** | `#b45309` (amber) |
 | **Danger color** | `#b91c1c` (red) |
@@ -145,7 +145,7 @@ one only when a deliberate custom style is the point.
 **Example badge:**
 ```javascript
 _jsx('span', {
-  style: { background: '#e8d5f5', color: '#7c3aed', padding: '2px 7px', borderRadius: '9999px', fontSize: '10px', fontWeight: 600, letterSpacing: '0.02em' },
+  style: { background: '#ccfbf1', color: '#0f766e', padding: '2px 7px', borderRadius: '9999px', fontSize: '10px', fontWeight: 600, letterSpacing: '0.02em' },
   children: 'LABEL'
 })
 ```
@@ -153,7 +153,7 @@ _jsx('span', {
 **Example primary button:**
 ```javascript
 _jsx('button', {
-  style: { background: '#7c3aed', color: '#fff', border: 'none', padding: '5px 14px', borderRadius: '9999px', fontSize: '11px', fontWeight: 500, cursor: 'pointer' },
+  style: { background: '#0f766e', color: '#fff', border: 'none', padding: '5px 14px', borderRadius: '9999px', fontSize: '11px', fontWeight: 500, cursor: 'pointer' },
   children: 'Action'
 })
 ```
@@ -161,7 +161,7 @@ _jsx('button', {
 **Example secondary/ghost button:**
 ```javascript
 _jsx('button', {
-  style: { background: 'transparent', color: '#7c3aed', border: '1px solid #e8d5f5', padding: '5px 14px', borderRadius: '9999px', fontSize: '11px', fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap' },
+  style: { background: 'transparent', color: '#0f766e', border: '1px solid #ccfbf1', padding: '5px 14px', borderRadius: '9999px', fontSize: '11px', fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap' },
   children: '↻ Refresh'
 })
 ```
@@ -186,43 +186,43 @@ Visual mock of the target style:
   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px">
     <div style="display:flex; align-items:center; gap:10px">
       <span style="font-size:18px; font-weight:600">Review Tender</span>
-      <span style="background:#e8d5f5; color:#7c3aed; padding:2px 8px; border-radius:9999px; font-size:10px; font-weight:600">Every 15 min</span>
+      <span style="background:#ccfbf1; color:#0f766e; padding:2px 8px; border-radius:9999px; font-size:10px; font-weight:600">Every 15 min</span>
     </div>
     <div style="display:flex; align-items:center; gap:10px">
       <span style="font-size:11px; color:#6b7280">Last scan: 3m ago</span>
-      <button style="background:transparent; color:#7c3aed; border:1px solid #e8d5f5; padding:5px 14px; border-radius:9999px; font-size:11px; font-weight:500">↻ Refresh</button>
+      <button style="background:transparent; color:#0f766e; border:1px solid #ccfbf1; padding:5px 14px; border-radius:9999px; font-size:11px; font-weight:500">↻ Refresh</button>
       <span style="font-size:10px; color:#6b7280">v1.7.0</span>
     </div>
   </div>
 
   <!-- Card -->
   <div style="background:#1a1b26; border:1px solid #2d2f3d; border-radius:6px; padding:14px; margin-bottom:12px">
-    <div style="font-size:13px; font-weight:600; color:#7c3aed; margin-bottom:8px">Open Reviews Being Tended (2)</div>
+    <div style="font-size:13px; font-weight:600; color:#0f766e; margin-bottom:8px">Open Reviews Being Tended (2)</div>
 
     <!-- Table row example -->
     <div style="display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid #2d2f3d; font-size:12px">
-      <a style="color:#7c3aed; text-decoration:none">#1234</a>
+      <a style="color:#0f766e; text-decoration:none">#1234</a>
       <span style="font-size:11px; max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">Fix manifest dict format</span>
       <span style="background:#fef3c7; color:#b45309; padding:2px 7px; border-radius:9999px; font-size:10px; font-weight:600">iterating</span>
       <span style="margin-left:auto">
-        <button style="background:transparent; color:#7c3aed; border:1px solid #e8d5f5; padding:5px 14px; border-radius:9999px; font-size:11px; font-weight:500">💬 Chat</button>
+        <button style="background:transparent; color:#0f766e; border:1px solid #ccfbf1; padding:5px 14px; border-radius:9999px; font-size:11px; font-weight:500">💬 Chat</button>
       </span>
     </div>
   </div>
 
   <!-- Update banner -->
-  <div style="background:#e8d5f5; color:#7c3aed; padding:8px 14px; border-radius:9999px; font-size:12px; display:flex; justify-content:space-between; align-items:center">
+  <div style="background:#ccfbf1; color:#0f766e; padding:8px 14px; border-radius:9999px; font-size:12px; display:flex; justify-content:space-between; align-items:center">
     <span>Update available: v1.6.0 → v1.7.0</span>
-    <button style="background:#7c3aed; color:#fff; border:none; padding:5px 14px; border-radius:9999px; font-size:11px; font-weight:500">Update Now</button>
+    <button style="background:#0f766e; color:#fff; border:none; padding:5px 14px; border-radius:9999px; font-size:11px; font-weight:500">Update Now</button>
   </div>
 </div>
 ```
 
 Key visual rules from the mock:
 - Dark theme uses `var(--bg)` / `var(--border)` / `var(--text)` — don't hardcode dark hex
-- Light purple badge for metadata (`#e8d5f5` bg, `#7c3aed` text)
+- Light teal badge for metadata (`#ccfbf1` bg, `#0f766e` text)
 - Amber status pills (`#fef3c7` bg, `#b45309` text)
-- Ghost buttons with purple text on light purple border
+- Ghost buttons with teal text on light teal border
 - Version as plain muted text (smallest element, 10px)
 - Cards have 14px padding, 6px radius, 12px bottom margin
 
@@ -279,12 +279,12 @@ _jsxs('div', {
   style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' },
   children: [
     _jsxs('div', { style: { display: 'flex', alignItems: 'center', gap: '10px' }, children: [
-      // Inline SVG icon (same as ui/icon.svg, rendered at 20px with purple stroke)
+      // Inline SVG icon (same as ui/icon.svg, rendered at 20px with teal stroke)
       _jsx('svg', { xmlns: 'http://www.w3.org/2000/svg', width: 20, height: 20, viewBox: '0 0 24 24',
-        fill: 'none', stroke: '#7c3aed', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round',
+        fill: 'none', stroke: '#0f766e', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round',
         children: [/* your icon paths */] }),
       _jsx('h2', { style: { margin: 0, fontSize: '18px' }, children: 'My App' }),
-      _jsx('span', { style: { background: '#e8d5f5', color: '#7c3aed', padding: '2px 8px', borderRadius: '9999px', fontSize: '10px', fontWeight: 600 }, children: 'Every 15 min' })
+      _jsx('span', { style: { background: '#ccfbf1', color: '#0f766e', padding: '2px 8px', borderRadius: '9999px', fontSize: '10px', fontWeight: 600 }, children: 'Every 15 min' })
     ]}),
     _jsxs('div', { style: { display: 'flex', alignItems: 'center', gap: '10px' }, children: [
       _jsx('span', { style: { fontSize: '11px', color: 'var(--muted)' }, children: lastScan }),
@@ -296,7 +296,7 @@ _jsxs('div', {
 ```
 
 **Inline icon rules:**
-- Render the same SVG from `ui/icon.svg` directly in JSX (20x20px, `stroke: '#7c3aed'`)
+- Render the same SVG from `ui/icon.svg` directly in JSX (20x20px, `stroke: '#0f766e'`)
 - Use `_jsx('svg', {...})` with child `_jsx('path', { d: '...' })` elements
 - Don't fetch the icon file at runtime — inline it for instant render
 
@@ -316,7 +316,7 @@ _jsx('button', {
     }).catch(() => {})
     setTimeout(() => setRefreshing(false), 5000)
   },
-  style: { background: 'transparent', color: refreshing ? 'var(--muted)' : '#7c3aed', border: '1px solid #e8d5f5', padding: '4px 10px', borderRadius: '9999px', fontSize: '11px', fontWeight: 500, cursor: refreshing ? 'default' : 'pointer' },
+  style: { background: 'transparent', color: refreshing ? 'var(--muted)' : '#0f766e', border: '1px solid #ccfbf1', padding: '4px 10px', borderRadius: '9999px', fontSize: '11px', fontWeight: 500, cursor: refreshing ? 'default' : 'pointer' },
   children: refreshing ? '↻ Running…' : '↻ Refresh'
 })
 
@@ -339,7 +339,7 @@ _jsx('button', {
 | Use `useAppApi()` with an app-owned route or config endpoint | Bypass the permission-scoped SDK with raw `fetch` |
 | Use `useNavigate()` from `@ajcrew/app-sdk` for navigation | Use `window.location` (causes full reload) |
 | Use theme vars for backgrounds/text/borders | Hardcode hex for theme-dependent colors |
-| Use theme tokens (`var(--accent)`) for accent elements | Hardcode `#7c3aed` outside a `var(--accent, …)` fallback |
+| Use theme tokens (`var(--accent)`) for accent elements | Hardcode `#0f766e` outside a `var(--accent, …)` fallback |
 | Read version from `useAppInfo()` | Read version from `data/config.json` or derive an absolute install path |
 | Run background work through `useAppApi().post('/api/chat?ws=1', ...)` | Navigate to `/chat` for automated actions |
 | Show a loading/error state when config is unavailable | Show cryptic error messages |
@@ -766,7 +766,7 @@ By DEFAULT, apps should look and behave like the dashboard they live in:
   `var(--bg)`/`var(--card)`/`var(--border)`/`var(--text)`/`var(--muted)`.
   Hardcoded hex breaks the moment a user picks a custom palette (and error
   banners hardcoded for light mode glow in dark mode). Give tokens fallbacks
-  (`var(--accent, #7c3aed)`) so old hosts still render.
+  (`var(--accent, #0f766e)`) so old hosts still render.
 - **Host components over hand-rolled ones**: the `@ajcrew/ui` module-map
   export ships `Btn, Input, SearchInput, Badge, Toggle, EmptyState, Skeleton,
   ContentSkeleton, PageHeader, SegmentedControl, MarkdownRenderer` and more;

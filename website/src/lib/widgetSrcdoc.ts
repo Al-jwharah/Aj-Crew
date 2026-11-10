@@ -1480,7 +1480,7 @@ export function buildSrcdoc({
       'transition:opacity .3s ease}',
       '#mc-tw-loading.mc-hidden{opacity:0;pointer-events:none}',
       '#mc-tw-loading .mc-spinner{width:16px;height:16px;',
-      'border:2px solid var(--border,#333);border-top-color:var(--accent,#6366f1);',
+      'border:2px solid var(--border,#333);border-top-color:var(--accent,#2dd4bf);',
       'border-radius:50%;animation:mc-spin .8s linear infinite;margin-right:8px}',
       '@keyframes mc-spin{to{transform:rotate(360deg)}}',
       // Match the parent indicator's motion-reduce treatment: the iframe has its

@@ -49,9 +49,9 @@
   try { EMBEDDED = window.parent && window.parent !== window; } catch (_) { EMBEDDED = true; }
 
   var THEME = {
-    accent: "#8b5cf6", accentFg: "#ffffff", panel: "#141220", card: "#1b1830",
-    bgElevated: "#221f38", text: "#e9e7ff", textStrong: "#ffffff", muted: "#9d99b7",
-    border: "#2a2740", info: "#3b82f6", ok: "#22c55e", warn: "#f59e0b", danger: "#ef4444",
+    accent: "#2dd4bf", accentFg: "#0b0c0f", panel: "#0f1115", card: "#15181d",
+    bgElevated: "#1c2026", text: "#e6e8ee", textStrong: "#ffffff", muted: "#9aa1ad",
+    border: "#262a32", info: "#3b82f6", ok: "#22c55e", warn: "#f59e0b", danger: "#ef4444",
   };
 
   // ---- overlay highlight boxes ----

@@ -17,8 +17,8 @@ const C = {
   text: '#3f3f46',
   muted: '#a1a1aa',
   mutedSoft: '#c4c4cc',
-  accent: '#7c3aed',
-  accentBg: '#f1ecfe',
+  accent: '#0f766e',
+  accentBg: '#e6f6f3',
   pill: '#f6f6f8',
 };
 
@@ -231,7 +231,7 @@ export function AppPreview() {
                   <div style={{ color: C.mutedSoft }}>@@ -0,0 +1,210 @@</div>
                   <div style={{ color: '#16a34a' }}>+ // Self-contained light 1:1 replica of the dashboard</div>
                   <div style={{ color: '#16a34a' }}>+ // flat rail · bordered session sidebar · folder counts</div>
-                  <div style={{ color: '#16a34a' }}>+ // two-line session cards · violet accent</div>
+                  <div style={{ color: '#16a34a' }}>+ // two-line session cards · teal accent</div>
                 </div>
               </div>
             </div>

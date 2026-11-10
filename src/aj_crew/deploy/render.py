@@ -19,7 +19,7 @@ from aj_crew.constants import md_link_destination
 # Fixed light theme — supplies the same theme CSS vars the dashboard iframe
 # normally injects, so widgets that reference var(--bg)/var(--text)/etc. render.
 _THEME_CSS = """
-:root{--bg:#ffffff;--text:#1a1b26;--muted:#6b7280;--border:#e5e7eb;--card:#f9fafb;--accent:#7c3aed;}
+:root{--bg:#ffffff;--text:#1a1b26;--muted:#6b7280;--border:#e5e7eb;--card:#f9fafb;--accent:#0f766e;}
 *{box-sizing:border-box}
 body{margin:0;padding:24px;background:var(--bg);color:var(--text);
 font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;line-height:1.55;}
