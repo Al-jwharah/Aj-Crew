@@ -66,7 +66,7 @@ describe('invalidateRefreshQueries', () => {
     invalidateRefreshQueries(qc, ['cron_history'])
     await settle()
     expect(refetched(fetches)).toEqual([
-      'artifacts/all-tags', 'cron-history-all', 'cron-jobs', 'crons/crew-wake/ada', 'ajcrewConfig',
+      'ajcrewConfig', 'artifacts/all-tags', 'cron-history-all', 'cron-jobs', 'crons/crew-wake/ada',
     ])
   })
 
