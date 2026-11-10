@@ -1,4 +1,4 @@
-"""Portability API handlers — export/import AjCrew state as zip."""
+"""Portability API handlers — export/import Aj Crew state as zip."""
 
 from __future__ import annotations
 

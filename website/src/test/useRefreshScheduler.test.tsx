@@ -308,7 +308,7 @@ describe('useRefreshScheduler', () => {
 
   it('TR-F-11: 403 + X-Auth-Required on /api/auth/me triggers proactive refresh (cold-reopen banner fix)', async () => {
     // The auth middleware denies an expired/absent access cookie
-    // with 403 + X-Auth-Required (AjCrew token_auth._deny), NOT 401. The
+    // with 403 + X-Auth-Required (Aj Crew token_auth._deny), NOT 401. The
     // recovery MUST fire on this signal too — otherwise a cold reopen shows
     // the red session-expired banner and never uses the still-valid 30-day
     // refresh cookie.

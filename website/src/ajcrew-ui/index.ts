@@ -1,5 +1,5 @@
 /**
- * @ajcrew/ui — shared component library for AjCrew apps.
+ * @ajcrew/ui — shared component library for Aj Crew apps.
  *
  * Apps import themed components from this module. In the host app, these
  * resolve to the same components used by core pages. When published as a

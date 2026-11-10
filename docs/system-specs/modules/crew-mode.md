@@ -1226,7 +1226,7 @@ that decides what an agent may do without asking (Settings → Security, approva
 Approval mode picker, Computer Use, Secrets) in words, without a guide; describe what a
 removal deletes only from the page's own `caution_text`; and propose a denied-command,
 approval or secret change only when the user asked for that exact change. The operating
-contract every session receives (`config/prompt.md`, section `AjCrew Capabilities`) carries one
+contract every session receives (`config/prompt.md`, section `Aj Crew Capabilities`) carries one
 line pointing at these tools.
 In a dashboard turn, a change to Aj Crew itself that the user asked for (settings,
 schedules, Bots and their capabilities, templates, MCP servers, connections, secrets,

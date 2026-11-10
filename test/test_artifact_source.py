@@ -252,7 +252,7 @@ class TestNonGitProjectsLink:
     ) -> None:
         """`$HOME` is never a project root, and `.kiro` is why this matters.
 
-        AjCrew's own data home is ``~/.kiro/crew``, so ``~/.kiro`` exists for
+        Aj Crew's own data home is ``~/.kiro/crew``, so ``~/.kiro`` exists for
         every user. Treating that as a marker would make the whole home
         directory a project and turn a loose ``~/notes.md`` into a LIVE link
         whose artifact edits overwrite the original file.
@@ -333,7 +333,7 @@ class TestClassifySourceProjectWalk:
     def test_git_FILE_worktree_counts_as_repo(self, narrow_tempdir, tmp_path: Path) -> None:
         # A git worktree's .git is a FILE (gitdir pointer). os.path.exists is
         # used precisely so worktrees don't report as "not a repo" — this is
-        # the AjCrew development layout itself.
+        # the Aj Crew development layout itself.
         wt = tmp_path / "ajcrew-wt-feature"
         wt.mkdir()
         (wt / ".git").write_text("gitdir: /workplace/user/AjCrew/.git/worktrees/feature\n")

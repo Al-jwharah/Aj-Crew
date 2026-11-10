@@ -134,8 +134,8 @@ export const mockMemoryGraph = {
   nodes: [
     { id: 'p1', label: 'Use TypeScript', group: 'preference', title: 'Use TypeScript' },
     { id: 'p2', label: 'Follow Amazon style guide', group: 'preference', title: 'Follow Amazon style guide' },
-    { id: 'pr1', label: 'AjCrew', group: 'project', title: 'AjCrew' },
-    { id: 'pr2', label: 'AjCrew: AI-powered assistant', group: 'project', title: 'AI-powered development assistant' },
+    { id: 'pr1', label: 'AjCrew', group: 'project', title: 'AjCrew' }, // brand-ok: fixture data
+    { id: 'pr2', label: 'AjCrew: AI-powered assistant', group: 'project', title: 'AI-powered development assistant' }, // brand-ok: fixture data
     { id: 's1', label: 'pref.editor', group: 'semantic', title: 'pref.editor = vim' },
     { id: 'l1', label: 'Check CRs before building', group: 'lesson', title: 'Always check for existing open CRs' },
     { id: 'h1', label: '2026-03-25', group: 'history', title: '2026-03-25 work session' },

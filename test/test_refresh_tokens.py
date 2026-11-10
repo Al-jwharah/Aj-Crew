@@ -1283,7 +1283,7 @@ def test_tr_u_24_logout_without_cookie_still_clears(
 def test_tr_u_25_secure_flag_only_on_https():
     """Cookies must set Secure=True only when the request is HTTPS. Localhost
     HTTP must not set it (browser would refuse to send it back). Per the security reviewer
-    finding #5 on. Forward-compatible for AjCrew OSS behind
+    finding #5 on. Forward-compatible for Aj Crew OSS behind
     a real HTTPS reverse proxy.
     """
     from unittest.mock import MagicMock

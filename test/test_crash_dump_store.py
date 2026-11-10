@@ -131,7 +131,7 @@ def _create_stacked_dump(dumps_dir: Path, name: str) -> Path:
     """Create a dump file with real stack content (simulating a wedge)."""
     p = dumps_dir / name
     p.write_text(
-        "# AjCrew loop-stall crash dump — opened 20260717T020000Z\n"
+        "# AjCrew loop-stall crash dump — opened 20260717T020000Z\n"  # brand-ok: mirrors production dump header
         f"# PID: 12345 @ {crash_dump_store._pid_domain()}\n"
         "# If thread stacks appear below, the event loop wedged and faulthandler fired.\n"
         "\n"
@@ -193,7 +193,7 @@ def test_open_dump_file_creates_file(dumps_dir: Path) -> None:
         assert files[0].name.endswith(DUMP_SUFFIX)
         # Header should be written
         content = files[0].read_text(encoding="utf-8")
-        assert "AjCrew loop-stall crash dump" in content
+        assert "AjCrew loop-stall crash dump" in content  # brand-ok: mirrors production dump header
         assert "PID:" in content
 
 

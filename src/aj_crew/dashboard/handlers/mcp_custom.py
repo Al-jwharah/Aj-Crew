@@ -512,7 +512,7 @@ async def api_mcp_custom_get(request: web.Request) -> web.Response:
 async def api_mcp_custom_update(request: web.Request) -> web.Response:
     """PUT /api/mcp/custom/{name} — replace an installed server's spec.
 
-    404 when the name isn't an AjCrew-managed entry.  The server's
+    404 when the name isn't an Aj Crew-managed entry.  The server's
     enabled/disabled state is preserved — editing is not consent to run.
 
     Keys outside the editable allowlist that already exist on the entry

@@ -98,7 +98,7 @@ def launchd_live_program() -> "os.PathLike[str]":
     drop-in does); a symlink would leave PATH-resolved subprocesses on the OLD install.
     """
     return (
-        Path.home() / "Library" / "Application Support" / "AjCrew"
+        Path.home() / "Library" / "Application Support" / "AjCrew"  # brand-ok: on-disk directory name
         / "live-gateway"
     )
 

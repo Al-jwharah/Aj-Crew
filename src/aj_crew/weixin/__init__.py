@@ -12,6 +12,6 @@ channel (no terminal wizard).
 
 Protocol layer ported from Nous Research's Hermes Agent ``weixin`` adapter
 (MIT License, https://github.com/NousResearch/hermes-agent) and re-expressed
-against AjCrew's :class:`~aj_crew.messaging.transport.MessagingTransport`
+against Aj Crew's :class:`~aj_crew.messaging.transport.MessagingTransport`
 contract.
 """

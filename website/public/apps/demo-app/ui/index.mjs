@@ -1,4 +1,4 @@
-// Demo AjCrew App — proves the federated loading pipeline works end-to-end.
+// Demo Aj Crew App — proves the federated loading pipeline works end-to-end.
 // This file is loaded dynamically by AppHost via import('/apps/demo-app/ui/index.mjs').
 // It uses the import map to resolve 'react' and '@ajcrew/app-sdk' from the host.
 

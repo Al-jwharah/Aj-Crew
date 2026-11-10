@@ -305,8 +305,8 @@ def test_exact_gated_handoff_is_renamed_for_the_release(tmp_path: Path) -> None:
 
     assert result.returncode == 0, result.stderr + result.stdout
     release = tmp_path / "release"
-    release_zip = release / f"AjCrew-{VERSION}-universal-mac.zip"
-    release_dmg = release / f"AjCrew-{VERSION}-universal.dmg"
+    release_zip = release / f"AjCrew-{VERSION}-universal-mac.zip"  # brand-ok: fixture data
+    release_dmg = release / f"AjCrew-{VERSION}-universal.dmg"  # brand-ok: fixture data
     assert release_zip.read_bytes() == (gated / "notarized.zip").read_bytes()
     assert release_dmg.read_bytes() == (gated / "AjCrew.dmg").read_bytes()
     # The single-arch legs land beside it under the same shape: the arch is

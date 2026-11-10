@@ -1,4 +1,4 @@
-"""AjCrew core deploy module — AWS deploy engine, profiles, and route handlers.
+"""Aj Crew core deploy module — AWS deploy engine, profiles, and route handlers.
 
 Core owns the AWS deploy layer directly; the "Artifact Deploy" page lives
 at ``/artifacts/deploy`` in the main dashboard.
@@ -66,7 +66,7 @@ def _register_core_skills() -> None:
             if not (link / _MANAGED_MARKER).exists():
                 logger.warning(
                     "Skipping deploy skill %s: user-placed directory at %s "
-                    "(remove it manually to allow AjCrew to manage this skill)",
+                    "(remove it manually to allow Aj Crew to manage this skill)",
                     skill_dir.name,
                     link,
                 )

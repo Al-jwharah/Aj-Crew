@@ -51,7 +51,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
 
-# Optional AjCrew runtime dep (absent when running standalone / in tests).
+# Optional Aj Crew runtime dep (absent when running standalone / in tests).
 # Kept at module top per the imports guideline; guarded at each use site.
 try:
     from aj_crew.security import redact_credentials, redact_exfiltration_urls  # type: ignore
@@ -128,7 +128,7 @@ from sage_lib.worker_response import (  # noqa: E402,F401
 def _redact(text: str) -> str:
     """Scrub credentials + exfiltration URLs from LLM-generated text before it is
     posted to an external surface (the dashboard artifact store). No-op when the
-    AjCrew redaction lib isn't importable (standalone)."""
+    Aj Crew redaction lib isn't importable (standalone)."""
     if redact_exfiltration_urls is None or redact_credentials is None:
         return text
     return redact_credentials(redact_exfiltration_urls(text)[0])[0]
@@ -695,7 +695,7 @@ def _candidate_ports() -> list[int]:
 
 
 def _probe(base: str, secret: str) -> bool:
-    """True if an AjCrew gateway is listening at base (any HTTP response, incl.
+    """True if an Aj Crew gateway is listening at base (any HTTP response, incl.
     401/404, means it's there; only connection errors mean it isn't).
 
     Proxy-disabled deliberately: ``_gateway_base`` calls this once per candidate

@@ -1092,20 +1092,20 @@ class TestCompactCallbackWiring:
 
 def test_folder_breadcrumb_walks_full_ancestry(state):
     state._folders = [
-        {"id": "a", "name": "AjCrew", "parent_id": ""},
+        {"id": "a", "name": "Aj Crew", "parent_id": ""},
         {"id": "b", "name": "Backend", "parent_id": "a"},
         {"id": "c", "name": "auth-refactor", "parent_id": "b"},
     ]
-    assert state.folder_breadcrumb("c") == "AjCrew › Backend › auth-refactor"
+    assert state.folder_breadcrumb("c") == "Aj Crew › Backend › auth-refactor"
 
 
 def test_folder_breadcrumb_single_root(state):
-    state._folders = [{"id": "a", "name": "AjCrew", "parent_id": ""}]
-    assert state.folder_breadcrumb("a") == "AjCrew"
+    state._folders = [{"id": "a", "name": "Aj Crew", "parent_id": ""}]
+    assert state.folder_breadcrumb("a") == "Aj Crew"
 
 
 def test_folder_breadcrumb_empty_or_unknown_id(state):
-    state._folders = [{"id": "a", "name": "AjCrew", "parent_id": ""}]
+    state._folders = [{"id": "a", "name": "Aj Crew", "parent_id": ""}]
     assert state.folder_breadcrumb("") == ""
     assert state.folder_breadcrumb("missing") == ""
 

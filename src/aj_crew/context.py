@@ -1006,9 +1006,9 @@ def _build_docs_section() -> str:
         return ""
     return (
         "[DOCUMENTATION]\n"
-        f"AjCrew docs: {_BUNDLED_DOCS_DIR}\n"
+        f"Aj Crew docs: {_BUNDLED_DOCS_DIR}\n"
         "\n"
-        "For AjCrew behavior, commands, config, or architecture: "
+        "For Aj Crew behavior, commands, config, or architecture: "
         "consult local docs first.\n"
         "When diagnosing issues, run `ajcrew status` or "
         "`ajcrew doctor` yourself when possible.\n"
@@ -1236,7 +1236,7 @@ def build_session_replay(
     budget_chars: int = _REPLAY_BUDGET_CHARS,
     exclude_messages: list[dict] | None = None,
 ) -> str | None:
-    """Build session replay from AjCrew's conversation_log.
+    """Build session replay from Aj Crew's conversation_log.
 
     Keeps as many recent messages as fit within *budget_chars*
     (``_REPLAY_BUDGET_CHARS`` unless the conductor context cap's trim asks for

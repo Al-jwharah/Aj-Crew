@@ -11,7 +11,7 @@ export const FEATURES = [
 ];
 
 export const TAG_CLS: Record<string, string> = {
-  Core: 'bg-indigo-500/10 text-indigo-400',
+  Core: 'bg-teal-500/10 text-teal-400',
   AI: 'bg-amber-300/10 text-amber-300',
   Ops: 'bg-green-500/10 text-green-400',
   UX: 'bg-rose-500/10 text-rose-400',

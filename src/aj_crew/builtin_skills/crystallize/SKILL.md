@@ -71,7 +71,7 @@ a session that touched credentials / sensitive paths. Being asked does not make 
    same limits yourself.
 
 4. **Choose the destination — candidate by default, live only on an explicit
-   request.** First resolve your AjCrew skills directory — the SAME directory
+   request.** First resolve your Aj Crew skills directory — the SAME directory
    that holds the `auto/` group you inspected in step 2 (honor `$AJCREW_HOME`
    if set; do **not** assume a literal `~/.ajcrew`, since migrated installs
    live elsewhere).

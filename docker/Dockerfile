@@ -1,4 +1,4 @@
-# AjCrew gateway image — headless dashboard + channel bots (Slack/Discord/
+# Aj Crew gateway image — headless dashboard + channel bots (Slack/Discord/
 # Telegram/WeCom/Webex) in a container.
 #
 # Build contract: the image consumes the CI-BUILT WHEEL from dist/ (the same
@@ -57,7 +57,7 @@ ARG KIRO_CLI_VERSION=
 ARG SOURCE_REPO_URL="https://github.com/Al-jwharah/Aj-Crew"
 
 LABEL org.opencontainers.image.source="${SOURCE_REPO_URL}" \
-      org.opencontainers.image.description="AjCrew gateway — personal AI agent crew (dashboard + Slack/Discord/Telegram/WeCom/Webex)" \
+      org.opencontainers.image.description="Aj Crew gateway — personal AI agent crew (dashboard + Slack/Discord/Telegram/WeCom/Webex)" \
       org.opencontainers.image.licenses="MIT" \
       org.opencontainers.image.version="${AJCREW_VERSION}" \
       org.opencontainers.image.revision="${VCS_REF}" \
@@ -78,7 +78,7 @@ RUN apt-get update \
         unzip \
     && rm -rf /var/lib/apt/lists/*
 
-# kiro-cli — the agent runtime AjCrew drives over ACP; chat sessions
+# kiro-cli — the agent runtime Aj Crew drives over ACP; chat sessions
 # require it. Every kiro-cli* binary the release ships (kiro-cli, and
 # kiro-cli-chat / kiro-cli-term where present) ends up in /usr/local/bin.
 # Older installers honour Q_INSTALL_GLOBAL; newer ones read

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useLayoutEffect } from 'react'
 import { OverlayPortal } from './overlayRoot'
-import { EyeOff, Ghost, Loader2, Undo2, VenetianMask } from 'lucide-react'
+import { EyeOff, Loader2, Undo2, VenetianMask } from 'lucide-react'
 import { Glass } from './Glass'
 
 import { i18nT } from '../i18n/t'
@@ -99,7 +99,7 @@ export function MemoryModeChip({ memoryMode, onSwitchMode, switching = false, di
           else onSwitchMode('persistent')
         }}
       >
-        {switching ? <Loader2 size={13} className="animate-spin" /> : !ephemeralActive ? <Ghost size={13} /> : <Undo2 size={13} />}
+        {switching ? <Loader2 size={13} className="animate-spin" /> : !ephemeralActive ? <EyeOff size={13} /> : <Undo2 size={13} />}
         <span>{label}</span>
       </Glass>
       {open && !switching && !disabled && <OverlayPortal>

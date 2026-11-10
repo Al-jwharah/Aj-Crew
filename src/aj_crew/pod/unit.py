@@ -40,7 +40,7 @@ from aj_crew.service.common import systemd_quote
 
 _UNIT_TEMPLATE = """\
 [Unit]
-Description=AjCrew pod (%i) — isolated worktree gateway, throwaway
+Description=Aj Crew pod (%i) — isolated worktree gateway, throwaway
 # Multi-active: many run at once, one per worktree, each on its own port + own
 # AJCREW_HOME. Orthogonal to the live gateway; refuses to bind the live port.
 

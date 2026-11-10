@@ -92,7 +92,7 @@ const OVERLAY_SOURCE = `(() => {
   // what the panel uses for Remove and the armed Clear, and one hue must not
   // carry two meanings. Fixed hex because the page realm cannot read the
   // dashboard's theme variables.
-  var COLOR = "#7c3aed";
+  var COLOR = "#0d9488";
   var editHint = "";
   var roleNames = {};
   function roleLabel(role) { return (role && Object.prototype.hasOwnProperty.call(roleNames, role) && roleNames[role]) || role; }

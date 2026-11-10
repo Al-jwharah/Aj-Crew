@@ -4,7 +4,7 @@ Status: implemented in `src/aj_crew/apps/manager_records.py`, `src/aj_crew/apps/
 
 ## Overview
 
-Implement the two-phase graceful migration mechanism for builtin apps. Backend changes in Python (AjCrew gateway), frontend changes in TypeScript/React (AjCrewWebsite).
+Implement the two-phase graceful migration mechanism for builtin apps. Backend changes in Python (Aj Crew gateway), frontend changes in TypeScript/React (AjCrewWebsite).
 
 ## Tasks
 

@@ -1,4 +1,4 @@
-"""The AjCrew Governance Model — archetypes, ceiling, evaluator, loader.
+"""The Aj Crew Governance Model — archetypes, ceiling, evaluator, loader.
 
 This module is the **decoupled, extensible core** of the two-level governance
 model (see ``docs/system-specs/modules/governance.md`` and the design doc).
@@ -470,7 +470,7 @@ def strip_ungoverned_auto_approve(
     ``allowedTools`` on kiro-cli, the projection's ``permissions`` on KAS), which the
     runtime approves locally with no permission request, so ``hooks.on_tool_call``
     never runs for it.
-    ``agent.py``'s managed-server block states the rule for the servers AjCrew
+    ``agent.py``'s managed-server block states the rule for the servers Aj Crew
     ships ("DELIBERATELY NO autoApprove KEY, and none may ever be added"); this
     applies it to every other source.
 

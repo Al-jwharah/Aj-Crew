@@ -33,7 +33,7 @@ describe('AgentSelector', () => {
     expect(screen.getByText('default')).toBeInTheDocument()
   })
 
-  it('calls onChange with AjCrew agent name on selection', () => {
+  it('calls onChange with Aj Crew agent name on selection', () => {
     const onChange = vi.fn()
     render(<AgentSelector agents={agents} defaultAgent="coding" value="coding" onChange={onChange} />)
     fireEvent.click(screen.getByLabelText('Switch agent'))

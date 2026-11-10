@@ -617,7 +617,7 @@ async def spawn_backend(
     not gateway-spawned backends. Compensating controls:
 
     1. ``command`` is taken verbatim from ``AJCREW_MCP_TARGET_<SERVER>`` env
-       vars populated at AjCrew startup by the rewriter from the user's
+       vars populated at Aj Crew startup by the rewriter from the user's
        own ``~/.kiro/agents/*.json``. Stubs cannot cause gatewayd to spawn
        an arbitrary binary — only pre-approved MCP servers.
     2. ``GatewayManager._scrub_sensitive_env()`` strips AWS / SSH / GPG /
@@ -822,7 +822,7 @@ async def _pump_stderr(reader: asyncio.StreamReader, label: str) -> None:
         # DEBUG intentionally — backend stderr is routinely verbose
         # (tracing/log crate output) and would otherwise flood INFO logs.
         # redact() so a secret printed to stderr (e.g. a token fragment in a
-        # stack trace) does not land verbatim in the AjCrew log.
+        # stack trace) does not land verbatim in the Aj Crew log.
         logger.debug(
             "backend[%s] stderr: %s",
             label,

@@ -6,7 +6,7 @@
 # is the Nightly lane). Aj Crew publishes no prebuilt wheels yet, so a source
 # install is the supported one; update it with `git pull`, then `ajcrew update`.
 #
-# Sets up AjCrew using only public tooling:
+# Sets up Aj Crew using only public tooling:
 #   1. Node.js (via ensure-node.sh)
 #   2. Optional tools (git-lfs, ffmpeg for voice)
 #   3. Optional ACP adapter + Kiro CLI prerequisite disclosure
@@ -28,7 +28,7 @@ cd "$_ajcrew_dir" || return 1
 # shellcheck source=scripts/lib/acp-adapter-pin.sh
 . "$_ajcrew_dir/scripts/lib/acp-adapter-pin.sh"
 
-echo "💎 AjCrew Setup"
+echo "💎 Aj Crew Setup"
 echo ""
 
 # ── Ensure PATH includes common install locations ──
@@ -286,8 +286,8 @@ _add_to_rc() {
         echo "  ✅ Already in $_rc"
         return
     fi
-    # Remove any old AjCrew PATH entry and replace with current
-    if grep -qF "AjCrew" "$_rc" 2>/dev/null; then
+    # Remove any old Aj Crew PATH entry and replace with current
+    if grep -qF "AjCrew" "$_rc" 2>/dev/null; then  # brand-ok: shell-rc marker
         sed -i.bak '/# AjCrew/d;/AjCrew.*bin/d;/\.local\/bin/d' "$_rc"
         rm -f "${_rc}.bak"
     fi
@@ -296,7 +296,7 @@ _add_to_rc() {
     case "${_answer:-Y}" in
         [Yy]*)
             echo "" >> "$_rc"
-            echo "# AjCrew" >> "$_rc"
+            echo "# AjCrew" >> "$_rc"  # brand-ok: shell-rc marker
             echo "$_path_line" >> "$_rc"
             echo "  ✅ Added to $_rc"
             ;;

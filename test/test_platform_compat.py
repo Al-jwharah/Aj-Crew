@@ -1,5 +1,5 @@
 """Unit tests for aj_crew.platform_compat — the cross-platform shim that lets
-AjCrew run natively on Windows alongside macOS/Linux.
+Aj Crew run natively on Windows alongside macOS/Linux.
 
 These exercise the PURE / platform-dispatching surface, spawning a real process
 only where the contract IS an OS behavior (process-session semantics): the
@@ -1265,13 +1265,13 @@ class TestUtf8Console:
         assert os.environ["PYTHONIOENCODING"] == "utf-8:backslashreplace"
 
     def test_emoji_print_does_not_raise_after_call(self, capsys):
-        # The bug this guards: AjCrew prints non-ASCII glyphs everywhere, and on
+        # The bug this guards: Aj Crew prints non-ASCII glyphs everywhere, and on
         # Windows cp1252 stdout that raised UnicodeEncodeError and killed the gateway.
         # After ensure_utf8_console(), a non-ASCII print must succeed on any platform.
         pc.ensure_utf8_console()
-        print("中文 AjCrew 日本語")  # non-cp1252-encodable glyphs
+        print("中文 Aj Crew 日本語")  # non-cp1252-encodable glyphs
         out = capsys.readouterr().out
-        assert "AjCrew" in out
+        assert "Aj Crew" in out
 
     def test_rewraps_cp1252_stream_so_emoji_log_record_survives(self, monkeypatch):
         # When the worker's stderr is a cp1252 TextIOWrapper that reconfigure()

@@ -10,7 +10,7 @@ timestamps, and paths are synthetic.
 Running `ajcrew gateway --seed minimal` against a fresh
 `$AJCREW_HOME` lands you on a clickable dashboard: memory tab shows
 the workspace content, cron tab shows the two jobs, sessions tab shows
-the pinned **Welcome to AjCrew** starter. Useful as the default
+the pinned **Welcome to Aj Crew** starter. Useful as the default
 fixture for pytest tests that need "populated enough to exercise the
 dashboard" without having to author more content than necessary.
 

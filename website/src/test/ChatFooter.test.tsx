@@ -6,7 +6,7 @@ import { GHOST_POSE_ICONS, GHOST_POSE_URLS } from '../components/GhostPoses'
 import { registerThemeBranding } from '../themeBranding'
 import { THEME_LOADER_ICONS } from '../themeLoaderIcons'
 
-const base = { running: false, stopping: false, state: '', lastRole: '', avatar: '/logo.png', botName: 'AjCrew' }
+const base = { running: false, stopping: false, state: '', lastRole: '', avatar: '/logo.png', botName: 'Aj Crew' }
 
 afterEach(() => document.documentElement.removeAttribute('data-theme'))
 

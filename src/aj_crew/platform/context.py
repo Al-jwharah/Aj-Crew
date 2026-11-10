@@ -1,6 +1,6 @@
 """The PlatformContext composition object and the active-context accessor.
 
-AjCrew uses the Composed Platform Providers (CPP) model to share one core
+Aj Crew uses the Composed Platform Providers (CPP) model to share one core
 between the public open-source edition and the Amazon-internal companion.  The
 public core defines a set of *extension points* — interfaces in
 ``aj_crew.platform.interfaces`` — and ships a ``Default*`` adapter for each

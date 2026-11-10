@@ -1091,7 +1091,7 @@ def test_denial_text_does_not_disclose_the_ceiling(
 def test_read_only_and_mutating_sets_partition_the_tools():
     """The classification the PreToolUse gate keys on must be total and disjoint.
 
-    ``computer_end_turn`` is neither: it drops AjCrew's OWN cache and touches no
+    ``computer_end_turn`` is neither: it drops Aj Crew's OWN cache and touches no
     other application, so it is control-plane.
     """
     assert READ_ONLY_TOOLS & MUTATING_TOOLS == frozenset()

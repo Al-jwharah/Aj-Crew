@@ -1,7 +1,7 @@
 "use strict";
 // Decision table for the cross-app gateway ownership guard. The guard's
 // contract: interpose ONLY when both sides are positively identified as
-// different AjCrew identity families; every ambiguous case preserves the
+// different Aj Crew identity families; every ambiguous case preserves the
 // historical reuse behavior.
 
 const { test } = require("node:test");
@@ -35,7 +35,7 @@ test("same family reuses: nightly shell, nightly gateway (relaunch)", () => {
   assert.equal(d.action, "reuse");
 });
 
-// A local AjCrew LISTEN owner is what makes an eviction legitimate. Passing
+// A local Aj Crew LISTEN owner is what makes an eviction legitimate. Passing
 // it explicitly in the cross-family cases keeps those tests about FAMILY logic.
 const LOCAL = { localOwner: "ajcrew" };
 
@@ -117,7 +117,7 @@ test("unclassifiable own version never evicts", () => {
 // An `ssh -L 5476:localhost:5476 host` forward makes a REMOTE gateway answer
 // /api/health on localhost with a payload identical to a local install's. Every
 // case below is cross-family (the family logic says "evict") and must still
-// reuse, because the port is not held by a local AjCrew process.
+// reuse, because the port is not held by a local Aj Crew process.
 const CROSS_FAMILY_HEALTH = { ok: true, app: "ajcrew", version: "0.1.0" };
 const NIGHTLY_SHELL = "0.2.0-nightly.20260722120000";
 
@@ -165,7 +165,7 @@ test("locality is checked only after family — same-family still short-circuits
 test("FAMILY_META separates display names from quit-by-name targets", () => {
   // Both installs deliberately share one bundle identifier, so the app NAME
   // is the only valid AppleScript targeting handle.
-  assert.equal(FAMILY_META.prod.appName, "AjCrew");
+  assert.equal(FAMILY_META.prod.appName, "AjCrew"); // brand-ok: desktop productName
   assert.equal(FAMILY_META.nightly.appName, "AjCrew Nightly");
   assert.equal(FAMILY_META.prod.displayName, "Aj Crew");
   assert.equal(FAMILY_META.nightly.displayName, "Aj Crew Nightly");

@@ -1057,7 +1057,7 @@ there.
 The same specs mount the Bot's own-record server `ajcrew-mate`, on the
 same terms: always emitted, no `autoApprove`, and exactly the tools in
 `agent._MATE_AUTO_GRANTS` as exact `allowedTools` grants (`update_self`, which
-writes the calling Bot's name, description or ghost face on the user's word
+writes the calling Bot's name, description or gem face on the user's word
 and leaves one undoable row in its chat; `set_model`, `set_approval_mode`,
 `request_capabilities`, `set_goal`, `set_key_results` and `set_check_ins`, which only offer a
 change card; `find_capabilities`, which reads what the Bot's worker has and

@@ -63,7 +63,7 @@ done
 has node || die "Node.js not found. Install Node.js 22.12+ (24 LTS recommended, https://nodejs.org) and re-run."
 has npm  || die "npm not found. Install Node.js 22.12+ (24 LTS recommended, https://nodejs.org) and re-run."
 
-echo "💎 AjCrew — minimal install"
+echo "💎 Aj Crew — minimal install"
 echo "  Repo:    $REPO_DIR"
 echo "  Python:  $("$_py" --version 2>&1)"
 echo "  Node:    $(node --version)"
@@ -178,7 +178,7 @@ echo "✓ Symlinked ajcrew → ~/.local/bin/ajcrew"
 echo ""
 
 # ── Done ──
-echo "💎 AjCrew installed!"
+echo "💎 Aj Crew installed!"
 echo ""
 echo "  Next steps:"
 echo "    1. Default agent: install Kiro CLI from https://kiro.dev/cli/"

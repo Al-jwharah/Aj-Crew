@@ -1,6 +1,6 @@
 """cloud IAM — least-privilege policy generator + read-only reachability check.
 
-Same philosophy as ``deploy_web/iam.py``: **AjCrew never performs an IAM
+Same philosophy as ``deploy_web/iam.py``: **Aj Crew never performs an IAM
 write.** We *generate* the policy text for the user to apply themselves (or they
 already have it, being the account owner). Verification is **read-only
 reachability only** — ``sts get-caller-identity`` plus harmless ``describe``

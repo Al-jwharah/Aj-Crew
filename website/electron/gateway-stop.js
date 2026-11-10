@@ -711,7 +711,7 @@ async function confirmedFree(port, { confirmFree, waitMs, sleep, onWait, isAbort
 }
 
 /**
- * Force-stop whatever AjCrew process is LISTENing on `port`, then VERIFY the
+ * Force-stop whatever Aj Crew process is LISTENing on `port`, then VERIFY the
  * port actually freed before reporting success.
  *
  * The old inline version SIGKILLed the owner and resolved after a fixed 800ms
@@ -723,7 +723,7 @@ async function confirmedFree(port, { confirmFree, waitMs, sleep, onWait, isAbort
  *
  * This version polls the listener set after killing and returns `freed` based on
  * whether the port is ACTUALLY free afterwards (not merely whether our targets
- * died), plus `survivors` (the AjCrew PIDs we tried to kill that are still
+ * died), plus `survivors` (the Aj Crew PIDs we tried to kill that are still
  * holding the port) and `foreignHolder` (a non-AjCrew process still owns it).
  * `freed === false` means a respawn would just fail to bind — the caller MUST
  * NOT respawn; it should tell the user a restart is required (`survivors`, an
@@ -797,7 +797,7 @@ async function forceStopPort(
     return { killed: 0, freed: true, survivors: [], foreignHolder: false, serviceHolder: false };
   }
 
-  // Only signal PIDs we can positively identify as AjCrew — never SIGKILL an
+  // Only signal PIDs we can positively identify as Aj Crew — never SIGKILL an
   // unrelated app that happens to share the port.
   const targets = [];
   let serviceHolder = false;
@@ -810,7 +810,7 @@ async function forceStopPort(
       // race the respawn. Leave it alone and tell the caller why.
       if (await isServiceManaged(pid, getPpid, isLaunchdJob)) {
         serviceHolder = true;
-        log(`force-stop: SKIP pid=${pid} — service-managed AjCrew gateway (${cmd.slice(0, 80)})`);
+        log(`force-stop: SKIP pid=${pid} — service-managed Aj Crew gateway (${cmd.slice(0, 80)})`);
         continue;
       }
       try {
@@ -821,7 +821,7 @@ async function forceStopPort(
         log(`force-stop: kill pid=${pid} failed: ${e && e.message}`);
       }
     } else {
-      log(`force-stop: SKIP pid=${pid} — not an AjCrew process (${cmd.slice(0, 80)})`);
+      log(`force-stop: SKIP pid=${pid} — not an Aj Crew process (${cmd.slice(0, 80)})`);
     }
   }
 
@@ -945,7 +945,7 @@ async function probePortBinding(port, { getListenPids, log = () => {} }) {
  * owner is the ground truth the payload lacks — on a tunnel it is `ssh`.
  *
  * Deliberately fail-safe: every outcome except a positively identified local
- * AjCrew process is a reason NOT to evict.
+ * Aj Crew process is a reason NOT to evict.
  *   "ajcrew" — a local LISTEN owner matching isAjcrewCommand. Only this
  *                value may authorise a takeover.
  *   "foreign"  — a local LISTEN owner exists but is not ours (e.g. `ssh`).
@@ -1002,10 +1002,10 @@ async function classifyPortOwner(
     const ours = isAjcrew(cmd);
     if (ours) {
       if (await isServiceManaged(pid, getPpid, isLaunchdJob)) {
-        log(`port-owner: :${port} held by SERVICE-MANAGED AjCrew pid=${pid} (${cmd.slice(0, 80)}) — reuse, never evict`);
+        log(`port-owner: :${port} held by SERVICE-MANAGED Aj Crew pid=${pid} (${cmd.slice(0, 80)}) — reuse, never evict`);
         return "service";
       }
-      log(`port-owner: :${port} held by local AjCrew pid=${pid} (${cmd.slice(0, 80)})`);
+      log(`port-owner: :${port} held by local Aj Crew pid=${pid} (${cmd.slice(0, 80)})`);
       return "ajcrew";
     }
     log(`port-owner: :${port} held by NON-AjCrew pid=${pid} (${cmd.slice(0, 80)})`);

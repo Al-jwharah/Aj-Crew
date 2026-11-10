@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Attach a per-app backend origin to the shared AjCrew CloudFront distribution.
+"""Attach a per-app backend origin to the shared Aj Crew CloudFront distribution.
 
 Idempotently adds an origin for the backend + a '<slug>/api/*' cache behavior
 routing to it (no caching, all-viewer-except-host so the origin sees the right
@@ -41,7 +41,7 @@ def aws(profile, region, *args):
     except ImportError:
         sys.stderr.write(
             "error: aj_crew package not importable — refusing to spawn AWS "
-            "commands unsandboxed. Run this script with the AjCrew venv "
+            "commands unsandboxed. Run this script with the Aj Crew venv "
             "python (see skills/artifact-deploy/SKILL.md).\n"
         )
         sys.exit(1)
@@ -89,7 +89,7 @@ def ensure_lambda_oac(profile, region):
             return it["Id"]
     cfg = {
         "Name": OAC_NAME,
-        "Description": "AjCrew deploy Lambda OAC",
+        "Description": "AjCrew deploy Lambda OAC",  # brand-ok: AWS resource description
         "SigningProtocol": "sigv4",
         "SigningBehavior": "always",
         "OriginAccessControlOriginType": "lambda",
@@ -145,7 +145,7 @@ def _validate_args(profile: str, region: str, dist_id: str, slug: str) -> None:
 
 # Sensitive paths that must never be read via --origin-verify-secret-file.
 # Standalone list (duplicated here for standalone execution where aj_crew
-# may not be importable) — covers both the current AjCrew data home
+# may not be importable) — covers both the current Aj Crew data home
 # (~/.kiro/crew) and the legacy ~/.ajcrew home, so a not-yet-migrated box
 # is covered too.
 _SENSITIVE_PREFIXES: tuple[str, ...] = (

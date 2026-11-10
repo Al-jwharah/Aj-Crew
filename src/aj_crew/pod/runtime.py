@@ -1378,9 +1378,9 @@ def build_pod_env(
         # install's specs -- and, just as importantly, stops a pod that was merely
         # BLOCKED from rewriting them falling back to the shared spec, whose env
         # pins the LIVE data home (so a pod's ``learn_add`` would have written the
-        # real lessons). Safe only because every AjCrew reader of the transcripts
+        # real lessons). Safe only because every Aj Crew reader of the transcripts
         # dir now resolves through ``kiro_sessions_dir()``; without that the pod
-        # would write sessions somewhere AjCrew never looks and lose resume.
+        # would write sessions somewhere Aj Crew never looks and lose resume.
         # Inside the pod HOME so ``pod down``'s teardown reclaims it.
         "KIRO_HOME": str(home_dir / "kiro"),
         # Give the pod its OWN workspace root. Without this, `workspace_root()`

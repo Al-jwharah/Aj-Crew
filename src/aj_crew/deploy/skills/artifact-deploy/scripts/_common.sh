@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Shared helpers for AjCrew One-Click Deploy scripts.
+# Shared helpers for Aj Crew One-Click Deploy scripts.
 #   source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_common.sh"
 # Provides: STACK_NAME, PROFILE, REGION, aws_cli(), read_base_outputs(), validate_slug(),
 #           scan_source_dir()

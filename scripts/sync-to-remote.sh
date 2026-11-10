@@ -1,5 +1,5 @@
 #!/bin/bash
-# sync-to-remote.sh — push AjCrew state from LOCAL → REMOTE Cloud Desktop
+# sync-to-remote.sh — push Aj Crew state from LOCAL → REMOTE Cloud Desktop
 # Direction: one-way (local overwrites remote). Run from your laptop/Mac.
 # Improvements over sync-ajcrew.sh:
 #   - Custom port support (patches config.json after copy)
@@ -23,7 +23,7 @@ usage() {
   cat <<EOF
 Usage: sync-to-remote.sh [OPTIONS] [HOST] [PORT]
 
-Push AjCrew state from LOCAL → REMOTE (one-way, local overwrites remote).
+Push Aj Crew state from LOCAL → REMOTE (one-way, local overwrites remote).
 Run this from your laptop/Mac. Patches remote config.json with the specified
 port and disables auto_open_browser.
 
@@ -87,7 +87,7 @@ rsync_dry() {
   fi
 }
 
-echo "=== Syncing AjCrew to $HOST (port=$PORT) $(${DRY_RUN} && echo '[DRY RUN]') ==="
+echo "=== Syncing Aj Crew to $HOST (port=$PORT) $(${DRY_RUN} && echo '[DRY RUN]') ==="
 
 # --- Create remote dirs ---
 if ! $DRY_RUN; then

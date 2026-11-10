@@ -1,5 +1,5 @@
 /**
- * ChatPanel — mounts the full AjCrew ChatPage inside an app.
+ * ChatPanel — mounts the full Aj Crew ChatPage inside an app.
  *
  * ChatPage accepts `embedded` prop which skips URL sync effects.
  * ChatPanel makes the workspace session the active slot (`useOwnSlotChat`) and

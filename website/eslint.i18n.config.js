@@ -1008,7 +1008,7 @@ export default [
               // six-string probe file.
               '^[^A-Za-z]*$',
               // The product brand. The display name is `Aj Crew`; the unspaced
-              // `AjCrew` is the same name (and the glossary term that still guards the
+              // `AjCrew` is the same name (and the glossary term that still guards the (brand-ok: glossary term)
               // generated Slack app name), so both are equally DNT. Anchored
               // to the whole value, so a sentence merely *containing* the brand is still
               // reported — only the bare name is exempt.
@@ -1172,7 +1172,7 @@ export default [
               '^(css|cx|clsx|twMerge|cva|cn)$',
               // Storage, telemetry and routing take machine keys.
               '(local|session)Storage\\.\\w+', 'navigate', 'track', 'emit',
-              // AjCrew's own telemetry shim (`src/rum.ts`). Its first argument is
+              // Aj Crew's own telemetry shim (`src/rum.ts`). Its first argument is
               // a machine event name (`notifications_open`) and its second a tag
               // bag (`{ source: 'topbar' }`) — never rendered, so never copy. Sits
               // beside `track`/`emit` above, which are the same shape.

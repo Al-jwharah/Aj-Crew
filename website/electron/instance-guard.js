@@ -7,9 +7,9 @@
  * separates installs by filename; Squirrel validates updates against the
  * host's designated requirement, which pins the id), ONE data home
  * (~/.kiro/crew), and ONE gateway port (5476). That makes the port a mutex:
- * only one AjCrew-family gateway may run at a time. Electron's
+ * only one Aj Crew-family gateway may run at a time. Electron's
  * requestSingleInstanceLock is keyed on userData (per productName), so it
- * cannot stop "AjCrew Nightly" launching while "AjCrew" runs — this
+ * cannot stop "AjCrew Nightly" launching while "AjCrew" runs — this (brand-ok: desktop productName)
  * module covers that cross-app seam.
  *
  * Decision inputs: our own stamped version (identity family derives from it,
@@ -81,7 +81,7 @@ function classifyGatewayReadiness(statusCode, payload) {
 const FAMILY_META = {
   // appName is the technical Finder/AppleScript target. displayName is the
   // product spelling shown in dialogs and status text.
-  prod: { appName: "AjCrew", displayName: "Aj Crew" },
+  prod: { appName: "AjCrew", displayName: "Aj Crew" }, // brand-ok: desktop productName
   nightly: { appName: "AjCrew Nightly", displayName: "Aj Crew Nightly" },
   // The LTS edition is a third side-by-side install (build-desktop.sh). Its
   // gateway runs the lts backend, so an LTS shell must never adopt an oss one.
@@ -155,11 +155,11 @@ function decideGatewayAction(ownVersion, remoteHealth, {
     return { action: "reuse", reason: "same-family" };
   }
   if (remote === null) return { action: "reuse", reason: "dev-gateway" };
-  // Cross-family: the payload says "a rival AjCrew owns the port". That is
+  // Cross-family: the payload says "a rival Aj Crew owns the port". That is
   // necessary but NOT sufficient to evict, because the payload is identical
   // whether the responder is a local install or a REMOTE gateway forwarded
   // here by `ssh -L <port>:localhost:<port>`. Only a positively identified
-  // local AjCrew LISTEN owner authorises the eviction; a tunnel ("foreign",
+  // local Aj Crew LISTEN owner authorises the eviction; a tunnel ("foreign",
   // owner is `ssh`), an unseen socket ("none"), or a failed probe ("unknown")
   // all reuse instead. Evicting a tunnel is doubly wrong: the AppleScript quit
   // targets a local app that is not running, and killing the port would tear

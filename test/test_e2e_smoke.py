@@ -1,6 +1,6 @@
 """E2E smoke tests using ``spawn_feature_gateway`` harness.
 
-Phase 5 of the AjCrew Testing & Release Plan. These tests spawn a real
+Phase 5 of the Aj Crew Testing & Release Plan. These tests spawn a real
 gateway subprocess, hit its HTTP endpoints with the token from the READY
 line, and verify core functionality works end-to-end.
 

@@ -1,4 +1,4 @@
-"""OAuth-style refresh tokens for the AjCrew dashboard.
+"""OAuth-style refresh tokens for the Aj Crew dashboard.
 
 Adds a paired refresh cookie alongside the existing access cookie
 (``mc_token_<port>``) so users do not need to re-mint via the

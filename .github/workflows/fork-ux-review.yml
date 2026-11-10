@@ -788,7 +788,7 @@ jobs:
                surrounding website/src code to compare against established
                patterns, labels, and components.
 
-            REPO CONTEXT: AjCrew is an open-source AI agent platform (Python
+            REPO CONTEXT: Aj Crew is an open-source AI agent platform (Python
             backend + React/TS dashboard). Single-user tool; the dashboard is a
             SOVEREIGN surface (daily, full-attention use — dense, keyboard-
             friendly, muted) while dialogs/settings/onboarding are TRANSIENT

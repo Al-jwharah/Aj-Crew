@@ -105,7 +105,7 @@ class TestMemoryGraphNodeExtraction:
         monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = self._make_state(
             tmp_path,
-            projects="## AjCrew\n- Repository: ssh://git.example.com\n- Branch: main",
+            projects="## Aj Crew\n- Repository: ssh://git.example.com\n- Branch: main",
         )
         request = MagicMock()
         request.app = {"state": state}
@@ -115,7 +115,7 @@ class TestMemoryGraphNodeExtraction:
 
         proj_nodes = [n for n in data["nodes"] if n["group"] == "project"]
         assert len(proj_nodes) == 3  # parent + 2 details
-        assert any(n["label"] == "AjCrew" for n in proj_nodes)
+        assert any(n["label"] == "Aj Crew" for n in proj_nodes)
         # Detail nodes should have edges to parent
         assert len(data["edges"]) == 2
 
@@ -209,7 +209,7 @@ class TestMemoryGraphNodeExtraction:
         vs = MagicMock()
         vs.get_all_semantic.return_value = [
             {"key": "pref.editor", "value_json": '"vim"'},
-            {"key": "project.name", "value_json": '"AjCrew"'},
+            {"key": "project.name", "value_json": '"Aj Crew"'},
         ]
         vs.get_lessons.return_value = []
         state.context_builder.memory.vector_store = vs
@@ -481,8 +481,8 @@ class TestMemoryGraphEdgeDetection:
         monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = self._make_state(
             tmp_path,
-            prefs="- Uses AjCrew for automation",
-            projects="## AjCrew\n- Local path: /home/user/ajcrew",
+            prefs="- Uses AjCrew for automation",  # brand-ok: single-token project name fixture
+            projects="## AjCrew\n- Local path: /home/user/ajcrew",  # brand-ok: single-token project name fixture
         )
         request = MagicMock()
         request.app = {"state": state}
@@ -830,7 +830,7 @@ class TestMemoryGraphHTTPIntegration:
         state = self._make_state(
             tmp_path,
             prefs="- Prefers dark mode",
-            projects="## AjCrew\n- Local path: /home/user/mc",
+            projects="## Aj Crew\n- Local path: /home/user/mc",
             history="# 2026-03-25\n[2026-03-25 10:00] Did some work",
         )
         state.lessons.load_all.return_value = [

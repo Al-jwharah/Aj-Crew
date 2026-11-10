@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""pod-playwright.py — headless-chromium frontend check for an AjCrew pod.
+"""pod-playwright.py — headless-chromium frontend check for an Aj Crew pod.
 
 Run by pod-e2e.sh with a Playwright venv python (Playwright + bundled
-chromium at ~/.cache/ms-playwright/chromium-*). The AjCrew gateway serves its
+chromium at ~/.cache/ms-playwright/chromium-*). The Aj Crew gateway serves its
 own SPA bundle (src/aj_crew/static/dist), so we point chromium straight at the
 pod port with ?token=<t> — no separate FE dev server.
 
@@ -394,7 +394,7 @@ def run(base_url: str, token: str, artifact_dir: str, spec: str | None,
                     # Playwright scripts loaded from this skill's own directory or
                     # the worktree under test — not external/user input. Path is
                     # containment-checked above against skill specs/ dir and
-                    # AjCrew worktree roots.
+                    # Aj Crew worktree roots.
                     exec(spec_path.read_text(encoding="utf-8"), scope)  # nosemgrep: python.lang.security.audit.exec-detected.exec-detected
                     verdict.record("spec", True, spec)
                 except Exception as exc:

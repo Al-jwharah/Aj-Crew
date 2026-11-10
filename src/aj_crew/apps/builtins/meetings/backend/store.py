@@ -107,7 +107,8 @@ def data_dir(root: Path | None = None) -> Path:
     return data
 
 
-SEED_DICTIONARY = """\
+SEED_DICTIONARY = (
+    """\
 # Domain dictionary for meetings speech-to-text correction
 #
 # Speech recognition mangles project nouns. Add the misheard forms here once and
@@ -119,13 +120,16 @@ SEED_DICTIONARY = """\
 
 [[term]]
 correct = "Aj Crew"
-aliases = ["ajcrew", "aj crew", "aj-crew"]
-
+"""
+    # The misheard spellings are the data this entry corrects, not prose.
+    'aliases = ["ajcrew", "aj crew", "aj-crew"]\n'  # brand-ok: dictionary aliases
+    """
 # Add your team's terms below:
 # [[term]]
 # correct = "DynamoDB"
 # aliases = ["dynamo db", "dynamo d.b."]
 """
+)
 
 
 def ensure_data_dirs(root: Path | None = None) -> Path:

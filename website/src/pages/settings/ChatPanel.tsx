@@ -113,7 +113,7 @@ export function ChatPanel({ basePath }: { basePath?: string } = {}) {
     fvFetchMut, fv, featureVideoLine, dashMut, defaultModeMut,
   } = useChatPanelDashboard({ qc, setPathSaveError, clearOwnPathError, overlay })
 
-  // ── AjCrew config (server-side) ──
+  // ── Aj Crew config (server-side) ──
   const mcQ = useQuery<AjcrewConfigShape>({
     queryKey: ['ajcrewConfig'],
     queryFn: () => api.ajcrewConfig(),

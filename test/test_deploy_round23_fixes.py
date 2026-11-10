@@ -1,4 +1,4 @@
-"""Regression tests for Round-23 findings (AjCrew PR #6).
+"""Regression tests for Round-23 findings (Aj Crew PR #6).
 
 F1: the fullstack IAM policy conditions iam:CreateRole on the
     ajcrew-deploy-app-boundary permissions boundary and denies boundary

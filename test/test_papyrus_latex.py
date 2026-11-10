@@ -670,7 +670,7 @@ class TestRunHelper:
     async def test_hides_ajcrews_own_trust_root_from_the_compiler(
         self, project: Path
     ) -> None:
-        """Strict mode alone is NOT enough — it misses AjCrew's own secrets.
+        """Strict mode alone is NOT enough — it misses Aj Crew's own secrets.
 
         ``_STRICT_DIRS`` covers third-party credential locations plus
         ``~/.kiro/crew/.env``, but the gateway's ``.local_secret``,

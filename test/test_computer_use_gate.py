@@ -15,7 +15,7 @@ a future edit could quietly reintroduce a refusal (or lose the audit):
   operator's only record of what the agent did to their desktop;
 * the observation ceiling is a pass-through, so a renderer cannot lose fields to
   it;
-* the one retained refusal (AjCrew's own window) lives in ``policy``, NOT here —
+* the one retained refusal (Aj Crew's own window) lives in ``policy``, NOT here —
   asserted so nobody moves it back into the gate.
 """
 

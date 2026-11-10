@@ -471,7 +471,7 @@ async def _run_side_turn(
     # so nothing the user typed is lost.
     cancelled = False
     try:
-        # Resolve the AjCrew slot agent name (e.g. "default") to the real
+        # Resolve the Aj Crew slot agent name (e.g. "default") to the real
         # kiro-cli agent (e.g. "ajcrew") before creating the session. Passing
         # the raw slot name straight through to get_or_create -> create_session
         # -> set_mode fails with "Mode '<name>' not found" because there is no

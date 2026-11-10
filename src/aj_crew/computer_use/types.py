@@ -584,7 +584,7 @@ PERMISSION_UNSUPPORTED = "unsupported"
 ERROR_PREFIX = "Error: "
 REFUSAL_UNSUPPORTED = "computer use is not supported on this platform ({platform}): {reason}"
 REFUSAL_DISABLED = (
-    "computer use is disabled. Enable it in the AjCrew dashboard under "
+    "computer use is disabled. Enable it in the Aj Crew dashboard under "
     "Settings -> Computer Use; it cannot be enabled by an agent."
 )
 REFUSAL_DENIED_APP = "'{app}' is a blocked target for computer use ({reason})."
@@ -1318,7 +1318,7 @@ class DeniedApp:
     bundle_prefixes: tuple[str, ...] = field(default_factory=tuple)
     name_substrings: tuple[str, ...] = field(default_factory=tuple)
     # Matched against the resolved WINDOW TITLE, not the app identity. Needed
-    # because a host application can display someone else's UI: AjCrew's own
+    # because a host application can display someone else's UI: Aj Crew's own
     # dashboard served in a browser tab has Chrome's bundle id and Chrome's process
     # name, so a bundle/name rule cannot see it. Only ever used
     # to ADD a refusal — a title match can never lift a bundle match.

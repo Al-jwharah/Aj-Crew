@@ -1,4 +1,4 @@
-"""Telegram channel for AjCrew via Telegram Bot API.
+"""Telegram channel for Aj Crew via Telegram Bot API.
 
 DM-focused, long-polling loop to Telegram's getUpdates endpoint.
 Reuses the existing session machinery (SessionManager / provider.stream); this

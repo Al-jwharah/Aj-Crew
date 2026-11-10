@@ -1,5 +1,5 @@
 #!/bin/sh
-# AjCrew CLI wrapper.
+# Aj Crew CLI wrapper.
 #
 # Public/OSS build: delegates to the bundled .venv so child processes inherit
 # a working Python even under a minimal PATH (e.g. MCP servers spawned by the

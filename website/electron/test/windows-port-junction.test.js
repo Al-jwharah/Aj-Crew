@@ -151,5 +151,5 @@ test("classifyPortOwner recognises the junction-resolved backend as a local Aj C
   });
   assert.strictEqual(owner, "ajcrew");
   // The log line quotes the existing owner vocabulary verbatim.
-  assert.ok(logs.some((line) => line.includes("held by local AjCrew pid=33000"))); // brand-ok
+  assert.ok(logs.some((line) => line.includes("held by local Aj Crew pid=33000")));
 });

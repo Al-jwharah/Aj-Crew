@@ -1,4 +1,4 @@
-"""ajcrew-client — async Python client for the AjCrew Gateway.
+"""ajcrew-client — async Python client for the Aj Crew Gateway.
 
 Usage::
 

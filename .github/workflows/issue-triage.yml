@@ -329,7 +329,7 @@ jobs:
 
           # Quoted heredoc: nothing in the prompt is shell-expanded.
           cat > instructions.txt <<'PROMPT'
-          You are a triage classifier for the AjCrew repository — a Python gateway
+          You are a triage classifier for the Aj Crew repository — a Python gateway
           plus a React/TypeScript dashboard that runs AI coding agents. Assign labels
           to one newly opened issue.
 

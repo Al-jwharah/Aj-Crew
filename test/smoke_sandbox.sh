@@ -71,7 +71,7 @@ else:
 }
 
 echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║          AjCrew Sandbox Security Smoke Test               ║"
+echo "║          Aj Crew Sandbox Security Smoke Test               ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
 echo "Account: $ACCOUNT"
@@ -224,7 +224,7 @@ done
 safe_cases=(
     "Successfully refreshed aws credentials for default"
     '{"Account": "123456789012", "Arn": "arn:aws:iam::123:user/dev"}'
-    "Cloning into AjCrew... remote: Enumerating objects: 1234"
+    "Cloning into AjCrew... remote: Enumerating objects: 1234"  # brand-ok: fixture data
     "NAME       READY   STATUS    RESTARTS   AGE"
 )
 

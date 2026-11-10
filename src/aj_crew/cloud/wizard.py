@@ -1,6 +1,6 @@
 """The interactive ``ajcrew cloud launch`` wizard.
 
-One command → answer at most a question or two → AjCrew running on a
+One command → answer at most a question or two → Aj Crew running on a
 correctly-sized, correctly-configured EC2 box in the user's own AWS account,
 backend signed in, browser open on the live dashboard.
 
@@ -451,7 +451,7 @@ def launch(
     steps.step("AWS account")
     if not profile:
         ui.info("Using the AWS CLI's default credentials (no --profile).")
-        ui.detail("AjCrew never stores AWS credentials — the aws CLI resolves them.")
+        ui.detail("Aj Crew never stores AWS credentials — the aws CLI resolves them.")
     with ui.Spinner("Checking AWS access…"):
         reach = iam.reachability_check(profile, region)
     if not reach["reachable"]:
@@ -586,7 +586,7 @@ def launch(
         if not _clear_prior_pointer(cfg.last_tag):
             return 1
         cfg = dataclasses.replace(cfg, profile=profile, region=region, last_tag=tag)
-        ui.info("Provisioning EC2 + installing AjCrew (this takes a few minutes)…")
+        ui.info("Provisioning EC2 + installing Aj Crew (this takes a few minutes)…")
         try:
             result = _deploy_with_progress(
                 tag=tag,
@@ -629,7 +629,7 @@ def launch(
         # the instance is deployed and billing, before sign-in and dashboard setup -- so the
         # command aborted over a file it did not need to write at all.
         _record_launch(profile=profile, region=region, tag=tag)
-        ui.ok(f"Instance {result.instance_id} is up and AjCrew is healthy.")
+        ui.ok(f"Instance {result.instance_id} is up and Aj Crew is healthy.")
     elif not result.instance_id:
         ui.warn("Previous cloud stack exists but the instance is not ready yet.")
         ui.detail("Check progress with: ajcrew cloud status")
@@ -761,9 +761,9 @@ def launch(
         )
         ui.detail(f"Fix: {target.recovery_command()}")
     elif dashboard_ready:
-        ui.note(f"{ui.GREEN}{ui.BOLD}AjCrew is live on AWS.{ui.RESET}")
+        ui.note(f"{ui.GREEN}{ui.BOLD}Aj Crew is live on AWS.{ui.RESET}")
     else:
-        ui.warn("AjCrew is running on AWS, but the dashboard tunnel is not open.")
+        ui.warn("Aj Crew is running on AWS, but the dashboard tunnel is not open.")
         ui.detail("Fix the local SSM tunnel issue, then run: ajcrew cloud connect")
     print()
     ui.note(f"{ui.BOLD}Manage it:{ui.RESET}")
@@ -791,7 +791,7 @@ def launch(
                 conn.process.wait()
             except KeyboardInterrupt:
                 conn.close()
-                ui.info("Tunnel closed. AjCrew keeps running on AWS.")
+                ui.info("Tunnel closed. Aj Crew keeps running on AWS.")
     if signin_state == "mismatch":
         return 1
     return 0 if dashboard_ready else 1
@@ -808,7 +808,7 @@ def _ensure_session_manager_plugin(*, assume_yes: bool = False) -> bool:
         return False
 
     ui.warn("session-manager-plugin is required for SSM dashboard tunnels.")
-    ui.detail("AjCrew can install AWS's official Session Manager plugin locally.")
+    ui.detail("Aj Crew can install AWS's official Session Manager plugin locally.")
     if not assume_yes and not ui.confirm("Install session-manager-plugin now?", default=True):
         ui.detail("Install it later with: ajcrew cloud doctor")
         return False
@@ -1005,7 +1005,7 @@ def _choose_existing_launch(
         if saved:
             chosen = launches[0]
             ui.info(
-                f"Existing AjCrew cloud stack found: {chosen.stack_name}. " "Keeping it by default."
+                f"Existing Aj Crew cloud stack found: {chosen.stack_name}. " "Keeping it by default."
             )
             ui.detail("Use `ajcrew cloud launch --new` to create a separate instance.")
             return chosen

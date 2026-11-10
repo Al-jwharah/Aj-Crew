@@ -49,7 +49,7 @@ custom-rules:
     file-patterns:
       - "src/aj_crew/**/*.py"
     rule: |
-      Enforce AjCrew backend security controls, based on real vulnerabilities
+      Enforce Aj Crew backend security controls, based on real vulnerabilities
       found and fixed in this codebase.
 
       - Never read sensitive credential paths (for example ~/.aws, ~/.ssh,

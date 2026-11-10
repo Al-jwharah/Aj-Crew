@@ -1,4 +1,4 @@
-"""Test harness for spawning isolated AjCrew gateways.
+"""Test harness for spawning isolated Aj Crew gateways.
 
 Companion to the ``--test-mode`` / ``--json-ready`` / ``--port`` / ``--approval``
 CLI flags on ``ajcrew gateway``. Provides a context manager that spins up

@@ -1,7 +1,7 @@
-"""Registration bridges — wire app resources into AjCrew's runtime.
+"""Registration bridges — wire app resources into Aj Crew's runtime.
 
 When an app is installed or enabled, its agents, skills, and cron jobs need
-to be registered with AjCrew's existing systems.  This module provides
+to be registered with Aj Crew's existing systems.  This module provides
 ``register_app`` and ``deregister_app`` which handle the namespacing and
 symlink/copy operations.
 

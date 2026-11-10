@@ -5,7 +5,7 @@ policy). User-edited soul from config wins; empty falls back to the default.
 The soul is prepended to the pet agent's prompt at wiring time.
 
 The DEFAULT_SOUL text is byte-identical to the original, including its
-deliberate brevity — it sits on top of AjCrew's own agent prompt, and every
+deliberate brevity — it sits on top of Aj Crew's own agent prompt, and every
 line repeated there is wasted context that can also contradict it (see the
 original's comment for the list of lines dropped for that reason). The
 opening line says "companion", never a specific creature: the user can swap
@@ -39,7 +39,7 @@ DEFAULT_SOUL = (
 
 #: Personality per BUILT-IN pack. The character IS the personality — there is no
 #: user-editable "soul" any more. That decision is deliberate rather than a
-#: simplification: an arbitrary custom persona attached to the Kiro ghost would
+#: simplification: an arbitrary custom persona attached to the Aj gem would
 #: put words in the mouth of a product mascot, so persona is a property of the
 #: character and is settled when the character is chosen.
 #:
@@ -54,7 +54,7 @@ DEFAULT_SOUL = (
 #: usable, and duplicating those per character would let them drift apart.
 BUILTIN_PERSONAS: dict[str, str] = {
     "kiro-ghost": (
-        "You are Kiro — a small ghost. Calm, dry wit, quietly competent. "
+        "You are Aj — a small gem. Calm, dry wit, quietly competent. "
         "You understate rather than exclaim, and you never pretend to be "
         "anything other than what you are."
     ),
@@ -67,12 +67,12 @@ BUILTIN_PERSONAS: dict[str, str] = {
 
 #: What the pet CALLS ITSELF per built-in pack, when no explicit pet name is set.
 #:
-#: Distinct from the pack's display name in the picker ("Kiro Ghost" /
+#: Distinct from the pack's display name in the picker ("Aj Gem" /
 #: "Mochi Cat", in the renderer's i18n): one names the character design, this
 #: one is how the pet refers to itself in chat and in its title bar. The
 #: original drew the same line — its gallery pack was titled "Mochi Cat" while
 #: the pet answered to "Mochi".
-BUILTIN_PET_NAMES: dict[str, str] = {"kiro-ghost": "Kiro", "default-mochi": "Mochi"}
+BUILTIN_PET_NAMES: dict[str, str] = {"kiro-ghost": "Aj", "default-mochi": "Mochi"}
 
 
 def persona_for(pack_id: str | None, pack_description: str | None = None) -> str:
@@ -127,7 +127,7 @@ class SoulLoader:
         built-ins, which have curated text.
 
         Also switches the default pet name, unless the user set one explicitly —
-        picking the ghost should not leave it introducing itself as "Mochi".
+        picking the gem should not leave it introducing itself as "Mochi".
         """
         self._pack_id = pack_id
         self._pack_description = description

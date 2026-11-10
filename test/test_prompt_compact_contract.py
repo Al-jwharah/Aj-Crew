@@ -164,13 +164,13 @@ def test_cron_modes_and_session_ownership_remain_explicit() -> None:
     for value in ("persistent_session=false", "minimal_context=true", "hide_in_chat=true"):
         assert value in CRON
     assert "ajcrew cron preview <script:function> -m <message>" in CRON
-    capabilities = _section(_read(), "## AjCrew Capabilities")  # brand-ok: exact prompt heading
+    capabilities = _section(_read(), "## Aj Crew Capabilities")
     _require(capabilities, r"`ask_question`.*DEFAULT TO SILENCE", r"\[OPTIONS: .*cheaper")
 
 
 def test_merged_trigger_lines_keep_every_sibling_tools_trigger() -> None:
     """A deferred tool shows only its name, so each one keeps its own when-to-use line."""
-    capabilities = _section(_read(), "## AjCrew Capabilities")  # brand-ok: exact prompt heading
+    capabilities = _section(_read(), "## Aj Crew Capabilities")
     _require(
         capabilities,
         r"`knowledge_add_document`: add a load-bearing design/spec/RFC/runbook/wiki you READ",

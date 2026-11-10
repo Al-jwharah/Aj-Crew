@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 270" fill="none">
-  <rect width="480" height="270" fill="#1a1b26"/>
+  <rect width="480" height="270" fill="#161e1c"/>
   <!-- Left panel - file tree -->
   <rect x="80" y="50" width="140" height="170" rx="6" stroke="#334155" stroke-width="1.5" fill="#1e293b"/>
   <!-- Folder icons -->
@@ -29,7 +29,7 @@
   <rect x="278" y="83" width="55" height="3" rx="1.5" fill="#4ade80" opacity="0.6"/>
   <rect x="278" y="96" width="35" height="3" rx="1.5" fill="#60a5fa" opacity="0.6"/>
   <rect x="318" y="96" width="20" height="3" rx="1.5" fill="#fbbf24" opacity="0.5"/>
-  <rect x="278" y="109" width="70" height="3" rx="1.5" fill="#c084fc" opacity="0.5"/>
+  <rect x="278" y="109" width="70" height="3" rx="1.5" fill="#0cbfaa" opacity="0.5"/>
   <rect x="278" y="122" width="45" height="3" rx="1.5" fill="#4ade80" opacity="0.6"/>
   <rect x="270" y="135" width="30" height="3" rx="1.5" fill="#f59e0b" opacity="0.6"/>
   <rect x="278" y="148" width="60" height="3" rx="1.5" fill="#60a5fa" opacity="0.5"/>

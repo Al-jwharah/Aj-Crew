@@ -1,4 +1,4 @@
-"""Regression tests for Round-27 findings (AjCrew PR #6).
+"""Regression tests for Round-27 findings (Aj Crew PR #6).
 
 F1 (Codex): missing bucket TagSet is an identity FAILURE — the reaper
     quarantines the manifest and touches nothing (no name-prefix pass);

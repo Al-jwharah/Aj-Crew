@@ -1,11 +1,11 @@
-"""Publish-provider interface for sharing AjCrew artifacts to external
+"""Publish-provider interface for sharing Aj Crew artifacts to external
 destinations.
 
 A ``PublishProvider`` abstracts "publish this artifact's bytes to a destination
 and give me back a stable id + URL, then keep versions/sharing in sync." The
 interface is vendor-neutral: any destination that can accept bytes and return a
 stable id/URL can plug in by implementing this interface and registering itself.
-Mirrors AjCrew's ``LLMProvider`` ABC pattern.
+Mirrors Aj Crew's ``LLMProvider`` ABC pattern.
 
 In the public (standalone) edition NO concrete provider is registered — the
 registry is empty, so ``get_provider`` raises ``PublishUnavailableError`` (→ 503)
@@ -29,7 +29,7 @@ Error model:
 - ``push_version`` is **best-effort** and NEVER raises for upstream failures —
   it returns a ``PushResult`` whose ``error`` is set (and ``conflict`` flags an
   optimistic-concurrency mismatch). This preserves the "a sync failure never
-  fails the AjCrew update" invariant.
+  fails the Aj Crew update" invariant.
 """
 
 from __future__ import annotations
@@ -117,7 +117,7 @@ class SharingModel:
     supports_roles: bool = True
     #: Sharing has a time dimension (TTL).
     supports_expiration: bool = False
-    #: Can AjCrew set sharing via the provider API? When False the UI shows an
+    #: Can Aj Crew set sharing via the provider API? When False the UI shows an
     #: "out of band" link instead of grant controls (web-UI-only sharing).
     programmable: bool = True
     #: Where the user manages sharing when not ``programmable`` (may contain a
@@ -135,7 +135,7 @@ class SyncModel:
     - ``authority="ajcrew"`` + ``concurrency="lww"`` → MIRROR_LWW
       (blind last-write-wins; no Force-push).
     - ``authority="remote"`` + ``concurrency="crdt"`` → LIVE_CRDT
-      (AjCrew is a participant; no version-conflict UI).
+      (Aj Crew is a participant; no version-conflict UI).
     """
 
     #: "ajcrew" (MIRROR / collab_mode=mirror) | "remote" (LIVE / collab_mode=live)

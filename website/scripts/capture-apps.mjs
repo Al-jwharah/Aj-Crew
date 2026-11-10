@@ -81,7 +81,7 @@ const registryApps = [
   A('taskkeeper', 'TaskKeeper', 'zezhexu', 'Personal task manager — triage Slack and email into actionable tasks with To-Do sync.', ['tasks', 'outlook'], { _registry: REG }),
   A('mimir', 'Mimir', 'zezhexu', 'Unified task aggregation across Taskei, SIM, and Asana.', ['tasks', 'aggregation'], { _registry: REG }),
   A('team-manager', 'Team Manager', 'zezhexu', 'Generate periodic team work reports and compare products with source-cited evidence.', ['reports', 'team'], { _registry: REG }),
-  A('workflows', 'Workflows', 'ajcrew', 'Author, run, and watch dynamic workflows — agent-authored Python scripts that orchestrate AjCrew agents.', ['workflows', 'automation'], { installed: true, enabled: true }),
+  A('workflows', 'Workflows', 'ajcrew', 'Author, run, and watch dynamic workflows — agent-authored Python scripts that orchestrate Aj Crew agents.', ['workflows', 'automation'], { installed: true, enabled: true }),
   A('code-reviewer', 'Code Reviewer', 'ajcrew', 'Review local git changes with a CRUX-like diff viewer, inline comments, and an IntelliJ-style Git panel.', ['code-review', 'git'], { _registry: REG }),
   A('writing-review', 'WritingReview', 'zezhexu', 'Multi-scanner writing review for documents. Upload a doc, supply audience and tone context, and get findings grouped by scanner.', ['writing', 'review'], { _registry: REG }),
   A('auto-improvement', 'Auto-Improvement', 'zezhexu', 'Analyzes a target codebase, designs a calibrated metric, then runs keep-or-revert performance loops.', ['performance', 'code-quality'], { _registry: REG }),

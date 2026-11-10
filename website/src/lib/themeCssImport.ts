@@ -209,7 +209,7 @@ export function themeVarsToCss(dark: ThemeVars, light: ThemeVars): string {
  */
 export function exampleThemeCss(): string {
   return themeVarsToCss(
-    { '--bg': '#12141a', '--text': '#e6e8ee', '--accent': '#8b5cf6' },
-    { '--bg': '#fafafa', '--text': '#1f2328', '--accent': '#7c3aed' },
+    { '--bg': '#12141a', '--text': '#e6e8ee', '--accent': '#2dd4bf' },
+    { '--bg': '#fafafa', '--text': '#1f2328', '--accent': '#0f766e' },
   )
 }

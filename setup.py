@@ -1,4 +1,4 @@
-"""AjCrew packaging — plain setuptools build.
+"""Aj Crew packaging — plain setuptools build.
 
 Package metadata, dependencies, and entry points live in ``setup.cfg`` and
 ``pyproject.toml``; this file only adds a custom ``build_py`` step that copies

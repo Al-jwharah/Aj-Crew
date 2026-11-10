@@ -1,7 +1,7 @@
-"""Webex Messaging channel for AjCrew via the Webex REST API + WebSocket.
+"""Webex Messaging channel for Aj Crew via the Webex REST API + WebSocket.
 
 DM-focused. Inbound events arrive over a device-registration WebSocket
-(no public URL or webhook needed; AjCrew reaches out to Webex), then the
+(no public URL or webhook needed; Aj Crew reaches out to Webex), then the
 full message is fetched via the documented REST API. Outbound replies are
 plain REST ``POST /v1/messages`` sends, with a budgeted ``PUT`` edit used
 for the in-place status placeholder (Webex caps a message at 10 edits).

@@ -11,7 +11,7 @@
 <path d="M50 58v30M50 118v46M50 194v30" stroke="#CFD8DC" fill="none"/>
 <rect x="200" y="24" width="256" height="222" rx="10" fill="#fff" opacity=".95"/>
 <rect x="200" y="24" width="256" height="28" rx="10" fill="#F5F5F5"/><rect x="200" y="42" width="256" height="10" fill="#F5F5F5"/><rect x="210" y="30" width="50" height="18" rx="4" fill="#fff"/>
-<g fill="#7C4DFF"><rect x="220" y="64" width="44" height="6" rx="3"/><rect x="220" y="96" width="36" height="6" rx="3"/><rect x="302" y="112" width="32" height="6" rx="3"/><rect x="270" y="144" width="44" height="6" rx="3"/><rect x="220" y="176" width="20" height="6" rx="3"/></g>
+<g fill="#088D7D"><rect x="220" y="64" width="44" height="6" rx="3"/><rect x="220" y="96" width="36" height="6" rx="3"/><rect x="302" y="112" width="32" height="6" rx="3"/><rect x="270" y="144" width="44" height="6" rx="3"/><rect x="220" y="176" width="20" height="6" rx="3"/></g>
 <g fill="#66BB6A"><rect x="270" y="64" width="30" height="6" rx="3"/><rect x="262" y="96" width="48" height="6" rx="3"/><rect x="236" y="128" width="40" height="6" rx="3"/><rect x="220" y="160" width="52" height="6" rx="3"/></g>
 <g fill="#FF9800"><rect x="220" y="80" width="24" height="6" rx="3"/><rect x="316" y="96" width="20" height="6" rx="3"/><rect x="282" y="128" width="50" height="6" rx="3"/><rect x="278" y="160" width="36" height="6" rx="3"/></g>
 <g fill="#42A5F5"><rect x="250" y="80" width="56" height="6" rx="3"/><rect x="236" y="112" width="60" height="6" rx="3"/><rect x="236" y="144" width="28" height="6" rx="3"/><rect x="246" y="176" width="64" height="6" rx="3"/></g>

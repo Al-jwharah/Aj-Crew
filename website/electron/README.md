@@ -134,7 +134,7 @@ sudo rm -rf /Applications/AjCrew.app
 sudo cp -R "$APP_DIR/AjCrew.app" /Applications/AjCrew.app
 ```
 
-Launch via Spotlight (Cmd+Space → "AjCrew"), Dock, or `open /Applications/AjCrew.app`.
+Launch via Spotlight (Cmd+Space → `AjCrew`), Dock, or `open /Applications/AjCrew.app`.
 Right-click the Dock icon → Options → Keep in Dock to pin it.
 
 ## Build `.dmg`

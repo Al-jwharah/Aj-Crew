@@ -9,11 +9,11 @@ import re
 from collections.abc import Iterator
 
 # Positive-identity marker injected into the environment of every subprocess
-# tree AjCrew spawns (the ACP provider, MCP probes, gateway pool backends).
+# tree Aj Crew spawns (the ACP provider, MCP probes, gateway pool backends).
 # Children inherit the environment, so marking the provider process
 # transitively marks every MCP server it launches. The untracked-orphan sweep
 # (``session_pid_orphan_scan.py``) reads it back from ``/proc/<pid>/environ`` to positively
-# identify escaped MCP launcher processes whose *cmdline* carries no AjCrew
+# identify escaped MCP launcher processes whose *cmdline* carries no Aj Crew
 # fingerprint (e.g. ``npx @playwright/mcp`` -> node) without ever risking a
 # kill of a user's own identically-named processes. Constant by design: it must
 # never vary per session/agent, both so the check is a simple presence test and

@@ -1,5 +1,5 @@
 /**
- * GhostScene — the Worlds haunt — driven frame by frame.
+ * GhostScene — the Worlds gem scene (the name predates the gem) — driven frame by frame.
  *
  * The existing `Scenes.test.tsx` only proves each scene mounts a canvas, so
  * everything this file actually DOES (the twilight sky, the eight outfits, the
@@ -15,7 +15,7 @@
  *     bubble expiry are deterministic.
  *
  * What is asserted is what a viewer would see: how many ghosts are on screen,
- * which one is labelled "haunting", whether the eyes are shut on this frame,
+ * which one is labelled "shining", whether the eyes are shut on this frame,
  * whether the bubble is still up.
  */
 import React from 'react'
@@ -189,13 +189,13 @@ const fullHaunt: AgentSource[] = Array.from({ length: 8 }, (_, i) =>
 describe('GhostScene mounting', () => {
   it('renders the pixel canvas and the text overlay with accessible labels', () => {
     const view = mount([])
-    expect(view.getByLabelText('Kiro ghost haunt animation')).toBeInTheDocument()
-    expect(view.getByLabelText('Kiro ghost haunt text overlay')).toBeInTheDocument()
+    expect(view.getByLabelText('Aj gem glow animation')).toBeInTheDocument()
+    expect(view.getByLabelText('Aj gem glow text overlay')).toBeInTheDocument()
   })
 
   it('sizes the pixel canvas and keeps it unsmoothed so the sprites stay crisp', () => {
     const view = mount([])
-    const canvas = view.getByLabelText('Kiro ghost haunt animation') as HTMLCanvasElement
+    const canvas = view.getByLabelText('Aj gem glow animation') as HTMLCanvasElement
     expect(canvas.style.imageRendering).toBe('pixelated')
     expect(canvas.width).toBeGreaterThan(0)
   })
@@ -209,8 +209,8 @@ describe('GhostScene mounting', () => {
 describe('GhostScene background', () => {
   it('paints the sky, the moon and the scene titles on the very first frame', () => {
     const { pixel, overlay } = mount([])
-    expect(labels(overlay)).toContain('Kiro Haunt')
-    expect(labels(overlay)).toContain('friendly hauntings only')
+    expect(labels(overlay)).toContain('Gem Glow')
+    expect(labels(overlay)).toContain('friendly sparkles only')
     // Moon disc plus its three craters, and the halo behind it.
     expect(pixel.arcs.length).toBeGreaterThanOrEqual(4)
     expect(pixel.radials.count).toBeGreaterThan(0)
@@ -221,7 +221,7 @@ describe('GhostScene background', () => {
 
   it('reports an empty haunt in the counter', () => {
     const { overlay } = mount([])
-    expect(labels(overlay)).toContain('kiro haunt · 0 ghosts')
+    expect(labels(overlay)).toContain('gem glow · 0 gems')
   })
 
   it('draws nothing while hidden and starts drawing once it becomes visible', () => {
@@ -231,7 +231,7 @@ describe('GhostScene background', () => {
 
     rerender([agent({ id: 'slot-hidden' })], true)
     runFrames(1)
-    expect(labels(overlay)).toContain('Kiro Haunt')
+    expect(labels(overlay)).toContain('Gem Glow')
   })
 
   it('streaks a shooting star in from the left on the 140th frame', () => {
@@ -247,7 +247,7 @@ describe('GhostScene background', () => {
 
   it('streaks the star in from the right when the coin flip goes the other way', () => {
     const view = mount([])
-    const canvas = view.getByLabelText('Kiro ghost haunt animation') as HTMLCanvasElement
+    const canvas = view.getByLabelText('Aj gem glow animation') as HTMLCanvasElement
     runFrames(138)
     view.pixel.fills.length = 0
     // First draw decides "spawn?", the second decides "from the left?".
@@ -266,7 +266,7 @@ describe('GhostScene agent to ghost sync', () => {
       agent({ id: 'slot-b', name: 'Beta' }),
       agent({ id: 'cron-c', name: 'Gamma', kind: 'cron', detail: 'every 5m' }),
     ])
-    expect(labels(overlay)).toContain('kiro haunt · 3 ghosts')
+    expect(labels(overlay)).toContain('gem glow · 3 gems')
     expect(labels(overlay)).toEqual(expect.arrayContaining(['Alpha', 'Beta', 'Gamma']))
     expect(colors(pixel)).toContain(BODY)
   })
@@ -274,15 +274,15 @@ describe('GhostScene agent to ghost sync', () => {
   it('caps the haunt at the eight anchor spots', () => {
     const many = Array.from({ length: 12 }, (_, i) => agent({ id: `slot-many-${i}` }))
     const { overlay } = mount(many)
-    expect(labels(overlay)).toContain('kiro haunt · 8 ghosts')
+    expect(labels(overlay)).toContain('gem glow · 8 gems')
   })
 
-  it('labels a running agent as haunting and an idle one as idle', () => {
+  it('labels a running agent as shining and an idle one as idle', () => {
     const { overlay } = mount([
       agent({ id: 'slot-run', name: 'Runner', running: true }),
       agent({ id: 'slot-idle', name: 'Sitter', running: false }),
     ])
-    expect(labels(overlay)).toContain('haunting')
+    expect(labels(overlay)).toContain('shining')
     expect(labels(overlay)).toContain('idle')
   })
 
@@ -313,7 +313,7 @@ describe('GhostScene agent to ghost sync', () => {
     overlay.texts.length = 0
     runFrames(30)
     // Both ghosts survived the reorder — no re-entrance, no duplicates.
-    expect(labels(overlay)).toContain('kiro haunt · 2 ghosts')
+    expect(labels(overlay)).toContain('gem glow · 2 gems')
     expect(labels(overlay)).toEqual(expect.arrayContaining(['Mover', 'Shifter']))
   })
 
@@ -325,7 +325,7 @@ describe('GhostScene agent to ghost sync', () => {
     overlay.texts.length = 0
     runFrames(1)
     expect(labels(overlay)).toContain('After')
-    expect(labels(overlay)).toContain('haunting')
+    expect(labels(overlay)).toContain('shining')
     expect(labels(overlay)).not.toContain('Before')
   })
 
@@ -335,7 +335,7 @@ describe('GhostScene agent to ghost sync', () => {
     rerender([keep])
     overlay.texts.length = 0
     runFrames(1)
-    expect(labels(overlay)).toContain('kiro haunt · 1 ghosts')
+    expect(labels(overlay)).toContain('gem glow · 1 gems')
     expect(labels(overlay)).not.toContain('Goner')
   })
 
@@ -367,7 +367,7 @@ describe('GhostScene sprite detail', () => {
     const used = colors(pixel)
     for (const color of [
       '#3a3a4a',  // round glasses
-      '#2d1b4e',  // witch hat
+      '#12343a',  // witch hat
       '#c0392b',  // red cape
       '#181820',  // top hat
       '#111',     // shades
@@ -376,7 +376,7 @@ describe('GhostScene sprite detail', () => {
       '#16a085',  // beanie
       '#f39c12',  // party hat
       '#f1c40f',  // crown
-      '#5b2c6f',  // purple cape
+      '#0f766e',  // teal cape
     ]) {
       expect(used, `expected ${color} to be drawn`).toContain(color)
     }

@@ -1,4 +1,4 @@
-"""App MCP servers land in AjCrew's agent config, never the shared kiro file.
+"""App MCP servers land in Aj Crew's agent config, never the shared kiro file.
 
 The shared ``~/.kiro/settings/mcp.json`` is read by Kiro IDE and every kiro-cli agent,
 so app tools there would reach surfaces that never installed the app. A ``clean``

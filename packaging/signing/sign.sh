@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Sign an AjCrew .app bundle via the enterprise signing service.
+# Sign an Aj Crew .app bundle via the enterprise signing service.
 #
 # Usage:
 #   bash packaging/signing/sign.sh <app-path> <channel> <version>

@@ -1034,7 +1034,7 @@ provenance and is diagnosed rather than guessed.
 Imported conversations are persisted through `ConversationLog` under generated,
 closed destination keys. They enter the normal History list but do not create
 live dashboard slots, resume a foreign runtime, or reuse a foreign identifier as
-an executable AjCrew session key. The normal ConversationLog metadata/message
+an executable Aj Crew session key. The normal ConversationLog metadata/message
 schema, rotation, path sanitization, and retention behavior therefore remain
 authoritative.
 

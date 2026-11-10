@@ -502,7 +502,7 @@ jobs:
             the same failure, so readiness already holds); do not BLOCK, and name
             the re-run in the reason.
 
-            REPO CONTEXT: AjCrew is an open-source AI agent platform (Python
+            REPO CONTEXT: Aj Crew is an open-source AI agent platform (Python
             backend + React/TS dashboard), a de-Amazoned public fork. Do NOT flag
             the absence of Brazil/AUTOSDE build tooling or internal-only infra.
 

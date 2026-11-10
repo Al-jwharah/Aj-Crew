@@ -79,15 +79,15 @@ function detect() {
   const p = pkg()
   const deps = { ...p.dependencies, ...p.devDependencies }
 
-  // AjCrew app with an embedded UI — no routes of its own.
+  // Aj Crew app with an embedded UI — no routes of its own.
   const ajRaw = read(join(root, 'app.json'))
   if (ajRaw) {
     try {
       const aj = JSON.parse(ajRaw)
       if (aj.ui || aj.mcpServers || aj.agents) {
         const hostPage = aj.ui?.pages?.[0]?.route || null
-        notes.push('This is an AjCrew app with an embedded UI — it has no routes to crawl by itself. Run the whole AjCrew dashboard and open its page' + (hostPage ? ` (${hostPage})` : '') + ', or give a screenshot.')
-        return { framework: 'AjCrew app (embedded UI)', routing: 'host-embedded', routes: [], hostPage }
+        notes.push('This is an Aj Crew app with an embedded UI — it has no routes to crawl by itself. Run the whole Aj Crew dashboard and open its page' + (hostPage ? ` (${hostPage})` : '') + ', or give a screenshot.')
+        return { framework: 'Aj Crew app (embedded UI)', routing: 'host-embedded', routes: [], hostPage }
       }
     } catch { /* not valid json — ignore */ }
   }

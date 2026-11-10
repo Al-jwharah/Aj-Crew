@@ -1,9 +1,9 @@
-"""Caller-identity protocol extension for AjCrew MCP servers.
+"""Caller-identity protocol extension for Aj Crew MCP servers.
 
 BACKGROUND
 ----------
 The base MCP protocol (Anthropic spec 2024-11-05) models a 1:1 stdio
-transport: one client, one server. When AjCrew introduces a broker that
+transport: one client, one server. When Aj Crew introduces a broker that
 fans N client sessions into a shared backend, the backend no
 longer has an implicit 1:1 identity — it needs to know *which* client made
 each call so it can:
@@ -66,7 +66,7 @@ This module defines a **namespaced, versioned, typed** protocol extension:
 
 This module is the **single source of truth** for the extension's wire
 format, capability name, and validation rules. mcp_core / mcp_cron and
-any future AjCrew-owned MCP server must go through this module.
+any future Aj Crew-owned MCP server must go through this module.
 """
 
 from __future__ import annotations
@@ -572,7 +572,7 @@ def _report_co_tenancy(pid: int, tenants: int) -> None:
 
 @dataclass(frozen=True)
 class CallerContext:
-    """Identity of the originating AjCrew session for a single MCP call.
+    """Identity of the originating Aj Crew session for a single MCP call.
 
     Immutable by design — passing by reference is safe, and tool handlers
     cannot accidentally mutate the caller on their way to downstream code.

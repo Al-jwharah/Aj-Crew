@@ -339,7 +339,7 @@ function AnimThumbnail({ content, format, size = 64, spriteConfig, colorMap, fli
   /**
    * Mirror the art. ONE prop for every format: this used to be read straight off
    * `spriteConfig` inside the sprite branch, so a mirrored SVG or Lottie pack
-   * (the built-in Kiro Ghost) faced the wrong way in the gallery while the pet
+   * (the built-in Aj Gem) faced the wrong way in the gallery while the pet
    * — which has always XOR'd a pack-level baseline — faced the right way.
    */
   flipX?: boolean

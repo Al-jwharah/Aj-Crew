@@ -1,4 +1,4 @@
-"""Asyncio unix-socket server for the AjCrew MCP gateway.
+"""Asyncio unix-socket server for the Aj Crew MCP gateway.
 
 This module is the entry point for ``python -m
 aj_crew.mcp_gateway.gatewayd`` and for in-process use by

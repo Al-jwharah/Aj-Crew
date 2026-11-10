@@ -1,4 +1,4 @@
-"""Canonical filenames of the agent configs AjCrew generates.
+"""Canonical filenames of the agent configs Aj Crew generates.
 
 Single source of truth for the names Aj Crew writes into ``~/.kiro/agents/``.
 A **leaf module** (no intra-package imports): ``agent.py`` imports
@@ -11,10 +11,10 @@ A new managed spec is added to ``OWNED_KIRO_AGENT_FILES`` and every consumer
 
 from __future__ import annotations
 
-# The primary AjCrew agent spec.
+# The primary Aj Crew agent spec.
 AGENT_FILENAME = "ajcrew.json"
 
-# Background/auxiliary managed agent specs AjCrew writes under ~/.kiro/agents/.
+# Background/auxiliary managed agent specs Aj Crew writes under ~/.kiro/agents/.
 LITE_AGENT_FILENAME = "ajcrew-lite.json"
 # The tool-less agent a non-operator channel sender talks to. Its own file so the
 # background helper (lite) may grow a tool one day without handing it to a guest.
@@ -116,9 +116,9 @@ def is_assistant_member(name: object, entry: object) -> bool:
     return name == ASSISTANT_MEMBER_NAME
 
 
-# Collective allowlists — the EXACT filenames AjCrew owns in each dir. Used by
+# Collective allowlists — the EXACT filenames Aj Crew owns in each dir. Used by
 # the Playwright convergence sweep (browser/setup.py) so it rewrites only files
-# AjCrew generates, never a user's own agent config that happens to share a
+# Aj Crew generates, never a user's own agent config that happens to share a
 # prefix (e.g. a hand-authored ``ajcrew-custom.json``).
 OWNED_KIRO_AGENT_FILES = (
     AGENT_FILENAME,

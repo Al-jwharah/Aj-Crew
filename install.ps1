@@ -1,5 +1,5 @@
 # ======================================================================
-#  AjCrew — Windows setup (cloud mode)
+#  Aj Crew — Windows setup (cloud mode)
 # ======================================================================
 #  This is the CLOUD path: Aj Crew runs on an EC2 Linux instance in YOUR OWN
 #  AWS account and this machine is the thin client. Use it when you want the
@@ -83,8 +83,8 @@ function Ensure-WingetOrChoco {
 }
 
 Write-Host ""
-Write-Host "  AjCrew — Windows setup (cloud mode)" -ForegroundColor Magenta
-Write-Host "  Runs AjCrew on your own AWS EC2; this PC is the client." -ForegroundColor DarkGray
+Write-Host "  Aj Crew — Windows setup (cloud mode)" -ForegroundColor Magenta
+Write-Host "  Runs Aj Crew on your own AWS EC2; this PC is the client." -ForegroundColor DarkGray
 Write-Host "  For a native local install instead: .\make.ps1 build" -ForegroundColor DarkGray
 $arch = Get-RealArch
 Write-Info "Detected architecture: $arch"
@@ -164,8 +164,8 @@ if (Have "session-manager-plugin") {
     }
 }
 
-# --- 4. AjCrew client + launch ------------------------------------------
-Write-Step 4 4 "AjCrew client"
+# --- 4. Aj Crew client + launch ------------------------------------------
+Write-Step 4 4 "Aj Crew client"
 $repoRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 Push-Location $repoRoot
 try {
@@ -181,7 +181,7 @@ try {
         Write-Warn "pip install failed (exit $LASTEXITCODE) - fix the error above, then re-run this installer."
         exit 1
     }
-    Write-Ok "AjCrew client installed"
+    Write-Ok "Aj Crew client installed"
 } finally {
     Pop-Location
 }
@@ -216,7 +216,7 @@ if ($NonInteractive) {
 }
 
 Write-Host ""
-Write-Host "  Launching AjCrew on AWS..." -ForegroundColor Cyan
+Write-Host "  Launching Aj Crew on AWS..." -ForegroundColor Cyan
 if ($Size -ne "") {
     & $PyExe -m aj_crew cloud launch --size $Size
 } else {

@@ -272,7 +272,7 @@ class AcpProvider(LLMProvider):
         self._crew_agent: str = crew_agent or ""
         # F2 load-recovery: set True by _start_kiro_runtime_impl when a resume
         # falls back to a FRESH native session (the prior session's lock never
-        # cleared). Signals SessionManager.get_or_create to replay AjCrew's
+        # cleared). Signals SessionManager.get_or_create to replay Aj Crew's
         # conversation_log into the fresh session on the first prompt so the slot
         # is not context-free.
         self._history_replay_needed: bool = False
@@ -304,7 +304,7 @@ class AcpProvider(LLMProvider):
         # MCP Tool Search toggle (kiro-cli backend only). None = caller did not
         # specify (e.g. claude_code factory), so leave the overlay untouched.
         # True/False = write the kiro settings overlay deterministically so the
-        # AjCrew toggle is authoritative over any global kiro setting.
+        # Aj Crew toggle is authoritative over any global kiro setting.
         self._tool_search = tool_search
         # None = caller expressed no preference; fall back to kiro-cli's own
         # activation thresholds rather than inventing a product-specific one.

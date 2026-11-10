@@ -210,7 +210,7 @@ describe("macOS bundle naming", () => {
   );
 
   it("keeps CFBundleName aligned with productName for Electron helpers", () => {
-    assert.equal(pkg.build.productName, "AjCrew");
+    assert.equal(pkg.build.productName, "AjCrew"); // brand-ok: desktop productName
     assert.equal(
       Object.hasOwn(extendInfo, "CFBundleName"),
       false,
@@ -1364,7 +1364,7 @@ describe("uninstall data preservation contract", () => {
     // NSIS generates its own uninstaller, so there is no in-app uninstall
     // handler to audit any more -- the guarantee moves entirely into config.
     // deleteAppDataOnUninstall MUST stay false/absent: it would delete the
-    // Electron userData dir on uninstall, and the AjCrew home under
+    // Electron userData dir on uninstall, and the Aj Crew home under
     // ~/.kiro/crew is user data that survives an uninstall by design.
     assert.notEqual(
       electronPkg.build.nsis?.deleteAppDataOnUninstall,
@@ -1390,7 +1390,7 @@ describe("uninstall data preservation contract", () => {
 
   it("uses an assisted installer so nightly installs beside stable", () => {
     // getWindowsInstallationDirName(appInfo, !oneClick || isPerMachine) in
-    // app-builder-lib only uses productFilename ("AjCrew" / "AjCrew
+    // app-builder-lib only uses productFilename ("AjCrew" / "AjCrew (brand-ok: desktop productName)
     // Nightly") when that flag is true. Under oneClick+perUser it falls back to
     // appInfo.sanitizedName -- the npm package name -- which would put both
     // channels in ONE directory named after the package rather than the product.

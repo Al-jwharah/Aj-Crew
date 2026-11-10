@@ -258,7 +258,7 @@ export const PetWidget: React.FC = () => {
   const [spriteConfig, setSpriteConfig] = useState<SpriteConfig | null>(null)
   // The PACK's baseline facing, XOR'd with situational flips in the transform
   // below. Read from the pack-level `flipX` (falling back to a sprite sheet's
-  // own flag), so a mirrored SVG/Lottie pack — the built-in Kiro Ghost — can say
+  // own flag), so a mirrored SVG/Lottie pack — the built-in Aj Gem — can say
   // so without pretending to be a sprite.
   const [packFlipX, setPackFlipX] = useState(false)
 

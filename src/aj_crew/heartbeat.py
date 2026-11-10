@@ -170,7 +170,7 @@ _STOP_DRAIN_SECS = 10
 HEARTBEAT_FILE = "HEARTBEAT.md"
 _HEADER = (
     "# Heartbeat Tasks\n\n<!-- Add tasks below (one per line). "
-    "AjCrew picks them up on next heartbeat. -->\n"
+    "Aj Crew picks them up on next heartbeat. -->\n"
 )
 
 

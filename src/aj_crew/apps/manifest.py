@@ -1,7 +1,7 @@
-"""App manifest — static metadata for AjCrew apps.
+"""App manifest — static metadata for Aj Crew apps.
 
 An app manifest (``app.json``) declares an app's identity, resources, and
-requirements without executing any app code.  AjCrew reads it during
+requirements without executing any app code.  Aj Crew reads it during
 install to register agents, skills, crons, UI pages, and backend config.
 
 Design follows the same pattern as :class:`aj_crew.plugins.manifest.PluginManifest`
@@ -437,7 +437,7 @@ _KNOWN_FIELDS = frozenset(
 
 @dataclass
 class AppManifest:
-    """Static metadata for an AjCrew app — readable without executing app code.
+    """Static metadata for an Aj Crew app — readable without executing app code.
 
     Parsed from ``app.json`` at the root of an app package.  Follows the same
     pattern as :class:`~aj_crew.plugins.manifest.PluginManifest`: dataclass

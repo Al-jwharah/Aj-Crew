@@ -241,7 +241,7 @@ CALENDAR_PROVIDER_ICS = "ics"
 CALENDAR_PROVIDER_NONE = "none"
 DEFAULT_CALENDAR_PROVIDER = CALENDAR_PROVIDER_NONE
 
-# STT provider ids. AjCrew's own streaming endpoint is the only one.
+# STT provider ids. Aj Crew's own streaming endpoint is the only one.
 STT_PROVIDER_AJCREW = "ajcrew"
 DEFAULT_STT_PROVIDER = STT_PROVIDER_AJCREW
 

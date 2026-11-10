@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 288" fill="none">
-  <rect width="1200" height="288" fill="#1a1b26"/>
+  <rect width="1200" height="288" fill="#161e1c"/>
   <!-- full-width scattered accents so side-crop only trims decoration -->
   <circle cx="60" cy="46" r="2.5" fill="#f59e0b" opacity="0.3"/>
   <circle cx="150" cy="250" r="2" fill="#fbbf24" opacity="0.3"/>
@@ -39,5 +39,5 @@
   <g opacity="0.5"><rect x="596" y="94" width="26" height="4" rx="2" fill="#fbbf24"/><rect x="632" y="128" width="22" height="4" rx="2" fill="#fbbf24"/><rect x="700" y="182" width="26" height="4" rx="2" fill="#fbbf24"/><rect x="852" y="94" width="60" height="4" rx="2" fill="#fbbf24"/></g>
   <g opacity="0.6"><rect x="560" y="116" width="58" height="4" rx="2" fill="#4ade80"/><rect x="636" y="172" width="44" height="4" rx="2" fill="#4ade80"/><rect x="560" y="216" width="54" height="4" rx="2" fill="#4ade80"/><rect x="716" y="128" width="50" height="4" rx="2" fill="#4ade80"/><rect x="628" y="150" width="50" height="4" rx="2" fill="#4ade80"/><rect x="860" y="216" width="70" height="4" rx="2" fill="#4ade80"/></g>
   <g opacity="0.6"><rect x="632" y="116" width="30" height="4" rx="2" fill="#60a5fa"/><rect x="560" y="128" width="40" height="4" rx="2" fill="#60a5fa"/><rect x="614" y="182" width="58" height="4" rx="2" fill="#60a5fa"/><rect x="660" y="216" width="64" height="4" rx="2" fill="#60a5fa"/><rect x="788" y="150" width="90" height="4" rx="2" fill="#60a5fa"/><rect x="700" y="94" width="120" height="4" rx="2" fill="#60a5fa"/></g>
-  <g opacity="0.5"><rect x="636" y="128" width="64" height="4" rx="2" fill="#c084fc"/><rect x="560" y="172" width="70" height="4" rx="2" fill="#c084fc"/><rect x="740" y="200" width="60" height="4" rx="2" fill="#c084fc"/><rect x="836" y="128" width="80" height="4" rx="2" fill="#c084fc"/></g>
+  <g opacity="0.5"><rect x="636" y="128" width="64" height="4" rx="2" fill="#0cbfaa"/><rect x="560" y="172" width="70" height="4" rx="2" fill="#0cbfaa"/><rect x="740" y="200" width="60" height="4" rx="2" fill="#0cbfaa"/><rect x="836" y="128" width="80" height="4" rx="2" fill="#0cbfaa"/></g>
 </svg>

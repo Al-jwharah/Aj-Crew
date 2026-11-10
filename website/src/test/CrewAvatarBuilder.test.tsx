@@ -243,7 +243,7 @@ describe('CrewAvatarBuilder — icon tier', () => {
 
   it('offers no Ghost face tab for a non-ghost crew (new ghosts are not authorable)', () => {
     mount(null)
-    expect(screen.queryByRole('radio', { name: 'Ghost face' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('radio', { name: 'Gem face' })).not.toBeInTheDocument()
     // Icon, Picture and Library remain the authorable tiers.
     expect(screen.getByRole('radio', { name: 'Icon' })).toBeInTheDocument()
     expect(screen.getByRole('radio', { name: 'Picture' })).toBeInTheDocument()
@@ -251,7 +251,7 @@ describe('CrewAvatarBuilder — icon tier', () => {
 
   it('still offers the Ghost face tab for a crew that already wears one', () => {
     mount({ kind: 'ghost', traits: {} })
-    expect(screen.getByRole('radio', { name: 'Ghost face' })).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: 'Gem face' })).toBeInTheDocument()
   })
 
   it('picking a pose and Apply hands over an icon override', () => {

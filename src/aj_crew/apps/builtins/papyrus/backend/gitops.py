@@ -265,7 +265,7 @@ def _pin_attributes_sync(cwd: Path) -> None:
     info = git_dir / "info"
     target = info / "attributes"
     # A SYMLINK at either name is refused outright, before anything is read or
-    # written. Both are paths AjCrew owns and writes BY NAME, so a link there is
+    # written. Both are paths Aj Crew owns and writes BY NAME, so a link there is
     # illegitimate wherever it points — the same rule `store._config_path` applies
     # for the same reason. Two concrete failures this closes:
     #   * `attributes -> /dev/null` (or any file) made the pin unobservable, so
@@ -294,7 +294,7 @@ def _pin_attributes_sync(cwd: Path) -> None:
         or store.is_reparse_link(target)
     ):
         # SEL-audited before raising, like every other refusal on this path: this is a
-        # security DECISION (a link where AjCrew owns the name), and a denial that
+        # security DECISION (a link where Aj Crew owns the name), and a denial that
         # leaves no tamper-evident record is indistinguishable afterwards from an
         # operation that never happened.
         _audit("pin_attributes", str(cwd), "denied", error="attributes path is a link")

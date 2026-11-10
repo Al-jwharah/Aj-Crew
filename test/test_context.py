@@ -1011,10 +1011,10 @@ class TestContextBuilder:
         # build_message injects whenever the caller supplies folder_path
         # (is_new_session=False here proves the block is not gated to new sessions).
         msg, _ = builder.build_message(
-            "hello", is_new_session=False, folder_path="AjCrew › Backend"
+            "hello", is_new_session=False, folder_path="Aj Crew › Backend"
         )
         assert "[FOLDER]" in msg
-        assert "AjCrew › Backend" in msg
+        assert "Aj Crew › Backend" in msg
         # Absent when no folder path is supplied.
         msg_none, _ = builder.build_message("hello", is_new_session=False)
         assert "[FOLDER]" not in msg_none
@@ -1556,14 +1556,14 @@ class TestRuntimeDisplayName:
     @pytest.mark.parametrize(
         "session_key, expected_runtime",
         [
-            ("dashboard:chat-1-100", "AjCrew dashboard"),
-            ("dashboard_chat-1-100", "AjCrew dashboard"),
-            ("cron:daily", "AjCrew cron job"),
-            ("cron_076ab486", "AjCrew cron job"),
-            ("subagent:abc-123", "AjCrew subagent"),
-            ("taskrunner:proj:task1", "AjCrew task runner"),
-            ("_bg", "AjCrew background"),
-            ("_hb", "AjCrew heartbeat"),
+            ("dashboard:chat-1-100", "AjCrew dashboard"),  # brand-ok: prompt bytes the model reads
+            ("dashboard_chat-1-100", "AjCrew dashboard"),  # brand-ok: prompt bytes the model reads
+            ("cron:daily", "AjCrew cron job"),  # brand-ok: prompt bytes the model reads
+            ("cron_076ab486", "AjCrew cron job"),  # brand-ok: prompt bytes the model reads
+            ("subagent:abc-123", "AjCrew subagent"),  # brand-ok: prompt bytes the model reads
+            ("taskrunner:proj:task1", "AjCrew task runner"),  # brand-ok: prompt bytes the model reads
+            ("_bg", "AjCrew background"),  # brand-ok: prompt bytes the model reads
+            ("_hb", "AjCrew heartbeat"),  # brand-ok: prompt bytes the model reads
             ("cli_chat", "CLI terminal"),
             ("slack:1234567890.123456", "Slack"),
             ("discord:ajcrew:direct:474737235959480320", "Discord"),
@@ -1586,7 +1586,7 @@ class TestRuntimeDisplayName:
         builder = ContextBuilder(memory=MemoryStore(workspace=tmp_path))
         ctx = builder.build_session_context("dashboard:chat-1", agent="gpu-comms")
         assert "[CURRENT AGENT] gpu-comms" in ctx
-        assert "[RUNTIME] AjCrew dashboard" in ctx
+        assert "[RUNTIME] AjCrew dashboard" in ctx  # brand-ok: prompt bytes the model reads
 
     def test_agent_identity_omitted_without_session_key(self, tmp_path):
         """build_session_context omits agent identity when session_key is None."""
@@ -1609,7 +1609,7 @@ class TestRuntimeDisplayName:
             runtime_source="discord",
         )
         assert "[RUNTIME] Discord" in ctx
-        assert "[RUNTIME] AjCrew dashboard" not in ctx
+        assert "[RUNTIME] AjCrew dashboard" not in ctx  # brand-ok: prompt bytes the model reads
 
     def test_follow_up_refreshes_runtime_from_current_transport(self, tmp_path):
         """Warm cross-surface sessions receive authoritative per-turn runtime."""

@@ -8,7 +8,7 @@ controls, so every path is vetted through the CENTRALIZED sensitive-path
 gate (aj_crew.security.is_sensitive_path) -- never a local copy of the
 denylist, which would drift (miss .docker, .npmrc, .netrc, trust roots...).
 
-Fail-closed: these scripts record AjCrew demos, so the worktree venv they
+Fail-closed: these scripts record Aj Crew demos, so the worktree venv they
 run in has aj_crew installed. If the import fails, path safety cannot be
 established and the script refuses to run.
 

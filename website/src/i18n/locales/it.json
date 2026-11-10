@@ -231,7 +231,6 @@
     "cpu": "CPU",
     "cpu_unavailable": "CPU: non disponibile",
     "credits": "crediti",
-    "discord_community": "Community Discord",
     "disk_unavailable": "Disco: non disponibile",
     "dismiss": "Ignora",
     "dsk": "DSK",
@@ -249,7 +248,6 @@
     "kiro_credit_usage_checking_2": "Account e crediti Kiro — verifica in corso",
     "kiro_credit_usage_signin_required": "Account e crediti Kiro — non è stato possibile leggere alcun accesso Kiro attivo; accedi di nuovo",
     "kiro_credit_usage_unavailable": "Account e crediti Kiro — non disponibile",
-    "kiro_discord_community": "Community Discord di Kiro",
     "main_navigation": "Navigazione principale",
     "manage_account": "Gestisci account e abbonamento",
     "mem": "MEM",
@@ -6234,7 +6232,7 @@
       "lib_retry": "Riprova",
       "lib_selected": "Selezionato",
       "mirror": "Inverti direzione",
-      "mode_face": "Volto fantasma",
+      "mode_face": "Volto gemma",
       "mode_icon": "Icona",
       "mode_library": "Libreria",
       "mode_picture": "Immagine",
@@ -6291,12 +6289,12 @@
       "opt_wrench": "Chiave inglese",
       "pack_load_failed": "Impossibile caricare la grafica del pacchetto: viene mostrato il volto predefinito.",
       "randomize": "Casuale",
-      "react_absent_note": "Le reazioni sono del volto fantasma, quindi qui non c’è la scheda Reazioni. Un’immagine resta ferma e muta; un pack della Libreria usa la propria grafica e il proprio suono.",
+      "react_absent_note": "Le reazioni sono del volto gemma, quindi qui non c’è la scheda Reazioni. Un’immagine resta ferma e muta; un pack della Libreria usa la propria grafica e il proprio suono.",
       "react_hint": "Scegli un movimento e un suono per quando un turno finisce o fallisce, e il suono che fa quando il lavoro inizia.",
       "react_motion": "Movimento",
       "react_reset_state": "Ripristina {{state}}",
-      "react_retired_cue_note_pack": "I suoni salvati di questa squadra ({{states}}) non vengono più riprodotti: questo pack riproduce i suoi suoni. Passa al volto fantasma per scegliere di nuovo un suono preimpostato.",
-      "react_retired_cue_note_picture": "I suoni salvati di questa squadra ({{states}}) non vengono più riprodotti: un’immagine è silenziosa. Passa al volto fantasma per scegliere di nuovo un suono.",
+      "react_retired_cue_note_pack": "I suoni salvati di questa squadra ({{states}}) non vengono più riprodotti: questo pack riproduce i suoi suoni. Passa al volto gemma per scegliere di nuovo un suono preimpostato.",
+      "react_retired_cue_note_picture": "I suoni salvati di questa squadra ({{states}}) non vengono più riprodotti: un’immagine è silenziosa. Passa al volto gemma per scegliere di nuovo un suono.",
       "react_sound": "Suono",
       "reset_default": "Ripristina avatar e reazioni ai valori predefiniti",
       "use_original_look": "Torna all'aspetto originale di {{name}}",
@@ -18245,14 +18243,14 @@
         "mission_desc": "Centro operativo della NASA",
         "serengeti_label": "Pozza d'acqua",
         "serengeti_desc": "Savana del Serengeti con giraffe, facoceri ed elefanti",
-        "ghost_label": "Dimora di Kiro",
-        "ghost_desc": "Fantasmi Kiro con cappelli, occhiali e mantelli"
+        "ghost_label": "Bagliore di gemme",
+        "ghost_desc": "Gemme Aj con cappelli, occhiali e mantelli"
       },
       "ghostScene": {
-        "friendly_hauntings_only": "solo apparizioni amichevoli",
-        "kiro_ghost_haunt_animation": "Animazione del fantasma Kiro",
-        "kiro_ghost_haunt_text_overlay": "Sovrapposizione di testo del fantasma Kiro",
-        "kiro_haunt": "Dimora di Kiro"
+        "friendly_hauntings_only": "solo scintillii amichevoli",
+        "kiro_ghost_haunt_animation": "Animazione del bagliore delle gemme Aj",
+        "kiro_ghost_haunt_text_overlay": "Sovrapposizione di testo del bagliore delle gemme Aj",
+        "kiro_haunt": "Bagliore di gemme"
       },
       "missionControl": {
         "missionControlScene": {

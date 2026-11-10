@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "ajcrew-client"
 version = "0.1.0"
-description = "AjCrew Client — async Python client for the AjCrew Gateway"
+description = "Aj Crew Client — async Python client for the Aj Crew Gateway"
 requires-python = ">=3.9"
 dependencies = ["aiohttp>=3.9"]
 

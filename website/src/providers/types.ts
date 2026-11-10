@@ -1,4 +1,4 @@
-// AjCrew is KiroACP-only — kiro-cli over ACP is the sole provider. This is a
+// Aj Crew is KiroACP-only — kiro-cli over ACP is the sole provider. This is a
 // single-member union so the adapter interface below still type-checks for its
 // many consumers.
 export type ProviderId = 'acp'
@@ -183,8 +183,8 @@ export interface ProviderAdapter {
   readonly labels: ProviderLabels
 
   resolveAgentTemplate(agent: AgentBinding): string
-  /** The model a NEW session on this AjCrew agent would run on ('' = the
-   *  backend picks). Takes an AjCrew agent name, not a kiro agent template:
+  /** The model a NEW session on this Aj Crew agent would run on ('' = the
+   *  backend picks). Takes an Aj Crew agent name, not a kiro agent template:
    *  the per-agent default is stored per agent, and several agents can share
    *  one template. `app` is the app that owns the session, when one does: its
    *  own model setting is then part of the answer. */

@@ -36,7 +36,7 @@ import { fmtList } from '../i18n/format'
 // for the decode, and a bare import of the icon binds that identifier at
 // module scope — the constructor would then build a React component and every
 // picture upload would throw.
-import { Coffee, Crown, Dices, Eye, Ghost, Heart, Image as ImageIcon, ImageUp, LayoutGrid, LibraryBig, Meh, Palette, Play, Smile, Sparkles } from 'lucide-react'
+import { Coffee, Crown, Dices, Eye, Gem, Heart, Image as ImageIcon, ImageUp, LayoutGrid, LibraryBig, Meh, Palette, Play, Smile, Sparkles } from 'lucide-react'
 import { Dialog, DialogBody, DialogContent, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog'
 import { Btn, Toggle } from './ui'
 import SegmentedControl from './SegmentedControl'
@@ -888,7 +888,7 @@ export default function CrewAvatarBuilder({
                       {
                         key: 'face',
                         label: t('components.avatarBuilder.mode_face'),
-                        icon: <Ghost size={13} aria-hidden="true" />,
+                        icon: <Gem size={13} aria-hidden="true" />,
                       },
                     ]
                   : []),

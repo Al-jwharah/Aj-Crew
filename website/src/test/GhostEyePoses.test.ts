@@ -13,6 +13,9 @@
  * into the 128px pet box with `object-fit: contain`) by sampling the white silhouette
  * at each pose's own eye height — the head narrows toward the top, so a single bound
  * for all poses would be either too loose to catch anything or too tight to pass.
+ * The current body is the gem the brand kit generates (`scripts/brand/`); it was
+ * sampled at the top, centre and bottom of each pose's eyes and the narrowest of the
+ * three kept, because its corners round in just above and below the face.
  * Re-measure if the body art ever changes; the numbers are only valid for that file.
  */
 import { describe, it, expect } from 'vitest'
@@ -20,11 +23,11 @@ import { GHOST_EYE_MAP } from '../apps/crew-companion/ghostEyes'
 
 /** Head silhouette extent (box percent) at each pose's eye height. */
 const HEAD_AT_EYE_HEIGHT: Record<string, { left: number; right: number }> = {
-  primary: { left: 26.3, right: 80.2 },
-  '2nd': { left: 27.3, right: 79.3 },
-  '3rd': { left: 27.3, right: 79.2 },
-  '4th': { left: 26.0, right: 80.3 },
-  docked: { left: 31.9, right: 74.2 },
+  primary: { left: 19.1, right: 80.8 },
+  '2nd': { left: 18.7, right: 81.2 },
+  '3rd': { left: 18.7, right: 81.2 },
+  '4th': { left: 19.7, right: 80.2 },
+  docked: { left: 20.4, right: 79.5 },
 }
 
 /** The art's black outline. An eye inside this band still reads as clipped. */

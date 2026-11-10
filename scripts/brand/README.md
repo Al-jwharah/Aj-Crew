@@ -9,6 +9,8 @@ hand-edit the generated files.
 | --- | --- |
 | `mark.py` | The gem mark: six facets on a 1024 canvas. |
 | `mascot.py` | The gem character (the mark with eyes), its poses, and the 24 px line marks. |
+| `petclips.py` | The desktop pet's gem pack: four Lottie clips built from the same cut. |
+| `retint.py` | Moves violet, indigo and purple artwork into the accent's hue (the app catalogue's banners). |
 | `textpath.py` | Turns the wordmark into outlines, so no asset needs a font installed. |
 | `build.py` | Writes every asset into the checkout. |
 | `eye-centers.json` | Where each avatar pose's eyes sit; `website/src/lib/avatarPoses.ts` mirrors it. |
@@ -41,6 +43,20 @@ A rebuild with no change to the kit leaves the checkout byte-identical.
 - `website/src/assets/`: `aj-mark.svg`, `aj-gem.svg`, `aj-gem-figure.svg`,
   `crew-member-mark.svg`, `avatarPoses/`, `ghost-poses/`, `onboarding/aj-gem-*.svg`,
   `aj-file-chomper.png`.
+- The character's other bodies (the file and symbol names predate the gem):
+  `website/src/apps/crew-companion/assets/kiro_idle.svg` (the desktop companion's
+  eyeless body), the `KIRO_GHOST_PIXELS` bitmap in `website/src/hooks/sceneText.ts`
+  (the canvas scenes), `website/src/apps/mochi/assets/animations/kiro_*.json` (the
+  desktop pet's gem pack), and in `website/public/app-assets/crew-companion/` the
+  `icon.svg` and the figure between the `companion` comments of both banners.
+
+The crew sprite sheet in `website/src/apps/issue-radar/components/` is drawn from
+that bitmap by its own generator (`crew-ghost-sprite.gen.mjs`); re-run it after
+changing `PIXEL_GEM`.
+
+`retint.py` is not part of the build. Run it by hand on artwork drawn against the
+old purple theme (`python scripts/brand/retint.py website/public/app-assets`); a
+second run changes nothing.
 
 ## Palette
 

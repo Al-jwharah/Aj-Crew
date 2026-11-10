@@ -1,5 +1,5 @@
 #!/bin/sh
-# AjCrew container entrypoint.
+# Aj Crew container entrypoint.
 #
 # Responsibilities (deliberately minimal — real logic lives in the product):
 #

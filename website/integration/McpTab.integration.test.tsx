@@ -176,7 +176,7 @@ describe('McpTab Integration Tests', () => {
     expect(within(screen.getByTestId('agent-spec-not-rewritten')).queryByRole('button')).not.toBeInTheDocument()
   })
 
-  it('stages AjCrew scope off and commits it via Apply', async () => {
+  it('stages Aj Crew scope off and commits it via Apply', async () => {
     const user = userEvent.setup()
 
     let applyPayload: any = null
@@ -193,7 +193,7 @@ describe('McpTab Integration Tests', () => {
       expect(screen.getAllByText('builder-mcp').length).toBeGreaterThan(0)
     })
 
-    // Find the builder-mcp row and click its AjCrew scope badge
+    // Find the builder-mcp row and click its Aj Crew scope badge
     const rows = screen.getAllByRole('row')
     const builderRow = rows.find(row =>
       within(row as HTMLElement).queryByText('builder-mcp')

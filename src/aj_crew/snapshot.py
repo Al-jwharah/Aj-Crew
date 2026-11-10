@@ -903,7 +903,7 @@ def snapshot_main(
 
 
 def _is_gateway_running() -> bool:
-    """Check if the AjCrew gateway is listening on its dashboard port."""
+    """Check if the Aj Crew gateway is listening on its dashboard port."""
     # Deterministic override (used by tests / scripted restores) — avoids a real
     # socket probe whose result is environment-dependent.
     override = os.environ.get("AJCREW_ASSUME_GATEWAY_RUNNING")
@@ -1005,7 +1005,7 @@ def _report_held_back(held: dict[str, list[str]], mc: Path) -> None:
 def restore_main(argv: list[str] | None = None, *, parsed: argparse.Namespace | None = None) -> int:
     if parsed is None:
         p = argparse.ArgumentParser(
-            prog="ajcrew-restore", description="Restore AjCrew state from a snapshot."
+            prog="ajcrew-restore", description="Restore Aj Crew state from a snapshot."
         )
         p.add_argument("snapshot", nargs="?")
         p.add_argument("--mode", choices=("replace", "merge"))

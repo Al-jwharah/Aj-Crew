@@ -72,7 +72,7 @@ export interface AppConfig {
     character: string  // default: 'mochiCat'
   }
   llm: {
-    useAgentBackend: boolean  // default: true — reuse AjCrew's LLM
+    useAgentBackend: boolean  // default: true — reuse Aj Crew's LLM
     customEndpoint?: string
     customApiKey?: string
   }

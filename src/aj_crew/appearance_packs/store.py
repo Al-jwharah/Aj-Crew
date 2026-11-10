@@ -876,7 +876,7 @@ class AppearanceStore:
     def _builtin_meta(self) -> PackMeta:
         return PackMeta(
             id=DEFAULT_PACK,
-            name="Kiro",
+            name="Aj",
             author="Aj Crew",
             description="The default companion.",
             type="builtin",

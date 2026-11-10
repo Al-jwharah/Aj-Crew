@@ -1,4 +1,4 @@
-"""Instances registry — persistent store of remote AjCrew instances.
+"""Instances registry — persistent store of remote Aj Crew instances.
 
 Backs the *Instances* feature (multi-instance management). The registry is a
 small JSON file at ``~/.kiro/crew/instances.json``. Each record describes how to

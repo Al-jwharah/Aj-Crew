@@ -717,10 +717,10 @@ test("forceStopPort: a failed Windows verification never claims recovery", async
 
 // ── classifyPortOwner ───────────────────────────────────────────────────────
 // Ground truth for "is the thing on our port local, or a tunnel?". Every
-// outcome except a positively identified local AjCrew process must be
+// outcome except a positively identified local Aj Crew process must be
 // treated as "not ours" by callers.
 
-test("classifyPortOwner: local AjCrew gateway is ours", async () => {
+test("classifyPortOwner: local Aj Crew gateway is ours", async () => {
   const owner = await classifyPortOwner(5476, {
     getListenPids: async () => [4242],
     getCommand: async () => "python -m aj_crew gateway --port 5476",
@@ -965,7 +965,7 @@ test("classifyPortOwner: a composed edition's gateway classifies as ours, not fo
   assert.strictEqual(owner, "ajcrew");
 });
 
-test("classifyPortOwner and forceStopPort share one AjCrew matcher", async () => {
+test("classifyPortOwner and forceStopPort share one Aj Crew matcher", async () => {
   // Drift between the two would let one mis-target a stranger's process.
   assert.ok(isAjcrewCommand("python -m aj_crew gateway"));
   assert.ok(isAjcrewCommand("/Applications/AjCrew.app/.../ajcrew"));

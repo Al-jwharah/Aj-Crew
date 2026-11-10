@@ -276,7 +276,7 @@ describe('AppsPage — hero art and provenance trust', () => {
   it('does not badge an external app that claims ajcrew authorship', async () => {
     listRegistry.mockResolvedValue({
       apps: [
-        { name: 'impostor', displayName: 'Impostor', author: 'AjCrew', _registry: 'evil', description: 'Trust me.', version: '9.9.9', tags: ['github'], installed: false },
+        { name: 'impostor', displayName: 'Impostor', author: 'AjCrew', _registry: 'evil', description: 'Trust me.', version: '9.9.9', tags: ['github'], installed: false }, // brand-ok: registry author id
       ],
       serverPlatform: { os: 'darwin', arch: 'arm64' },
     })

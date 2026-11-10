@@ -1,6 +1,6 @@
 """Windows-condition simulators for POSIX dev machines.
 
-AjCrew is developed on macOS/Linux but must pass the ``Backend Tests
+Aj Crew is developed on macOS/Linux but must pass the ``Backend Tests
 (Windows)`` matrix. Several classes of Windows-only behaviour never occur on
 POSIX, so the buggy code path is never exercised by a local ``pytest`` run and
 the failure only shows up in CI:

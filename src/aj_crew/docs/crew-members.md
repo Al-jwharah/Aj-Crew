@@ -33,7 +33,7 @@ The **Bots** row sits in the left rail, under Sessions, and opens
 | Reasoning effort | How long its sessions think before answering | the global default, or its role effort for a background worker crew; ignored by models that do not reason |
 | Description | One line about what it is for | no description shown |
 | Triggers (`triggers`) | Free text saying when work should go to it | never auto-selected; naming it still delegates to it |
-| Avatar | A ghost face with chosen traits, or an uploaded picture | a face derived from its name |
+| Avatar | A gem face with chosen traits, or an uploaded picture | a face derived from its name |
 | Session color | Tints the sessions it starts | no color of its own |
 
 A per-session pick always wins over the Bot's model and reasoning effort,
@@ -173,7 +173,7 @@ back to showing the agent name. A name another Bot already shows is
 refused, as is one with line breaks or hidden characters. A Bot can also
 take a new name itself: tell it in its own chat what to call it, and it renames
 itself with the `update_self` tool, under the same rules. The same tool lets it
-change its description and its ghost face when you ask it to ("wear a cap",
+change its description and its gem face when you ask it to ("wear a cap",
 "describe yourself as the build watcher"): the change is applied at once and the
 chat shows one line saying what changed, with an **Undo** that puts the old
 value back. The undo is yours alone; the Bot has no tool for it, and it

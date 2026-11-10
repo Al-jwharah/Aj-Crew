@@ -118,7 +118,7 @@ Decided:
 
 Decided:
 
-- With no crewmates, the Crewmates tab is a hero: the ghost avatar, "No
+- With no crewmates, the Crewmates tab is a hero: the gem avatar, "No
   crewmates yet", the one-line positioning sentence in its singular form, and
   one button, **New crewmate**.
 - **New crewmate** opens one card as a modal over the chat, which stays

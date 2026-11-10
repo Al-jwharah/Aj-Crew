@@ -100,7 +100,7 @@ class TestApiSlashCommands:
         for name, desc in by_name.items():
             assert desc, f"blank description for {name}"
             assert desc == SLASH_COMMAND_DESCRIPTIONS[name]
-        # AjCrew-local commands read meaningfully.
+        # Aj Crew-local commands read meaningfully.
         assert "side" in by_name["/side"].lower()
 
     @pytest.mark.asyncio

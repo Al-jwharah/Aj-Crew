@@ -1,8 +1,8 @@
 """Shared MCP config cleanup utilities.
 
-AjCrew does NOT write AjCrew-managed MCP servers to the user's global
+Aj Crew does NOT write Aj Crew-managed MCP servers to the user's global
 provider MCP config (``~/.kiro/settings/mcp.json``) during normal
-operation — the AjCrew agent file is authoritative, and provider
+operation — the Aj Crew agent file is authoritative, and provider
 globals are user-owned.  Remaining helpers here clean up stale
 ajcrew-binary entries left over from older install methods.
 
@@ -366,7 +366,7 @@ AJCREW_BIN_MCP_SERVERS = ALWAYS_ON_BIN_MCP_SERVERS + OPT_IN_BIN_MCP_SERVERS
 # ``gatewayd.CONTROL_PLANE_BACKENDS`` reads its set from here.
 CONTROL_PLANE_SERVERS = ("ajcrew-core", "ajcrew-cron")
 
-# Every managed-binary server name AjCrew is responsible for removing from
+# Every managed-binary server name Aj Crew is responsible for removing from
 # the user's global mcp.json (Aj Crew never legitimately writes these there).
 #
 # ALWAYS_ON only, and there is no ownership-proven exception. This purge exists
@@ -481,7 +481,7 @@ def clean_stale_managed_mcp() -> list[str]:
 
     Runs from explicit setup (``ajcrew setup``) and once on first gateway
     start (marker-guarded by ``run_first_run_setup``) — never on every startup,
-    which would violate the "AjCrew owns only the agent file" boundary.
+    which would violate the "Aj Crew owns only the agent file" boundary.
 
     Removes two classes of stale entry left in the user's global provider
     config; genuine user-installed servers are never touched:

@@ -70,7 +70,7 @@ no_pattern() { ! echo "$1" | grep -qi "$2"; }
 
 echo ""
 echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║        AjCrew Gateway Security Smoke Test (E2E)           ║"
+echo "║        Aj Crew Gateway Security Smoke Test (E2E)           ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
 

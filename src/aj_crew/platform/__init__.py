@@ -1,4 +1,4 @@
-"""AjCrew platform contract — the Composed Platform Providers (CPP) seam.
+"""Aj Crew platform contract — the Composed Platform Providers (CPP) seam.
 
 Public API for booting and reading the platform context.  Core code imports
 from ``aj_crew.platform`` only; an enterprise companion imports

@@ -1,11 +1,11 @@
-"""File Explorer backend for AjCrew.
+"""File Explorer backend for Aj Crew.
 
 A small stdlib-only HTTP server that exposes a read-only filesystem API for the
-file-explorer frontend. Bound to localhost; AjCrew proxies requests from
+file-explorer frontend. Bound to localhost; Aj Crew proxies requests from
 ``/apps/file-explorer/api/*`` to this process.
 
 Endpoints (all relative to the proxied base — the server itself sees them at
-the root since AjCrew strips the prefix):
+the root since Aj Crew strips the prefix):
 
   GET  /health                                  → {"status": "ok"}
   GET  /resolve?path=<p>                        → {"path", "exists", "type", "size", "mtime"}
@@ -158,7 +158,7 @@ SENSITIVE_DIRS = {
     ".git-credentials",
 }
 
-# AjCrew data-home subdirectories that are safe for the file explorer to
+# Aj Crew data-home subdirectories that are safe for the file explorer to
 # access. Everything else under the data home is blocked (keys, tokens, DB,
 # sessions).
 #
@@ -239,7 +239,7 @@ def _is_safe_crew_subdir(name: str) -> bool:
     return name in _AJCREW_SAFE_SUBDIRS
 
 
-# The AjCrew data home is ~/.kiro/crew (nested under kiro-cli's ~/.kiro), with
+# The Aj Crew data home is ~/.kiro/crew (nested under kiro-cli's ~/.kiro), with
 # a legacy location at ~/.ajcrew. The granular deny-by-default listing policy
 # must recognize the home wherever it lives: the current ~/.kiro/crew, and the
 # legacy ~/.ajcrew.
@@ -439,7 +439,7 @@ def _is_sensitive(p: Path) -> bool:
     ``SENSITIVE_DIRS`` set so the access-deny gate can never be narrower than
     the listing-hide filter.
 
-    For the AjCrew data home (``~/.kiro/crew``, plus the legacy variant), a
+    For the Aj Crew data home (``~/.kiro/crew``, plus the legacy variant), a
     granular policy applies: only subdirectories listed in
     ``_AJCREW_SAFE_SUBDIRS`` are accessible; everything else (keys, tokens,
     DB, sessions) is blocked.
@@ -865,7 +865,7 @@ def _search_rg(root: Path, query: str, include: str, exclude: str, executable: s
     # top-level folders so ripgrep never descends into ~/Pictures (the Photos
     # library) or ~/Music (the media library). Recursing into them makes macOS
     # pop a per-folder consent dialog -- attributed to the bundled ``rg`` binary
-    # separately from AjCrew itself, which is why the same folder gets prompted
+    # separately from Aj Crew itself, which is why the same folder gets prompted
     # more than once. The leading-slash glob anchors to the search root, so only
     # the TOP level of $HOME is pruned: a nested project ``Music/`` is untouched,
     # and an explicit search rooted AT one of these folders (root != $HOME, so
@@ -1027,7 +1027,7 @@ def _search_python(root: Path, query: str, include: str, exclude: str) -> list[d
 
 
 class FileExplorerHandler(BaseHTTPRequestHandler):
-    server_version = "AjCrew-FileExplorer/0.1"
+    server_version = "AjCrew-FileExplorer/0.1"  # brand-ok: protocol identifier
 
     # Silence default logging — we use our own.
     def log_message(self, fmt: str, *args) -> None:  # noqa: A003
@@ -1075,7 +1075,7 @@ class FileExplorerHandler(BaseHTTPRequestHandler):
         url = urllib.parse.urlparse(self.path)
         qs = urllib.parse.parse_qs(url.query)
         route = url.path.rstrip("/") or "/"
-        # AjCrew's reverse proxy forwards requests as /api/<path>;
+        # Aj Crew's reverse proxy forwards requests as /api/<path>;
         # strip it so both direct and proxied requests resolve.
         if route.startswith("/api/"):
             route = route[4:] or "/"

@@ -1,6 +1,6 @@
 """Cross-platform Kiro CLI readiness detection.
 
-The public AjCrew provider is KiroACP-only, so a healthy, authenticated
+The public Aj Crew provider is KiroACP-only, so a healthy, authenticated
 ``kiro-cli`` is a hard runtime prerequisite. This module's job is to answer one
 question about the gateway host: **is there a Kiro CLI that runs, and is it
 signed in?** It answers that by running the CLI's own read-only probes

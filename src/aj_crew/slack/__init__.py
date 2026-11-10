@@ -1,1 +1,1 @@
-"""Slack integration for AjCrew."""
+"""Slack integration for Aj Crew."""

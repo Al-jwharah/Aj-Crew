@@ -12,8 +12,8 @@ script, then re-apply the hand-written follow-up commits.
 WHAT IS RENAMED (the product's own name, in every spelling)
 
     Kiro Crew  -> Aj Crew        kiro_crew -> aj_crew       KIROCREW_* -> AJCREW_*
-    KiroCrew   -> AjCrew         kirocrew  -> ajcrew        kiro-crew  -> aj-crew
-    Kirocrew   -> Ajcrew         kiroCrew  -> ajCrew        kiro.crew  -> aj.crew
+    KiroCrew   -> AjCrew         kirocrew  -> ajcrew        kiro-crew  -> aj-crew    (brand-ok: mapping table)
+    Kirocrew   -> Ajcrew         kiroCrew  -> ajCrew        kiro.crew  -> aj.crew    (brand-ok: mapping table)
     themes kiro-dark / kiro-light, the .kirobot share file, the assistant's
     display name in a short list of UI strings.
 
@@ -518,7 +518,7 @@ _ARTICLE = re.compile(
     rb"(?=(?:[ \t]`{0,2}"
     rb"|[ \t]*\r?\n[ \t]*(?:(?:#|//|\*|>|--|;|REM)[ \t]*)?`{0,2}"
     rb"|[ \t][\"'`][ \t]*\+?[ \t]*\r?\n[ \t]*\+?[ \t]*[fFrRbBuU]{0,2}[\"'`]`{0,2})"
-    rb"(?:Aj Crew|AjCrew|ajcrew|aj_crew|Aj-Crew|AJCREW|aj-crew|Aj(?![\w])"
+    rb"(?:Aj Crew|AjCrew|ajcrew|aj_crew|Aj-Crew|AJCREW|aj-crew|Aj(?![\w])"  # brand-ok: rename-tool pattern
     rb"|\{\{ ?productName ?\}\}))"
 )
 _NON_ENGLISH_CATALOG = re.compile(rb"website/src/i18n/locales/(?!en(?:-XA|\.manual)?\.json$)")
@@ -580,7 +580,7 @@ _CLONE_NO_TARGET = re.compile(
     rb"git clone (?:-\S+ )*https://github\.com/Al-jwharah/Aj-Crew(?:\.git)?"
     rb"(?=[ \t]*(?:\r?\n|\\n|&&|;|\"|'|`|$))"
 )
-_CD_CHECKOUT = re.compile(rb"(?:(?<=\\n)|(?<![\w-]))cd (?:AjCrew|ajcrew)(?![\w./-])")
+_CD_CHECKOUT = re.compile(rb"(?:(?<=\\n)|(?<![\w-]))cd (?:AjCrew|ajcrew)(?![\w./-])")  # brand-ok: rename-tool pattern
 
 
 def transform(data: bytes, path: bytes = b"") -> bytes:

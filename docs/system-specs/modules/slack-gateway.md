@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Slack integration (`aj_crew/slack/`) connects AjCrew to Slack via Socket Mode. DMs are routed through ACP to kiro-cli with real-time streaming and interactive tool approval.
+The Slack integration (`aj_crew/slack/`) connects Aj Crew to Slack via Socket Mode. DMs are routed through ACP to kiro-cli with real-time streaming and interactive tool approval.
 
 Independently scheduled agent runs admit their exact execution key as durable
 work before provider allocation, publishing its privacy mode in the canonical
@@ -1472,7 +1472,7 @@ An `OPTIONS_ACTION_PREFIX` element whose action ID is NOT a numbered card button
 
 ## Messaging Transport (`messaging.use_transport`)
 
-A channel-neutral dispatch path that replaces the native `handle_message` stream loop with a shared `SlackTransport → TurnDriver → SlackRenderer` pipeline. Gated by `messaging.use_transport` (`MessagingConfig`, default `True` in AjCrew — the transport abstraction is the canonical path; set `false` to fall back to the legacy native handler — `config/loader.py`). When the flag is on, `events.py:_route_message` routes the message to `handle_message_transport`; when off, nothing in the live gateway path imports the transport (it is purely additive).
+A channel-neutral dispatch path that replaces the native `handle_message` stream loop with a shared `SlackTransport → TurnDriver → SlackRenderer` pipeline. Gated by `messaging.use_transport` (`MessagingConfig`, default `True` in Aj Crew — the transport abstraction is the canonical path; set `false` to fall back to the legacy native handler — `config/loader.py`). When the flag is on, `events.py:_route_message` routes the message to `handle_message_transport`; when off, nothing in the live gateway path imports the transport (it is purely additive).
 
 - **`SlackTransport`** (`slack/transport.py`): wraps `SlackClientOps` in the neutral `MessagingTransport` contract (dependency direction `slack → messaging`; the `messaging` package never imports Slack). `authorize()` is **owner-only, deny-by-default** — an empty allow-list authorizes nobody, and it SEL-audits **every** rejection (`operation="slack_transport.authorize"`, `outcome="denied"`), including empty/missing `user_id`, so the deny-by-default control is observable.
 - **`TurnDriver`** (`messaging/driver.py`): channel-neutral turn loop converting provider `AcpEvent`s into abstract `OutputEvent`s. Approval ladder mirrors the native `APPROVAL_*` contract — `APPROVAL_AUTO` / `APPROVAL_TRUST` (approve all), `APPROVAL_TRUST_READS` (approve `tool_kind == "read"`), `APPROVAL_INTERACTIVE` (deny-by-default unless the injected decider approves). Two injected predicates keep the driver channel-neutral: `auto_approve_tool` (the `spawn_run` / `auto_approve_subagent_spawn` hook predicate) and `auto_approve_session` (per-session Trust). Interactive buttons are rendered only when a decider is present — without one, `_approve()` denies by default so posting buttons would leave dead controls.

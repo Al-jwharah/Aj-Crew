@@ -154,9 +154,9 @@ async def test_discover_worktrees_sandbox_error_keeps_remedy():
         "available on this host, and the agent subprocess cannot be safely "
         "isolated. Probe detail: sandbox-exec probe failed (exit 71). This "
         "host's sandbox is NOT broken: the kernel reports this process is "
-        "already inside a macOS Seatbelt sandbox that AjCrew did not create. "
+        "already inside a macOS Seatbelt sandbox that Aj Crew did not create. "
         'Set {"sandbox": false} in ~/.kiro/settings/amazon-internal.json so '
-        "AjCrew's own profile owns isolation, then restart the gateway."
+        "Aj Crew's own profile owns isolation, then restart the gateway."
     )
     assert len(stderr) > 200, "fixture must exceed the old cap to be meaningful"
     with patch.object(runtime_mod, "_run_cmd", new=AsyncMock(return_value=(-1, "", stderr))):

@@ -59,7 +59,7 @@ function permLabel(state: string): string {
  *  platform; `unknown` means the probe itself could not run (framework load
  *  failure), which a retry in 5s will not fix. Only `missing` is worth polling —
  *  and even that is not authoritative, since macOS attributes a grant to the
- *  process that launched AjCrew. */
+ *  process that launched Aj Crew. */
 const TERMINAL_PERM_STATES = new Set([GRANTED, 'unsupported', 'unknown'])
 
 /** Permission poll cadence, and the cap on how long it runs.

@@ -24,7 +24,7 @@ from pathlib import Path
 
 # Optional Aj Crew redaction — scrubs LLM-generated text before it is
 # posted to an external surface. Imported at module top (absent only when run
-# fully standalone outside the AjCrew runtime).
+# fully standalone outside the Aj Crew runtime).
 try:
     from aj_crew.security import redact_credentials, redact_exfiltration_urls
 except ImportError:  # pragma: no cover - standalone fallback
@@ -199,7 +199,7 @@ def list_open_prs(owner: str, repo: str, *, host: str = "github.com",
 # ---------------------------------------------------------------------------
 
 def resolve_rule_pack(pack_name: str) -> str | None:
-    """Find a rule-pack SKILL.md by skill name under the AjCrew skills dir
+    """Find a rule-pack SKILL.md by skill name under the Aj Crew skills dir
     (``<config_dir>/skills/`` — ``~/.kiro/crew/skills/`` by default, honoring
     ``AJCREW_HOME`` — this is where the app framework symlinks app + user
     skills). Prefers the most recently modified copy. Returns an absolute path

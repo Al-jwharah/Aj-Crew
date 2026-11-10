@@ -1,4 +1,4 @@
-"""Reusable Block Kit builders for AjCrew slash commands.
+"""Reusable Block Kit builders for Aj Crew slash commands.
 
 All functions return raw Block Kit dicts (no slack_sdk dependency).
 Action IDs follow the mc_<command>_<action>[_<id>] convention.

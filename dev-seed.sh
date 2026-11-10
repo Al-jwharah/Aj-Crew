@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copy the AjCrew data home into .ajcrew-dev/ for local development.
+# Copy the Aj Crew data home into .ajcrew-dev/ for local development.
 # Safe to re-run — wipes .ajcrew-dev first so you get a clean snapshot.
 #
 # Usage: ./dev-seed.sh

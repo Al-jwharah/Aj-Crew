@@ -7,7 +7,7 @@
  * loaded the full player, it was worse: the expression compiler's `eval()`
  * threw under the dashboard CSP (`script-src 'self' 'unsafe-inline'`, no
  * `'unsafe-eval'`) mid-build and the slot painted nothing. Three of the four
- * built-in Kiro Ghost clips carried a redundant `loopOut()` and were therefore
+ * built-in ghost clips of the time carried a redundant `loopOut()` and were therefore
  * invisible, while the one without an expression rendered fine; the pack read
  * as "broken" rather than "one Lottie feature is unavailable". Either way —
  * throw then, ignore now — an expression in a shipped clip is a defect.

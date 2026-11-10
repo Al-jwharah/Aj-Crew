@@ -522,7 +522,7 @@ function AnimThumbnail({ content, format, size = 64, spriteConfig, colorMap, eye
 // ── Helper: built-in ghost thumbnail ───────────────────────────────────────
 
 /**
- * The built-in "Kiro" pack's card art.
+ * The built-in pack's card art.
  *
  * The built-in ghost is NOT a file the backend can serve — its body is bundled with
  * the frontend and its detail payload comes back with empty `animations`, so the

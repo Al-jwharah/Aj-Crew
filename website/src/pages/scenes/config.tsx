@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { Building2, Brain, Wand2, Waves, Rocket, Sparkles, TreePine, Ghost } from 'lucide-react'
+import { Building2, Brain, Wand2, Waves, Rocket, Sparkles, TreePine, Gem } from 'lucide-react'
 import { i18nT } from '../../i18n/t'
 
 export type SceneKey = 'office' | 'panda' | 'neural' | 'wizard' | 'underwater' | 'mission' | 'serengeti' | 'ghost'
@@ -58,7 +58,7 @@ export const SCENES: SceneMeta[] = [
   {
     key: 'ghost',
     get label() { return i18nT('pages.scenes.config.ghost_label') },
-    icon: <Ghost className="lucide-inline" />,
+    icon: <Gem className="lucide-inline" />,
     get desc() { return i18nT('pages.scenes.config.ghost_desc') },
   },
 ]

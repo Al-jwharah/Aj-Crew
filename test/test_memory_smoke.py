@@ -529,7 +529,7 @@ class TestHybridSemanticRetrieval:
         store = opened(VectorMemoryStore(db_path=tmp_path / "mem.db"))
         store.init()
         store.set_semantic("pref.language", "Python", 1.0, "user_explicit")
-        store.set_semantic("project.name", "AjCrew", 1.0, "user_explicit")
+        store.set_semantic("project.name", "Aj Crew", 1.0, "user_explicit")
         ctx = store.get_semantic_context(query_text="Python language")
         assert "pref.language: Python" in ctx
 
@@ -548,7 +548,7 @@ class TestHybridSemanticRetrieval:
         store.init()
         store.embed_fn = mock_embed
         store.set_semantic("pref.language", "Python", 1.0, "user_explicit")
-        store.set_semantic("project.name", "AjCrew", 1.0, "user_explicit")
+        store.set_semantic("project.name", "Aj Crew", 1.0, "user_explicit")
         store.set_semantic("user.timezone", "PST", 1.0, "user_explicit")
         ctx = store.get_semantic_context(query_text="what language do you prefer")
         # Should return results — hybrid scoring should find relevant entries

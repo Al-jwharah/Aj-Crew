@@ -1,4 +1,4 @@
-"""Warm-pool prewarming for the AjCrew MCP gateway.
+"""Warm-pool prewarming for the Aj Crew MCP gateway.
 
 The gateway spawns a backend lazily on a stub's first non-register frame
 (:func:`gatewayd._acquire_backend`). That lazy path costs a full

@@ -1,4 +1,4 @@
-// External-scheme hand-off for the AjCrew Electron app.
+// External-scheme hand-off for the Aj Crew Electron app.
 //
 // Why this exists: Settings -> Computer Use offers "Open System Settings"
 // shortcuts that target macOS System Settings deep links

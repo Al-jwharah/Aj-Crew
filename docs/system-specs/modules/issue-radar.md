@@ -500,7 +500,7 @@ apart.
 
 ## Recording findings
 
-The Investigate / Review buttons open an AjCrew chat session seeded with a
+The Investigate / Review buttons open an Aj Crew chat session seeded with a
 triage prompt. When the agent concludes it writes its verdict back into the
 item's investigation record — that is what puts a verdict + summary on the
 issue's card instead of leaving it in chat scrollback.

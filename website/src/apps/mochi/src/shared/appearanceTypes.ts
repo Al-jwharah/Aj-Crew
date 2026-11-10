@@ -100,7 +100,7 @@ export interface PackManifest {
    *
    * A pack-level fact, not a sprite one: `SpriteConfig.flipX` could only speak for
    * sprite sheets, but a hand-drawn SVG or an exported Lottie can just as easily
-   * come out mirrored (the built-in Kiro Ghost does). Consumers should read
+   * come out mirrored (the built-in Aj Gem does). Consumers should read
    * `flipX ?? sprite?.flipX` so an existing sprite pack keeps working unchanged.
    *
    * This is the pack's BASELINE facing, which situational flips (walk direction,

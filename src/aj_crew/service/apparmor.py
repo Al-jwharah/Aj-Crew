@@ -2,7 +2,7 @@
 
 Ubuntu >= 23.10 ships ``kernel.apparmor_restrict_unprivileged_userns=1``, which
 moves any process that creates a user namespace into a restricted AppArmor
-profile carrying no ``CAP_SYS_ADMIN``. AjCrew's Linux sandbox needs a user
+profile carrying no ``CAP_SYS_ADMIN``. Aj Crew's Linux sandbox needs a user
 namespace *and then* a mount namespace, so the second ``unshare`` gets EPERM and
 ``wrap_argv()`` fail-closes — correctly refusing to run the agent unisolated.
 
@@ -10,7 +10,7 @@ The distro-sanctioned remedy is a **per-application AppArmor profile** granting
 ``userns``, not a kernel-wide sysctl rollback. ``/etc/apparmor.d/`` on a stock
 Ubuntu already ships exactly this for every application in the same position
 (``bwrap-userns-restrict``, ``chrome``, ``chromium``, ``brave``, ``buildah``,
-``ch-run``, ``QtWebEngineProcess``, ``1password``, ``Discord``). AjCrew was the
+``ch-run``, ``QtWebEngineProcess``, ``1password``, ``Discord``). Aj Crew was the
 outlier.
 
 **Why a NAMED profile ATTACHED to the launcher script, not the interpreter, and

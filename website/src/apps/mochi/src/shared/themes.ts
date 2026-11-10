@@ -3,7 +3,7 @@
  *
  * The original shipped six switchable themes (`THEMES`, `THEME_LIST`) plus a
  * picker in the settings panel. The team sync decision removed overall themes:
- * Mochi follows the AjCrew theme instead. This module keeps the original's
+ * Mochi follows the Aj Crew theme instead. This module keeps the original's
  * EXPORT SURFACE so the vendored components compile unchanged, with a single
  * `'ajcrew'` id.
  *

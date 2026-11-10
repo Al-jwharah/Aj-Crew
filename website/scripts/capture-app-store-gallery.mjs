@@ -25,13 +25,10 @@ const OUTPUT_ROOT = resolve(process.argv[2]
   || fileURLToPath(new URL('../public/app-assets/', import.meta.url)))
 const VIEWPORT = { width: 1280, height: 800 }
 
-// These are prior captures of the same real SPA in richer, deliberately seeded
-// states. Keep them instead of replacing useful product frames with empty-state
-// screenshots. They are copied byte-for-byte; no mock artwork is substituted.
+// A prior capture of the same real SPA in a richer, deliberately seeded state.
+// Keep it instead of replacing a useful product frame with an empty-state
+// screenshot. It is copied byte-for-byte; no mock artwork is substituted.
 const SEEDED_CAPTURES = {
-  'auto-improvement': fileURLToPath(new URL('../../temp-screenshots/auto-improvement/01-dashboard.png', import.meta.url)),
-  'command-bar': fileURLToPath(new URL('../../temp-screenshots/command-bar/2-command-bar-root.png', import.meta.url)),
-  'crew-companion': fileURLToPath(new URL('../../temp-screenshots/crew-companion/dashboard-app-page.png', import.meta.url)),
   mochi: fileURLToPath(new URL('../public/app-assets/mochi/shot-1-gallery.png', import.meta.url)),
 }
 
@@ -39,9 +36,10 @@ const APPS = [
   ['agent-worlds', 'agent_worlds', 'worlds', '/worlds'],
   ['auto-improvement', 'auto_improvement', 'auto-improvement', '/auto-improvement'],
   ['auto-research', 'auto_research', 'auto-research', '/auto-research'],
+  ['aws-control', 'aws_control', 'aws-control', '/aws-control'],
   ['channels', 'channels', 'channels', '/channels'],
   ['code-review-sage', 'code_review_sage', 'code-review-sage', '/code-review-sage'],
-  ['command-bar', 'command_bar', 'command-bar', '/chat'],
+  ['command-bar', 'command_bar', 'command-bar', '/app-store'],
   ['crew-companion', 'crew_companion', 'crew-companion', '/crew-companion'],
   ['design-critique', 'design_critique', 'design-critique', '/design-critique'],
   ['design-tweak', 'design_tweak', 'design-tweak', '/design-tweak'],
@@ -55,6 +53,7 @@ const APPS = [
   ['papyrus', 'papyrus', 'papyrus', '/papyrus'],
   ['personal-shopper', 'personal_shopper', 'personal-shopper', '/personal-shopper'],
   ['pptx-maker', 'pptx_maker', 'pptx-maker', '/pptx-maker'],
+  ['project-scaffolder', 'project_scaffolder', 'project-scaffolder', '/project-scaffolder'],
   ['projects', 'projects', 'projects', '/projects'],
   ['spec-builder', 'spec_builder', 'spec-builder', '/spec-builder'],
   ['workflows', 'workflows', 'workflows', '/workflows'],
@@ -95,6 +94,18 @@ const FIXTURES = {
   '/api/apps/auto-improvement/config': { configured: false, target_url: '', branch: '' },
   '/api/apps/auto-improvement/status': { status: 'idle', findings: [], history: [] },
   '/api/apps/auto-research/questions': { questions: [], sessions: [] },
+  '/api/apps/aws-control/accounts': {
+    accounts: [], totals: { accounts: 0, profiles: 0, profilesHealthy: 0 },
+    generatedAt: '2026-08-25T12:00:00Z',
+  },
+  '/api/apps/aws-control/profiles/available': {
+    profiles: [], registeredCount: 0, max: 5, supported: true,
+  },
+  '/api/aws/consent': {
+    service: '', serviceLabel: '', profile: '', credentialSource: '', region: '',
+    account: '', arn: '', identityResolved: false, identityDetail: '', granted: false,
+    reason: '', revokedOnAccountChange: false, grant: null,
+  },
   '/api/apps/code-review-sage/runs': { runs: [], pool: null, reviewer: null },
   '/api/apps/code-review-sage/repos': { repos: [] },
   '/api/apps/code-review-sage/settings': { settings: {}, models: [], efforts: [], namespaces: [] },
@@ -164,6 +175,12 @@ async function main() {
       await json(route, installed)
       return true
     }
+    if (path === '/api/chat/slots' && route.request().method() === 'POST') {
+      // With no sessions the shell opens one. The shared stub answers this path
+      // with the LIST, which carries no `key` for the new session's readers.
+      await json(route, { key: 'chat-1-1', title: 'New Session' })
+      return true
+    }
     if (path === '/api/apps/registry') {
       await json(route, { apps: [], serverPlatform: { os: 'linux', arch: 'x86_64' } })
       return true
@@ -211,6 +228,12 @@ async function main() {
         await example.click()
         await page.waitForTimeout(500)
       }
+    }
+    if (name === 'command-bar') {
+      // The bar is an overlay, not a page: open it over the catalogue.
+      await page.keyboard.press('ControlOrMeta+k')
+      await page.getByRole('dialog').first().waitFor({ state: 'visible', timeout: 5000 })
+      await page.waitForTimeout(500)
     }
     const visibleText = (await page.locator('body').innerText()).replace(/\s+/g, ' ').trim()
     if (visibleText.length < 40) {

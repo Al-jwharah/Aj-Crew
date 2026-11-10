@@ -198,7 +198,7 @@
     color: var(--text, #e4e4e7); cursor: pointer;
     transition: border-color var(--pr-motion-fast) var(--pr-ease), background var(--pr-motion-fast) var(--pr-ease); }
   .pr-todo-opt:hover { border-color: var(--pr-todo-c, var(--accent)); }
-  .pr-todo-opt:focus-visible { outline: 2px solid var(--accent, #8b5cf6); outline-offset: 1px; }
+  .pr-todo-opt:focus-visible { outline: 2px solid var(--accent, #2dd4bf); outline-offset: 1px; }
   .pr-todo-opt.pr-rec { border-color: var(--pr-todo-c, var(--accent)); }
   .pr-todo-opt.pr-own { border-style: dashed; color: var(--muted, #7f7f88); }
   /* A picked card folds away to one line; it leaves for good when the board moves. */
@@ -2003,7 +2003,7 @@
   //: names the kind in the item's `ask`; an item without one is a decision.
   var ASK_KINDS = {
     decide: { id: 'decide', badge: 'Pick one', color: 'var(--pr-s2)' },
-    approve: { id: 'approve', badge: 'OK to go?', color: 'var(--accent, #8b5cf6)' },
+    approve: { id: 'approve', badge: 'OK to go?', color: 'var(--accent, #2dd4bf)' },
     'do': { id: 'do', badge: 'Only you', color: 'var(--pr-s1)' }
   };
   //: The brief a manager writes on the card: context (where things stand), why (why

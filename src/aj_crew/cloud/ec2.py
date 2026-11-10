@@ -460,7 +460,7 @@ def discover_network(profile: str, region: str, instance_type: str = "") -> tupl
         return vpc_id, igw[0]["SubnetId"], "igw"
     raise aws.AWSError(
         f"no subnet in VPC {vpc_id} has a verified internet egress route (internet "
-        "gateway or NAT). AjCrew needs outbound access to install packages and "
+        "gateway or NAT). Aj Crew needs outbound access to install packages and "
         "reach SSM. Add an internet gateway + public route (or a NAT), or pass a "
         "subnet that has one via `--subnet`, then retry.",
         action="ec2:DescribeRouteTables",
@@ -791,7 +791,7 @@ def deploy(
     extra_packages: str = "",
     ssm_kms_key_arn: str = "",
 ) -> DeployResult:
-    """Provision (or update) the AjCrew stack. Idempotent by stack name.
+    """Provision (or update) the Aj Crew stack. Idempotent by stack name.
 
     By default the local source is packaged and uploaded only when Aj Crew is
     running from a checkout; packaged installs use the template's public-repo
@@ -1069,7 +1069,7 @@ def find_stack(tag: str, profile: str = "", region: str = "") -> Optional[dict[s
         raise aws.AWSError(
             f"a CloudFormation stack named {stack_name(tag)} already exists but is "
             f"NOT tagged {MANAGED_TAG_KEY}=true — refusing to touch it (it wasn't "
-            "created by AjCrew). Use a different --tag, or remove that stack.",
+            "created by Aj Crew). Use a different --tag, or remove that stack.",
             action="cloudformation:DescribeStacks",
         )
     # Also require the instance tag to match THIS tag. A managed stack that
@@ -1278,7 +1278,7 @@ def list_instances(profile: str = "", region: str = "") -> list[dict[str, Any]]:
 
 
 def list_stacks(profile: str = "", region: str = "") -> list[dict[str, Any]]:
-    """List AjCrew CloudFormation stacks by deterministic stack prefix."""
+    """List Aj Crew CloudFormation stacks by deterministic stack prefix."""
     profile = validate_profile(profile)
     region = validate_region(region)
     data = aws.checked_json(
@@ -1349,7 +1349,7 @@ def live_instance_tags(profile: str = "", region: str = "") -> set[str]:
 def _instance_id_for(tag: str, profile: str, region: str) -> str:
     st = describe(tag, profile, region)
     if not st.get("exists"):
-        raise aws.AWSError(f"no AjCrew instance found for tag '{tag}'")
+        raise aws.AWSError(f"no Aj Crew instance found for tag '{tag}'")
     iid = st.get("instance_id", "")
     if not iid:
         raise aws.AWSError(f"instance for '{tag}' has no instance id (stack still creating?)")

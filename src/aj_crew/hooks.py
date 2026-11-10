@@ -1,4 +1,4 @@
-"""Config-driven hook system for AjCrew's message pipeline.
+"""Config-driven hook system for Aj Crew's message pipeline.
 
 Hooks intercept messages and tool calls based on rules in config.json.
 Supports declarative rules and executable script hooks with timeout/sandboxing.
@@ -1493,7 +1493,7 @@ _INTERNAL_READ_ALLOWLIST: dict[str, str] = {
     # usage dict returns to the process, and it is run through
     # ``redact_credentials``/``redact_exfiltration_urls`` before caching, so the
     # credential never reaches an LLM/agent surface. The operator already
-    # trusted AjCrew with the session by running ``kiro-cli login`` outside
+    # trusted Aj Crew with the session by running ``kiro-cli login`` outside
     # any agent loop. (On Linux the live token lives in the kiro-cli SQLite
     # store, which is not a sensitive path; these JSON entries cover the IDE /
     # older kiro-cli cache layout.)
