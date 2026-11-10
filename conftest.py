@@ -158,7 +158,7 @@ os.environ.pop("AJCREW_ACP_RECORD_FRAMES", None)
 # the fetching path, against the sealed ``_open_catalog`` seam that refuses a
 # real request, so it opts in for the whole process. A test of the shipped
 # default deletes the variable itself.
-os.environ["AJCREW_SKIP_APP_STORE_FETCH"] = "0"
+os.environ["AJCREW_SKIP_APP_STORE_FETCH"] = "0"  # flake-ok: suite-wide floor set at import
 
 
 @pytest.fixture

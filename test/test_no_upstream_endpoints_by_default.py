@@ -1,12 +1,11 @@
 """The shipped build contacts none of the upstream project's services on its own.
 
 Aj Crew is a fork, and the upstream project's release feed, usage beacon,
-feedback form and app catalog are that project's, not this one's. Each used to
-be a default this build would have inherited: it would have offered the
-upstream project's builds as its own updates, reported its installs to their
-collector, sent survey answers to their form and read their catalog on every
-store load. These tests pin the defaults that keep all four off until an
-operator names an endpoint or opts in.
+feedback form and app catalog are that project's, not this one's. A build that
+defaulted to them would offer the upstream project's builds as its own updates,
+report its installs to their collector, send survey answers to their form and
+read their catalog on every store load. These tests pin the defaults that keep
+all four off until an operator names an endpoint or opts in.
 
 The suite's floor configures a release feed for the update tests
 (``_release_feed_test_hosts``), so the tests of the shipped default clear it

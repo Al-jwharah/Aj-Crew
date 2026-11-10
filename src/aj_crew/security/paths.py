@@ -518,8 +518,8 @@ def write_protected_home_paths() -> tuple[str, ...]:
 def crew_home_prefixes() -> tuple[str, ...]:
     """Public view of the known crew data-home prefixes.
 
-    Used to classify a sensitive path as an Aj Crew trust root vs. a third-party
-    credential store when describing the posture.
+    The posture description classifies a sensitive path with these: an Aj Crew
+    trust root if it sits under one, a third-party credential store otherwise.
     """
     return tuple(_CREW_HOME_PREFIXES)
 
