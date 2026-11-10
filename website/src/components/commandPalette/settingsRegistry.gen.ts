@@ -2768,6 +2768,18 @@ export const SETTINGS_REGISTRY: SettingEntry[] =
     }
   },
   {
+    "id": "display.layout",
+    "label": "Layout",
+    "labelKey": "simpleLayout.layout_label",
+    "hint": "Simple is chat-first: one sidebar, a quiet top bar, and a centered message box on a new chat. Advanced is the full workspace shell. Both reach every feature.",
+    "tab": "display",
+    "type": "buttonGroup",
+    "occurrence": 1,
+    "params": {
+      "sub": "view"
+    }
+  },
+  {
     "id": "display.mode",
     "label": "Mode",
     "labelKey": "pages.settings.displayPanel.mode",

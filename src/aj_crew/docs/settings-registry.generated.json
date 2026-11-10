@@ -1619,6 +1619,13 @@
       "hint": "Language for the dashboard interface."
     },
     {
+      "id": "display.layout",
+      "label": "Layout",
+      "tab": "display",
+      "route": "/settings/display/view?highlight=display.layout",
+      "hint": "Simple is chat-first: one sidebar, a quiet top bar, and a centered message box on a new chat. Advanced is the full workspace shell. Both reach every feature."
+    },
+    {
       "id": "display.mode",
       "label": "Mode",
       "tab": "display",
