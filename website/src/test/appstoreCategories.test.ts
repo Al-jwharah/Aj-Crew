@@ -121,15 +121,15 @@ describe('provenance helpers', () => {
 
   it('verifies built-ins and ajcrew-authored core apps only', () => {
     expect(isVerified({ origin: 'builtin', author: 'x' })).toBe(true)
-    expect(isVerified({ author: 'AjCrew' })).toBe(true)
+    expect(isVerified({ author: 'AjCrew' })).toBe(true) // brand-ok: registry author id
     expect(isVerified({ author: 'random' })).toBe(false)
   })
 
   it('never lets an EXTERNAL registry self-award the verified mark', () => {
-    // An external app.json claiming author "AjCrew" must not be badged as
+    // An external app.json claiming author "AjCrew" must not be badged as (brand-ok: registry author id)
     // first-party — the badge sits next to an Install that runs setup code
     // with gateway privileges.
-    expect(isVerified({ author: 'AjCrew', _registry: 'evil-registry' })).toBe(false)
+    expect(isVerified({ author: 'AjCrew', _registry: 'evil-registry' })).toBe(false) // brand-ok: registry author id
     expect(isVerified({ author: 'ajcrew', _registry: 'kirodotdev-labs' })).toBe(false)
   })
 

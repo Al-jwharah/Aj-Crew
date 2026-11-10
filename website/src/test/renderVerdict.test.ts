@@ -51,7 +51,7 @@ describe('tally', () => {
       { surface: 'chat', locale: 'en-XA', finding: { kind: 'text', signature: 'untranslated-text' } },
       { surface: 'chat', locale: 'de', finding: { kind: 'layout', signature: 'clipped-without-title' } },
       { surface: 'projects', locale: 'de', finding: { kind: 'layout', signature: 'ellipsis-with-flex-parent' } },
-      { surface: 'chat', locale: 'zh-CN', finding: { kind: 'dnt', detail: 'AjCrew -> 基罗组' } },
+      { surface: 'chat', locale: 'zh-CN', finding: { kind: 'dnt', detail: 'AjCrew -> 基罗组' } }, // brand-ok: glossary term
     ], SURFACES)
 
     expect(counts.chat).toEqual({ text: 1, layout: 1, latent: 0 })
@@ -125,7 +125,7 @@ describe('decide — a total is a report, never a failure', () => {
       baseCounts: at('chat', 'text', 0),
       ledger: null,
       surfaceIds: SURFACES,
-      dnt: [{ surface: 'chat', locale: 'zh-CN', finding: { kind: 'dnt', detail: 'AjCrew' } }],
+      dnt: [{ surface: 'chat', locale: 'zh-CN', finding: { kind: 'dnt', detail: 'AjCrew' } }], // brand-ok: glossary term
     })
 
     expect(verdict.failed).toBe(true)

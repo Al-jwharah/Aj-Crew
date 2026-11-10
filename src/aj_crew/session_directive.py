@@ -1,6 +1,6 @@
 """Session-directive protocol — stateless session-bound MCP tools.
 
-Some AjCrew MCP tools act on *the session that called them* — arm a monitor
+Some Aj Crew MCP tools act on *the session that called them* — arm a monitor
 loop, set a chat slot's project, render a follow-up card. In the unpooled
 (gateway-off) topology the MCP server cannot know which session is calling
 (one ``ajcrew-core`` serves the whole runtime, and the ``/proc`` walk is
@@ -28,7 +28,7 @@ the subagent's session — never its parent's. There is no walk to get wrong.
 FORGERY: the marker payload is model-visible (it comes back as the tool result
 text), so a model *could* emit the literal bytes. The consumer defends by
 honouring a directive ONLY when the tool call it arrived under was recorded — by
-AjCrew observing the tool CALL — as an MCP-served call whose CANONICAL name
+Aj Crew observing the tool CALL — as an MCP-served call whose CANONICAL name
 (``_meta.kiro.toolName``, with ``_meta.kiro.mcpServerName`` set) is one of
 :data:`DIRECTIVE_TOOLS`. That identity comes from kiro-cli's out-of-band ``_meta``
 channel, NOT the ``title`` (which is LLM-authored prose for shell tools — a shell
@@ -71,7 +71,7 @@ DIRECTIVE_TOOLS: frozenset[str] = frozenset(
     }
 )
 
-# The MCP server name AjCrew registers its own tools under (kiro-cli reports
+# The MCP server name Aj Crew registers its own tools under (kiro-cli reports
 # it in ``_meta.kiro.mcpServerName``). The consumer honours a directive ONLY
 # from a call served by THIS server — a third-party MCP server that happens to
 # expose a tool named e.g. ``monitor_start`` must never be able to drive a
@@ -534,7 +534,7 @@ def is_refusal(text: str | None) -> bool:
 
 def decode(text: str, expected_tool: str) -> dict[str, Any] | None:
     """Return the directive ``args`` iff *text* carries a well-formed marker AND
-    *expected_tool* (the name AjCrew recorded for this tool call) matches the
+    *expected_tool* (the name Aj Crew recorded for this tool call) matches the
     directive kind and is a known directive tool. Returns ``None`` otherwise —
     the forgery gate.
     """

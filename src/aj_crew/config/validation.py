@@ -1,4 +1,4 @@
-"""Config validation + the validated-data cache for AjCrew.
+"""Config validation + the validated-data cache for Aj Crew.
 
 Extracted from ``config/loader.py`` so the schema-driven validation logic and
 the process-global validated-config cache live apart from the config DTO

@@ -8,7 +8,7 @@ beside systemd. The current contract is [`src/aj_crew/pod/README.md`](../../../s
 ## Module layout
 
 A self-contained package under the main source tree — nothing ships outside it,
-so a `pip install` of AjCrew is complete. Mirrors the thin-verb / runtime split
+so a `pip install` of Aj Crew is complete. Mirrors the thin-verb / runtime split
 used elsewhere in the CLI.
 
 ```
@@ -48,7 +48,7 @@ Two layers with deliberately different failure semantics:
 
 ## Worktree resolution (git-native)
 
-AjCrew worktrees are **plain git worktrees** (flat repo root — no nested package
+Aj Crew worktrees are **plain git worktrees** (flat repo root — no nested package
 subdir), created wherever the developer likes
 (`git worktree add ../<name> -b feat/<name> main`). Rather than tie pods to a
 fixed root, a friendly `name` is resolved to an absolute checkout path by

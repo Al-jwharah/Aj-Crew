@@ -185,7 +185,7 @@ class TestLoadJsonOrEmptyUndecodable:
 class TestApplyEndpoint:
     @pytest.mark.asyncio
     async def test_preservation_kiro_to_ajcrew(self, tmp_path, monkeypatch):
-        """Turning Kiro off when server was only in Kiro copies to AjCrew first."""
+        """Turning Kiro off when server was only in Kiro copies to Aj Crew first."""
         from aj_crew.dashboard.handlers import mcp as mcp_mod
 
         # Real files: only kiro global has slack-mcp initially.
@@ -241,7 +241,7 @@ class TestApplyEndpoint:
         assert body["ok"] is True
         assert body["applied"] == 1
 
-        # AjCrew mcp.json should now have slack-mcp (preservation happened)
+        # Aj Crew mcp.json should now have slack-mcp (preservation happened)
         mc = json.loads(mc_path.read_text(encoding="utf-8"))
         assert "slack-mcp" in mc["mcpServers"]
         assert mc["mcpServers"]["slack-mcp"].get("disabled") is not True

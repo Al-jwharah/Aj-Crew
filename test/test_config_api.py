@@ -201,11 +201,11 @@ class TestSchemaApiEndpoint:
             assert len(data["entries"]) == len(SCHEMA_REGISTRY)
 
 
-# AjCrew Agent CRUD API tests (Tasks 5.3 + 5.4)
+# Aj Crew Agent CRUD API tests (Tasks 5.3 + 5.4)
 
 
 def _make_crud_app() -> web.Application:
-    """Minimal aiohttp app with AjCrew Agent CRUD endpoints."""
+    """Minimal aiohttp app with Aj Crew Agent CRUD endpoints."""
     from aj_crew.dashboard.handlers import (
         api_ajcrew_agent_delete,
         api_ajcrew_agent_update,
@@ -246,7 +246,7 @@ def _seed_config() -> dict:
 
 
 class TestAgentCrudProperties:
-    """Property-based tests for AjCrew Agent CRUD round-trips."""
+    """Property-based tests for Aj Crew Agent CRUD round-trips."""
 
     # Feature: multi-agent-orchestration, Property 8: CRUD create round-trip
     # **Validates: Requirements 4.1, 4.2**
@@ -479,7 +479,7 @@ class TestAgentCrudProperties:
 
 
 class TestAgentCrudEdgeCases:
-    """Unit tests for AjCrew Agent CRUD error handling."""
+    """Unit tests for Aj Crew Agent CRUD error handling."""
 
     @pytest.mark.asyncio
     async def test_create_duplicate_returns_409(self, tmp_path: Path) -> None:

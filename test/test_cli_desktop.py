@@ -349,7 +349,7 @@ class TestNightlyProductDirectory:
 
     def test_the_newest_artifact_wins_when_both_exist(self, monkeypatch, tmp_path):
         """With both installed, the run just reproduced is the one written last."""
-        release = tmp_path / "AjCrew"
+        release = tmp_path / "AjCrew"  # brand-ok: fixture data
         nightly = tmp_path / "AjCrew Nightly"
         release.mkdir()
         nightly.mkdir()

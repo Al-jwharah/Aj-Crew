@@ -1,4 +1,4 @@
-"""AjCrew — open-source personal AI agent."""
+"""Aj Crew — open-source personal AI agent."""
 
 from __future__ import annotations
 

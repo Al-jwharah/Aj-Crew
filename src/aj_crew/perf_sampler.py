@@ -1,6 +1,6 @@
 """Debug-only statistical stack sampler.
 
-AjCrew has aggregate duration histograms (``aj_crew.metrics``) and a stall
+Aj Crew has aggregate duration histograms (``aj_crew.metrics``) and a stall
 detector that dumps thread stacks when the event loop wedges
 (``dashboard.loop_watchdog``), but nothing that attributes CPU/wall time to
 call paths. This module is the missing piece: a sampling profiler that turns a

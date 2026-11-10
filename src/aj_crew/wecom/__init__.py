@@ -1,4 +1,4 @@
-"""WeCom channel for AjCrew via WeCom (企业微信) AI-bot.
+"""WeCom channel for Aj Crew via WeCom (企业微信) AI-bot.
 
 DM-only, outbound WebSocket long-connection to ``wss://openws.work.weixin.qq.com``.
 Reuses the existing session machinery (SessionManager / provider.stream); this

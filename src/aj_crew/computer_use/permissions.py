@@ -13,7 +13,7 @@ whatever launched the tree — ``AjCrew.app`` when packaged, ``Terminal.app`` fo
 dev ``ajcrew gateway``, an IDE if launched from one. A probe inspects only its
 own process's grant and therefore reports ``missing`` for a tree that is fully
 authorized. :attr:`PermissionProbe.responsible_hint` names the process the user
-should actually grant, because "grant Accessibility to AjCrew" is unactionable
+should actually grant, because "grant Accessibility to Aj Crew" is unactionable
 advice when the thing holding the grant is their terminal.
 
 Two related hazards this module is careful about:

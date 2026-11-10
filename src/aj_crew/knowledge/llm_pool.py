@@ -176,7 +176,7 @@ def _get_sandbox_mode(config: Optional[dict] = None) -> str:
       sandbox on macOS when it is enabled (kiro-cli >= 2.13).
     - ``sandbox`` **present but malformed/unrecognised** (typo, wrong type) ->
       ``"auto"``: fail SECURE. A garbage value is a misconfiguration, not an
-      intent to run unsandboxed, so we re-enable AjCrew's OS-level confinement
+      intent to run unsandboxed, so we re-enable Aj Crew's OS-level confinement
       rather than degrade to no isolation.
     """
     data = _read_config() if config is None else config

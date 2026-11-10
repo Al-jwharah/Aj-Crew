@@ -402,7 +402,7 @@ describe('usePanelTabs', () => {
     const { result } = renderHook(() => usePanelTabs(null, mock.descriptors))
     act(() => result.current.openFolder('/Users/me/workspace/AjCrew', 'chat-a'))
     expect(result.current.activeTab).toMatchObject({
-      id: 'folder:/Users/me/workspace/AjCrew', kind: 'folder', title: 'AjCrew', slot: 'chat-a',
+      id: 'folder:/Users/me/workspace/AjCrew', kind: 'folder', title: 'AjCrew', slot: 'chat-a', // brand-ok: fixture data
     })
     // Re-opening the same directory focuses the existing tab, not a duplicate.
     act(() => result.current.openFolder('/Users/me/workspace/AjCrew'))

@@ -1,6 +1,6 @@
 """Multi-session evaluation runner.
 
-Runs scenarios against an AjCrew instance, capturing responses and
+Runs scenarios against an Aj Crew instance, capturing responses and
 scoring assertions. Each scenario gets a fresh memory directory with
 optional profile seeding.
 """

@@ -163,10 +163,10 @@ def _cloud_list(args: argparse.Namespace) -> int:
         ui.fail(str(exc))
         return 1
     if not rows:
-        ui.info("No AjCrew cloud instances found.")
+        ui.info("No Aj Crew cloud instances found.")
         ui.detail("Launch one with: ajcrew cloud launch")
         return 0
-    ui.note(f"{ui.BOLD}AjCrew cloud instances ({region}):{ui.RESET}")
+    ui.note(f"{ui.BOLD}Aj Crew cloud instances ({region}):{ui.RESET}")
     for r in rows:
         state = r.get("instance_state", "?")
         ui.note(f"  {ui.BOLD}{r['tag']}{ui.RESET}  {r['instance_id']}  {ui.DIM}{state}{ui.RESET}")
@@ -410,7 +410,7 @@ def _cloud_destroy(args: argparse.Namespace) -> int:
     )
     ui.detail("Any data on the instance is lost. This cannot be undone.")
     if not getattr(args, "yes", False):
-        if not ui.confirm(f"Remove AjCrew instance '{tag}' from AWS?", default=False):
+        if not ui.confirm(f"Remove Aj Crew instance '{tag}' from AWS?", default=False):
             ui.info("Aborted — nothing was deleted.")
             return 0
 
@@ -630,7 +630,7 @@ def _cloud_doctor(args: argparse.Namespace) -> int:
     import shutil
 
     profile, region = _resolve(args)
-    ui.note(f"{ui.BOLD}AjCrew cloud — diagnostics{ui.RESET}")
+    ui.note(f"{ui.BOLD}Aj Crew cloud — diagnostics{ui.RESET}")
     # Client prerequisites. Probe the exact binary resolved spawn sites execute
     # (the shared deploy-engine resolver), so the doctor's verdict agrees with
     # what `ajcrew cloud` commands actually run under a GUI-launched
@@ -693,7 +693,7 @@ def _ensure_session_manager_plugin() -> bool:
         ui.fail(ssm.session_manager_plugin_unavailable_message())
         return False
     ui.warn("session-manager-plugin is required for SSM dashboard tunnels.")
-    ui.detail("AjCrew can install AWS's official Session Manager plugin locally.")
+    ui.detail("Aj Crew can install AWS's official Session Manager plugin locally.")
     if not ui.confirm("Install session-manager-plugin now?", default=True):
         ui.detail("Install it later with: ajcrew cloud doctor")
         return False
@@ -730,10 +730,10 @@ def handle_cloud(args: argparse.Namespace) -> int:
     """Entry point for ``ajcrew cloud <action>``."""
     action = getattr(args, "cloud_action", None)
     if not action:
-        ui.note(f"{ui.BOLD}ajcrew cloud{ui.RESET} — run AjCrew on your own AWS EC2")
+        ui.note(f"{ui.BOLD}ajcrew cloud{ui.RESET} — run Aj Crew on your own AWS EC2")
         print()
         ui.detail("launch      Provision + configure an instance (interactive)")
-        ui.detail("list        List your AjCrew cloud instances")
+        ui.detail("list        List your Aj Crew cloud instances")
         ui.detail("status      Show one instance's state")
         ui.detail("tunnel      Open the dashboard SSM tunnel (alias: connect)")
         ui.detail("connect     Open the dashboard over an SSM tunnel")

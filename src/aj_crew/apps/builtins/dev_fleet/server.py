@@ -1,7 +1,7 @@
-"""Dev Fleet — standalone aiohttp backend for AjCrew feature worktrees.
+"""Dev Fleet — standalone aiohttp backend for Aj Crew feature worktrees.
 
-Manages AjCrew feature worktrees (git worktrees of the main repo) and their
-isolated pod test instances. Runs as a subprocess spawned by the AjCrew app
+Manages Aj Crew feature worktrees (git worktrees of the main repo) and their
+isolated pod test instances. Runs as a subprocess spawned by the Aj Crew app
 backend system (apps/backend.py). The gateway proxies /apps/dev-fleet/api/* to
 this process with X-AjCrew-Proxy HMAC signing; HMAC middleware validates
 every request (except /health) fail-closed.

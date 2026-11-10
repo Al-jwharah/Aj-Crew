@@ -1,6 +1,6 @@
 """App backend process management — spawn, health check, stop, and proxy config.
 
-When an app declares a ``backend`` section in its manifest, AjCrew manages
+When an app declares a ``backend`` section in its manifest, Aj Crew manages
 the backend process lifecycle: spawn on enable, health-check, stop on disable.
 
 This module is the backend's only import path and patch surface. Its rules live in
@@ -491,7 +491,7 @@ def _start_app_backend_body(app_name: str, manifest: Any) -> AppProcess | None:
     root = app_dir(app_name)
     entry_point = manifest.backend.entryPoint
     # Module-style entry point (e.g. "aj_crew.apps.builtins.<name>"):
-    # used by built-in apps that live inside the AjCrew package itself.
+    # used by built-in apps that live inside the Aj Crew package itself.
     # The shape test is the shared `is_module_style_entry_point` -- the same
     # predicate `bridges_mcp.py` and the install-time desktop gate answer from,
     # so what this spawn provisions and what those sites assume it provisions

@@ -1,4 +1,4 @@
-"""AjCrew kiro-cli agent configuration.
+"""Aj Crew kiro-cli agent configuration.
 
 Generates and installs ``ajcrew.json`` into ``~/.kiro/agents/``.
 
@@ -871,7 +871,7 @@ def _all_skill_paths() -> list[str]:
         kiro_proj = proj / ".kiro" / "skills"
         if kiro_proj.is_dir() and not is_sensitive_path(str(kiro_proj)):
             paths.add(str(kiro_proj))
-    # User-created skills (AjCrew convention)
+    # User-created skills (Aj Crew convention)
     user_skills = config_dir() / "skills"
     if user_skills.is_dir():
         paths.add(str(user_skills))
@@ -1340,7 +1340,7 @@ def _refresh_dynamic_fields(
     if cur_model in _model_migration:
         config["model"] = _model_migration[cur_model]
 
-    # Self-heal: lift any stray AjCrew bookkeeping keys into the sidecar and
+    # Self-heal: lift any stray Aj Crew bookkeeping keys into the sidecar and
     # strip them from the spec so kiro-cli (deny_unknown_fields) accepts it. The
     # one-time migrate_agent_specs() at startup handles the rest of ~/.kiro/agents/.
     name = config.get("name") or _MAIN_AGENT_NAME
@@ -1446,7 +1446,7 @@ class _AgentSpecUnreadable(Exception):
 
 
 _KNOWLEDGE_SYSTEM_PROMPT = (
-    "You are a knowledge extraction specialist for AjCrew's Knowledge Library. "
+    "You are a knowledge extraction specialist for Aj Crew's Knowledge Library. "
     "Your job is to analyze documents and extract structured information.\n\n"
     "You ALWAYS output valid JSON. No markdown, no explanation — just the JSON object.\n\n"
     "Be precise with entity names — use canonical forms (e.g., 'DynamoDB' not 'dynamo' or 'DDB').\n"
@@ -1455,7 +1455,7 @@ _KNOWLEDGE_SYSTEM_PROMPT = (
 )
 
 
-_RESEARCH_SYSTEM_PROMPT = """# AjCrew Research Worker
+_RESEARCH_SYSTEM_PROMPT = """# Aj Crew Research Worker
 
 You are `ajcrew-research`, an autonomous research worker. You run ONE research
 cycle per turn inside an autonudge loop, then end your turn — the next cycle fires
@@ -1528,7 +1528,7 @@ automatically. The Research Lab app drives you; the nudge names the campaign and
 """
 
 
-_HEARTBEAT_SYSTEM_PROMPT = """# AjCrew Heartbeat Worker
+_HEARTBEAT_SYSTEM_PROMPT = """# Aj Crew Heartbeat Worker
 
 You are `ajcrew-heartbeat`, an unattended polling worker that runs one task
 per heartbeat cycle. You are dispatched by HeartbeatService when a task line in

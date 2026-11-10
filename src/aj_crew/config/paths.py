@@ -1,4 +1,4 @@
-"""Pure filesystem path primitives for AjCrew configuration.
+"""Pure filesystem path primitives for Aj Crew configuration.
 
 This is a **leaf module**: it depends only on the standard library
 (``os``, ``sys``, ``pathlib``, ``logging``) and imports nothing from
@@ -141,9 +141,9 @@ def _write_recovery_breadcrumb(data_home: Path) -> None:
     try:
         crumb = Path.home() / RECOVERY_BREADCRUMB_NAME
         content = (
-            "AjCrew data-home location pointer (safe to delete).\n"
+            "Aj Crew data-home location pointer (safe to delete).\n"
             "\n"
-            "AjCrew stores its data (config, credentials, history, DBs) at:\n"
+            "Aj Crew stores its data (config, credentials, history, DBs) at:\n"
             f"    {data_home}\n"
             "\n"
             "This pointer lives outside ~/.kiro/ on purpose: if a Kiro-family\n"
@@ -1137,11 +1137,11 @@ def kiro_home() -> Path:
 
     SCOPE CAVEAT — read before setting this. ``KIRO_HOME`` redirects kiro-cli's
     WHOLE user directory (agents, prompts, skills, steering, settings, sessions),
-    but AjCrew currently resolves the host ``~/.kiro`` for most of those readers
+    but Aj Crew currently resolves the host ``~/.kiro`` for most of those readers
     (session transcripts in ``session_map.py`` / ``acp/*`` / ``providers/acp_*.py``
     / ``dashboard/handlers/usage_sessions.py``, and the ``settings/mcp.json`` registry).
     Setting ``KIRO_HOME`` therefore moves where kiro-cli WRITES sessions without
-    moving where AjCrew READS them, which breaks session resume. Only the agents
+    moving where Aj Crew READS them, which breaks session resume. Only the agents
     directory follows it today, so this is not yet a supported way to isolate an
     instance. (``build_pod_env()`` does set it, to ``<pod home>/kiro``.) Bringing
     the remaining readers through this resolver is the prerequisite.
@@ -1176,7 +1176,7 @@ def kiro_sessions_dir() -> Path:
 
     Honors ``KIRO_HOME`` for the same reason :func:`kiro_agents_dir` does. This
     matters because ``KIRO_HOME`` is directory-wide: it moves the transcripts too,
-    so an instance that redirects its agent specs and then has AjCrew read
+    so an instance that redirects its agent specs and then has Aj Crew read
     transcripts from the machine-wide path loses session resume and has its
     mappings pruned. Routing both through the resolver keeps writer and reader in
     agreement.

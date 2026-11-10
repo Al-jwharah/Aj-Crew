@@ -1,6 +1,6 @@
 # Code Review Sage
 
-A self-evolving deep code reviewer packaged as a built-in AjCrew app. Reviews
+A self-evolving deep code reviewer packaged as a built-in Aj Crew app. Reviews
 **GitHub pull requests**, learns per-repository from shipped fixes + review
 comments + design discussions, and produces a prioritized **Focus Report** so
 you know which changes actually deserve scrutiny. Findings are read **in the

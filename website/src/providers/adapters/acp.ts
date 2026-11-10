@@ -244,14 +244,14 @@ export class AcpAdapter implements ProviderAdapter {
     // the composer shows the real value before a session exists to report one.
     //
     // This deliberately does NOT re-derive the precedence client-side. The
-    // chain is four tiers deep (the AjCrew agent's own model, the bound kiro
+    // chain is four tiers deep (the Aj Crew agent's own model, the bound kiro
     // agent's pin, the global agent.model default, the installed agent file)
     // and a second copy of it here would drift from the backend's: a fresh slot
     // would display the kiro agent file's model while the turn actually ran on
     // the configured default, and the mismatch would only self-correct once the
     // first turn backfilled slot.model from the live session.
     //
-    // `agentName` is an AjCrew agent name (a "crew"), not a kiro agent
+    // `agentName` is an Aj Crew agent name (a "crew"), not a kiro agent
     // template — the per-agent default is stored per crew, and several crews can
     // share one template. `app` names the app that owns the session, so the
     // answer includes that app's own model setting as the session start does.
@@ -263,7 +263,7 @@ export class AcpAdapter implements ProviderAdapter {
     }
   }
 
-  /** AjCrew's configured default model (Settings → Chat → Default Model).
+  /** Aj Crew's configured default model (Settings → Chat → Default Model).
    *  '' when unset or "auto" — both mean "no explicit default", so callers fall
    *  through to the agent-file model exactly as the backend does. */
   async resolveDefaultModel(): Promise<string> {
@@ -276,7 +276,7 @@ export class AcpAdapter implements ProviderAdapter {
     }
   }
 
-  /** AjCrew's configured default reasoning effort (Settings → Chat). '' means
+  /** Aj Crew's configured default reasoning effort (Settings → Chat). '' means
    *  no default, i.e. the model picks its own. A per-slot override outranks it,
    *  matching ConfigLoader._acp()'s `reasoning_effort_override or default`.
    *  `readConfig` supplies the gateway config body from the caller's shared

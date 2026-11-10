@@ -167,7 +167,7 @@ class TestKiroInternalSandboxExclusion:
         assert result == (["sandbox-exec", "python3"], "/tmp/p.sb")
 
     def test_darwin_kiro_disabled_stays_wrapped(self, tmp_path, monkeypatch):
-        """kiro sandbox OFF -> AjCrew's seatbelt ON (the inverse rule)."""
+        """kiro sandbox OFF -> Aj Crew's seatbelt ON (the inverse rule)."""
         self._write_settings(tmp_path, monkeypatch, '{"sandbox": false}')
         monkeypatch.setattr("aj_crew.sandbox.sys.platform", "darwin")
         with (
@@ -276,7 +276,7 @@ class TestKiroInternalSandboxExclusion:
 
     def test_sel_failure_refuses_delegation_falls_back_to_seatbelt(self, tmp_path, monkeypatch):
         """Audit-or-deny: if the SEL audit cannot be written, the delegation
-        is refused and the spawn falls back to AjCrew's own seatbelt."""
+        is refused and the spawn falls back to Aj Crew's own seatbelt."""
         self._write_settings(tmp_path, monkeypatch, '{"sandbox": true}')
         monkeypatch.setattr("aj_crew.sandbox.sys.platform", "darwin")
         with (
@@ -360,7 +360,7 @@ class TestMacOsNestingDetection:
     Files' ``git status`` / search) and ~40 gateway-boot MCP probes failing with
     "sandbox unavailable ... no OS-level sandbox backend is available on this
     host" on a macOS host whose ``sandbox-exec`` works perfectly when NOT nested
-    — because AjCrew's own seatbelt had already confined the process tree.
+    — because Aj Crew's own seatbelt had already confined the process tree.
 
     Every test fixes both gate inputs explicitly rather than inheriting whatever
     the test host happens to be: these assertions must not flip between a
@@ -457,7 +457,7 @@ class TestMacOsNestingDetection:
     def test_foreign_outer_sandbox_fails_closed_with_actionable_guidance(
         self, mock_detect, monkeypatch
     ):
-        # Nested under a sandbox AjCrew did NOT create (no marker): its profile
+        # Nested under a sandbox Aj Crew did NOT create (no marker): its profile
         # is unidentifiable and its environment was never scrubbed by us, so
         # passthrough is refused. The error must still name the REAL cause and a
         # remedy that keeps isolation, not repeat the false "this host has no

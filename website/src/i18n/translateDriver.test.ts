@@ -472,7 +472,7 @@ describe('passthroughRatio', () => {
   })
 
   it('tolerates a proper noun surviving translation', () => {
-    expect(passthroughRatio({ a: 'AjCrew', b: 'Open' }, { a: 'AjCrew', b: '打开' })).toBe(0.5)
+    expect(passthroughRatio({ a: 'AjCrew', b: 'Open' }, { a: 'AjCrew', b: '打开' })).toBe(0.5) // brand-ok: glossary term
   })
 
   it('is 0 for an empty corpus rather than NaN', () => {

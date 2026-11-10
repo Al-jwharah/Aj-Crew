@@ -35,7 +35,7 @@ from conftest import make_dir_link
 
 def _fake_aj_crew_package(root: Path) -> Path:
     """Build the minimal directory shape the resolver walks."""
-    pkg = root / "src" / "AjCrew" / "src" / "aj_crew"
+    pkg = root / "src" / "AjCrew" / "src" / "aj_crew"  # brand-ok: fixture data
     pkg.mkdir(parents=True)
     (pkg / "__init__.py").write_text("")
     return pkg

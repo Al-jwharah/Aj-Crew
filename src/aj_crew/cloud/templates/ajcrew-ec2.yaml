@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: >-
-  AjCrew self-hosted gateway on a single EC2 instance in the user's own AWS
+  Aj Crew self-hosted gateway on a single EC2 instance in the user's own AWS
   account. Reached over SSM Session Manager (no inbound ports, no SSH key).
   Managed by `ajcrew cloud`. Delete this stack to remove all resources.
 
@@ -78,7 +78,7 @@ Parameters:
     Default: ""
     AllowedPattern: "^$|^[a-z0-9.-]{3,63}$"
     Description: >-
-      S3 bucket holding the AjCrew source tarball uploaded by the launcher.
+      S3 bucket holding the Aj Crew source tarball uploaded by the launcher.
       When set, the instance downloads the source from S3 (using its IAM role);
       no GitHub access needed. Empty = fall back to a public git clone.
   SourceKey:
@@ -275,7 +275,7 @@ Resources:
   InstanceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: !Sub "AjCrew ${StackTag} - SSM-only (no inbound by default)"
+      GroupDescription: !Sub "Aj Crew ${StackTag} - SSM-only (no inbound by default)"
       VpcId: !Ref VpcId
       SecurityGroupEgress:
         - IpProtocol: "-1"
@@ -297,7 +297,7 @@ Resources:
       CidrIp: !Ref AllowSshCidr
       Description: SSH fallback from the user's CIDR
 
-  # --- The instance. UserData installs AjCrew + kiro-cli + the systemd service
+  # --- The instance. UserData installs Aj Crew + kiro-cli + the systemd service
   #     and signals the WaitCondition when the gateway is healthy (or fails it
   #     with the tail of the setup log, so the stack rolls back cleanly).
   Instance:
@@ -339,7 +339,7 @@ Resources:
           AssociatePublicIpAddress: !If [WantPublicIp, true, false]
           SubnetId: !Ref SubnetId
           GroupSet: [!Ref InstanceSecurityGroup]
-      # Enforce IMDSv2 (token-required) and a hop limit of 1. AjCrew runs a
+      # Enforce IMDSv2 (token-required) and a hop limit of 1. Aj Crew runs a
       # prompt-injectable agent that executes arbitrary tools, so an SSRF or
       # injection that reaches 169.254.169.254 must NOT be able to read the
       # instance role's STS credentials via unauthenticated IMDSv1.
@@ -572,7 +572,7 @@ Resources:
           mkdir -p "$BOOTSTRAP_STATE"
           [ -f "$SIGNAL_DONE" ] && exit 0
           exec >>/var/log/ajcrew-setup.log 2>&1
-          echo "=== AjCrew bootstrap starting $(date -u) ==="
+          echo "=== Aj Crew bootstrap starting $(date -u) ==="
 
           HANDLE="${WaitHandle}"
           LOG=/var/log/ajcrew-setup.log
@@ -689,7 +689,7 @@ Resources:
           sudo -u $RUN_USER bash -lc 'command -v kiro-cli >/dev/null 2>&1 || [ -x "$HOME/.local/bin/kiro-cli" ] || [ -x /usr/local/bin/kiro-cli ]' \
             || fail "kiro-cli did not install (the chat backend would not work)"
 
-          echo "--- fetching + installing AjCrew ---"
+          echo "--- fetching + installing Aj Crew ---"
           # S3 source preferred, git clone fallback. Values are inlined into a
           # script file to dodge sudo env_reset: see "Source fetch" above.
           cat > /tmp/kcfetch.sh <<KCFETCH
@@ -750,7 +750,7 @@ Resources:
           AJCREW_BIN=$(sudo -u $RUN_USER bash -lc 'command -v ajcrew || echo $HOME/.local/bin/ajcrew')
           cat > /etc/systemd/system/ajcrew.service <<UNIT
           [Unit]
-          Description=AjCrew AI Agent Gateway
+          Description=Aj Crew AI Agent Gateway
           After=network-online.target
           Wants=network-online.target
 
@@ -787,7 +787,7 @@ Resources:
           done
           [ "$ok" = "1" ] || fail "gateway did not become healthy within 5 minutes"
 
-          echo "=== AjCrew bootstrap complete $(date -u) ==="
+          echo "=== Aj Crew bootstrap complete $(date -u) ==="
           signal_ok=0
           for attempt in 1 2 3; do
             if /opt/aws/bin/cfn-signal -e 0 -r "ajcrew healthy" "$HANDLE"; then

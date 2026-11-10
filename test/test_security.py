@@ -407,7 +407,7 @@ class TestRedactCredentials:
         assert len(warnings) == 0
 
     def test_preserves_git_output(self) -> None:
-        text = "Cloning into 'AjCrew'...\nremote: Enumerating objects: 1234"
+        text = "Cloning into 'AjCrew'...\nremote: Enumerating objects: 1234"  # brand-ok: fixture data
         result, warnings = redact_credentials(text)
         assert result == text
 

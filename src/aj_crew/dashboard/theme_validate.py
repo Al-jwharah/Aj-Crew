@@ -280,7 +280,7 @@ _THEME_CLONE_TIMEOUT_SEC = 30
 
 # Manifest schema version. A pack declares ``formatVersion`` (integer) in
 # theme.json; this is the newest major the installer understands. A pack
-# declaring a higher major is rejected with an honest "needs a newer AjCrew"
+# declaring a higher major is rejected with an honest "needs a newer Aj Crew"
 # message rather than an opaque schema error (one-way-door schema guard).
 _THEME_FORMAT_VERSION = 1
 
@@ -1287,7 +1287,7 @@ def _validate_theme_dir(
     if not isinstance(manifest, dict):
         return None, "theme.json must be a JSON object"
     # formatVersion FIRST (before any other schema check) so a pack authored
-    # for a newer AjCrew gets the honest version message, not an opaque
+    # for a newer Aj Crew gets the honest version message, not an opaque
     # downstream schema error. Must be a positive integer; a major above the
     # supported one is a forward-incompatible pack.
     fmt = manifest.get("formatVersion")

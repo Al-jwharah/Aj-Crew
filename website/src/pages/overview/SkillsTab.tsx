@@ -362,7 +362,7 @@ export default function SkillsTab() {
     },
   })
 
-  // Two groups: skills AjCrew can edit (ajcrew + kiro-cli's own dirs) and
+  // Two groups: skills Aj Crew can edit (ajcrew + kiro-cli's own dirs) and
   // read-only AIM-package skills.  The text filter is applied to both.
   const { localSkills, packageSkills } = useMemo(() => {
     const q = skillFilter.toLowerCase()

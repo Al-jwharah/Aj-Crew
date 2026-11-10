@@ -5,7 +5,7 @@ MCP servers, skills, agents) so that uninstall can safely clean up dependencies
 that no app references any more.
 
 All reads/writes use ``fcntl.flock()`` for concurrency safety, consistent
-with AjCrew's existing file locking patterns.  Read-modify-write cycles
+with Aj Crew's existing file locking patterns.  Read-modify-write cycles
 hold a single exclusive lock across the entire operation to prevent lost
 updates.
 
@@ -45,7 +45,7 @@ _LEGACY_KEY_PREFIX = "aim"
 CAPABILITY_DEP_TYPES = ("mcp", "skills", "agents")
 
 #: Types the ``CapabilityManager`` seam exposes NO install/uninstall op for, so
-#: AjCrew can neither install nor clean them up. Their ledger rows must SURVIVE
+#: Aj Crew can neither install nor clean them up. Their ledger rows must SURVIVE
 #: an uninstall: deleting the row for something we cannot actually remove would
 #: leave the installed package on disk with no record that anything referenced it
 #: (an untraceable orphan). Ownership is dropped instead, so the dep reads as
@@ -371,7 +371,7 @@ def classify_and_clean_for_uninstall(
                     entry["installedBy"] = installed_by
                     # An emptied row is normally pruned — but for an UNCLEANABLE
                     # type the row is the only remaining record that the package
-                    # was installed at all (AjCrew has no operation to remove
+                    # was installed at all (Aj Crew has no operation to remove
                     # it), so retain it ownerless instead of orphaning the package.
                     if not installed_by and not uncleanable:
                         del ledger[dep_key]

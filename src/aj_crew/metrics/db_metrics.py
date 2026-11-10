@@ -1,4 +1,4 @@
-"""Per-query timing for AjCrew's SQLite stores.
+"""Per-query timing for Aj Crew's SQLite stores.
 
 ``ajcrew.db.query.duration`` — a histogram (ms) of how long individual store
 operations take, labelled by which store and which kind of operation.

@@ -719,8 +719,8 @@ jobs:
           fi
           PLURAL="s"; [ "$COUNT" = "1" ] && PLURAL=""
           IPLURAL="s"; [ "$ICOUNT" = "1" ] && IPLURAL=""
-          TITLE="AjCrew ship report"
-          [ "$LINK_STYLE" = "plain" ] || TITLE="*AjCrew ship report*"
+          TITLE="Aj Crew ship report"
+          [ "$LINK_STYLE" = "plain" ] || TITLE="*Aj Crew ship report*"
           START_FMT="$(TZ=America/Los_Angeles date -d "$START" +'%b %d %I:%M %p')"
           if [ "$(TZ=America/Los_Angeles date -d "$START" +%Y%m%d)" = "$(TZ=America/Los_Angeles date -d "$END" +%Y%m%d)" ]; then
             END_FMT="$(TZ=America/Los_Angeles date -d "$END" +'%I:%M %p')"

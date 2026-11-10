@@ -131,7 +131,7 @@ def _manifest(alias: str | None = None, output: str | None = None, url: bool = F
             reason = safe_terminal_line(str(exc.strerror or exc))
             print(f"❌ Could not write {shown}: {reason}", file=sys.stderr)
             sys.exit(1)
-        print(f"✅ Manifest written to {output} (name: AjCrew-{alias})")
+        print(f"✅ Manifest written to {output} (name: AjCrew-{alias})")  # brand-ok: Slack app name
         print(hint)
     else:
         print(rendered)
@@ -139,7 +139,7 @@ def _manifest(alias: str | None = None, output: str | None = None, url: bool = F
 
 
 def _fix_shell_profiles() -> None:
-    """Remove stale AjCrew PATH entries from shell profiles."""
+    """Remove stale Aj Crew PATH entries from shell profiles."""
     home = Path.home()
     profiles = [
         home / ".zshrc",
@@ -323,7 +323,7 @@ def _setup_electron() -> bool:
         shutil.rmtree(app_dest)
     shutil.copytree(str(app_src), str(app_dest))
     print("  ✅ AjCrew.app installed to ~/Applications")
-    print("     Launch via Spotlight (⌘+Space → AjCrew) or Finder → ~/Applications")
+    print("     Launch via Spotlight (⌘+Space → AjCrew) or Finder → ~/Applications")  # brand-ok: app bundle name
     return True
 
 
@@ -418,7 +418,7 @@ def _setup_impl(
     if removed_mcp:
         print(f"  ✅ Removed stale MCP entries: {', '.join(removed_mcp)}")
 
-    # 2b. Ensure config.json has default AjCrew agent for fresh installs
+    # 2b. Ensure config.json has default Aj Crew agent for fresh installs
     _ensure_default_agent_in_config()
 
     # 2c. Remove the delegation skill the retired `agent.conductor_skill` flag
@@ -490,7 +490,7 @@ def _setup_impl(
             else:
                 print("  ⏭  Skipped. Install later: ajcrew setup --electron-only\n")
 
-    # 7. Cloud (run AjCrew on the user's own AWS EC2) — optional, delegated.
+    # 7. Cloud (run Aj Crew on the user's own AWS EC2) — optional, delegated.
     _maybe_setup_cloud()
 
     print("\n💎 Done! Try: ajcrew doctor && ajcrew gateway")
@@ -513,7 +513,7 @@ def _builtin_cloud_lane_offered() -> bool:
 
 
 def _maybe_setup_cloud() -> None:
-    """Offer to launch AjCrew on the user's own AWS EC2.
+    """Offer to launch Aj Crew on the user's own AWS EC2.
 
     A thin delegating step — all AWS/CloudFormation/SSM logic lives in the
     testable ``aj_crew.cloud`` module. This just asks and hands off to the
@@ -532,7 +532,7 @@ def _maybe_setup_cloud() -> None:
     print("  Aj Crew can run 24/7 on your own AWS EC2 instance (bring your own")
     print("  AWS account; credentials stay in the aws CLI — never stored here).")
     try:
-        answer = input("  Launch AjCrew on AWS now? [y/N]: ").strip().lower()
+        answer = input("  Launch Aj Crew on AWS now? [y/N]: ").strip().lower()
     except (EOFError, UnicodeDecodeError):
         # Piped/non-interactive setup or a non-UTF-8 locale (e.g. C/POSIX on
         # Amazon Linux Cloud Desktop) — input() decodes stdin with the locale

@@ -1,4 +1,4 @@
-"""AjCrew cloud launcher — provision + run AjCrew on the user's own EC2.
+"""Aj Crew cloud launcher — provision + run Aj Crew on the user's own EC2.
 
 The design is documented in ``docs/system-specs/modules/cloud.md``. The short
 version:
@@ -6,7 +6,7 @@ version:
 - **Bring-your-own-AWS, store nothing.** Every AWS call shells to the ``aws``
   CLI with ``--profile`` (never boto3) through the single :func:`cloud.aws.run_aws`
   chokepoint, so credential resolution stays in the CLI's own provider chain.
-  AjCrew persists only a profile name, region, and stack name.
+  Aj Crew persists only a profile name, region, and stack name.
 - **CloudFormation** provisions the whole resource stack (IAM role + instance
   profile, security group, EC2 instance, EBS volume, tags) in one atomic,
   rollback-safe, one-command-teardown deploy.

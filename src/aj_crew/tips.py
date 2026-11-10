@@ -1394,7 +1394,7 @@ async def api_tips_status(request: web.Request) -> web.Response:
 
     Returns JSON: {"enabled_config": <bool>, "opted_out": <bool>, "cadence_hours": <float>}
     - enabled_config: instance-level ``tips_enabled`` config flag.
-    - opted_out: per-instance opt-out flag (AjCrew is a single-owner
+    - opted_out: per-instance opt-out flag (Aj Crew is a single-owner
       personal gateway; tips state is instance-wide by design) (optout/optin
       feedback actions). Lets the settings UI render the current state.
     - cadence_hours: configured ``tips_cadence_hours`` — lets the client derive

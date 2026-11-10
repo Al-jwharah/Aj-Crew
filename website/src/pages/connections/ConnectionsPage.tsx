@@ -447,7 +447,7 @@ export default function ConnectionsPage({ servicesEnabled = false }: { servicesE
       await api.mcpCustomUpdate(existing.name, { ...stored.spec, url: provider.mcp_url })
       // Editing a spec deliberately preserves the disabled flag ("editing is
       // not consent to run") — but Reconnect IS consent, so re-enable the
-      // AjCrew-managed scope. mcpToggle would write the GLOBAL mcp.json
+      // Aj Crew-managed scope. mcpToggle would write the GLOBAL mcp.json
       // (creating an empty stub for ajcrew-scoped names), so use the
       // scope-preserving apply instead: ajcrew on, every observed global
       // scope passed through unchanged (the backend defaults kiroGlobal to

@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import NudgeCard, { parseNudgeMessage, nudgeMatchesLoop } from '../pages/chat/NudgeCard'
 import type { ChatMessage } from '../types'
 
-const BODY = 'Babysit the AjCrew bug-fix PRs to MERGE-READY\nsecond line of instructions'
+const BODY = 'Babysit the Aj Crew bug-fix PRs to MERGE-READY\nsecond line of instructions'
 
 function makeMsg(over: Partial<ChatMessage> = {}): ChatMessage {
   return {

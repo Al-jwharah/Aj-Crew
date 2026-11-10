@@ -688,7 +688,7 @@ def _deps_status() -> dict:
     once.
 
     ``managed`` distinguishes the app's own install from the user's system one,
-    which is what lets the UI say "installed by AjCrew" rather than implying
+    which is what lets the UI say "installed by Aj Crew" rather than implying
     the host changed.
 
     BLOCKING (filesystem probes over ``PATH``) — called through ``off_loop``.

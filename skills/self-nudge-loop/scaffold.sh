@@ -44,7 +44,7 @@ write_if_absent() {  # $1=path  $2=content
 LOOP_MD=$(cat <<EOF
 # LOOP — $PROJECT continuous session guide
 
-One page. Tells you how to launch an autonomous AutoNudge loop in this AjCrew session for **$PROJECT**.
+One page. Tells you how to launch an autonomous AutoNudge loop in this Aj Crew session for **$PROJECT**.
 
 Generated: $(date -u +%FT%TZ) by \`self-nudge-loop/scaffold.sh\`.
 

@@ -446,7 +446,7 @@ class TestPutRegistriesValidation:
         async with TestClient(TestServer(_make_app())) as client:
             resp = await client.put(
                 "/api/apps/registries",
-                json={"registries": [{"repo": "AjCrew"}]},
+                json={"registries": [{"repo": "AjCrew"}]},  # brand-ok: fixture data
             )
             assert resp.status == 400
             data = await resp.json()
@@ -646,7 +646,7 @@ class TestPutRegistriesUrls:
         async with TestClient(TestServer(_make_app())) as client:
             resp = await client.put(
                 "/api/apps/registries",
-                json={"registries": [{"repo": "AjCrew"}]},
+                json={"registries": [{"repo": "AjCrew"}]},  # brand-ok: fixture data
             )
             assert resp.status == 400
             assert "core registry" in (await resp.json())["error"]

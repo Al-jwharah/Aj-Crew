@@ -1,4 +1,4 @@
-"""AjCrew One-Click Deploy - in-account reaper Lambda.
+"""Aj Crew One-Click Deploy - in-account reaper Lambda.
 
 Triggered by an EventBridge schedule (see reaper.yaml). Each run scans the
 shared deploy bucket for per-slug `.ajcrew-deploy.json` manifests and, for any

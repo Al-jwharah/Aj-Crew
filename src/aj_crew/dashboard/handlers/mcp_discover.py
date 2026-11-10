@@ -115,7 +115,7 @@ def _derive_install_name(server_id: str) -> str:
 
 
 def _configured_server_names() -> set[str]:
-    """Names of all MCP servers AjCrew currently knows about.
+    """Names of all MCP servers Aj Crew currently knows about.
 
     Same source as the ``/api/mcp`` list endpoint so the ``installed``
     cross-ref matches what the config table shows.
@@ -247,7 +247,7 @@ async def search_registry(
     else:
         search_response = await registry.search_with_outcomes(query, provider=provider, limit=limit)
 
-    # Cross-ref against AjCrew's configured servers so the UI can badge
+    # Cross-ref against Aj Crew's configured servers so the UI can badge
     # already-installed entries. list_servers() reads config files
     # synchronously — offload it.
     configured = await asyncio.to_thread(_configured_server_names)
@@ -391,7 +391,7 @@ async def api_mcp_discover_install(request: web.Request) -> web.Response:
     """POST /api/mcp/discover/install — body ``{"provider": ..., "id": ...}``.
 
     provider=official: translate the registry entry to an mcp.json spec and
-    write it into the AjCrew scope enabled=true (reusing the mcp.py write
+    write it into the Aj Crew scope enabled=true (reusing the mcp.py write
     helpers). provider=capability: delegate to the edition manager.
     """
     # Body-scope import, like the sibling gates in this package

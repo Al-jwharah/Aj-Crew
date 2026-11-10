@@ -31,7 +31,7 @@ fallback link comes from ``provider.tracked_items_url``. Nothing here assumes
 GitHub: this module names no client directly.
 
 This is NOT a cron job: it lives entirely inside the gateway process and only
-runs while AjCrew is running (and the machine is awake). It is also
+runs while Aj Crew is running (and the machine is awake). It is also
 zero-LLM/zero-token — it shells out to the user's existing provider CLI session
 (``gh`` / ``glab`` / ``az``, via the dispatched client's
 ``list_recent_open_issues``) and compares item numbers against a per-repo

@@ -34,7 +34,7 @@ native question affordances instead:
 
 - **Multiple choice:** state your reading of the situation, then put the options
   on their own line as `[OPTIONS: first choice | second choice | third choice]`.
-  AjCrew renders these as buttons and the user's pick arrives as their next
+  Aj Crew renders these as buttons and the user's pick arrives as their next
   message. One `[OPTIONS:]` line per message.
 - **Open questions:** just ask in plain text.
 

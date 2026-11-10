@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Detach a per-app backend from the shared AjCrew CloudFront distribution.
+"""Detach a per-app backend from the shared Aj Crew CloudFront distribution.
 
 Inverse of attach_backend.py: removes the '<slug>/api/*' cache behavior and the
 origin it targeted (only if no other behavior / the default still uses it).
@@ -28,7 +28,7 @@ def aws(profile, region, *args):
     except ImportError:
         sys.stderr.write(
             "error: aj_crew package not importable — refusing to spawn AWS "
-            "commands unsandboxed. Run this script with the AjCrew venv "
+            "commands unsandboxed. Run this script with the Aj Crew venv "
             "python (see skills/artifact-deploy/SKILL.md).\n"
         )
         sys.exit(1)

@@ -80,7 +80,7 @@ interface Props {
   /** Pin the currently-active model as this agent's own default, in place. Omit
    *  to hide the row (e.g. surfaces with no agent in scope). */
   onPinToAgent?: () => void
-  /** AjCrew agent the pin row acts on; shown in its label. */
+  /** Aj Crew agent the pin row acts on; shown in its label. */
   agentName?: string
   /** Model the pin row would WRITE, named in its label. This is the slot's real
    *  model, which is not always the one the composer displays: when a pin is

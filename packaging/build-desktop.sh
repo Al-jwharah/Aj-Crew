@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build the standalone AjCrew desktop app end-to-end.
+# Build the standalone Aj Crew desktop app end-to-end.
 #
 # Pipeline (uses the python-build-standalone approach):
 #   1. Build the React dashboard (npm)         -> website/dist
@@ -244,10 +244,10 @@ fi
 # they are ONE app on two update lanes (the in-app channel switcher moves
 # between them), so they keep the package.json defaults. Derivation mirrors
 # auto-update.js channelForVersion: only a "-nightly." stamp changes
-# identity; unstamped dev builds and insider/stable stamps build "AjCrew".
+# identity; unstamped dev builds and insider/stable stamps build "AjCrew". (brand-ok: desktop productName)
 case "$KC_VERSION" in
   *-nightly.*) PRODUCT_NAME="AjCrew Nightly" ;;
-  *)           PRODUCT_NAME="AjCrew" ;;
+  *)           PRODUCT_NAME="AjCrew" ;;  # brand-ok: desktop productName
 esac
 # The LTS edition (`EDITION=lts`) is a separate side-by-side app as well, on
 # the same pattern as nightly: it updates only from its own `lts` channel (RFC

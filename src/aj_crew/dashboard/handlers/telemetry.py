@@ -1526,7 +1526,7 @@ async def api_telemetry_startup(request: web.Request) -> web.Response:
 async def api_context_trace(request: web.Request) -> web.Response:
     """GET /api/telemetry/context-trace?slot=<session key> — per-turn injection.
 
-    Returns what AjCrew added to each turn of one session, block by block, so
+    Returns what Aj Crew added to each turn of one session, block by block, so
     the user can audit their own context rather than reverse-engineering it. The
     aggregate (bounded, block-keyed) half of the same data belongs on a metric;
     this per-session, per-turn half deliberately does not — see

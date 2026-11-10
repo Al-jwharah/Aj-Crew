@@ -167,7 +167,7 @@ class TestShippedScenarios:
             assert after[1:] == before[1:]  # only the metadata line moved
             meta = ConversationLog(base_dir=sessions).get_metadata(starter.stem)
         assert meta["project"] == str(project)
-        assert meta["title"] == "Welcome to AjCrew"  # brand-ok: verbatim seeded title
+        assert meta["title"] == "Welcome to Aj Crew"
         sc = scenarios.load_scenario(SCENARIOS_DIR / "chat-files-side-panel-browse.yaml")
         assert any(meta["title"] in step for step in sc.steps)
 
@@ -1086,7 +1086,7 @@ class TestSeededTitleReset:
     """
 
     #: The title the ``rich`` fixture seeds for the pinned starter session.
-    _FIXTURE_WELCOME_TITLE = "Welcome to AjCrew"  # brand-ok: verbatim fixture title
+    _FIXTURE_WELCOME_TITLE = "Welcome to Aj Crew"
 
     #: The session cookie the harness sends. The link-token window does not
     #: matter to it; a cookie that validates is all the reset needs.

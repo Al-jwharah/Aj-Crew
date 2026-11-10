@@ -326,7 +326,7 @@ def _exit_on_pending_save(entry: Callable[[], None]) -> Callable[[], None]:
 @_exit_on_pending_save
 def main() -> None:
     """Entry point — parse args and dispatch to the appropriate subcommand."""
-    # On Windows, force stdout/stderr to UTF-8 BEFORE anything prints — AjCrew's
+    # On Windows, force stdout/stderr to UTF-8 BEFORE anything prints — Aj Crew's
     # non-ASCII output otherwise raises UnicodeEncodeError under the cp1252
     # default when stdout is a pipe (detached gateway, AjCrewHub client). On
     # POSIX, an ASCII-only stdout replaces glyphs instead of raising. Must be the

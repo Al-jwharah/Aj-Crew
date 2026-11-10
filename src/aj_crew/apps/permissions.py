@@ -1,6 +1,6 @@
 """App permissions — validate and enforce declared permissions.
 
-Apps declare permissions in their manifest. AjCrew validates them at
+Apps declare permissions in their manifest. Aj Crew validates them at
 install time and enforces them at runtime.
 """
 
@@ -55,7 +55,7 @@ def validate_permissions(manifest: AppManifest) -> PermissionCheck:
     # Shared memory warning
     if perms.memory == "shared":
         result.warnings.append(
-            "App requests shared memory access — it can read/write AjCrew's memory stores"
+            "App requests shared memory access — it can read/write Aj Crew's memory stores"
         )
 
     # Path traversal in any resource paths

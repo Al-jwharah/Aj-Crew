@@ -45,7 +45,7 @@ from aj_crew.platform import (
 )
 
 # ── Sentinel enterprise values the test asserts on ──
-# A *second* internal git host NOT in AjCrew's Default trusted set, so the
+# A *second* internal git host NOT in Aj Crew's Default trusted set, so the
 # overlay must extend the set for an SSH clone to it to become "standard".
 _ENT_GIT_HOST = "git.internal.example.com"
 _ENT_EMBED_MODEL = "enterprise-embed:1.0"
@@ -81,7 +81,7 @@ class _EnterpriseAppsLoader:
 
 class _EnterpriseRegistryPolicy:
     def public_git_hosts(self):
-        # The AjCrew Default trusted set PLUS an extra internal git host.
+        # The Aj Crew Default trusted set PLUS an extra internal git host.
         return app_registry._PUBLIC_GIT_HOSTS | frozenset({_ENT_GIT_HOST})
 
     def clone_sandbox_mode(self, git_url, trusted_hosts):

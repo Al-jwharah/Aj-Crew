@@ -2,7 +2,7 @@
 
 Investigates issues and surfaces linked PR/commit status, keeping findings in a
 local per-repo ledger. Authenticates via the user's existing ``gh`` CLI
-session; no GitHub App, no PAT management, no AjCrew-hosted storage.
+session; no GitHub App, no PAT management, no Aj Crew-hosted storage.
 """
 
 # Required re-export: dashboard/server.py's startup route registration does

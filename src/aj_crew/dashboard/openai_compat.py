@@ -1,11 +1,11 @@
 """OpenAI-compatible /v1/chat/completions endpoint.
 
-Translates OpenAI API format into AjCrew's slot-based chat system,
-allowing any OpenAI SDK client to talk to AjCrew agents by setting
+Translates OpenAI API format into Aj Crew's slot-based chat system,
+allowing any OpenAI SDK client to talk to Aj Crew agents by setting
 `model` to the agent name (e.g. "router", "lite").
 
 Limitations:
-- ``usage`` fields are hardcoded to zero; AjCrew does not track token
+- ``usage`` fields are hardcoded to zero; Aj Crew does not track token
   counts at the slot layer. Clients relying on usage for billing/rate-
   limiting should use their own tokenizer on the response content.
 """
@@ -915,7 +915,7 @@ async def _blocking_response(
 ) -> web.Response:
     """Wait for full completion and return a single JSON response.
 
-    Note: ``usage`` is hardcoded to zero — AjCrew does not expose token
+    Note: ``usage`` is hardcoded to zero — Aj Crew does not expose token
     counts at the slot layer.
     """
     collected: list[str] = []

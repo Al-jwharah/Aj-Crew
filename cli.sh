@@ -1,6 +1,6 @@
 #!/bin/sh
 # ──────────────────────────────────────────────────────────────────────
-# AjCrew CLI installer (channel / wheel based).
+# Aj Crew CLI installer (channel / wheel based).
 #
 #   sh cli.sh --cdn https://<your-release-host>
 #   sh cli.sh --cdn https://<your-release-host> --channel nightly
@@ -119,7 +119,7 @@ while [ $# -gt 0 ]; do
     --kas) INSTALL_KAS=1; shift ;;
     -h|--help)
       cat <<'EOF'
-AjCrew CLI installer (channel / wheel based).
+Aj Crew CLI installer (channel / wheel based).
 
   sh cli.sh --cdn https://<your-release-host>
   sh cli.sh --cdn https://<your-release-host> --channel nightly
@@ -799,10 +799,10 @@ if [ -n "$PIN_VERSION" ]; then
     *[!A-Za-z0-9._+]*) err "invalid pinned version '$PIN_VERSION'" ;;
   esac
   MANIFEST_URL="$ARTIFACT_BASE/cli/$CHANNEL_PATH/$PIN_VERSION/cli-manifest.json"
-  echo "Resolving AjCrew $PIN_VERSION ($CHANNEL channel, pinned) ..."
+  echo "Resolving Aj Crew $PIN_VERSION ($CHANNEL channel, pinned) ..."
 else
   MANIFEST_URL="$FEED_BASE/feed/$CHANNEL_PATH/latest-cli.json"
-  echo "Resolving AjCrew ($CHANNEL channel) ..."
+  echo "Resolving Aj Crew ($CHANNEL channel) ..."
 fi
 # A pinned miss is policy far more often than it is a broken CDN: releases
 # published before manifest signing was enabled carry no signed manifest and are

@@ -5,7 +5,7 @@ is a *deny* gate: it either returns ``None`` (nothing to say) or a refusal
 sentence. Nothing in this module can widen access.
 
 Why this module carries so much weight: computer use is structurally invisible
-to every other security plane in AjCrew. ``is_sensitive_path`` cannot see a
+to every other security plane in Aj Crew. ``is_sensitive_path`` cannot see a
 password field's ``AXValue``; the bash deny rules cannot see a keystroke posted
 into a terminal window; the exfil URL scan cannot see a logged-in banking tab
 rendered as pixels. The path matchers protect the filesystem the agent reaches
@@ -71,7 +71,7 @@ _DENIED_BUNDLE_PREFIXES: tuple[DeniedApp, ...] = (
         # The ONE app that stays refused, and the only one that is not a judgement
         # call about the operator's own machine.
         #
-        # AjCrew's Settings UI is where the computer-use primary enable lives, and
+        # Aj Crew's Settings UI is where the computer-use primary enable lives, and
         # that enable is on the keystone precisely so the AGENT cannot reach it (the
         # keystone sits behind ``security._SENSITIVE_HOME_DIRS``). If the agent could
         # DRIVE our own window, it would click that toggle itself — and every other
@@ -84,17 +84,17 @@ _DENIED_BUNDLE_PREFIXES: tuple[DeniedApp, ...] = (
         # the agent is trusted with the desktop, and a shipped list of "apps you may
         # not automate" was both incomplete by construction and in the operator's way.
         reason=(
-            "AjCrew's own dashboard can change the agent's security settings, "
+            "Aj Crew's own dashboard can change the agent's security settings, "
             "which must only be done by the operator out-of-band"
         ),
         bundle_prefixes=("io.github.al-jwharah.ajcrew", "io.github.al-jwharah.ajcrew"),
-        name_substrings=("aj crew", "ajcrew"),
+        name_substrings=("aj crew", "ajcrew"),  # brand-ok: lowercase matcher
         # The dashboard is ALSO reachable as a browser tab, where the app identity
         # is Chrome's or Safari's and the two lists above cannot fire. The window
         # title is the only signal that survives that hosting, so it carries the
         # same rule. Substrings, not exact strings: the tab title takes a badge
         # prefix ("(3) Aj Crew") and popouts a "<label> — Aj Crew" suffix.
-        title_substrings=("aj crew", "ajcrew"),
+        title_substrings=("aj crew", "ajcrew"),  # brand-ok: lowercase matcher
     ),
 )
 
@@ -116,7 +116,7 @@ def denied_rule_for(app: AppRef) -> DeniedApp | None:
 
     * ``bundle_prefixes`` / ``name_substrings`` — the app's own identity;
     * ``title_substrings`` — the resolved WINDOW TITLE. Load-bearing for the
-      self-target rule: AjCrew's dashboard served into a browser tab presents
+      self-target rule: Aj Crew's dashboard served into a browser tab presents
       Chrome's (or Safari's) bundle id and process name, so identity matching cannot
       see it, and the agent could drive our own Settings UI — clicking the very
       toggle the keystone exists to keep out of its reach.
@@ -126,8 +126,8 @@ def denied_rule_for(app: AppRef) -> DeniedApp | None:
     (``… — Aj Crew``), and popout frames prepend their own label.
 
     The known false-positive cost, stated rather than discovered: any window whose
-    title merely CONTAINS "aj crew" is refused — a code editor with this repo open,
-    a browser reading this very PR. That is accepted because the failure directions
+    title merely CONTAINS ``aj crew`` is refused (brand-ok: the matcher) — a code
+    editor with this repo open, a browser reading this very PR. That is accepted because the failure directions
     are not symmetric. Refusing an unrelated window is visible and recoverable (the
     refusal names the target); failing to refuse our own dashboard silently hands the
     agent its own security settings. A title is also the only signal available — the

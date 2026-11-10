@@ -184,7 +184,7 @@ so no rc-to-rc step was detectable.
 
 ## Summary
 
-AjCrew ships in five distribution shapes and has three disjoint update
+Aj Crew ships in five distribution shapes and has three disjoint update
 mechanisms, one of which covers no shape a user is told to install. The
 mechanisms themselves are legitimate — a notarized app bundle and a
 pipx-managed wheel share nothing at the byte level, so any product shipping

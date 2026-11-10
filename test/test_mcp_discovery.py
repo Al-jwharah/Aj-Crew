@@ -243,10 +243,10 @@ class TestListServers:
     def test_list_surfaces_ajcrew_disabled_servers_as_disabled_rows(
         self, tmp_path, monkeypatch
     ) -> None:
-        """AjCrew-scope disabled entries get a row marked disabled.
+        """Aj Crew-scope disabled entries get a row marked disabled.
 
         Consent-disabled installs/custom adds land with ``disabled: true``
-        in the AjCrew scope; the table's enable action is the consent
+        in the Aj Crew scope; the table's enable action is the consent
         step, so the row must exist."""
         monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
         monkeypatch.setattr("aj_crew.mcp_discovery.Path.home", lambda: tmp_path)

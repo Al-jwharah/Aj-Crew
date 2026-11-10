@@ -2,7 +2,7 @@
 
 Receipts reuse the beacon endpoint and effective consent gate. The wire format is
 fixed: official app slug in the path plus a per-app HMAC token, install kind,
-and clamped AjCrew release in the query. Custom registries and non-registry
+and clamped Aj Crew release in the query. Custom registries and non-registry
 install paths never call this sender. It deliberately does not use the metrics
 schema's ``redact()`` pass: that pass would replace the HMAC token, while this
 module's closed field set contains no caller-supplied free-form value.

@@ -4,12 +4,12 @@ Status: implemented in `src/aj_crew/config/loader_agents.py` (`resolve_agent_bin
 
 ## Introduction
 
-AjCrew currently treats agent selection as a thin pass-through to kiro-cli's `session/set_mode` — the `agent.default_agent` field in `config.json` is a single string naming a kiro agent, and workspaces are flat `dict[str, str]` mappings with no structured metadata. This feature introduces AjCrew-owned agent definitions that serve as the orchestration layer binding together a workspace, a memory store, and a reference to a kiro/AIM agent (the execution layer). Kiro agents handle LLM details (prompt, tools, MCP servers, model). AjCrew agents handle operational bindings (which workspace, which memory store, behavioral preferences). This is Phase 2 of the RFC config evolution, building on the formalized config system from Phase 1.
+Aj Crew currently treats agent selection as a thin pass-through to kiro-cli's `session/set_mode` — the `agent.default_agent` field in `config.json` is a single string naming a kiro agent, and workspaces are flat `dict[str, str]` mappings with no structured metadata. This feature introduces Aj Crew-owned agent definitions that serve as the orchestration layer binding together a workspace, a memory store, and a reference to a kiro/AIM agent (the execution layer). Kiro agents handle LLM details (prompt, tools, MCP servers, model). Aj Crew agents handle operational bindings (which workspace, which memory store, behavioral preferences). This is Phase 2 of the RFC config evolution, building on the formalized config system from Phase 1.
 
 ## Glossary
 
 - **AjCrew_Agent**: A named agent definition in `config.json` under the `agents` section. Each AjCrew_Agent binds a workspace, a memory store, and a reference to a Kiro_Agent. Multiple AjCrew_Agents can reference the same Kiro_Agent with different operational bindings.
-- **Kiro_Agent**: An agent config file installed at `~/.kiro/agents/*.json` by AIM or AjCrew setup. Kiro_Agents define LLM behavior (prompt, tools, MCP servers, model). Selected via `session/set_mode` with the agent's `modeId`.
+- **Kiro_Agent**: An agent config file installed at `~/.kiro/agents/*.json` by AIM or Aj Crew setup. Kiro_Agents define LLM behavior (prompt, tools, MCP servers, model). Selected via `session/set_mode` with the agent's `modeId`.
 - **Config_Loader**: The Python module (`config/loader.py`) responsible for reading, validating, and writing `config.json`.
 - **Schema_Registry**: The in-memory registry built at import time from the dataclass field metadata, producing flat `ConfigEntry` records.
 - **Workspace_Config**: A structured workspace definition containing at minimum a directory path. Replaces the current flat `dict[str, str]` workspace mapping.
@@ -19,9 +19,9 @@ AjCrew currently treats agent selection as a thin pass-through to kiro-cli's `se
 
 ## Requirements
 
-### Requirement 1: AjCrew Agent Definitions in Config
+### Requirement 1: Aj Crew Agent Definitions in Config
 
-**User Story:** As an AjCrew user, I want to define named AjCrew agents in my config.json, so that I can have multiple operational profiles (e.g. coding, oncall) each with their own workspace and memory store bindings.
+**User Story:** As an Aj Crew user, I want to define named Aj Crew agents in my config.json, so that I can have multiple operational profiles (e.g. coding, oncall) each with their own workspace and memory store bindings.
 
 #### Acceptance Criteria
 
@@ -35,7 +35,7 @@ AjCrew currently treats agent selection as a thin pass-through to kiro-cli's `se
 
 ### Requirement 2: Default Agent Selection
 
-**User Story:** As an AjCrew user, I want to designate a default AjCrew agent, so that new sessions automatically use the correct workspace and memory store without manual selection.
+**User Story:** As an Aj Crew user, I want to designate a default Aj Crew agent, so that new sessions automatically use the correct workspace and memory store without manual selection.
 
 #### Acceptance Criteria
 
@@ -46,19 +46,19 @@ AjCrew currently treats agent selection as a thin pass-through to kiro-cli's `se
 
 ### Requirement 3: Structured Workspace Definitions
 
-**User Story:** As an AjCrew user, I want workspaces to be structured objects with a directory path, so that the config system can support richer workspace metadata in the future.
+**User Story:** As an Aj Crew user, I want workspaces to be structured objects with a directory path, so that the config system can support richer workspace metadata in the future.
 
 #### Acceptance Criteria
 
 1. THE Config_Loader SHALL define a `WorkspaceConfig` dataclass with a `dir` field (str) specifying the workspace directory path, with appropriate field metadata.
 2. THE `AjCrewConfig.workspaces` field type SHALL change from `dict[str, str]` to `dict[str, WorkspaceConfig]`.
 3. THE Workspace_Config SHALL NOT contain any agent or memory store references — the binding flows from AjCrew_Agent to workspace, not from workspace to agent.
-4. WHEN a workspace `dir` value starts with `/` or `~`, THE Config_Loader SHALL treat the path as absolute. WHEN the value is a relative path, THE Config_Loader SHALL resolve it relative to the AjCrew config directory (`~/.ajcrew/`).
+4. WHEN a workspace `dir` value starts with `/` or `~`, THE Config_Loader SHALL treat the path as absolute. WHEN the value is a relative path, THE Config_Loader SHALL resolve it relative to the Aj Crew config directory (`~/.ajcrew/`).
 5. THE `AjCrewConfig` SHALL retain a `default_workspace` field (str) naming the fallback workspace when no AjCrew_Agent binding applies.
 
 ### Requirement 4: Workspace Migration from Flat Format
 
-**User Story:** As an existing AjCrew user, I want my current flat workspace config to continue working after the upgrade, so that I do not need to manually rewrite my config.json.
+**User Story:** As an existing Aj Crew user, I want my current flat workspace config to continue working after the upgrade, so that I do not need to manually rewrite my config.json.
 
 #### Acceptance Criteria
 
@@ -69,7 +69,7 @@ AjCrew currently treats agent selection as a thin pass-through to kiro-cli's `se
 
 ### Requirement 5: Named Memory Store Definitions
 
-**User Story:** As an AjCrew user, I want to define named memory stores in my config, so that different agents or tasks can use isolated knowledge containers with their own settings.
+**User Story:** As an Aj Crew user, I want to define named memory stores in my config, so that different agents or tasks can use isolated knowledge containers with their own settings.
 
 #### Acceptance Criteria
 
@@ -82,7 +82,7 @@ AjCrew currently treats agent selection as a thin pass-through to kiro-cli's `se
 
 ### Requirement 6: Memory Store Settings Resolution
 
-**User Story:** As an AjCrew developer, I want memory store settings to merge with global defaults at the dict level, so that a store that only overrides `embedding_provider` inherits all other memory settings from the top-level config.
+**User Story:** As an Aj Crew developer, I want memory store settings to merge with global defaults at the dict level, so that a store that only overrides `embedding_provider` inherits all other memory settings from the top-level config.
 
 #### Acceptance Criteria
 
@@ -93,7 +93,7 @@ AjCrew currently treats agent selection as a thin pass-through to kiro-cli's `se
 
 ### Requirement 7: Agent Resolver — Session Binding
 
-**User Story:** As an AjCrew user, I want switching agents to automatically switch my workspace and memory store, so that each agent profile provides a complete operational context.
+**User Story:** As an Aj Crew user, I want switching agents to automatically switch my workspace and memory store, so that each agent profile provides a complete operational context.
 
 #### Acceptance Criteria
 
@@ -105,7 +105,7 @@ AjCrew currently treats agent selection as a thin pass-through to kiro-cli's `se
 
 ### Requirement 8: Kiro Agent Validation
 
-**User Story:** As an AjCrew user, I want to be warned when my AjCrew agent references a kiro agent that is not installed, so that I can fix the configuration before encountering runtime errors.
+**User Story:** As an Aj Crew user, I want to be warned when my Aj Crew agent references a kiro agent that is not installed, so that I can fix the configuration before encountering runtime errors.
 
 #### Acceptance Criteria
 
@@ -115,7 +115,7 @@ AjCrew currently treats agent selection as a thin pass-through to kiro-cli's `se
 
 ### Requirement 9: Backward Compatibility with Existing Config
 
-**User Story:** As an existing AjCrew user, I want my current config.json to continue working without modification after the upgrade, so that the transition is seamless.
+**User Story:** As an existing Aj Crew user, I want my current config.json to continue working without modification after the upgrade, so that the transition is seamless.
 
 #### Acceptance Criteria
 
@@ -127,7 +127,7 @@ AjCrew currently treats agent selection as a thin pass-through to kiro-cli's `se
 
 ### Requirement 10: Schema Registry Extension
 
-**User Story:** As an AjCrew developer, I want the new agent, workspace, and memory store config sections to appear in the schema registry, so that the dashboard and baseline generator reflect the full config surface.
+**User Story:** As an Aj Crew developer, I want the new agent, workspace, and memory store config sections to appear in the schema registry, so that the dashboard and baseline generator reflect the full config surface.
 
 #### Acceptance Criteria
 
@@ -139,7 +139,7 @@ AjCrew currently treats agent selection as a thin pass-through to kiro-cli's `se
 
 ### Requirement 11: Config Serialization
 
-**User Story:** As an AjCrew developer, I want `to_dict()` to serialize the new config sections correctly, so that saving config preserves all agent, workspace, and memory store definitions.
+**User Story:** As an Aj Crew developer, I want `to_dict()` to serialize the new config sections correctly, so that saving config preserves all agent, workspace, and memory store definitions.
 
 #### Acceptance Criteria
 

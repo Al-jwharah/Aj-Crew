@@ -4,7 +4,7 @@ Status: implemented in `src/aj_crew/config/schema.py`, `src/aj_crew/config/valid
 
 ## Overview
 
-Formalize AjCrew's configuration by making the Python dataclass hierarchy the single source of truth. Add field metadata, introduce `SlackConfig` and `DashboardConfig`, build a schema registry, expose it via API, add a baseline generator, and wire in runtime validation with graceful degradation. All work is in Python, targeting the existing `config/loader.py`, a new `config/schema.py`, `dashboard/handlers.py`, and associated test files.
+Formalize Aj Crew's configuration by making the Python dataclass hierarchy the single source of truth. Add field metadata, introduce `SlackConfig` and `DashboardConfig`, build a schema registry, expose it via API, add a baseline generator, and wire in runtime validation with graceful degradation. All work is in Python, targeting the existing `config/loader.py`, a new `config/schema.py`, `dashboard/handlers.py`, and associated test files.
 
 ## Tasks
 

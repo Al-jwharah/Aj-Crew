@@ -19,7 +19,7 @@
           ]
         },
         {
-          "user": "Also remember I work on the AjCrew project.",
+          "user": "Also remember I work on the Aj Crew project.",
           "assertions": [
             {
               "type": "contains",
@@ -54,7 +54,7 @@
             },
             {
               "type": "judge",
-              "value": "Agent should recall that the user works on the AjCrew project."
+              "value": "Agent should recall that the user works on the Aj Crew project."
             }
           ]
         }

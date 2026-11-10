@@ -121,7 +121,7 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-#: Canonical kiro-cli agent name for AjCrew. Used as the final agent
+#: Canonical kiro-cli agent name for Aj Crew. Used as the final agent
 #: fallback so the transport session loads the same MCP surface (incl. the
 #: ajcrew-core server that provides ``spawn_run``) as the dashboard/native
 #: path. Without it, an empty ``agent.default_agent`` config makes kiro-cli

@@ -21,7 +21,7 @@ class TestAcpPerAgentModel:
 
     @staticmethod
     def _acp_cfg():
-        # AjCrew is KiroACP-only, so the factory is always acp; a plain
+        # Aj Crew is KiroACP-only, so the factory is always acp; a plain
         # instance keeps construction side-effect-free (AcpProvider.__init__
         # builds an AcpClient without spawning kiro-cli).
         return AjCrewConfig()

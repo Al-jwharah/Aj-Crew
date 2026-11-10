@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# AjCrew One-Click Deploy - promote a deploy to persistent (clears its TTL so
+# Aj Crew One-Click Deploy - promote a deploy to persistent (clears its TTL so
 # the reaper skips it).
 # Usage: persist.sh <slug> [--profile P] [--region R]
 set -euo pipefail

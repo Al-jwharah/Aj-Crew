@@ -650,7 +650,7 @@ def social_login_hint(prompt: Optional[LoginPrompt]) -> str:
     ports = ", ".join(str(p) for p in (prompt.ports if prompt else [])) or "the printed port"
     return (
         "For Google/GitHub sign-in, kiro-cli needs a forwarded callback port. "
-        f"AjCrew could not automate the SSM port-forward for {ports}; "
+        f"Aj Crew could not automate the SSM port-forward for {ports}; "
         "run `ajcrew cloud connect` and retry sign-in from the instance."
     )
 

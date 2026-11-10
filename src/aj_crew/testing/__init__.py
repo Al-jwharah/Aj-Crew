@@ -1,4 +1,4 @@
-"""Test utilities for AjCrew consumers.
+"""Test utilities for Aj Crew consumers.
 
 Everything under ``aj_crew.testing`` is intended for downstream test
 suites that want to exercise code against a populated ``$AJCREW_HOME``

@@ -1,4 +1,4 @@
-# AjCrew gateway — compose example.
+# Aj Crew gateway — compose example.
 #
 #   docker compose up -d
 #   docker compose exec ajcrew kiro-cli login          # one-time agent login

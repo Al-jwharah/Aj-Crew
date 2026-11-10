@@ -1,4 +1,4 @@
-"""Slack Socket Mode gateway orchestrator for AjCrew.
+"""Slack Socket Mode gateway orchestrator for Aj Crew.
 
 Manages the lifecycle of all runtime services: session manager, cron
 scheduler, context builder, heartbeat, subagents, task runner, dashboard,

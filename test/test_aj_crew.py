@@ -1,4 +1,4 @@
-"""Tests for AjCrew package."""
+"""Tests for Aj Crew package."""
 
 import aj_crew
 

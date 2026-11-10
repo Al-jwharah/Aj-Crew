@@ -131,7 +131,7 @@ def run_command(
     """Run a shell ``command`` on the instance via SSM and return its output.
 
     Uses ``AWS-RunShellScript``; wraps the command in ``sudo -u <run_as> -i`` so
-    it runs as the AjCrew user with a login shell (PATH, home). Blocks until
+    it runs as the Aj Crew user with a login shell (PATH, home). Blocks until
     the invocation completes or ``total_wait`` elapses.
 
     ``run_as`` is charset-validated (Unix username shape) even though every

@@ -2,7 +2,7 @@
 
 Covers:
   * resolve_profile.py resolution order (config / ajcrew markers /
-    auto-detect / generic) and the bundled AjCrew profile contents.
+    auto-detect / generic) and the bundled Aj Crew profile contents.
   * pr_status.py readiness-context override (flag / env / default) and the
     positional-argument stripping that makes it work.
 

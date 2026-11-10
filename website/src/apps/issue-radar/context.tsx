@@ -427,7 +427,7 @@ export function IssueRadarProvider({
   )
 
   // Restore the last view / filter / selection state (persisted to localStorage
-  // by the effect below) so leaving Issue Radar for another AjCrew page and
+  // by the effect below) so leaving Issue Radar for another Aj Crew page and
   // returning lands on the same page. The active repo is restored separately in
   // IssueRadarPage via loadActiveRepo.
   const [restored] = useState(loadUiState)

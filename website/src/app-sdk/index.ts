@@ -1,11 +1,11 @@
 /**
- * @ajcrew/app-sdk — lightweight SDK for AjCrew apps.
+ * @ajcrew/app-sdk — lightweight SDK for Aj Crew apps.
  *
  * Provides React hooks backed by a context that AppHost sets up.
- * Apps import these hooks to access the AjCrew API, real-time events,
+ * Apps import these hooks to access the Aj Crew API, real-time events,
  * theme, and navigation — all permission-scoped.
  *
- * This module lives inside the AjCrew frontend for now. When we publish
+ * This module lives inside the Aj Crew frontend for now. When we publish
  * it as a standalone package, apps will `import { useAppApi } from '@ajcrew/app-sdk'`
  * and the import map will resolve it to the host's vendored copy.
  */
@@ -310,7 +310,7 @@ export function useAppInfo(): AppInfo {
   return useCtx().info
 }
 
-/** Navigate to an AjCrew route (host-controlled). */
+/** Navigate to an Aj Crew route (host-controlled). */
 export function useNavigate(): (path: string) => void {
   return useCtx().navigate
 }

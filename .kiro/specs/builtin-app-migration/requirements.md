@@ -4,12 +4,12 @@ Status: implemented in `src/aj_crew/apps/manager_records.py`, `src/aj_crew/apps/
 
 ## Introduction
 
-Provide a graceful migration mechanism for AjCrew builtin apps when they are extracted into standalone packages. Users must never suddenly lose an app they were using. The migration spans at least two releases: the first marks the app as "transitioning" with warnings, and the second removes the builtin code while preserving a helpful migration page instead of a 404.
+Provide a graceful migration mechanism for Aj Crew builtin apps when they are extracted into standalone packages. Users must never suddenly lose an app they were using. The migration spans at least two releases: the first marks the app as "transitioning" with warnings, and the second removes the builtin code while preserving a helpful migration page instead of a 404.
 
 ## Glossary
 
-- **Gateway**: The AjCrew gateway service responsible for app lifecycle management and API routing
-- **Builtin_App**: A feature module baked into the AjCrew dashboard, using the host React router (no ESM bundle)
+- **Gateway**: The Aj Crew gateway service responsible for app lifecycle management and API routing
+- **Builtin_App**: A feature module baked into the Aj Crew dashboard, using the host React router (no ESM bundle)
 - **Standalone_App**: An independent app package extracted from a builtin app, installable via the App Store
 - **Migration_Phase**: The migration stage — Phase 1 (deprecation warning) or Phase 2 (code removed + fallback view)
 - **migratedTo**: A field in the builtin app definition pointing to the replacement standalone app identifier

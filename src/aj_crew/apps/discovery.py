@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 def _get_builtins_dir() -> Path:
-    """Return the path to the builtins/ directory within the AjCrew package."""
+    """Return the path to the builtins/ directory within the Aj Crew package."""
     return Path(__file__).parent / "builtins"
 
 

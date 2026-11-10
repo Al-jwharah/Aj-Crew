@@ -6,11 +6,11 @@ Combines the pure data layer (``artifacts.ArtifactStore`` — reads/writes the
 that touches both the store and a provider.
 
 Responsibilities that live here (provider-agnostic):
-- Rendering an AjCrew artifact to ``(bytes-on-disk, content_type)`` — including
+- Rendering an Aj Crew artifact to ``(bytes-on-disk, content_type)`` — including
   wrapping ``widget`` artifacts in a standalone HTML document.
-- The version-bump → push chokepoint and the 1:1 AjCrew↔destination version
+- The version-bump → push chokepoint and the 1:1 Aj Crew↔destination version
   invariant. Reverts mirror as a new version (never a pointer-rollback).
-- Best-effort sync: a ``push_version`` failure NEVER fails the AjCrew update;
+- Best-effort sync: a ``push_version`` failure NEVER fails the Aj Crew update;
   a genuine failure is recorded in ``publication.last_error`` and surfaced to
   the UI. A SUCCESSFUL publish whose link is not usable yet (e.g. CloudFront
   still rolling out) records that status on ``publication.notice`` instead —
@@ -296,7 +296,7 @@ def unwrap_widget_html(html: str) -> str | None:
     """Recover a widget's inner fragment from a document produced by
     ``wrap_widget_html``, or ``None`` when the sentinels are absent.
 
-    Used on pull: a sentinel-bearing document was an AjCrew widget, so we strip
+    Used on pull: a sentinel-bearing document was an Aj Crew widget, so we strip
     the wrapper and keep ``kind="widget"`` (preserving inline-chat embedding).
     A document without the sentinels (a foreign / pre-sentinel artifact) returns
     ``None`` and the caller keeps it as ``html``. Sentinel-delimited extraction
@@ -762,7 +762,7 @@ async def push_version(art: Artifact, *, force: bool = False) -> None:
 
     Best-effort: never raises for upstream failures. On a conflict or any
     provider failure, records ``publication.last_error`` and returns. Pushes
-    exactly once per AjCrew version (idempotent + the 1:1 invariant); a force
+    exactly once per Aj Crew version (idempotent + the 1:1 invariant); a force
     push (used by re-publish) bypasses the version guard.
     """
     if art.publication is None or not art.publication.auto_sync:
@@ -782,7 +782,7 @@ async def push_version(art: Artifact, *, force: bool = False) -> None:
             fresh = await asyncio.to_thread(lambda: store.update(art.slug, snapshot=True))
         except Exception as exc:  # pragma: no cover — snapshot must not break push
             logger.warning("push_version: pre-push snapshot failed for %s: %s", art.slug, exc)
-    # Push exactly once per AjCrew version. If this version was already synced
+    # Push exactly once per Aj Crew version. If this version was already synced
     # (and not force-republishing), there's nothing to do. We deliberately do
     # NOT dedupe on content — the 1:1 mapping is intentional, and a provider's
     # stored bytes (e.g. the provider's HTML auto-injection) won't match a
@@ -1025,7 +1025,7 @@ _DRIFT_PREFIX = "The remote copy changed outside Aj Crew"
 # pre-upgrade drift note stuck forever: the remote reconciles, the `elif` below
 # never matches, and the banner never clears. Match both spellings when clearing;
 # only the current one is ever written.
-_DRIFT_PREFIXES = (_DRIFT_PREFIX, "The remote copy changed outside AjCrew")
+_DRIFT_PREFIXES = (_DRIFT_PREFIX, "The remote copy changed outside AjCrew")  # brand-ok: persisted legacy prefix
 
 
 async def refresh_publication(slug: str) -> Artifact:
@@ -1278,7 +1278,7 @@ async def delete_for_artifact(art: Artifact) -> DeleteWithdrawal:
 
 
 def _kind_for_content_type(content_type: str) -> str:
-    """Map an upstream content-type back to an AjCrew artifact kind.
+    """Map an upstream content-type back to an Aj Crew artifact kind.
 
     Pulled/cloned artifacts arrive as *rendered* bytes — a widget's inner HTML
     is already wrapped in a standalone document, so HTML maps to ``html``, not

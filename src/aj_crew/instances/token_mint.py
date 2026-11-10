@@ -1,4 +1,4 @@
-"""Mint a remote AjCrew dashboard token over SSH.
+"""Mint a remote Aj Crew dashboard token over SSH.
 
 Build the shell snippet that runs ``ajcrew token`` on the remote desktop and
 parse the JWT out of the URL it prints. Lifting this into the gateway lets the

@@ -1,5 +1,5 @@
 /**
- * ChatEmbed — embeddable chat widget using AjCrew's native rendering.
+ * ChatEmbed — embeddable chat widget using Aj Crew's native rendering.
  *
  * Uses ChatMessageList (shared with ChatPage) for message rendering.
  * Manages its own state via useAppApi() + React Query. No Redux store: the

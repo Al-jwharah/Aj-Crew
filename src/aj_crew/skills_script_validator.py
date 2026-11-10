@@ -40,7 +40,7 @@ _DESTRUCTIVE = [
 # ``is_sensitive_path()``), so the validator stays complete and in-sync with the
 # shared file-read gate instead of maintaining a partial hand-rolled list — it
 # covers ~/.aws, ~/.ssh, ~/.gnupg, ~/.docker/config.json, ~/.npmrc, ~/.pypirc,
-# ~/.netrc, ~/.git-credentials, the SSO/kiro-cli auth stores, and AjCrew's own
+# ~/.netrc, ~/.git-credentials, the SSO/kiro-cli auth stores, and Aj Crew's own
 # governance trust-root files. The trailing ``(?!\w)`` keeps ``.env`` from
 # matching ``os.environ`` while still catching ``.env`` / ``.env.local``.
 # Entries are written with "/"; the separator also accepts "\" (and the doubled

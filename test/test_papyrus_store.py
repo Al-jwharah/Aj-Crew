@@ -679,7 +679,7 @@ class TestProjectConfigIsContained:
         `safe_child` answers "does this resolve inside the project", and an IN-PROJECT
         link satisfies it — so `.papyrus.json -> paper.tex` passed, and `set_main_file`
         (reached from `resolve_main_file`, i.e. every compile) replaced the user's
-        manuscript with JSON. This is a file AjCrew owns and writes by name, so a link
+        manuscript with JSON. This is a file Aj Crew owns and writes by name, so a link
         at that name is illegitimate wherever it points — same reasoning as the
         generated-artifact guard in `latex`.
         """

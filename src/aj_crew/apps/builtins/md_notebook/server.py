@@ -1,4 +1,4 @@
-"""Notes backend — git-backed markdown vaults for AjCrew.
+"""Notes backend — git-backed markdown vaults for Aj Crew.
 
 Ported from the app's Node backend. The gateway proxies
 ``/apps/md-notebook/api/*`` to this process, preserving the ``/api/`` prefix, so

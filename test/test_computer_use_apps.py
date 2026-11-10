@@ -100,7 +100,7 @@ def test_resolve_app_prefers_layer_zero_window_owner_over_decoy_helper(
                 window_id=2,
                 pid=_REAL_CHROME_PID,
                 owner="Google Chrome",
-                title="AjCrew — GitHub",
+                title="Aj Crew — GitHub",
                 layer=0,
             ),
         ],
@@ -108,7 +108,7 @@ def test_resolve_app_prefers_layer_zero_window_owner_over_decoy_helper(
     app = apps_macos.resolve_app("Google Chrome")
     assert app.pid == _REAL_CHROME_PID
     assert app.window_id == 2
-    assert app.window_title == "AjCrew — GitHub"
+    assert app.window_title == "Aj Crew — GitHub"
 
 
 def test_list_apps_drops_every_non_zero_layer(monkeypatch: pytest.MonkeyPatch, no_identity):
@@ -636,7 +636,7 @@ if __name__ == "__main__":  # pragma: no cover
 class TestBrowserHostedDashboardIsRefused:
     """The self-target rule must survive the dashboard being a BROWSER TAB.
 
-    AjCrew's own Settings page is where the computer-use enable lives, and that
+    Aj Crew's own Settings page is where the computer-use enable lives, and that
     enable sits on the keystone precisely so the agent cannot reach it. Driving our
     own window would route around it — which is why ``ajcrew_self`` is the one
     denylist entry the scope change kept.

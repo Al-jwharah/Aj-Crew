@@ -500,7 +500,7 @@ class SkillsLoader:
                 logger.debug("Edition skill path does not exist: %s", edition_path)
 
         # Persistent usage ledger for hotness-ranked lazy skill injection.
-        # Co-located with the skills root's parent (the AjCrew home) so it
+        # Co-located with the skills root's parent (the Aj Crew home) so it
         # travels with runtime state. Best-effort: a failure here must not break
         # skill loading — ranking then falls back to recency/unweighted order.
         self._usage: SkillUsageLedger | None

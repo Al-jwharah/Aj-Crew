@@ -595,7 +595,7 @@ def rewrite_agents(
             hashing). Created if missing; gatewayd sets it as the backend
             process's ``current_dir``.
         sandbox_mode: Value from ``config.agent.sandbox`` — fed through
-            so the stub's PoolKey matches AjCrew's sandbox policy.
+            so the stub's PoolKey matches Aj Crew's sandbox policy.
         approval_mode: Value from ``config.agent.approval_mode`` — same.
         stub_servers: Server names from ``config.mcp_gateway.stub_servers``.
             A stdio server gets a stub only when its name is in this set. A

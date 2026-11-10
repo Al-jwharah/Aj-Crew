@@ -1,4 +1,4 @@
-"""Regression tests for Round-21 findings (AjCrew PR #6).
+"""Regression tests for Round-21 findings (Aj Crew PR #6).
 
 F1: the app-arch (CloudFormation stack) reap path verifies the stack's
     ajcrew:site identity tag before deletion, matching the R19 engine-arch

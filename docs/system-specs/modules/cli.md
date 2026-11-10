@@ -873,7 +873,7 @@ force. On POSIX the spellings are separate variables and are left alone.
 
 ### First-run Kiro CLI prerequisite onboarding
 
-AjCrew exposes the same two-step readiness contract on every supported
+Aj Crew exposes the same two-step readiness contract on every supported
 platform: an executable candidate must answer `kiro-cli --version`, then
 `kiro-cli whoami` must confirm authentication. Candidate discovery includes
 supported fixed locations in addition to inherited `PATH`; unusable candidates
@@ -890,7 +890,7 @@ from a different later installation.
   validated before any request is sent, and the chain is limited to three
   redirects. Responses are size-bounded and must match a release-pinned
   SHA-256 digest plus the platform-specific official installer marker. A
-  changed upstream script therefore fails closed until an AjCrew release
+  changed upstream script therefore fails closed until an Aj Crew release
   updates the pin; the manual official guide remains available. The exact
   validated bytes stay in memory and run through the fixed system interpreter's
   standard input. The installer receives a system-only `PATH` plus explicit
@@ -939,7 +939,7 @@ credentials or desktop-session IPC. They use the strict OS sandbox and
 additionally hide the configured data home, `~/.kiro/crew`, `~/.ajcrew`, and
 every known Kiro identity store. Any candidate that runs `--version` is eligible
 for `whoami` and device login — trust is "it runs, and it has a valid login",
-not install source, owner, or fixed path (AjCrew is not the authority on where
+not install source, owner, or fixed path (Aj Crew is not the authority on where
 Kiro CLI is installed, and its self-updater rewrites its own bytes as the user).
 Auth calls execute the user's installed binary IN PLACE, never a private copy of
 its bytes — a multi-call Kiro CLI resolves its sibling subcommand executable
@@ -947,7 +947,7 @@ relative to its own path, so a copy strands it (see security.md).
 Sign-in itself is delegated to Kiro CLI: `login --use-device-flow` runs in the
 standard sandbox against the user's real home, with only the Aj Crew data
 homes hidden, and the CLI writes its own credential store exactly as it does
-from a terminal. AjCrew stages nothing and publishes nothing, so no staged
+from a terminal. Aj Crew stages nothing and publishes nothing, so no staged
 state has to be reconciled after a failure, timeout, or cancellation. The
 credential-minimal temporary home populated only with Kiro identity JSON and
 SQLite files survives as an opt-in read-only mode — one that also hides
@@ -1024,8 +1024,8 @@ Skipped if `ajcrew.localhost` is already present or user declines.
 ## Cloud Command
 
 `ajcrew cloud` is a human installer/control-plane surface for running
-AjCrew on the user's own AWS EC2 instance. Provisioning and teardown are not
-LLM-facing tools. AWS credentials are resolved by the AWS CLI; AjCrew stores
+Aj Crew on the user's own AWS EC2 instance. Provisioning and teardown are not
+LLM-facing tools. AWS credentials are resolved by the AWS CLI; Aj Crew stores
 only profile, region, and the most recent instance tag in `cloud.json`.
 
 `ajcrew cloud launch` runs a six-step wizard: check AWS reachability, explain
@@ -2022,7 +2022,7 @@ are talking to:
         (`platform_compat.find_listening_pids`), which is what makes a stale
         recorded pid harmless;
      3. that pid must be owned by the calling uid
-        (`platform_compat.process_owner_uid`) and look like an AjCrew process.
+        (`platform_compat.process_owner_uid`) and look like an Aj Crew process.
         The uid check is what closes pid *recycling* into a foreign user's
         process; argv is retained only as defense in depth.
 
@@ -2272,7 +2272,7 @@ no signal and exit 1. Without `--expect-pid` the command is unchanged:
    ends the stop command; a missing secret, refusal, malformed response, or
    transport failure retains the ordinary no-gateway diagnostic. This fallback never converts the pid sidecar into
    authority to signal a process.
-3. `platform_compat.process_command_line(pid)` to verify it's an AjCrew process —
+3. `platform_compat.process_command_line(pid)` to verify it's an Aj Crew process —
    `/proc/<pid>/cmdline` (Linux), `ps -o command=` (macOS), `Win32_Process.CommandLine`
    via WMI (Windows). The Windows venv `ajcrew.exe` re-execs `python.exe`, so the
    match is on the command line (`-m aj_crew gateway` / `\Scripts\ajcrew.exe gateway`),

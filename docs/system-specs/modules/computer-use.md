@@ -2631,7 +2631,7 @@ ONLY one, and the consequences should be stated rather than discovered:
   tab must refuse the whole browser, not just that window.
 
   Accepted false positive, stated rather than discovered: any window whose title
-  merely contains "aj crew" is refused — an editor with this repo open, a browser
+  merely contains `aj crew` is refused — an editor with this repo open, a browser
   reading this PR. The failure directions are not symmetric. Refusing an unrelated
   window is visible and recoverable (the refusal names the target); failing to refuse
   our own dashboard silently hands the agent its own security settings. A title is

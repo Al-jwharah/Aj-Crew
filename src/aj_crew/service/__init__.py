@@ -1,4 +1,4 @@
-"""Service management for the AjCrew gateway.
+"""Service management for the Aj Crew gateway.
 
 Provides ``install``, ``uninstall``, ``status`` for systemd (Linux,
 system-level unit at ``/etc/systemd/system/``) and launchd (macOS,

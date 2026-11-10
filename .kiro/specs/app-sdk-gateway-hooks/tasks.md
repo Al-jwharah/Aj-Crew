@@ -4,7 +4,7 @@ Status: implemented in `src/aj_crew/apps/hooks_integration.py` and the related `
 
 ## Overview
 
-Implement gateway-side hooks enabling apps to register routes, manage crons, and participate in lifecycle events without modifying AjCrew core files. Implementation is in Python (aiohttp) within the AjCrew package.
+Implement gateway-side hooks enabling apps to register routes, manage crons, and participate in lifecycle events without modifying Aj Crew core files. Implementation is in Python (aiohttp) within the Aj Crew package.
 
 ## Tasks
 

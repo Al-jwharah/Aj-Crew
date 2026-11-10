@@ -5,7 +5,7 @@ Status: implemented in `src/aj_crew/pod/` and exposed by `ajcrew pod`.
 ## Overview
 
 `ajcrew pod` gives developers **kubectl-style, throwaway, full-stack test
-instances**, one per feature worktree. A *pod* is an ephemeral AjCrew gateway
+instances**, one per feature worktree. A *pod* is an ephemeral Aj Crew gateway
 booted from a worktree's **own** `.venv`, on its **own** deterministic port, with
 its **own** `AJCREW_HOME` (isolated DB / sessions / memory), **no Slack tunnel**,
 `--no-crons`, resource-capped, and `rm -rf`'d on stop.

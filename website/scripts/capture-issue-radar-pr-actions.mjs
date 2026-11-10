@@ -62,7 +62,7 @@ const server = createServer((req, res) => {
   }
 })
 
-const REPO = { owner: 'kirodotdev', repo: 'AjCrew' }
+const REPO = { owner: 'kirodotdev', repo: 'AjCrew' } // brand-ok: fixture data
 const ISO = '2026-08-01T18:00:00Z'
 
 /** Two open PRs, so a bulk selection is genuinely two rows.
@@ -267,7 +267,7 @@ async function main() {
       localStorage.setItem('mc-theme-mode', t)
       localStorage.setItem('mc-theme', t)
       localStorage.setItem('kc:issue-radar:active-repo', JSON.stringify({
-        owner: 'kirodotdev', repo: 'AjCrew', provider: 'github', host: 'github.com',
+        owner: 'kirodotdev', repo: 'AjCrew', provider: 'github', host: 'github.com', // brand-ok: fixture data
       }))
       localStorage.setItem('kc:issue-radar:ui-state', JSON.stringify({
         mainView: 'pulls', prStateFilter: 'open', prSelectedPull: 1111,

@@ -247,7 +247,7 @@ echo "  ${DIM}Platform:${RESET}           $(uname -s) $(uname -m)"
 echo ""
 
 if [ ! -f "$AJCREW_APP_DIR/pyproject.toml" ]; then
-    die "Run this from inside an AjCrew clone (pyproject.toml not found in $AJCREW_APP_DIR).
+    die "Run this from inside an Aj Crew clone (pyproject.toml not found in $AJCREW_APP_DIR).
      git clone https://github.com/Al-jwharah/Aj-Crew.git && cd Aj-Crew && bash install.sh"
 fi
 
@@ -732,7 +732,7 @@ ok "Symlinked ajcrew → ~/.local/bin/ajcrew"
 
 # ── Desktop App (macOS only) ──
 if [ "$(uname)" = "Darwin" ] && has node && [ -d "$AJCREW_APP_DIR/electron" ]; then
-    printf "\n  Install AjCrew desktop app to ~/Applications? [Y/n] "
+    printf "\n  Install Aj Crew desktop app to ~/Applications? [Y/n] "
     read -r _install_app < /dev/tty
     case "${_install_app:-Y}" in
         [Yy]*)
@@ -751,7 +751,7 @@ if [ "$(uname)" = "Darwin" ] && has node && [ -d "$AJCREW_APP_DIR/electron" ]; t
                     rm -rf "$HOME/Applications/AjCrew.app" 2>/dev/null
                     cp -R "$_app_src" "$HOME/Applications/AjCrew.app"
                     ok "AjCrew.app installed to ~/Applications"
-                    detail "Launch via Spotlight (⌘+Space → AjCrew) or Finder → ~/Applications"
+                    detail "Launch via Spotlight (⌘+Space → AjCrew) or Finder → ~/Applications"  # brand-ok: app bundle name
                 else
                     warn "Electron build succeeded but .app not found"
                 fi
@@ -776,7 +776,7 @@ export PATH="$HOME/.local/bin:$AJCREW_APP_DIR/bin:$PATH"
 
 # Persist to shell rc files
 _path_line="export PATH=\"\$HOME/.local/bin:\$PATH\""
-_marker="# AjCrew"
+_marker="# AjCrew"  # brand-ok: shell-rc marker
 
 _add_to_rc() {
     local rc="$1"
@@ -907,7 +907,7 @@ detail "Install ollama (https://ollama.com), then: ollama pull qwen3-embedding:0
 
 echo ""
 echo ""
-echo "  ${GREEN}${BOLD}💎 AjCrew installed successfully!${RESET}"
+echo "  ${GREEN}${BOLD}💎 Aj Crew installed successfully!${RESET}"
 echo ""
 echo "  ${DIM}────────────────────────────────────────${RESET}"
 echo ""

@@ -36,8 +36,8 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
-# Canonical AjCrew data-root accessor. Imported at module top but kept guarded
-# so the store stays importable standalone (outside the AjCrew runtime) — the
+# Canonical Aj Crew data-root accessor. Imported at module top but kept guarded
+# so the store stays importable standalone (outside the Aj Crew runtime) — the
 # fallback mirrors ``config_dir()``'s default of ``~/.kiro/crew``, honoring
 # ``AJCREW_HOME`` when it is set.
 try:
@@ -143,12 +143,12 @@ APP_NAME = "code-review-sage"
 
 
 def crew_home() -> Path:
-    """Resolve the active AjCrew data root.
+    """Resolve the active Aj Crew data root.
 
     Delegates to ``aj_crew.config.paths.config_dir()`` when the runtime is
     importable (so it follows the ``~/.kiro/crew`` root and honors
     ``AJCREW_HOME`` uniformly, including the one-time legacy-home migration).
-    Falls back to a standalone resolution when run outside the AjCrew package.
+    Falls back to a standalone resolution when run outside the Aj Crew package.
     """
     if _config_dir is not None:
         return _config_dir()
@@ -215,11 +215,11 @@ DEFAULT_CONFIG: dict[str, object] = {
 
 
 def app_root() -> Path:
-    """Resolve the installed app root under the AjCrew home dir.
+    """Resolve the installed app root under the Aj Crew home dir.
 
     Derives from ``crew_home()`` (``config_dir()`` → ``~/.kiro/crew`` by
     default, honoring ``AJCREW_HOME``); ``crew_home`` keeps a standalone
-    fallback so the store stays importable outside the AjCrew runtime."""
+    fallback so the store stays importable outside the Aj Crew runtime."""
     return crew_home() / "apps" / APP_NAME
 
 

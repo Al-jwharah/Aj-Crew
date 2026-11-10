@@ -1,4 +1,4 @@
-"""AjCrewClient — async Python client for the AjCrew Gateway.
+"""AjCrewClient — async Python client for the Aj Crew Gateway.
 
 Standalone package (no dependency on aj_crew main package).
 Uses aiohttp for HTTP and WebSocket communication.
@@ -173,7 +173,7 @@ class ContextEntry:
 
 
 class AjCrewClient:
-    """Async HTTP client for the AjCrew Gateway.
+    """Async HTTP client for the Aj Crew Gateway.
 
     Usage::
 

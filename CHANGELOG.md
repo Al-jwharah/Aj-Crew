@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to AjCrew are documented in this file.
+All notable changes to Aj Crew are documented in this file.
 
 ## [0.12.0] - 2026-11-05
 
@@ -3249,7 +3249,7 @@ or a raw JSON-RPC dump.
 
 ## [0.1.2] — 2026-07-30
 
-First public release of AjCrew — an open-source personal AI agent that runs on
+First public release of Aj Crew — an open-source personal AI agent that runs on
 your own machine, driving [kiro-cli](https://kiro.dev) over the Agent Client
 Protocol. Install it, sign in once, and it is yours: no server to rent, no
 account to create, and your conversations, memory, and files stay on your disk.
@@ -3330,7 +3330,7 @@ account to create, and your conversations, memory, and files stay on your disk.
   automatically when a message matches or on demand when it decides it needs
   one. Twelve ship built in; write your own with no code and no rebuild.
 - **Any MCP server** — Discover, probe, enable, and disable MCP servers from the
-  dashboard. AjCrew's own capabilities are exposed the same way, so the agent
+  dashboard. Aj Crew's own capabilities are exposed the same way, so the agent
   calls structured tools instead of shelling out.
 - **Artifacts** — Documents, code files, and interactive widgets with a stable
   identity, version history, and a dashboard library. Deploy a webapp artifact
@@ -3361,13 +3361,13 @@ account to create, and your conversations, memory, and files stay on your disk.
   Linux namespaces or macOS Seatbelt, with three modes controlling which
   credential directories are even visible. This ships **opt-in**: the default
   (`agent.sandbox: "off"`) defers to whatever sandboxing kiro-cli applies itself,
-  so set `agent.sandbox` to `"auto"` to have AjCrew wrap the subprocess.
+  so set `agent.sandbox` to `"auto"` to have Aj Crew wrap the subprocess.
 - **Layered controls** — 137 built-in denied-command patterns that hold even in
   YOLO mode, credential redaction scanning everything the model emits, blocked
   access to `~/.aws` and `~/.ssh`, XSS sanitization with CSP, and an audit log of
   every command.
 - **A ceiling the agent cannot raise** — A two-level governance model
-  (`POLICY ∩ PROFILE`, tightest-wins) enforced at AjCrew's own tool gate. The
+  (`POLICY ∩ PROFILE`, tightest-wins) enforced at Aj Crew's own tool gate. The
   policy files live where the agent can neither read nor write them, so a
   prompt-injected agent cannot widen its own limits. Tool calls are auto-approved
   by default (`agent.approval_mode: "auto"`) with the deny and governance gates
@@ -3405,7 +3405,7 @@ account to create, and your conversations, memory, and files stay on your disk.
 
 ### Notes
 
-- **kiro-cli is required** — AjCrew orchestrates it. `ajcrew setup` walks you
+- **kiro-cli is required** — Aj Crew orchestrates it. `ajcrew setup` walks you
   through installing and signing in; `ajcrew doctor` verifies the whole wiring.
 - **Data lives in `~/.kiro/crew`** — override with `AJCREW_HOME`. Installs
   using the earlier `~/.ajcrew` layout migrate automatically on first launch.

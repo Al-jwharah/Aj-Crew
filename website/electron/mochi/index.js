@@ -786,7 +786,7 @@ function applyMochiShortcuts(desired) {
 /**
  * Global screen-capture shortcut.
  *
- * Capture runs in the CROP WINDOW's renderer, on AjCrew's existing
+ * Capture runs in the CROP WINDOW's renderer, on Aj Crew's existing
  * getDisplayMedia path (`session.setDisplayMediaRequestHandler` is already
  * registered — see display-media.js, which also gates on the macOS Screen
  * Recording permission and surfaces guidance when it is denied). There is still

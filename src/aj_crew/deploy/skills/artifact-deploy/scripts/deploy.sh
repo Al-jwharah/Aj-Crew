@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# AjCrew One-Click Deploy - deploy a pre-built static site under a slug.
+# Aj Crew One-Click Deploy - deploy a pre-built static site under a slug.
 #
 # Usage:
 #   deploy.sh <app_dir> [--slug NAME] [--ttl HOURS] [--profile P] [--region R]

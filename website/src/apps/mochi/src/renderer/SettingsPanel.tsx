@@ -377,10 +377,10 @@ export const SettingsPanel: React.FC<{ onClose: () => void }> = ({ onClose }) =>
         <SelectField label={i18nT('apps.mochi.settingsPanel.language')} desc={i18nT('apps.mochi.settingsPanel.language_desc', { name: config.mochi.petName || 'Mochi' })}
           value={config.mochi.language}
           options={[
-            // "Auto" is not a language — it is "follow AjCrew", which is what an
+            // "Auto" is not a language — it is "follow Aj Crew", which is what an
             // empty value means all the way down to initI18n(). The rest come from
             // the core registry rather than being listed here, so a language added
-            // to AjCrew appears for Mochi too instead of silently going missing.
+            // to Aj Crew appears for Mochi too instead of silently going missing.
             { value: '', label: i18nT('apps.mochi.settingsPanel.language_auto') },
             ...SUPPORTED_LANGUAGES.filter(l => !l.devOnly).map(l => ({ value: l.code, label: l.label })),
           ]}

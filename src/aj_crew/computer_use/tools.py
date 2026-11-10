@@ -12,7 +12,7 @@ and capture work, and all audit happen here. That split is not stylistic:
   fail-open evaluation) without weakening anything below.
 * The refusals that DO hold for computer use are enforced HERE, in band, on the
   dispatch path every caller goes through — the keystone enable, the
-  AjCrew's-own-window denylist, the secure-field and sensitive-text checks. They
+  Aj Crew's-own-window denylist, the secure-field and sensitive-text checks. They
   only work where the OS-resolved app identity and the addressed element's role are
   known, i.e. in this process.
 
@@ -207,7 +207,7 @@ _QUOTED_RUN_RE = re.compile(r"\"[^\"]*\"|'[^']*'")
 
 # Tools that address one application and therefore need a resolved OS identity
 # before the gate can bound them. ``computer_list_apps`` enumerates every app (it
-# has no single target) and ``computer_end_turn`` touches AjCrew's own cache, so
+# has no single target) and ``computer_end_turn`` touches Aj Crew's own cache, so
 # both are queried with ``requires_app_identity=False``.
 _APP_SCOPED_TOOLS: frozenset[str] = frozenset(
     {

@@ -1,7 +1,7 @@
 ---
 title: Federated App Platform — Dynamic ESM Loading with Import Maps
 status: partial
-author: AjCrew contributors
+author: Aj Crew contributors
 created: 2026-04-18
 last-audited: 2026-08-03
 audited-at: 0ab6ed48
@@ -21,7 +21,7 @@ superseded-by: []
 > map inside MCP App `srcdoc` iframes is a separate mechanism. Read the remaining
 > phases below as proposals, not descriptions of current behaviour.
 
-**Author:** AjCrew contributors  
+**Author:** Aj Crew contributors  
 **Date:** 2026-04-18  
 **Status:** partial — Phase 1 is substantially on main (import map, vendored ESM shims, `AppHost.tsx`, `@ajcrew/app-sdk`, static app-UI serving); Phase 3 is half-built (`app init --ui` shipped, `app dev` reinterpreted as a dev-mode toggle, no `ajcrewApp()` Vite plugin, no `app publish`). Unstarted: Phase 2 (Agent Worlds extraction — contradicted by the compiled-in builtin-apps pattern that shipped instead), Phase 1's entire removal table (app backends are alive and load-bearing), Phase 4's bundle+hash+CDN lane, Phase 5's CSP/monitoring. §3.3 and §3.7 are superseded by `rfc-appstore-official-registry.md`; this RFC's loading model is not.
 
@@ -29,25 +29,25 @@ superseded-by: []
 
 ## 1. Problem Statement
 
-AjCrew's app system today supports installing agent/skill/cron bundles from local directories. The UI side is limited: apps can either host their own HTTP backend (embedded via iframe) or have no visual presence at all. This creates three problems:
+Aj Crew's app system today supports installing agent/skill/cron bundles from local directories. The UI side is limited: apps can either host their own HTTP backend (embedded via iframe) or have no visual presence at all. This creates three problems:
 
-1. **No federated UI loading** — apps cannot contribute React pages that feel native to the AjCrew dashboard. The iframe approach has well-known UX limitations (scrolling, focus, accessibility, no shared theme/components, double scrollbars).
+1. **No federated UI loading** — apps cannot contribute React pages that feel native to the Aj Crew dashboard. The iframe approach has well-known UX limitations (scrolling, focus, accessibility, no shared theme/components, double scrollbars).
 
-2. **No remote registry** — apps can only be installed from local file paths. There's no way for a developer to publish an app and have other users discover and install it from within AjCrew.
+2. **No remote registry** — apps can only be installed from local file paths. There's no way for a developer to publish an app and have other users discover and install it from within Aj Crew.
 
-3. **Built-in features that should be apps** — features like Agent Worlds (pixel art scenes), Channels (multi-agent chat), and Schedule (cron UI) are hardcoded into the AjCrew frontend. They can't be independently versioned, disabled, or replaced. New features require modifying the core codebase.
+3. **Built-in features that should be apps** — features like Agent Worlds (pixel art scenes), Channels (multi-agent chat), and Schedule (cron UI) are hardcoded into the Aj Crew frontend. They can't be independently versioned, disabled, or replaced. New features require modifying the core codebase.
 
 The goal is a platform where:
 - A developer creates a new package, writes a React component, publishes it
-- A user discovers it in AjCrew's App Store, clicks Install, and gets a new sidebar page
+- A user discovers it in Aj Crew's App Store, clicks Install, and gets a new sidebar page
 - The app looks and feels native — same theme, same components, same React tree
 - No iframes, no Web Components, no separate backend processes
 
 ## 2. Design Principles
 
-1. **Apps are React components.** The contract is: export a default React component. No framework abstraction, no custom rendering layer. App developers use the same React + Tailwind + Lucide stack as AjCrew core.
+1. **Apps are React components.** The contract is: export a default React component. No framework abstraction, no custom rendering layer. App developers use the same React + Tailwind + Lucide stack as Aj Crew core.
 
-2. **Import maps for shared dependencies.** React, ReactDOM, and AjCrew's UI library are provided by the host via browser-native [import maps](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/importmap). Apps externalize these dependencies at build time. Result: tiny app bundles, single React instance, hooks and context work across the boundary.
+2. **Import maps for shared dependencies.** React, ReactDOM, and Aj Crew's UI library are provided by the host via browser-native [import maps](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/importmap). Apps externalize these dependencies at build time. Result: tiny app bundles, single React instance, hooks and context work across the boundary.
 
 3. **Permission-scoped API surface.** Apps declare which API endpoints and real-time events they need. The SDK provides a fetch wrapper that enforces these permissions client-side. In a future hosted deployment, the server enforces them too.
 
@@ -98,7 +98,7 @@ The goal is a platform where:
 
 ### 3.2 Import Map Strategy
 
-The host's `index.html` declares an import map that maps bare specifiers to vendored ESM bundles served by the AjCrew backend:
+The host's `index.html` declares an import map that maps bare specifiers to vendored ESM bundles served by the Aj Crew backend:
 
 ```html
 <script type="importmap">
@@ -119,7 +119,7 @@ The host's `index.html` declares an import map that maps bare specifiers to vend
 
 When an app bundle does `import { Card } from '@ajcrew/ui'`, the browser resolves it to the host's vendored copy. No duplicate React instances, no hook violations, no bundle bloat.
 
-The vendored files are generated at AjCrew build time by extracting ESM builds of each shared dependency. The Vite build already produces these — we just need to copy them to a `/vendor/` static directory.
+The vendored files are generated at Aj Crew build time by extracting ESM builds of each shared dependency. The Vite build already produces these — we just need to copy them to a `/vendor/` static directory.
 
 ### 3.3 App Manifest Schema
 
@@ -167,7 +167,7 @@ Fields:
 | `description` | string | no | One-line description |
 | `author` | string | no | Author alias |
 | `tags` | string[] | no | Searchable tags |
-| `ajcrew` | string | no | Minimum AjCrew version (semver range) |
+| `ajcrew` | string | no | Minimum Aj Crew version (semver range) |
 | `ui.entry` | string | no | Path to ESM bundle relative to app root |
 | `ui.pages` | Page[] | no | Routes to register in the sidebar |
 | `ui.pages[].route` | string | yes | URL path (e.g. `/worlds`) |
@@ -359,8 +359,8 @@ The registry is a JSON index file hosted on a CDN (or internal S3 bucket). The e
 
 Install flow:
 1. User clicks "Install" in App Store UI (or runs `ajcrew app install agent-worlds`)
-2. AjCrew downloads `app.json` from `manifestUrl`
-3. AjCrew downloads `index.mjs` from `bundleUrl`
+2. Aj Crew downloads `app.json` from `manifestUrl`
+3. Aj Crew downloads `index.mjs` from `bundleUrl`
 4. Verifies `bundleHash` matches the downloaded file
 5. Stores both in `~/.ajcrew/apps/agent-worlds/`
 6. Registers agents, skills, crons via existing bridge system
@@ -382,7 +382,7 @@ Install flow:
     installed.json         ← install metadata (version, date, source)
 ```
 
-The AjCrew backend serves `~/.ajcrew/apps/{name}/ui/*` at `/apps/{name}/ui/*` as static files. The import in `AppHost` resolves to `/apps/agent-worlds/ui/index.mjs`.
+The Aj Crew backend serves `~/.ajcrew/apps/{name}/ui/*` at `/apps/{name}/ui/*` as static files. The import in `AppHost` resolves to `/apps/agent-worlds/ui/index.mjs`.
 
 ## 4. Developer Experience
 
@@ -406,11 +406,11 @@ ajcrew app dev
 ```
 
 1. Starts Vite dev server on port 3001 with HMR
-2. Registers the app with the running AjCrew instance in dev mode
-3. AjCrew loads the app from `http://localhost:3001/src/index.tsx` (Vite's native ESM)
-4. Hot module replacement works — edit, save, see changes instantly in AjCrew
+2. Registers the app with the running Aj Crew instance in dev mode
+3. Aj Crew loads the app from `http://localhost:3001/src/index.tsx` (Vite's native ESM)
+4. Hot module replacement works — edit, save, see changes instantly in Aj Crew
 
-The dev server proxies API calls to the AjCrew backend, so the app has access to real data.
+The dev server proxies API calls to the Aj Crew backend, so the app has access to real data.
 
 ### 4.3 Build
 
@@ -465,7 +465,7 @@ export default function AgentWorldsApp() {
 ```
 
 The app author doesn't think about:
-- Import maps (handled by AjCrew host)
+- Import maps (handled by Aj Crew host)
 - Theme integration (CSS custom properties just work)
 - Permission enforcement (SDK handles it)
 - Bundle optimization (React is externalized automatically)
@@ -480,7 +480,7 @@ The app author doesn't think about:
 | Malicious app steals user data | Registry review process + bundle hash pinning |
 | Supply chain tampering after review | Subresource Integrity (hash verification on install) |
 | App accesses unauthorized APIs | Permission-scoped API proxy (client-side now, server-side in hosted mode) |
-| App crashes takes down AjCrew | ErrorBoundary per app |
+| App crashes takes down Aj Crew | ErrorBoundary per app |
 | App causes memory leak / CPU abuse | Future: runtime monitoring + kill switch |
 | Code injection at network level | CSP headers in hosted mode |
 
@@ -488,7 +488,7 @@ The app author doesn't think about:
 
 | Tier | Trust Level | Example | Verification |
 |------|-------------|---------|--------------|
-| Built-in | Full | Chat, Overview, Settings | Part of AjCrew core, no dynamic loading |
+| Built-in | Full | Chat, Overview, Settings | Part of Aj Crew core, no dynamic loading |
 | Curated | High | Apps in official registry | Reviewed, signed, hash-pinned |
 | Community | Medium | Apps from community registry | Hash-pinned, permissions displayed at install |
 | Local | User-controlled | `ajcrew app install ./my-app` | No verification, user takes responsibility |
@@ -517,7 +517,7 @@ The app author doesn't think about:
   - Create `AjCrewApp-AgentWorlds` package
   - Move scene components from `frontend/src/pages/scenes/` to the app
   - Move `WorldsPage.tsx` logic into the app's `index.tsx`
-  - Remove Worlds from AjCrew core's router and sidebar
+  - Remove Worlds from Aj Crew core's router and sidebar
   - Install the app via `ajcrew app install` — it appears in the sidebar as before
 - Validate the full cycle: scaffold → develop → build → install → render
 
@@ -575,17 +575,17 @@ The following modules are **kept** and enhanced:
 
 3. **Multi-page apps** — An app can declare multiple pages. Should each page be a separate lazy-loaded chunk, or one bundle for all pages? (Proposal: single bundle per app for simplicity. Apps can code-split internally with `React.lazy`.)
 
-4. **App-to-app communication** — Should apps be able to communicate with each other? (Proposal: not in scope. Apps communicate with AjCrew core via the SDK. If needed later, a pub/sub event bus can be added.)
+4. **App-to-app communication** — Should apps be able to communicate with each other? (Proposal: not in scope. Apps communicate with Aj Crew core via the SDK. If needed later, a pub/sub event bus can be added.)
 
-5. **Offline support** — Installed app bundles are cached locally. Should AjCrew work fully offline with installed apps? (Proposal: yes — bundles are downloaded at install time, not fetched on every page load.)
+5. **Offline support** — Installed app bundles are cached locally. Should Aj Crew work fully offline with installed apps? (Proposal: yes — bundles are downloaded at install time, not fetched on every page load.)
 
-6. **Version pinning** — When a new version of an app is published, should AjCrew auto-update or require user action? (Proposal: show "update available" badge, user clicks to update. No auto-update for apps — different from AjCrew core updates.)
+6. **Version pinning** — When a new version of an app is published, should Aj Crew auto-update or require user action? (Proposal: show "update available" badge, user clicks to update. No auto-update for apps — different from Aj Crew core updates.)
 
-7. **Shared state** — Some apps may want to read AjCrew's Redux store (e.g. connection status, active slot). Should the SDK expose this? (Proposal: expose read-only selectors for common state like `useConnectionStatus()`, `useActiveSlot()`. Don't expose the full store.)
+7. **Shared state** — Some apps may want to read Aj Crew's Redux store (e.g. connection status, active slot). Should the SDK expose this? (Proposal: expose read-only selectors for common state like `useConnectionStatus()`, `useActiveSlot()`. Don't expose the full store.)
 
 ## 9. Success Criteria
 
 - Phase 1: Agent Worlds renders as a dynamically loaded app with the same UX as the current built-in page. No visual regression. Import map resolves shared dependencies correctly. ErrorBoundary catches app crashes without affecting the host.
 - Phase 2: A developer can scaffold, develop, build, and install an app end-to-end using CLI commands. Hot reload works during development.
 - Phase 3: The App Store Browse tab shows apps from the registry. One-click install works. Bundle hash is verified.
-- Phase 4: At least 3 apps published by different developers. No iframe, no backend process, no build-time coupling to AjCrew core.
+- Phase 4: At least 3 apps published by different developers. No iframe, no backend process, no build-time coupling to Aj Crew core.

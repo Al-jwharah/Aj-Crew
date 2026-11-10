@@ -50,7 +50,7 @@ def versions_compatible(local: str, peer: str) -> bool:
 
 
 def check_min_version(min_version: str) -> str | None:
-    """Return an error string if the current AjCrew version is too old.
+    """Return an error string if the current Aj Crew version is too old.
 
     Returns ``None`` if the version is sufficient or if parsing fails. A bare
     number (``"minAjCrewVersion": 2``) is read as its string, the way

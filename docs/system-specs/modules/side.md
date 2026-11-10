@@ -1159,10 +1159,10 @@ exists this file does not claim one.
 - Context injection: sidecar storage on the parent ``_ChatSlot``
   (per-slot ``_side: SideState | None``) — keeps side messages reachable
   to the side handler without touching the main agent's context builder.
-- Build strategy: native AjCrew implementation reusing only the
+- Build strategy: native Aj Crew implementation reusing only the
   upstream wire format for the ``chat.side_result`` event.
 - Memory mode: side conversations are born ephemeral and never write to
-  vector store, learn store, AjCrew session JSONL, or the consolidation
+  vector store, learn store, Aj Crew session JSONL, or the consolidation
   pipeline. Tool calls run under `ToolApprovalPolicy.READ_ONLY`: only a call
   the hook gate's read-only classifier proves read-only executes, and every
   other call — `learn_add` and any other write tool included — is rejected.

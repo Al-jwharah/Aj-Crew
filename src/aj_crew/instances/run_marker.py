@@ -5,7 +5,7 @@ The problem this solves:
     from a fixed PATH candidate list (:data:`token_mint.REMOTE_BIN_CANDIDATES`,
     first entry ``$HOME/.local/bin/ajcrew``). When that launcher symlinks into
     an *uninstalled* git worktree (no ``.venv``), every mint fails with
-    "AjCrew venv not found" — even though the gateway itself is up and healthy,
+    "Aj Crew venv not found" — even though the gateway itself is up and healthy,
     because it runs from a *different* venv. The user's sync -> rebuild -> restart
     of the gateway can't fix mint, since mint never consults the gateway's own
     install. The proactive/reactive token-refresh loop then re-mints on every

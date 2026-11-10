@@ -1,9 +1,9 @@
-"""Sidecar store for AjCrew's per-agent bookkeeping.
+"""Sidecar store for Aj Crew's per-agent bookkeeping.
 
 kiro-cli validates ``~/.kiro/agents/*.json`` with serde ``deny_unknown_fields``
 and rejects the *entire* spec on any unknown key, then silently falls back to
 the default agent (``--agent <name>`` resolves to default with only a stderr
-"no agent with name X found" line). AjCrew therefore keeps its private
+"no agent with name X found" line). Aj Crew therefore keeps its private
 per-agent bookkeeping OUT of the kiro spec and in this sidecar, so every spec
 stays schema-valid for kiro-cli.
 

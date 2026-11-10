@@ -379,7 +379,7 @@ class TestValidateThemeDir:
 class TestFormatVersion:
     """theme.json ``formatVersion`` gate (arbiter item 1). Checked before any
     other schema error, so a forward-incompatible pack gets an honest 'needs a
-    newer AjCrew' message rather than an opaque downstream error."""
+    newer Aj Crew' message rather than an opaque downstream error."""
 
     def _fmt_theme(self, tmp_path: Path, fmt: object, *, omit: bool = False) -> Path:
         # _make_theme already writes a valid formatVersion:1 manifest; overwrite

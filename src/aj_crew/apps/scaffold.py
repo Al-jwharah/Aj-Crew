@@ -167,10 +167,10 @@ Describe what this skill teaches the agent.
 Describe common patterns the agent should know about.
 """
 
-_BACKEND_TEMPLATE = '''"""Minimal backend for {name} — an AjCrew app.
+_BACKEND_TEMPLATE = '''"""Minimal backend for {name} — an Aj Crew app.
 
 Run with: python backend/server.py
-Or let AjCrew manage it via the app manifest backend section.
+Or let Aj Crew manage it via the app manifest backend section.
 """
 import json
 import os

@@ -1,4 +1,4 @@
-"""Classify an assembled agent prompt into the blocks AjCrew injected.
+"""Classify an assembled agent prompt into the blocks Aj Crew injected.
 
 The assembly in :mod:`aj_crew.context` appends ~30 separately-sourced strings
 into one prompt. Attributing size back to those sources by instrumenting every

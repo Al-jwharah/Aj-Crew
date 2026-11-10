@@ -73,7 +73,7 @@ class TestSpillToFile:
 
         # Text should be truncated with marker
         text = result_msg["result"]["content"][0]["text"]
-        assert "[AjCrew: response truncated" in text
+        assert "[Aj Crew: response truncated" in text
         assert "mcp_spill" in text
         assert len(text.encode("utf-8")) < len(line)
 

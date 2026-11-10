@@ -80,7 +80,7 @@ describe('OverviewPage — mission control', () => {
     expect(screen.getByText('Uptime')).toBeInTheDocument()
     expect(screen.getByText('Sessions')).toBeInTheDocument()
     // The landing view has no sub-tab bar.
-    expect(screen.queryByText('AjCrew Config')).not.toBeInTheDocument()
+    expect(screen.queryByText('Aj Crew Config')).not.toBeInTheDocument()
     expect(screen.queryByText('Agent Config')).not.toBeInTheDocument()
     expect(screen.queryByText('Import/Export')).not.toBeInTheDocument()
     // Neither drill-in surface is mounted on the landing view.

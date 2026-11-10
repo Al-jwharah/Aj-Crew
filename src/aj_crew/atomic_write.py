@@ -1,6 +1,6 @@
 """Atomic file write using unique temp filenames to avoid race conditions.
 
-All atomic-write sites in AjCrew should use this helper instead of
+All atomic-write sites in Aj Crew should use this helper instead of
 deterministic ``.tmp`` filenames, which cause ENOENT when concurrent
 writers target the same file.
 """

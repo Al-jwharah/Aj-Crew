@@ -1,4 +1,4 @@
-"""Connect to a launched AjCrew instance — SSM tunnel + token + open browser.
+"""Connect to a launched Aj Crew instance — SSM tunnel + token + open browser.
 
 The instance's gateway is bound to loopback (never public). To reach it we:
 

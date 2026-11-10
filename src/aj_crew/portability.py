@@ -1,6 +1,6 @@
-"""Portable zip export/import for AjCrew state (dashboard endpoint).
+"""Portable zip export/import for Aj Crew state (dashboard endpoint).
 
-Creates a zip archive of all AjCrew settings and memory for download
+Creates a zip archive of all Aj Crew settings and memory for download
 via the dashboard, and restores from uploaded zip archives. Designed to
 work over HTTP for remote users (e.g. Linux Cloud Desktop → macOS browser).
 

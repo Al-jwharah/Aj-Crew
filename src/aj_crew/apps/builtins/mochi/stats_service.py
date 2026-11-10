@@ -20,11 +20,11 @@ Quirks preserved (characterized, kept deliberately):
   schedule a flush — the baseline persists on the next activity.
 
 DELIBERATE DEVIATIONS from the TypeScript (authorized; each is a fix or an
-AjCrew-composition change, not a silent drift):
+Aj Crew-composition change, not a silent drift):
 
 1. **No singleton, no hardcoded path.** The original baked
    ``~/Library/Application Support/DesktopBuddy/stats.json`` at module import
-   and exported a shared instance. The port takes ``data_dir`` (AjCrew data
+   and exported a shared instance. The port takes ``data_dir`` (Aj Crew data
    home) and keeps ``stats.json`` directly inside it.
 2. **Deterministic number grouping.** Milestone texts used
    ``toLocaleString()``, whose output depends on the process locale. The port

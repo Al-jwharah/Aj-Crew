@@ -1,4 +1,4 @@
-// Agent Worlds — Standalone AjCrew App
+// Agent Worlds — Standalone Aj Crew App
 // A pixel art office scene showing agents working at desks.
 // Uses the host's React and app-sdk via window.__ajcrew_modules.
 

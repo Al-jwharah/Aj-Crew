@@ -1281,7 +1281,7 @@ def test_cannot_complete_triggers_the_opt_in_and_exactly_one_retry(fakes: _Fakes
     """``-25204`` -> set ``AXManualAccessibility`` -> retry ONCE.
 
     Both halves matter. Without the opt-in, every Electron app (Slack, VS Code,
-    Obsidian, AjCrew's own desktop app) looks permanently empty. Without the
+    Obsidian, Aj Crew's own desktop app) looks permanently empty. Without the
     "exactly one retry" bound, a genuinely broken app costs the full poll wait on
     every single call.
 
@@ -1358,7 +1358,7 @@ def test_window_list_parses_entries_and_releases_the_array(fakes: _Fakes):
             macos_ffi.CG_WINDOW_NUMBER: fakes.new_number(2),
             macos_ffi.CG_WINDOW_OWNER_PID: fakes.new_number(637),
             macos_ffi.CG_WINDOW_OWNER_NAME: fakes.new_string("Google Chrome"),
-            macos_ffi.CG_WINDOW_NAME: fakes.new_string("AjCrew — GitHub"),
+            macos_ffi.CG_WINDOW_NAME: fakes.new_string("Aj Crew — GitHub"),
             macos_ffi.CG_WINDOW_LAYER: fakes.new_number(0),
         }
     )
@@ -1370,7 +1370,7 @@ def test_window_list_parses_entries_and_releases_the_array(fakes: _Fakes):
     assert windows[0].pid == 637
     assert windows[0].window_id == 2
     assert windows[0].owner_name == "Google Chrome"
-    assert windows[0].title == "AjCrew — GitHub"
+    assert windows[0].title == "Aj Crew — GitHub"
     assert windows[0].layer == 0
     assert array in fakes.heap.released
 

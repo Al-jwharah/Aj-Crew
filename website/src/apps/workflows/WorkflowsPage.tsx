@@ -36,7 +36,7 @@ import { i18nT } from '../../i18n/t'
 export { groupByPhase, latestBudget }
 export type { WfEvent, AgentRow, PhaseGroup }
 
-// Proxied base for the workflows builtin-app backend (AjCrew reverse-proxies
+// Proxied base for the workflows builtin-app backend (Aj Crew reverse-proxies
 // /apps/workflows/api/* to the app's HTTP server). A refusal throws the shared
 // ApiError, so the page shows the server's sentence and can read its `code`.
 const API_BASE = '/apps/workflows/api'

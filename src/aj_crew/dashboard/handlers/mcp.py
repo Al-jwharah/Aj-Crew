@@ -1570,7 +1570,7 @@ async def _do_mcp_apply(request: web.Request) -> web.Response:
 
                 # Audit the scope-toggle decision.  Changing scope presence
                 # controls which MCP servers (and therefore tools) are
-                # reachable from AjCrew sessions — a permission-shaping
+                # reachable from Aj Crew sessions — a permission-shaping
                 # event that belongs in the SEL log alongside uninstalls.
                 sel().log_api_access(
                     caller="dashboard",

@@ -11,7 +11,7 @@ tree / History panel / archive retention paths to be non-empty.
 Running `ajcrew gateway --seed rich` against a fresh `$AJCREW_HOME`
 lands you on a dashboard where:
 
-- **Sessions** panel shows 3 active slots: pinned **Welcome to AjCrew**
+- **Sessions** panel shows 3 active slots: pinned **Welcome to Aj Crew**
   + the two demo sessions grouped under the **Demos** folder.
 - **History** panel (expanded) shows the closed **Research notes**
   session — 12 msg, old mtime so the cutoff alone would have dropped

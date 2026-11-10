@@ -5,7 +5,7 @@ Two extension points, both shaped like ``aj_crew.embeddings``'s
 name-keyed factory registry, with exactly ONE implementation shipped here.
 
 * :mod:`tasks` — where a reviewed action item gets filed. Ships the local
-  AjCrew task ledger.
+  Aj Crew task ledger.
 * :mod:`calendar` — where upcoming meetings come from. Ships a stdlib
   iCalendar (``.ics``) reader.
 

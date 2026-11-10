@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ======================================================================
-#  AjCrew — cloud launcher bootstrap (macOS / Linux)
+#  Aj Crew — cloud launcher bootstrap (macOS / Linux)
 # ======================================================================
 #  Ensures the client prerequisites — Python, the AWS CLI, and the SSM
 #  Session Manager plugin — then hands off to the Python launcher wizard
@@ -81,7 +81,7 @@ fetch_verified() {
 }
 
 echo
-echo "  ${MAGENTA}${BOLD}AjCrew — run on your own AWS${RESET}"
+echo "  ${MAGENTA}${BOLD}Aj Crew — run on your own AWS${RESET}"
 echo "  ${DIM}Platform: $OS $ARCH${RESET}"
 
 # --- 1. Python -------------------------------------------------------------
@@ -193,9 +193,9 @@ else
     rm -rf "$tmp"
 fi
 
-# --- 4. AjCrew client + launch ------------------------------------------
-step 4 "AjCrew client"
-info "Installing the AjCrew client (pip, editable)…"
+# --- 4. Aj Crew client + launch ------------------------------------------
+step 4 "Aj Crew client"
+info "Installing the Aj Crew client (pip, editable)…"
 _venv="$REPO_ROOT/.venv"
 # Build the venv under a umask that masks group/other WRITE so bin/ajcrew
 # and its dirs are born non-group-writable -- `ajcrew service install`
@@ -247,5 +247,5 @@ if [ "$NONINTERACTIVE" -eq 1 ]; then
 fi
 
 echo
-echo "  ${CYAN}Launching AjCrew on AWS…${RESET}"
+echo "  ${CYAN}Launching Aj Crew on AWS…${RESET}"
 if [ -n "$SIZE" ]; then "$KC" cloud launch --size "$SIZE"; else "$KC" cloud launch; fi

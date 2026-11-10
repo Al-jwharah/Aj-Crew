@@ -1,4 +1,4 @@
-"""AjCrew telemetry metrics — public API.
+"""Aj Crew telemetry metrics — public API.
 
 OSS-CLEAN: No internal-only dependencies.
 """

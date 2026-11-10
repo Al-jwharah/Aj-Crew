@@ -282,7 +282,7 @@ class _FakePage:
         Path(path).write_bytes(b"")
 
     def text_content(self, _sel):
-        return "AjCrew dashboard shell rendered fine"
+        return "Aj Crew dashboard shell rendered fine"
 
     def unroute_all(self):
         self.unrouted = True

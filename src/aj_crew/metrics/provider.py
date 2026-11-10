@@ -76,7 +76,7 @@ if TYPE_CHECKING:  # real types for annotations; never imported at runtime
     from aj_crew.config.loader import TelemetryConfig
     from aj_crew.platform.interfaces import OtlpDestination
 
-# AjCrew declares opentelemetry-sdk as a required dependency, so
+# Aj Crew declares opentelemetry-sdk as a required dependency, so
 # the availability probe below is defense-in-depth — not for a genuinely
 # optional dep, but for a partial / --no-deps / broken env-closure install where
 # the SDK is absent. This module is on the eager boot chain (cli.py -> dashboard

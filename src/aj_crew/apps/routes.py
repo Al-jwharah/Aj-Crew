@@ -1,4 +1,4 @@
-"""App management REST API endpoints for the AjCrew dashboard.
+"""App management REST API endpoints for the Aj Crew dashboard.
 
 All endpoints are registered under ``/api/apps`` by the dashboard handler
 setup. These are aiohttp-compatible handler functions.

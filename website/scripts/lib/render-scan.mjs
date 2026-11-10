@@ -121,7 +121,7 @@ export const ALWAYS_LATIN = [
   // glossary term (see glossary.json) but must still be stripped before leak
   // detection or the `Crew` half orphans as a reportable Latin run.
   'AWS', 'Discord', 'Docker', 'Git', 'GitHub', 'GitLab', 'JSON', 'Kiro', 'Aj Crew',
-  'AjCrew',
+  'AjCrew', // brand-ok: glossary term
   // Connections launch-set provider brands (registry names; DNT proper nouns).
   // Asana joins because its pre-registered entry is now visible in the gallery
   // regardless of the launch gate, so its brand renders on `capabilities-mcp`.
@@ -533,7 +533,7 @@ export function scanDocument(opts) {
       // Prose only. A text node that is a single whitespace-free token is an
       // IDENTIFIER — an agent name, a slug, a filename, a config key — and the
       // casing convention there is the machine's, not the translator's. Without
-      // this, the agent named `ajcrew` reads as a mangled `AjCrew` on every
+      // this, the agent named `ajcrew` reads as a mangled `AjCrew` on every (brand-ok: glossary term)
       // surface that lists it. The accepted blind spot: a genuinely mistranslated
       // DNT term standing alone in its own element is missed.
       if (!/\s/.test(text.trim())) continue

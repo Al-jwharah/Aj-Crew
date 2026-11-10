@@ -1,6 +1,6 @@
 """Multi-instance management (the *Instances* feature).
 
-Lets one AjCrew gateway manage and switch between several remote AjCrew
+Lets one Aj Crew gateway manage and switch between several remote Aj Crew
 instances over SSH tunnels.
 
 This package is the gateway-side home for the instances registry, the

@@ -1317,8 +1317,8 @@ class TestDenylistCaseFolding:
 
         for name, bundle in (
             ("AJ CREW", "IO.GITHUB.AL-JWHARAH.AJCREW"),
-            ("aj crew", "io.github.al-jwharah.ajcrew"),
-            ("Aj Crew", "Io.Github.Al-Jwharah.Ajcrew"),
+            ("aj crew", "io.github.al-jwharah.ajcrew"),  # brand-ok: lowercase matcher
+            ("Aj Crew", "Io.Github.Al-Jwharah.Ajcrew"),  # brand-ok: fixture data
         ):
             assert policy.denied_rule_for(AppRef(name=name, pid=1, bundle_id=bundle)) is not None
 

@@ -285,7 +285,7 @@ _MAX_STEER_MARKER_CHARS = 16_384
 #: ``[steering steer-4a2f: ...]`` is accepted as.
 _STEER_TAIL_PREFIX_RE = re.compile(_STEERING_TAIL_PREFIX_RE.pattern, re.IGNORECASE | re.DOTALL)
 
-# These are AjCrew-generated status prefixes, not model-authored prose. A
+# These are Aj Crew-generated status prefixes, not model-authored prose. A
 # legacy dashboard transcript can contain the completed summary as an assistant
 # message; after a cold resume that provenance is lost and kiro-cli can echo it
 # back as an ordinary text chunk. The channel boundary is the last layer that

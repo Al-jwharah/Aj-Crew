@@ -30,7 +30,7 @@ const branchBtn = () => screen.getByRole('button', { name: /Cop(y|ied) (branch n
 describe('ChatInput project chip branch label', () => {
   it('renders the branch beside the folder name', () => {
     renderWithProviders(<ChatInput {...defaultProps} projectBranch="feat/example" />)
-    expect(chip()).toHaveTextContent('AjCrew')
+    expect(chip()).toHaveTextContent('AjCrew') // brand-ok: fixture data
     expect(branchBtn()).toHaveTextContent('feat/example')
     expect(chip().getAttribute('title')).toContain('Branch: feat/example')
     expect(chip().getAttribute('title')).toContain('/home/u/work/AjCrew')
@@ -39,7 +39,7 @@ describe('ChatInput project chip branch label', () => {
   it('shows only the folder name when no branch is known', () => {
     renderWithProviders(<ChatInput {...defaultProps} />)
     const btn = chip()
-    expect(btn).toHaveTextContent('AjCrew')
+    expect(btn).toHaveTextContent('AjCrew') // brand-ok: fixture data
     expect(btn.getAttribute('title')).toBe('Project: /home/u/work/AjCrew')
     expect(screen.queryByRole('button', { name: /Copy branch name/ })).not.toBeInTheDocument()
     // No separator glyph without a branch to separate.
