@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowLeftToLine, PanelLeft } from 'lucide-react'
-import { GithubIcon, DiscordIcon } from '../../components/BrandIcon'
+import { GithubIcon } from '../../components/BrandIcon'
 import type { getThemeBranding } from '../../themeBranding'
 import { i18nT } from '../../i18n/t'
 import { uiLocation } from '../../uiLocations/uiLocation'
@@ -173,7 +173,10 @@ export function RailCommunityLinks({ effectiveCollapsed, setReportProblemOpen }:
 }) {
   /*
    * Community row — a leading GitHub mark, then two links on ONE
-   * line separated by a middot, then the icon-only Discord link.
+   * line separated by a middot. (An icon-only link to the upstream
+   * project's Discord used to close the row; this fork has no
+   * Discord, so it was removed and the widths below — measured WITH
+   * that 24px icon — are now conservative.)
    *
    * This line is tight by construction, and the numbers are
    * MEASURED against real font advance widths, not estimated.
@@ -190,8 +193,8 @@ export function RailCommunityLinks({ effectiveCollapsed, setReportProblemOpen }:
    * "Star us · Report issue" at 12px, measured:
    * Space Grotesk   114.0px against a 132.8px budget — 18.7 spare
    * JetBrains Mono  136.8px against a 127.8px budget — 9.0 OVER
-   * Rather than shrink the type for everyone or drop the Discord
-   * link, mono alone is tightened to -0.05em, which brings it to
+   * Rather than shrink the type for everyone, mono alone is
+   * tightened to -0.05em, which brings it to
    * 125.4px (+3.0 spare). That rule lives in index.css keyed on
    * html[data-font-family="mono"] via the `rail-community-links`
    * class, and its measurement table is there. Mono's margin is only
@@ -227,10 +230,12 @@ export function RailCommunityLinks({ effectiveCollapsed, setReportProblemOpen }:
       <div className="flex items-center border-t border-border pl-3 pr-0.5 pt-2.5 pb-0.5 whitespace-nowrap">
         {/* pl-3 puts the mark on the same 12px x-offset as the
             nav-item icons above. No `gap` on this row ON PURPOSE: a row
-            gap applies between ALL THREE children (mark, links,
-            Discord), so pairing it with ml-0.5 would silently double
-            the mark-to-text distance to 6px and cost 4px the budget
-            below never accounts for. Spacing is explicit per child instead. */}
+            gap applies between EVERY child of the row, so pairing it
+            with ml-0.5 would silently double the mark-to-text distance
+            to 6px and cost 4px the budget below never accounts for.
+            Spacing is explicit per child instead. (The row used to end
+            in an icon link to the upstream project's Discord; this fork
+            has no Discord, so the row is the mark and the links.) */}
         <span className="flex items-center shrink-0 text-muted"><GithubIcon size={15} /></span>
         {/* `flex-wrap`: in a locale where "Star us" and "Report issue" together
             outrun the rail (the pseudolocale does, and so will any long-word
@@ -250,7 +255,6 @@ export function RailCommunityLinks({ effectiveCollapsed, setReportProblemOpen }:
               its sibling link so the row's width budget above is unchanged. */}
           <button type="button" onClick={() => setReportProblemOpen(true)} title={i18nT('app.report_a_problem_with_diagnostics')} aria-label={i18nT('app.report_a_problem_with_diagnostics')} {...uiLocation('shell.report-problem')} className="min-w-0 overflow-hidden text-ellipsis rounded text-muted hover:text-text transition-colors cursor-pointer bg-transparent border-0 p-0 text-[12px]">{i18nT('app.report_issue')}</button>
         </div>
-        <a href="https://kiro.dev/discord/" target="_blank" rel="noopener noreferrer" title={i18nT('app.discord_community')} aria-label={i18nT('app.kiro_discord_community')} className="flex items-center justify-center ml-1 w-6 h-6 rounded-md text-muted hover:text-text hover:bg-bg-hover transition-colors shrink-0"><DiscordIcon size={15} /></a>
       </div>
     </div>
   )
