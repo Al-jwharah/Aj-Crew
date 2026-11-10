@@ -235,7 +235,7 @@ describe('PinnedSidePanel', () => {
   it('names the pet in the empty hint', () => {
     render(
       <PinnedSidePanel pins={[]} updatedPaths={new Set()} deletedPaths={new Set()}
-        visible petName="Kiro" />,
+        visible petName="Aj" />,
     )
     expect(screen.getByText('Ask Aj to pin files you want to track')).toBeInTheDocument()
   })
