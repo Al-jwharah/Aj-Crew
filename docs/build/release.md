@@ -1019,9 +1019,14 @@ reintroduced.
 The client resolves `{feedBase}/{channel}/` as a **directory** (the trailing
 slash matters: without it `new URL("latest-mac.yml", base)` replaces the last
 segment and resolves the wrong channel) and the library appends the platform
-filename. The feed base defaults to `https://updates.crew.kiro.dev/feed` and is
-overridable through `AJCREW_UPDATE_FEED`, which enforces HTTPS except on
-loopback so the local harness works. The yml lives on the pointer host while
+filename. The feed base has no default: this project publishes no releases, so a
+build without `AJCREW_UPDATE_FEED` reports `disabled: "no-feed"` and never
+contacts an update host. `AJCREW_UPDATE_FEED` names the pointer host and
+`AJCREW_DOWNLOAD_BASE` the byte host behind the manual-download link; both
+enforce HTTPS except on loopback so the local harness works. The `publish` URL
+baked into `app-update.yml` is a placeholder on the reserved `.invalid` TLD,
+kept only because electron-builder needs a publish entry to emit the file. The
+yml lives on the pointer host while
 `files[].url` entries are absolute byte-host URLs; electron-updater's
 `newUrlFromBase` ignores the base for absolute URLs, which is what preserves the
 split. First check runs 30s after launch, then every 4 hours.

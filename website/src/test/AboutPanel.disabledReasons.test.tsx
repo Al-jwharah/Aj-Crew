@@ -127,6 +127,21 @@ describe('AboutPanel disabled-update reasons', () => {
     expect(screen.queryByTestId('managed-update-command')).toBeNull()
   })
 
+  it('names the missing update feed, not the platform, when the build has no feed', async () => {
+    // The updater reports this on every platform of a build that publishes no
+    // releases. The platform message would blame the OS for it.
+    mountWithUpdateApi({
+      version: '0.1.0',
+      platform: 'darwin-arm64',
+      packaged: true,
+      disabled: 'no-feed',
+    })
+    expect(await screen.findByText(/this build has no update feed/i)).toBeTruthy()
+    expect(screen.queryByText(/unavailable in this build on this platform/i)).toBeNull()
+    // Nothing to check against, so no Check button that could only error.
+    expect(screen.queryByText(/check for updates/i)).toBeNull()
+  })
+
   it('still names the platform when the platform itself has no lane', async () => {
     mountWithUpdateApi({
       version: '0.1.0',

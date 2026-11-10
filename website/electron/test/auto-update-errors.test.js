@@ -286,6 +286,8 @@ test("manualDownloadUrl: null wherever there is no publish lane", () => {
 });
 
 test("manualDownloadUrl: points at the same CDN the updater pulls from", () => {
-  // A manual reinstall must land on identical artifacts, not a different host.
-  assert.match(manualDownloadUrl("nightly", "darwin"), /^https:\/\/download\.crew\.kiro\.dev\//);
+  // A manual reinstall must land on identical artifacts, not a different host:
+  // the link is built on the one byte host this run names (test/_preload.cjs).
+  assert.strictEqual(DOWNLOAD_BASE, process.env.AJCREW_DOWNLOAD_BASE);
+  assert.ok(manualDownloadUrl("nightly", "darwin").startsWith(`${DOWNLOAD_BASE}/`));
 });

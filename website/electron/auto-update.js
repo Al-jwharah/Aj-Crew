@@ -28,13 +28,19 @@
  * marker-driven managed lane, both reporting through one state reporter.
  */
 
-// Default update feed host: updates.crew.kiro.dev, the pointer hostname of the
-// public distribution CDN (CloudFront + OAC over the ajcrew-updates bucket).
+// Update feed host. This build names NONE (DEFAULT_FEED_BASE below is empty):
+// it publishes no signed desktop releases of its own, and falling back to
+// another project's feed would offer that project's builds as updates to this
+// one. With no feed the updater is never armed and no host is contacted;
+// AJCREW_UPDATE_FEED names one for an operator's own mirror or the update
+// harness. The layout below is what a feed of this project's own must follow:
+// a pointer host (called updates.<host> here) and a byte host
+// (download.<host>).
 //
 // electron-updater's generic provider treats the configured URL as a DIRECTORY
 // and resolves <base>/latest-mac.yml (macOS) or <base>/latest-linux.yml (Linux)
 // from it. The artifact URLs inside those files are ABSOLUTE and point at the
-// byte hostname (download.crew.kiro.dev), which is what preserves our
+// byte hostname, which is what preserves the
 // pointer/bytes host split: `new URL(fileUrl, base)` ignores the base when
 // fileUrl is absolute. That behaviour is structural but undocumented, so
 // test/auto-update.test.js pins it against the real installed library — a
@@ -480,7 +486,9 @@ function isBundleContainerWritable(resourcesPath) {
   }
 }
 
-const DEFAULT_FEED_BASE = "https://updates.crew.kiro.dev/feed";
+// EMPTY on purpose: see the header. A release pipeline of this project's own
+// fills it in, together with DOWNLOAD_BASE below.
+const DEFAULT_FEED_BASE = "";
 const CHECK_INTERVAL_MS = 4 * 60 * 60 * 1000; // every 4h while running
 const LAUNCH_CHECK_DELAY_MS = 30 * 1000; // let startup settle first
 
@@ -496,9 +504,31 @@ const LAUNCH_CHECK_DELAY_MS = 30 * 1000; // let startup settle first
  */
 const SUPPORTED_PLATFORMS = new Set(["darwin", "linux", "win32"]);
 
+/**
+ * A host base an install may be pointed at: HTTPS, or HTTP on loopback (the
+ * local update harness). Anything else reads as "none", so a mistyped or
+ * downgraded override can neither arm the updater nor produce a download link.
+ *
+ * @param {string|undefined|null} raw
+ * @returns {string} the base without trailing slashes, or "" when unusable
+ */
+function usableBase(raw) {
+  const base = String(raw || "").trim().replace(/\/+$/, "");
+  if (!base) return "";
+  try {
+    const parsed = new URL(base);
+    const isLoopback = ["127.0.0.1", "localhost", "[::1]", "::1"].includes(parsed.hostname);
+    return parsed.protocol === "https:" || (parsed.protocol === "http:" && isLoopback) ? base : "";
+  } catch {
+    return "";
+  }
+}
+
 // Byte host for human (manual) downloads -- deliberately the same CDN the
 // updater pulls from, so a manual reinstall lands on identical artifacts.
-const DOWNLOAD_BASE = "https://download.crew.kiro.dev";
+// EMPTY unless AJCREW_DOWNLOAD_BASE names one, for the reason DEFAULT_FEED_BASE
+// is: with no byte host there is no manual-download link to offer.
+const DOWNLOAD_BASE = usableBase(process.env.AJCREW_DOWNLOAD_BASE);
 // Channels with a desktop publish lane. "dev" has none. "lts" is the LTS
 // edition's own channel (policy-channel.js), published by release-lts.yml
 // (test_windows_signing_contract.py keeps the two sets equal).
@@ -771,6 +801,7 @@ function shouldAutoOffer({ candidate, current, followedChannel, defaultChannel }
  */
 function buildFeedBase({ base, channel, variant = "" }) {
   const b = (base || DEFAULT_FEED_BASE).replace(/\/+$/, "");
+  if (!b) throw new Error("no update feed is configured for this build");
   const tail = variant ? `${encodeURIComponent(variant)}/` : "";
   const url = `${b}/${encodeURIComponent(channel)}/${tail}`;
   const parsed = new URL(url);
@@ -807,6 +838,7 @@ function buildFeedBase({ base, channel, variant = "" }) {
  * @returns {string|null}
  */
 function manualDownloadUrl(channel, osPlatform, osArch = process.arch, linuxFormat = "", macDistArch = "") {
+  if (!DOWNLOAD_BASE) return null;
   if (!channelHasLane(channel)) return null;
   // On darwin the arch comes from the BUILD, not the host: the universal DMG
   // runs anywhere, so a universal install is offered AjCrew.dmg whatever
@@ -1194,6 +1226,13 @@ function initAutoUpdate(deps) {
   if (!SUPPORTED_PLATFORMS.has(osPlatform)) {
     log.info(`[update] ${osPlatform} — auto-update disabled (no publish lane yet)`);
     return { check: () => {}, download: async () => {}, install: async () => {}, getInfo, disabled: "platform" };
+  }
+  // No feed is named: there is nothing to check and nothing to install from.
+  // Stand down before anything is constructed, so no host is contacted and
+  // About says why instead of offering a Check button that can only error.
+  if (!feedBase) {
+    log.info("[update] no update feed configured — auto-update disabled");
+    return { check: () => {}, download: async () => {}, install: async () => {}, getInfo, disabled: "no-feed" };
   }
   // A channel can lack a desktop publish lane entirely -- that is what
   // channelHasLane() records. No PLATFORM restricts channels today: every

@@ -82,7 +82,7 @@
       "publish": [
         {
           "provider": "generic",
-          "url": "https://updates.crew.kiro.dev/feed/stable/deb"
+          "url": "https://updates.ajcrew.invalid/feed/stable/deb"
         }
       ],
       "depends": [
@@ -106,7 +106,7 @@
       "publish": [
         {
           "provider": "generic",
-          "url": "https://updates.crew.kiro.dev/feed/stable/rpm"
+          "url": "https://updates.ajcrew.invalid/feed/stable/rpm"
         }
       ],
       "depends": [
@@ -318,7 +318,7 @@
     "publish": [
       {
         "provider": "generic",
-        "url": "https://updates.crew.kiro.dev/feed/stable/"
+        "url": "https://updates.ajcrew.invalid/feed/stable/"
       }
     ],
     "win": {

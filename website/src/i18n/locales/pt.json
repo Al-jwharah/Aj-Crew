@@ -18815,6 +18815,7 @@
         "gateway_auto_update_desktop_context": "Seus agentes e chats rodam em um programa em segundo plano chamado gateway, instalado separadamente do {{productName}}. Este interruptor mantém o gateway atualizado, não este app. O gateway só reinicia quando nenhum trabalho está ativo.",
         "automatic_updates_are_unavailable_in_this_build": "As atualizações automáticas não estão disponíveis nesta compilação",
         "automatic_updates_unavailable_dev_build": "As atualizações automáticas não estão disponíveis nesta compilação (compilação de desenvolvimento).",
+        "automatic_updates_unavailable_no_feed": "As atualizações automáticas não estão disponíveis porque esta compilação não tem um feed de atualização. Instale uma compilação mais recente para atualizar.",
         "automatic_updates_unavailable_channel": "As atualizações automáticas não estão disponíveis porque este canal de lançamento ainda não tem builds para a sua plataforma. Troque de canal acima para receber atualizações.",
         "automatic_updates_unavailable_policy_channel": "Esta build {{build}} não pode mudar para as atualizações {{channel}} que a política da sua organização exige, então as atualizações automáticas estão desativadas.",
         "automatic_updates_policy_channel_download": "<download>Instale o app {{channel}}</download> para voltar a receber atualizações. Suas configurações, chats e arquivos são mantidos.",

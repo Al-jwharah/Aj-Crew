@@ -222,12 +222,12 @@ test("buildFeedBase url-encodes the channel segment", () => {
   assert.strictEqual(url, "https://cdn.example.dev/feed/a%20b/");
 });
 
-test("buildFeedBase defaults to the public pointer host (DEFAULT_FEED_BASE)", () => {
-  assert.strictEqual(
-    buildFeedBase({ channel: "nightly" }),
-    "https://updates.crew.kiro.dev/feed/nightly/",
-  );
-  assert.strictEqual(DEFAULT_FEED_BASE, "https://updates.crew.kiro.dev/feed");
+test("buildFeedBase names no feed of its own: DEFAULT_FEED_BASE is empty and a missing base is refused", () => {
+  // The build publishes no desktop releases, so there is no default host to
+  // fall back to -- least of all another project's.
+  assert.strictEqual(DEFAULT_FEED_BASE, "");
+  assert.throws(() => buildFeedBase({ channel: "nightly" }), /no update feed is configured/);
+  assert.throws(() => buildFeedBase({ base: "", channel: "nightly" }), /no update feed is configured/);
 });
 
 test("buildFeedBase THROWS for plain http on non-loopback hosts", () => {

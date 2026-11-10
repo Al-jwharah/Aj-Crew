@@ -18334,6 +18334,7 @@
         "gateway_auto_update_desktop_context": "Deine Agenten und Chats laufen in einem Hintergrundprogramm namens Gateway, das unabhängig von {{productName}} installiert ist. Dieser Schalter hält das Gateway aktuell, nicht die App, und es startet nur neu, wenn keine Arbeit aktiv ist.",
         "automatic_updates_are_unavailable_in_this_build": "Automatische Aktualisierungen sind in diesem Build nicht verfügbar",
         "automatic_updates_unavailable_dev_build": "Automatische Aktualisierungen sind in diesem Build nicht verfügbar (Entwicklungs-Build).",
+        "automatic_updates_unavailable_no_feed": "Automatische Updates sind nicht verfügbar, da für diesen Build kein Update-Feed eingerichtet ist. Installieren Sie zum Aktualisieren einen neueren Build.",
         "automatic_updates_unavailable_channel": "Automatische Updates sind nicht verfügbar, da dieser Release-Kanal noch keine Builds für Ihre Plattform enthält. Wechseln Sie oben den Kanal, um Updates zu erhalten.",
         "automatic_updates_unavailable_policy_channel": "Dieser {{build}}-Build kann nicht auf {{channel}}-Updates wechseln, die die Richtlinie deiner Organisation verlangt, daher sind automatische Updates deaktiviert.",
         "automatic_updates_policy_channel_download": "<download>Installiere die {{channel}}-App</download>, um wieder Updates zu erhalten. Deine Einstellungen, Chats und Dateien bleiben erhalten.",

@@ -1421,6 +1421,11 @@ export function AboutPanel() {
             <p className="text-sm text-muted">
               {updatesDisabled === 'dev'
                 ? i18nT('pages.settings.aboutPanel.automatic_updates_unavailable_dev_build')
+                : updatesDisabled === 'no-feed'
+                  // The build names no update feed, so there is nothing to
+                  // check on any platform or channel. The platform string
+                  // would blame the OS for it.
+                  ? i18nT('pages.settings.aboutPanel.automatic_updates_unavailable_no_feed')
                 : updatesDisabled === 'translocated'
                   ? i18nT('pages.settings.aboutPanel.automatic_updates_unavailable_translocated')
                   : updatesDisabled === 'volume'
