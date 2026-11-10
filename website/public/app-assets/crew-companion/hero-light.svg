@@ -1,63 +1,52 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 270" width="480" height="270">
   <defs>
     <linearGradient id="cc-bg-l" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#f4f1ff"/>
-      <stop offset="100%" stop-color="#e2d8ff"/>
-    </linearGradient>
-    <linearGradient id="cc-body-l" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#ffffff"/>
-      <stop offset="100%" stop-color="#f0ebff"/>
+      <stop offset="0%" stop-color="#e6f8f4"/>
+      <stop offset="100%" stop-color="#b8ebe1"/>
     </linearGradient>
   </defs>
   <rect width="480" height="270" rx="12" fill="url(#cc-bg-l)"/>
 
   <!-- Soft corner motes -->
-  <circle cx="58" cy="42" r="20" fill="#cbb8ff" opacity="0.5"/>
-  <circle cx="430" cy="232" r="30" fill="#b79bff" opacity="0.35"/>
+  <circle cx="58" cy="42" r="20" fill="#74dbc9" opacity="0.5"/>
+  <circle cx="430" cy="232" r="30" fill="#0bcab4" opacity="0.35"/>
 
   <!-- Breathing rings behind the companion -->
   <g transform="translate(150,140)">
-    <circle r="118" fill="none" stroke="#a78bfa" stroke-width="1.4" opacity="0.22"/>
-    <circle r="92" fill="none" stroke="#a78bfa" stroke-width="1.4" opacity="0.32"/>
-    <circle r="66" fill="none" stroke="#8b5cf6" stroke-width="1.4" opacity="0.4"/>
+    <circle r="118" fill="none" stroke="#05baa6" stroke-width="1.4" opacity="0.22"/>
+    <circle r="92" fill="none" stroke="#05baa6" stroke-width="1.4" opacity="0.32"/>
+    <circle r="66" fill="none" stroke="#029786" stroke-width="1.4" opacity="0.4"/>
   </g>
 
-  <!-- Companion ghost, silhouette reused from the app's kiro_idle pose -->
-  <g transform="translate(0,4)">
-    <path d="M90,196 L90,120 A60,60 0 0 1 210,120 L210,196
-             Q190,218 170,196 Q150,218 130,196 Q110,218 90,196 Z"
-          fill="url(#cc-body-l)" stroke="#3a3363" stroke-width="5" stroke-linejoin="round"/>
-    <!-- Cheeks -->
-    <circle cx="118" cy="140" r="8" fill="#ffb3c8" opacity="0.55"/>
-    <circle cx="182" cy="140" r="8" fill="#ffb3c8" opacity="0.55"/>
-    <!-- Eyes -->
-    <circle cx="132" cy="120" r="9" fill="#3a3363"/>
-    <circle cx="168" cy="120" r="9" fill="#3a3363"/>
-    <circle cx="135" cy="117" r="2.6" fill="#ffffff"/>
-    <circle cx="171" cy="117" r="2.6" fill="#ffffff"/>
+  <!-- companion: scripts/brand -->
+  <g transform="translate(150,142) scale(0.262) translate(-210.5,-211)">
+    <path d="M31.2 16.6Q16 16.6 26.6 5.7L57.8 -26.4Q68.3 -37.2 74.6 -23.5L86.6 2.8Q92.9 16.6 77.8 16.6ZM88.4 -29Q82.1 -42.8 97.3 -42.8L323.7 -42.8Q338.9 -42.8 332.6 -29L318 2.8Q311.7 16.6 296.6 16.6L124.4 16.6Q109.3 16.6 103 2.8ZM346.3 -23.5Q352.6 -37.2 363.2 -26.4L394.4 5.7Q404.9 16.6 389.8 16.6L343.2 16.6Q328 16.6 334.3 2.8ZM387.5 31.4Q415.1 31.4 415.1 59L415.1 198.4Q415.1 226 404.1 251.3L359.7 354Q348.8 379.3 325.3 393.8L233.9 450.2Q210.5 464.7 187 450.2L95.7 393.8Q72.2 379.3 61.3 354L16.8 251.3Q5.9 226 5.9 198.4L5.9 59Q5.9 31.4 33.5 31.4Z" fill="#FFFFFF" stroke="#0B0C0F" stroke-width="18" stroke-linejoin="round" paint-order="stroke"/>
+    <ellipse cx="243" cy="187" rx="21" ry="29" fill="#0B0C0F"/>
+    <ellipse cx="342" cy="187" rx="21" ry="29" fill="#0B0C0F"/>
   </g>
+  <!-- /companion -->
 
   <!-- Nudge cards: drink water / look away / reminder -->
   <!-- Water -->
-  <rect x="300" y="52" width="152" height="44" rx="9" fill="#ffffff" stroke="#cbb8ff" stroke-width="1.5"/>
+  <rect x="300" y="52" width="152" height="44" rx="9" fill="#ffffff" stroke="#74dbc9" stroke-width="1.5"/>
   <circle cx="324" cy="74" r="13" fill="#e6f2ff"/>
   <path d="M324,66 C330,73 330,80 324,80 C318,80 318,73 324,66 Z" fill="#4a9ede"/>
-  <rect x="346" y="68" width="86" height="6" rx="3" fill="#5b4f8f"/>
-  <rect x="346" y="79" width="54" height="5" rx="2.5" fill="#b9a9e6"/>
+  <rect x="346" y="68" width="86" height="6" rx="3" fill="#046a5d"/>
+  <rect x="346" y="79" width="54" height="5" rx="2.5" fill="#70c7b7"/>
 
   <!-- Look away -->
-  <rect x="300" y="108" width="152" height="44" rx="9" fill="#ffffff" stroke="#cbb8ff" stroke-width="1.5"/>
+  <rect x="300" y="108" width="152" height="44" rx="9" fill="#ffffff" stroke="#74dbc9" stroke-width="1.5"/>
   <circle cx="324" cy="130" r="13" fill="#e3f7ef"/>
   <path d="M317,130 Q324,123 331,130 Q324,137 317,130 Z" fill="none" stroke="#10b981" stroke-width="2"/>
   <circle cx="324" cy="130" r="2.4" fill="#10b981"/>
-  <rect x="346" y="124" width="72" height="6" rx="3" fill="#5b4f8f"/>
-  <rect x="346" y="135" width="60" height="5" rx="2.5" fill="#b9a9e6"/>
+  <rect x="346" y="124" width="72" height="6" rx="3" fill="#046a5d"/>
+  <rect x="346" y="135" width="60" height="5" rx="2.5" fill="#70c7b7"/>
 
   <!-- Reminder (clock) -->
-  <rect x="300" y="164" width="152" height="44" rx="9" fill="#ffffff" stroke="#cbb8ff" stroke-width="1.5" opacity="0.92"/>
+  <rect x="300" y="164" width="152" height="44" rx="9" fill="#ffffff" stroke="#74dbc9" stroke-width="1.5" opacity="0.92"/>
   <circle cx="324" cy="186" r="13" fill="#fff2dd"/>
   <circle cx="324" cy="186" r="8" fill="none" stroke="#f59e0b" stroke-width="2"/>
   <path d="M324,186 L324,181 M324,186 L328,188" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"/>
-  <rect x="346" y="180" width="64" height="6" rx="3" fill="#5b4f8f"/>
-  <rect x="346" y="191" width="46" height="5" rx="2.5" fill="#b9a9e6"/>
+  <rect x="346" y="180" width="64" height="6" rx="3" fill="#046a5d"/>
+  <rect x="346" y="191" width="46" height="5" rx="2.5" fill="#70c7b7"/>
 </svg>
