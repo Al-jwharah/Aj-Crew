@@ -107,6 +107,11 @@ branch it is on, and `main` carries development builds. The channel machinery
 [release runbook](docs/build/release.md#the-three-channels) describes it for
 when this project runs a release pipeline of its own.
 
+The installer's `--version` pin belongs to that machinery. Its floor is
+unchanged: the minimum pinnable release is `0.1.2`, because `0.1.0` and `0.1.1`
+predate manifest signing and have no signed manifest to resolve. The
+[install guide](docs/guides/install.md#pinning-an-exact-version) has the rest.
+
 ## Why Aj Crew
 
 Most agent sessions end when the chat closes. Aj Crew runs continuously on

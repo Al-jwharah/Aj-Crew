@@ -116,8 +116,8 @@ function createFamilyTakeover({
     glog(`gateway on :${PORT} is ${other.appName}'s (${otherVersion}) but outlived its app, offering to stop it`);
     const { response } = await dialog.showMessageBox({
       type: "warning",
-      title: `A ${other.displayName} gateway is running`,
-      message: `A ${other.displayName} gateway (${otherVersion}) is still running with your Aj Crew data.`,
+      title: `An ${other.displayName} gateway is running`,
+      message: `An ${other.displayName} gateway (${otherVersion}) is still running with your Aj Crew data.`,
       detail: `It kept running after the app that started it quit, so quitting ${other.displayName} would not stop it. Only one Aj Crew app can use ~/.kiro/crew at a time.\n\nStop and continue stops that gateway with ajcrew stop --port ${PORT} and starts this app's gateway. Anything it was still doing is stopped with it.`,
       buttons: ["Stop and continue", "Cancel"],
       defaultId: 0,

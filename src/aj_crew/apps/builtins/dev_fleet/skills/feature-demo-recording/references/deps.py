@@ -119,7 +119,11 @@ def run(cmd, **kw):
     the caller's returncode/stdout contract so no probe needs to special-case it.
     """
     try:
-        return subprocess.run(cmd, capture_output=True, text=True, **kw)
+        # UTF-8, not the locale's code page: a probe's output is read the same on
+        # every host, and a stray byte is replaced instead of failing the probe.
+        return subprocess.run(
+            cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", **kw
+        )
     except subprocess.TimeoutExpired as exc:
         return subprocess.CompletedProcess(cmd, 124, "", f"timed out after {exc.timeout}s")
     except OSError as exc:
