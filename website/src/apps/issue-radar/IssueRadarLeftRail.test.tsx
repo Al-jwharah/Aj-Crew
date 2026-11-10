@@ -169,7 +169,7 @@ describe('LeftRail — crews section', () => {
 })
 
 describe('LeftRail — collapsed strip', () => {
-  const ACTIVE = { owner: 'kirodotdev', repo: 'AjCrew' }  // brand-ok: the repository name
+  const ACTIVE = { owner: 'kirodotdev', repo: 'KiroCrew' }  // brand-ok: the repository name
   const entry = (push: boolean) => ({ ...ACTIVE, permissions: { push, triage: false } })
 
   beforeEach(() => {

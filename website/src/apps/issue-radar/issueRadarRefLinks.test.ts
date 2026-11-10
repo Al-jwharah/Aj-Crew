@@ -15,7 +15,7 @@ const gl = (owner: string, repo: string, host = 'gitlab.com'): RepoRef =>
 // negative cases matter as much as the positive ones.
 describe('parseRepoRef', () => {
   const OWNER = 'kirodotdev'
-  const REPO = 'AjCrew'  // brand-ok: the repository name
+  const REPO = 'KiroCrew'  // brand-ok: the repository name
 
   it('resolves an issue URL in the same repo', () => {
     expect(parseRepoRef(`https://github.com/${OWNER}/${REPO}/issues/533`, gh(OWNER, REPO)))
