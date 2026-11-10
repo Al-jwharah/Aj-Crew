@@ -478,7 +478,7 @@ describe('phone chat page: one top bar', () => {
     // these two at 16px beside 20px neighbours.
     const marks = [
       within(rail).getByTestId('crew-member-mark'),
-      within(rail).getByTestId('kiro-ghost-mark'),
+      within(rail).getByTestId('aj-mark'),
     ]
     for (const mark of marks) {
       expect(mark.style.width).toBe('16px')

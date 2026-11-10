@@ -42,7 +42,7 @@
 import { useMemo, useState } from 'react'
 import { createAvatar } from '@dicebear/core'
 import {
-  BRAND_PURPLE,
+  BRAND_TILE,
   GHOST_RADIUS_PCT,
   ghostDataUri,
   kiroGhost,
@@ -227,7 +227,7 @@ export function ghostTraitsFrom(avatar: unknown): KiroGhostTraits | null {
     flip: !!t.flip,
     // The tile is interpolated into SVG markup, so anything but a hex color
     // falls back to the brand tile rather than reaching the string template.
-    tile: TILE_RE.test(tile) ? tile : BRAND_PURPLE,
+    tile: TILE_RE.test(tile) ? tile : BRAND_TILE,
   }
 }
 

@@ -552,7 +552,7 @@ def _install_shutdown_signal_handlers(self: GatewayOrchestrator) -> None:
             # is not instant, since a repeat Ctrl-C does nothing more.
             try:
                 print(
-                    "\n👻 Force exit! Saving the audit and log tail first "
+                    "\n💎 Force exit! Saving the audit and log tail first "
                     f"(at most {_FORCE_EXIT_DEADLINE_SECS:.0f}s)…"
                 )
             except Exception:
@@ -593,7 +593,7 @@ async def _shutdown_and_exit(
     """Use the same bounded cleanup for early owner stop and normal shutdown."""
     from aj_crew.session import cleanup_orphaned_sessions
 
-    print("👻 Shutting down…")
+    print("💎 Shutting down…")
 
     # Exit status for the os._exit below. 0 for an operator stop (SIGTERM,
     # `systemctl stop`, Ctrl-C) so a restart-on-failure supervisor leaves
@@ -692,7 +692,7 @@ async def _shutdown_and_exit(
     await _sign_in_drain
     await _env_stop
 
-    print("👻 Goodbye!")
+    print("💎 Goodbye!")
     # Kill any kiro-cli processes that survived graceful shutdown.
     # Off-loop: still inside the orchestrator coroutine here.
     #

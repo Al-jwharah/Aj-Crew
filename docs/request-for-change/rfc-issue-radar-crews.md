@@ -197,7 +197,7 @@ GitHub does not notify subscribers on an edit, so progress edits are silent wher
 new comments would not be. Edit only on real progress.
 
 ```
-👻 **Whirlpool** is on this · Aj Crew Issue Radar
+💎 **Whirlpool** is on this · Aj Crew Issue Radar
 implementing · PR #2271 · CI round 3 · updated 20:44 UTC
 
 <details><summary>progress</summary>

@@ -376,7 +376,7 @@ def host(tmp_path, monkeypatch) -> _Host:
 
 
 _READY = """\
-Aj Crew Doctor 👻
+Aj Crew Doctor 💎
 
 Platform
   edition:     ✅ standalone
@@ -669,7 +669,7 @@ def test_a_start_up_record_of_an_inherited_lib_path_leaves_the_report_unchanged(
 
 
 _BROKEN = """\
-Aj Crew Doctor 👻
+Aj Crew Doctor 💎
 
 Platform
   edition:     ❌ composition failed: companion missing
@@ -1044,7 +1044,7 @@ def test_kiro_sandbox_row_is_fatal_only_for_a_harness_that_spawns_kiro_cli(
 
 
 _BUNDLE = """\
-Aj Crew Doctor 👻
+Aj Crew Doctor 💎
 
 Collecting diagnostics bundle (secrets are redacted)...
 

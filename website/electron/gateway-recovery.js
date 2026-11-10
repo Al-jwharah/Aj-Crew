@@ -366,7 +366,7 @@ const INCUMBENT_RECOVERY_BACKOFF_MS = Object.freeze([30_000, 60_000, 120_000]);
 // line is sent once per wait and would otherwise read as a frozen countdown.
 // It says no action is needed, because the splash's only control (close, with
 // its hint) ends the recovery it describes. It stays short: the line is
-// centred over the splash's large white foreground ghost, so every extra
+// centred over the splash's large white foreground gem, so every extra
 // character on its left half is drawn white on white at the default window
 // size.
 const INCUMBENT_RETRY_STATUS = "Previous gateway still exiting — no action needed";

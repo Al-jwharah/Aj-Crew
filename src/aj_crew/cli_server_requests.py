@@ -428,7 +428,7 @@ def _update_approve() -> None:
         print("   Approve the update in the app: Settings › About › Install & restart.")
         return
 
-    print("👻 Approving the pending in-app update…\n")
+    print("💎 Approving the pending in-app update…\n")
     # Default read: never writes. This runs in the CLI process, outside the
     # gateway's nonce mutex — expiry cleanup here could race a gateway
     # re-arm and delete a fresh request. Cleanup is the gateway's job.

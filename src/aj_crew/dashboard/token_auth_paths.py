@@ -391,7 +391,7 @@ _403_HTML = (
     ".err{{color:#ef4444}}}}"
     "</style></head><body>"
     "<div class='c'>"
-    "<div class='logo'>👻</div>"
+    "<div class='logo'>💎</div>"
     "<h1>Sign in required — {reason}</h1>"
     "<p>This browser does not have a dashboard session.</p>"
     "<p>On a device already signed in, open <strong>Settings → Security → Sign in on mobile</strong>, "

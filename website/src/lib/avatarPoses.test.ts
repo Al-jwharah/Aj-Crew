@@ -138,11 +138,12 @@ describe('icon working motion', () => {
       const v = poseEyeVars(pose)
       const x = parseFloat(v['--crew-icon-eye-x'])
       const y = parseFloat(v['--crew-icon-eye-y'])
-      // Every shipped pose has its eyes in the upper half, away from the tile's centre.
+      // Every shipped pose carries its eyes on the pavilion, just under the
+      // girdle: around the tile's middle band, never out at an edge.
       expect(x).toBeGreaterThan(30)
       expect(x).toBeLessThan(80)
-      expect(y).toBeGreaterThan(30)
-      expect(y).toBeLessThan(45)
+      expect(y).toBeGreaterThan(40)
+      expect(y).toBeLessThan(60)
     }
     expect(poseEyeVars('constructor')).toEqual(poseEyeVars(DEFAULT_POSE))
   })

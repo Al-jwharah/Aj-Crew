@@ -39,7 +39,7 @@ esac
 export AJCREW_PORT="${AJCREW_PORT:-6777}"
 export AJCREW_PROJECT_DIR="$SCRIPT_DIR"
 
-echo "👻 Dev backend starting (live source, port $AJCREW_PORT)"
+echo "💎 Dev backend starting (live source, port $AJCREW_PORT)"
 echo "   Python: $RUNTIME_PYTHON"
 echo "   Source: $PYTHONPATH"
 echo "   Data:   $AJCREW_HOME"

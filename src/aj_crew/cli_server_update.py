@@ -146,7 +146,7 @@ def _update(force: bool = False) -> None:
     """
     from aj_crew.platform.update_layout import InstallLayout
 
-    print("👻 Updating Aj Crew…\n")
+    print("💎 Updating Aj Crew…\n")
 
     # A policy-defined provider OWNS the update on this host. Checked before any
     # layout dispatch so a manual `ajcrew update` cannot run the built-in

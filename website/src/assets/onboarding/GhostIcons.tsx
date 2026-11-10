@@ -1,5 +1,5 @@
-// Onboarding mascot icons. The source art (kiro-ghost-var1.svg,
-// kiro-ghost-with-arm.svg + its -outline companion) is a static, non-icon
+// Onboarding mascot icons. The source art (aj-gem-var1.svg,
+// aj-gem-guide.svg + its -outline companion) is a static, non-icon
 // illustration asset consumed through a plain URL import — NOT svgr/`?react`,
 // and no <svg> element or path data in this (or any) TSX file — so it stays
 // inside the `use-lucide-icons` brand-mark carve-out.
@@ -14,9 +14,9 @@
 //     drifts from the nominal offset) and a centred stroke would eat into the
 //     body, so neither can reproduce the design.
 import { BrandGlyph } from '../../components/BrandIcon'
-import ghostVar1Url from './kiro-ghost-var1.svg'
-import ghostWithArmUrl from './kiro-ghost-with-arm.svg'
-import ghostWithArmOutlineUrl from './kiro-ghost-with-arm-outline.svg'
+import ghostVar1Url from './aj-gem-var1.svg'
+import ghostWithArmUrl from './aj-gem-guide.svg'
+import ghostWithArmOutlineUrl from './aj-gem-guide-outline.svg'
 
 // Export viewBox of the arm-ghost layer pair, the pad the border occupies inside
 // it, and the ship width.
@@ -68,10 +68,10 @@ export function GhostVar1({ width = 52 }: { width?: number }) {
  * reaches inside an <img>, and inline SVG path data in TSX is blocked outright
  * by `use-lucide-icons`):
  *
- *   1. the outline: `kiro-ghost-with-arm-outline.svg`, painted through a CSS
+ *   1. the outline: `aj-gem-guide-outline.svg`, painted through a CSS
  *      `mask` over `currentColor` by the shared `BrandGlyph` — so it re-skins
  *      live from `var(--accent)`.
- *   2. the body: `kiro-ghost-with-arm.svg` (body + eyes) as a plain <img> ON TOP.
+ *   2. the body: `aj-gem-guide.svg` (body + eyes) as a plain <img> ON TOP.
  *      A full-colour mark is NOT flattened to currentColor.
  *
  * The outline layer is the FILLED EXPANDED SILHOUETTE, not the hollow ring Figma

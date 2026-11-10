@@ -104,7 +104,7 @@ vi.mock('../api/crewCapabilities', async (orig) => {
 import AjCrewAgentsPage from '../pages/AjCrewAgentsPage'
 import CrewAvatar, { hasAvatarOverride, iconAvatarFrom, seededTraits } from '../components/CrewAvatar'
 import { poseDataUri } from '../lib/avatarPoses'
-import { BRAND_PURPLE } from '../lib/kiroGhostAvatar'
+import { BRAND_TILE } from '../lib/kiroGhostAvatar'
 
 /** Opening the editor is a lazy `CrewEditorModal` chunk import followed by a
  *  fresh-roster read (`staleTime: 0`) before the dialog renders, which can
@@ -840,7 +840,7 @@ describe('CrewAvatar', () => {
     const { container } = render(<CrewAvatar seed="oncall" avatar={evil} size={38} />)
     const src = decodeURIComponent(container.querySelector('img')!.getAttribute('src')!)
     expect(src).not.toContain('<script>')
-    expect(src).toContain(BRAND_PURPLE)
+    expect(src).toContain(BRAND_TILE)
   })
 
   it('seededTraits reads back the face the seeded render drew', async () => {

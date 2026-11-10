@@ -23,6 +23,7 @@ vi.mock('../themeBranding', async (importOriginal) => ({
 }))
 
 import WelcomeView from '../components/WelcomeView'
+import ajGemUrl from '../assets/aj-gem.svg'
 import { renderWithProviders } from './helpers'
 
 const SLUG = 'harbor'
@@ -104,14 +105,17 @@ describe('WelcomeView brand mark', () => {
     )
   })
 
-  it('keeps the stock ghost for a pack that ships no logo or welcome image', async () => {
+  it('keeps the stock gem for a pack that ships no logo or welcome image', async () => {
     installPack({ favicon: 'branding/favicon.svg' })
     renderWithProviders(<WelcomeView setInput={vi.fn()} />)
     // The favicon link is written by the same branding pass that resolves the
     // logo and welcome image, so once it exists that pass has run.
     await waitFor(() => expect(document.getElementById('mc-theme-favicon')).not.toBeNull())
-    expect(heroBlock().querySelector('img')).toBeNull()
-    expect(heroBlock().querySelector('svg')).not.toBeNull()
+    // The stock gem is the app's own bundled asset, never something a pack served.
+    const img = heroBlock().querySelector('img')
+    expect(img).toHaveAttribute('src', ajGemUrl)
+    expect(img!.getAttribute('src')).not.toContain(ASSETS)
+    expect(heroBlock().querySelector('canvas')).toBeNull()
   })
 
   it('lets compiled edition branding win over the installed pack', async () => {

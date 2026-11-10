@@ -421,7 +421,7 @@ export const THEMES: ThemeEntry[] = [
   { value: 'gruvbox', label: '🍦 Gruvbox' },
   { value: 'ice', label: '🧊 Ice' },
   { value: 'amoled', label: '🖤 AMOLED' },
-  { value: 'aj', label: '👻 Aj' },
+  { value: 'aj', label: '💎 Aj' },
   { value: 'intellij', label: '😶‍🌫️ IntelliJ' },
   // A catalog-keyed entry (see `THEME_LABEL_KEY`): `label` holds the glyph alone
   // as the pre-resolution fallback and the full display string lives in

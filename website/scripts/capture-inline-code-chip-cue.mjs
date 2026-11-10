@@ -245,11 +245,11 @@ async function main() {
     // :not(pre)>code{color:…}`, specificity 0,2,2) and the unlayered `text-accent`
     // utility (0,1,0) loses to it, so the class alone painted nothing — every chip
     // wore the code colour, and even with the accent restored the two purples
-    // (#c19aff / #b07fff) read as one kind of chip. The rule: a copy chip is
+    // (#99f6e4 / #5eead4) read as one kind of chip. The rule: a copy chip is
     // NEUTRAL (the prose colour, as on every non-Aj theme) with a dotted
     // underline; a chip whose click navigates is the accent. Keyed on
     // `data-chip-action`.
-    const ACCENT_COLOUR = { dark: 'rgb(176, 127, 255)', light: 'rgb(142, 72, 255)' } // #b07fff (message links) / --accent
+    const ACCENT_COLOUR = { dark: 'rgb(94, 234, 212)', light: 'rgb(15, 118, 110)' } // #5eead4 (message links) / --accent
     assert(`${theme}: chips declare their action (${rest.copy.action} / ${rest.file.action} / ${rest.dir.action})`,
       rest.copy.action === 'copy' && rest.file.action === 'navigate' && rest.dir.action === 'navigate')
     assert(`${theme}: copy chip paints in the NEUTRAL prose colour (${rest.copy.color} vs prose ${rest.copy.prose})`,
@@ -545,7 +545,7 @@ async function main() {
     }
   })
   assert(`session: chip declares "navigate" and paints in the accent (${sessionRest.action}, ${sessionRest.color})`,
-    sessionRest.action === 'navigate' && sessionRest.color === 'rgb(176, 127, 255)')
+    sessionRest.action === 'navigate' && sessionRest.color === 'rgb(94, 234, 212)')
   assert(`session: chip is named for its click (${sessionRest.name})`, sessionRest.name === `Switch to session ${OTHER_SLOT}`)
   assert(`session: no native title, the bubble is its tooltip (${sessionRest.title})`, sessionRest.title === null)
   await sessionChip.hover()

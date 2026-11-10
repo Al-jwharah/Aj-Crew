@@ -954,7 +954,7 @@ async def _auto_apply_update(self: GatewayOrchestrator, *, mandatory: bool = Fal
         # restart ownership itself is centralized below.
         importlib.reload(aj_crew)
         new_ver = aj_crew.__version__
-        print(f"👻 New version {new_ver} available — auto-updating and restarting…")
+        print(f"💎 New version {new_ver} available — auto-updating and restarting…")
         # Hand the gap to the restart: this step's ownership ends here and
         # the restart's begins as the await starts, with no yield between.
         owned.close()

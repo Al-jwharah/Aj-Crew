@@ -1565,7 +1565,7 @@ binding its port, while every other subcommand kept working.
 
 `platform_compat.ensure_line_buffered_stdout()` runs once on the **`gateway`
 command path only**, as the first statement of the dispatch branch, before the
-first status line prints. The gateway's `👻` status lines (`Checking for
+first status line prints. The gateway's `💎` status lines (`Checking for
 updates…`, `Probing MCP servers…`, `Aj Crew gateway running — press Ctrl+C to stop`, the
 update-check outcome, `Shutting down…`) are plain `print()` calls. CPython
 line-buffers `sys.stdout` only when it is a terminal; a pipe or a file gets a
@@ -1622,7 +1622,7 @@ the Desktop supervisor's log, the `gateway.log` of `_spawn_detached_gateway`),
 and whoever reads the log inside the link's click window can redeem it for a
 dashboard session. That boot prints every URL
 without its query string (`with_token=False`), followed by
-`👻 Sign in:   run ajcrew token for a sign-in link`.
+`💎 Sign in:   run ajcrew token for a sign-in link`.
 
 - The test is stdout's terminal state, not a service marker. `JOURNAL_STREAM`
   and `INVOCATION_ID` pass to every descendant of a unit, a terminal emulator

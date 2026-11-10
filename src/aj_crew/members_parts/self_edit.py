@@ -39,7 +39,7 @@ MEMBER_DESCRIPTION_MAX_CHARS = 4000
 #: starts from when it had no pinned traits before (a name-derived face). A trait
 #: the crewmate leaves out keeps this value, so a partial pick never draws a
 #: face with an axis missing (the renderer draws an unknown or empty option as
-#: nothing at all). ``tile`` is the brand purple the renderer falls back to.
+#: nothing at all). ``tile`` is the brand graphite the renderer falls back to.
 DEFAULT_GHOST_TRAITS: Mapping[str, object] = {
     "eyes": "canon",
     "brows": "none",
@@ -48,7 +48,7 @@ DEFAULT_GHOST_TRAITS: Mapping[str, object] = {
     "prop": "none",
     "blush": False,
     "flip": False,
-    "tile": "#9046ff",
+    "tile": "#30343c",
 }
 
 

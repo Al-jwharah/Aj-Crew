@@ -476,7 +476,7 @@ def _run_chat(message: str | None, model: str | None, agent: str | None = None) 
     try:
         asyncio.run(_chat(message, model, agent=agent))
     except KeyboardInterrupt:
-        print("\nBye! 👻")
+        print("\nBye! 💎")
     except SandboxCeilingUnsealable as exc:
         # Escaped HERE as well as in the formatters that build these sentences, and the
         # duplication is the point: this handler takes ANY builder of this exception,
@@ -1441,13 +1441,13 @@ async def _interactive(
         try:
             message = input("you> ").strip()
         except (EOFError, KeyboardInterrupt):
-            print("\nBye! 👻")
+            print("\nBye! 💎")
             break
 
         if not message:
             continue
         if message.lower() in ("exit", "quit", "/exit", "/quit", ":q"):
-            print("Bye! 👻")
+            print("Bye! 💎")
             break
 
         built: str | None = None

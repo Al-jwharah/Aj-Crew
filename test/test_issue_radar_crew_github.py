@@ -50,7 +50,7 @@ class UpdateIssueCommentTest(unittest.TestCase):
             "created_at": "2026-08-08T18:02:00Z", "updated_at": "2026-08-08T20:44:12Z",
         }
         with mock.patch.object(gh, "_gh_run", return_value=_proc(json.dumps(payload))) as run:
-            out = gh.update_issue_comment("o", "r", 9001, f"👻 on this\n\n{MARKER}")
+            out = gh.update_issue_comment("o", "r", 9001, f"💎 on this\n\n{MARKER}")
 
         argv = run.call_args[0][0]
         self.assertEqual(argv[:4], ["gh", "api", "--method", "PATCH"])
@@ -60,7 +60,7 @@ class UpdateIssueCommentTest(unittest.TestCase):
         self.assertIn("--input", argv)
         self.assertIn("-", argv)
         sent = json.loads(run.call_args.kwargs["input_text"])
-        self.assertEqual(sent, {"body": f"👻 on this\n\n{MARKER}"})
+        self.assertEqual(sent, {"body": f"💎 on this\n\n{MARKER}"})
         self.assertFalse(any(MARKER in str(a) for a in argv))
         # updated_at, not created_at: only the former can confirm the edit landed.
         self.assertEqual(out["updated_at"], "2026-08-08T20:44:12Z")
@@ -216,7 +216,7 @@ class FindCrewClaimTest(unittest.TestCase):
     """The marker parser + the ordering the collision rule depends on."""
 
     def test_parses_every_field_of_a_well_formed_marker(self):
-        rows = [_comment_row(9001, f"👻 **Andromeda** is on this\n\n{MARKER}")]
+        rows = [_comment_row(9001, f"💎 **Andromeda** is on this\n\n{MARKER}")]
         self.assertEqual(gh.find_crew_claim(rows), [{
             "comment_id": 9001, "crew_id": "c_7f3a", "phase": "implementing",
             "pr": 2271, "updated": "2026-08-08T20:44:12Z",

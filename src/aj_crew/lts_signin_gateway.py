@@ -400,7 +400,7 @@ def sign_in_then_exit(
         refuse_boot(str(unusable), fix_for(unusable.cause))
     except KeyboardInterrupt:
         # Ctrl-C at the sign-in screen is a plain stop, not a crash.
-        print("\n👻 Stopped before sign-in.", file=sys.stderr, flush=True)
+        print("\n💎 Stopped before sign-in.", file=sys.stderr, flush=True)
         raise SystemExit(130) from None
     except (OSError, OverflowError) as err:
         detail = getattr(err, "strerror", None) or err

@@ -52,7 +52,7 @@ export function parseCssColor(input: string): Rgb | null {
  * Flatten a translucent colour onto an opaque background.
  *
  * Theme accents are often given as rgba tints (the fallback's accent pill is
- * `rgba(142,72,255,0.3)`), and a contrast ratio computed from the raw rgba would
+ * `rgba(45,212,191,0.28)`), and a contrast ratio computed from the raw rgba would
  * describe a colour nobody can see.
  */
 export function compositeOver(fg: Rgb, bg: Rgb): Rgb {

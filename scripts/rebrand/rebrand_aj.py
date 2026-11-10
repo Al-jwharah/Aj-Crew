@@ -403,7 +403,7 @@ _PERSONA_LEAVES = {
     b"set_your_look_and_tell_kiro_about_you_so_respons",
 }
 _PERSONA_PATHS = {
-    b"components.avatarBuilder.tile_purple",
+    b"components.avatarBuilder.tile_graphite",
     b"components.webPreviewPanel.ask_kiro",
     b"components.webPreviewPanel.outside_url_body",
     b"components.gitPanel.filter_refused_title",

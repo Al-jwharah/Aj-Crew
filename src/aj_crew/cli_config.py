@@ -559,7 +559,7 @@ def _run_config_cmd(args: argparse.Namespace) -> None:
         if not p.exists():
             cfg = AjCrewConfig()
             cfg.save()
-            print(f"👻 Created default config: {p}")
+            print(f"💎 Created default config: {p}")
         sel().log_api_access(
             caller="cli",
             operation="config_edit",

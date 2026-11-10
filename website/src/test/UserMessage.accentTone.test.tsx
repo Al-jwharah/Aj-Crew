@@ -117,7 +117,7 @@ describe('the index.css hook', () => {
     for (const token of ['--bg-hover', '--bg-elevated', '--card']) {
       expect(block, `${token} must be re-pointed off the fill`).toMatch(new RegExp(`${token}:color-mix\\(in srgb,var\\(--text\\) \\d+%,var\\(--crewmate-fill\\)\\)`))
     }
-    // Aj dark's code patch is a literal (#28242e == its --bg-hover), which no token reaches.
+    // Aj dark's code patch is a literal (#1e2127 == its --bg-hover), which no token reaches.
     expect(INDEX_CSS).toMatch(/\[data-theme="aj-dark"\] \.message-bubble\.crewmate-bubble :not\(pre\)>code\{background:var\(--bg-hover\)\}/)
   })
 

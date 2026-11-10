@@ -305,7 +305,7 @@ function StorageEntryRow({ onOpen }: { onOpen: () => void }) {
 /* ── Traces are CSS clip-path polygons, NOT inline SVG ──────────────────────
  * `use-lucide-icons` in code-review.yml is a BLOCKING gate that greps ADDED
  * lines for an inline svg tag carrying a viewBox attribute, exempting only
- * brand assets (KiroGhost, *Logo, *Ghost). An SVG polyline here fails CI, so
+ * brand assets (AjGem, *Logo, *Ghost). An SVG polyline here fails CI, so
  * the trace is drawn by clipping a filled div. Coordinates are percentages,
  * which is what lets these scale with the container without measuring it.
  *

@@ -216,7 +216,7 @@ def test_run_chat_renders_keyboard_interrupt_as_clean_exit(monkeypatch, capsys) 
 
     cli_chat._run_chat(None, None)
 
-    assert capsys.readouterr().out == "\nBye! 👻\n"
+    assert capsys.readouterr().out == "\nBye! 💎\n"
 
 
 @pytest.mark.asyncio

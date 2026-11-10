@@ -1,20 +1,20 @@
-/** The small marks every Crew Mode surface shares: the solid ghost badge, the
+/** The small marks every Crew Mode surface shares: the solid gem badge, the
  *  gradient "CREW MODE" eyebrow, a worker's state dot and a stack of tiny worker
  *  ghosts coloured by state. Colours are theme tokens (`styles/crew-mode.css`,
  *  `lib/crewWorkers.ts`), so light and dark themes follow without a branch here. */
 import { useEffect, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
-import { KiroGhostMark } from '../KiroGhostMark'
+import { AjMark } from '../AjMark'
 import { Zap } from 'lucide-react'
 import { useReducedMotion as useLiveReducedMotion } from '../../hooks/useReducedMotion'
 import { i18nT } from '../../i18n/t'
 import { CREW_GROUP_LABEL_KEY, CREW_GROUP_TONE, type CrewWorkerGroup } from '../../lib/crewWorkers'
 
-/** The solid ghost on the crew gradient: the breadcrumb's root. */
+/** The solid gem on the crew gradient: the breadcrumb's root. */
 export function CrewGhostBadge({ size = 28 }: { size?: number }) {
   return (
     <span aria-hidden="true" data-testid="crew-ghost-badge" className="crew-grad shrink-0 rounded-full grid place-items-center" style={{ width: size, height: size }}>
-      <KiroGhostMark size={Math.round(size * 0.5)} className="inline-block shrink-0 text-aim-fg" />
+      <AjMark size={Math.round(size * 0.5)} className="inline-block shrink-0 text-aim-fg" />
     </span>
   )
 }
@@ -72,7 +72,7 @@ export function CrewWorkerStack({ groups, max = 6 }: { groups: CrewWorkerGroup[]
         // Tinted by the worker's own state colour, so the stack reads at a glance.
         <span key={i} data-group={g} className={`w-[18px] h-[18px] rounded-full grid place-items-center border border-current ring-2 ring-bg ${CREW_GROUP_TONE[g]}`}
           style={{ backgroundColor: 'color-mix(in srgb, currentColor 22%, var(--bg-elevated))' }}>
-          <KiroGhostMark size={11} className="inline-block shrink-0" />
+          <AjMark size={11} className="inline-block shrink-0" />
         </span>
       ))}
       {extra > 0 && <span className="pl-2 text-[11px] text-muted">+{extra}</span>}

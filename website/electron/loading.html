@@ -6,13 +6,15 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     :root {
-      --accent: #8E48FF;                 /* Kiro brand purple; overridden per-user at boot */
-      --backdrop: #0f1117;               /* neutral shown during the final hand-off fade */
+      --accent: #2DD4BF;                 /* brand teal; overridden per-user at boot */
+      --ground: #0B0C0F;                 /* brand ink: the splash is always dark, the accent only tints it */
+      --backdrop: #0B0C0F;               /* neutral shown during the final hand-off fade */
       /* Foreground "ink". Two variables because the two texts have different WCAG
          bars and sit on different parts of the backdrop (see the contrast block):
            --ink        → large "Aj Crew" wordmark (AA large = 3:1) at the gradient centre
            --ink-status → 14px status text + dot (AA normal = 4.5:1) at the bottom edge
-         Both default to white (dark accents) and flip to dark when the accent is light. */
+         Both are white on the dark ground. The script below re-checks them against the
+         tinted ground the accent produces, so a change to the tint cannot cost contrast. */
       --ink: #ffffff;
       --ink-status: #ffffff;
       --title-shadow: 0 6px 34px rgba(0,0,0,0.30);
@@ -28,22 +30,22 @@
       user-select: none;
     }
 
-    /* The whole reveal lives in #stage; overflow clips ghosts at the edges,
+    /* The whole reveal lives in #stage; overflow clips gems at the edges,
        and it fades out as one layer when the gateway is ready. */
     #stage {
       position: fixed; inset: 0; overflow: hidden;
       background:
         radial-gradient(circle at 50% 42%,
-          color-mix(in srgb, var(--accent) 80%, #ffffff 20%),
-          var(--accent) 74%);
+          color-mix(in srgb, var(--accent) 16%, var(--ground)),
+          color-mix(in srgb, var(--accent) 5%, var(--ground)) 74%);
       opacity: 1; transition: opacity 0.5s ease;
       will-change: opacity;
     }
     #stage.gone { opacity: 0; }
 
-    /* ---- Ghosts ----
-       nesting: .ghost(pos,opacity) > .float(screen-vertical bob) > .tilt(rotate) > .pop(scale) > svg */
-    .ghost { position: absolute; left: 0; top: 0; opacity: 0; will-change: opacity; }
+    /* ---- Gems ----
+       nesting: .gem(pos,opacity) > .float(screen-vertical bob) > .tilt(rotate) > .pop(scale) > svg */
+    .gem { position: absolute; left: 0; top: 0; opacity: 0; will-change: opacity; }
     .float { width: 100%; height: 100%; animation: bob 3s ease-in-out infinite; }
     @keyframes bob { 0%,100% { transform: translateY(-4px); } 50% { transform: translateY(4px); } }
     .tilt  { width: 100%; height: 100%; }
@@ -67,9 +69,9 @@
 
     .g-svg { width: 100%; height: 100%; display: block; }
     .g-eyes { transform-box: fill-box; transform-origin: center; transition: transform 0.09s ease; }
-    .g-eyes.blink { transform: scaleY(0.08); }   /* one whole ghost blinks (both eyes) */
+    .g-eyes.blink { transform: scaleY(0.08); }   /* one whole gem blinks (both eyes) */
 
-    /* ---- a theme pack's own splash art, shown in place of the ghosts ---- */
+    /* ---- a theme pack's own splash art, shown in place of the gems ---- */
     #art, #artStill {
       position: absolute; left: 50%; top: 46%; transform: translate(-50%, -50%);
       width: min(70vw, 720px); height: 56vh; object-fit: contain;   /* an SVG may carry no size */
@@ -90,15 +92,15 @@
     #title.show { opacity: 1; transform: translate(-50%, -50%) translateY(0) scale(1); }
 
     /* ---- status pill (bottom-centre) ----
-       The foreground ghosts drift through the bottom band, and a white ghost
+       The foreground gems drift through the bottom band, and a white gem
        body under white ink erases the covered words. The line gets the same
-       ~pure-accent surface as #exit, so the --ink-status contrast applyInk
-       computes against the accent still holds. No border and a small radius
+       accent-tinted ink surface as #exit, the one the script below checks
+       --ink-status against. No border and a small radius
        keep it from reading as a second button. */
     #status {
       position: absolute; left: 50%; bottom: 6%; transform: translateX(-50%);
       display: inline-flex; align-items: center; gap: 9px; z-index: 50;
-      background: color-mix(in srgb, var(--accent) 92%, transparent);
+      background: color-mix(in srgb, var(--accent) 8%, rgba(11,12,15,.92));
       padding: 6px 12px; border-radius: 8px;
       font-family: var(--font-body);
       font-size: 14px; font-weight: 600; color: var(--ink-status);
@@ -120,14 +122,14 @@
        The button sits beside an active status line, so its label says what
        closing does to this window, and a hint under it says where the app
        goes (script below picks both per window and platform).
-       The block paints its own accent surface: the ink colour is chosen against
-       the accent, and the foreground ghosts drift under this spot, so text on a
-       bare ghost body would lose its contrast. */
+       The block paints its own accent-tinted surface: the ink colour is chosen
+       against it, and the foreground gems drift under this spot, so text on a
+       bare gem body would lose its contrast. */
     #exit {
       position: absolute; left: 50%; bottom: calc(6% + 46px); transform: translateX(-50%);
       z-index: 50; display: flex; flex-direction: column; align-items: center; gap: 8px;
       width: max-content; max-width: min(88vw, 420px);
-      background: color-mix(in srgb, var(--accent) 92%, transparent);
+      background: color-mix(in srgb, var(--accent) 8%, rgba(11,12,15,.92));
       padding: 10px 14px; border-radius: 14px;
       opacity: 0; transition: opacity .3s ease;
     }
@@ -161,7 +163,7 @@
 </head>
 <body>
   <div id="stage">
-    <div id="ghosts"></div>
+    <div id="gems"></div>
     <img id="art" alt="" hidden>
     <canvas id="artStill" aria-hidden="true" hidden></canvas>
     <div id="title">Aj Crew</div>
@@ -180,21 +182,21 @@
     "use strict";
 
     // ── Per-user accent, injected by the Electron main process as a query param
-    //    (see showLoadingThenConnect in main.js). Falls back to the brand purple. ──
-    var accent = "#8E48FF";
+    //    (see showLoadingThenConnect in main.js). Falls back to the brand teal. ──
+    var accent = "#2DD4BF";
     try {
       var q = new URLSearchParams(location.search).get("accent");
       if (q && /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(q)) accent = q;
     } catch (e) {}
     document.documentElement.style.setProperty("--accent", accent);
 
-    // ── Adaptive foreground contrast ──
-    //    Choose a dark or light "ink" so the wordmark and status stay legible on
-    //    any accent, including pale ones. The two texts are evaluated separately
-    //    because they differ in size and sit on different parts of the backdrop:
-    //      • title  — large text (3:1 bar) on the gradient centre (accent 80% + white 20%)
-    //      • status — 14px text + dot (4.5:1 bar) on the ~pure accent at the bottom edge
-    //    Each keeps white unless white fails its own WCAG bar, then flips to dark.
+    // ── Foreground contrast ──
+    //    The splash is the brand ink tinted by the accent, so white ink holds on
+    //    every accent. This still measures it rather than assuming it: the two
+    //    texts sit on different tints, and each must clear its own WCAG bar.
+    //      • title  — large text (3:1 bar) on the gradient centre (accent 16% over the ground)
+    //      • status — 14px text + dot (4.5:1 bar) on its own patch (accent 8% over the ground)
+    //    Each keeps white unless white fails its bar, then flips to dark.
     (function () {
       function toRgb(h) {
         h = h.replace("#", "");
@@ -208,41 +210,47 @@
       function ratio(a, b) { var hi = Math.max(a,b), lo = Math.min(a,b); return (hi+0.05)/(lo+0.05); }
       try {
         var rgb = toRgb(accent);
+        var ground = [11, 12, 15];                 // --ground, #0B0C0F
         var white = lum([255, 255, 255]);
-        var dark  = "rgb(24,20,38)";
-        // The title sits at the LIGHTEST part of the backdrop — the gradient centre
-        // (accent 80% + white 20%, matching the CSS color-mix) — and is large text
-        // (66px/600), so it only needs the WCAG AA large bar of 3:1.
-        var centreLum = lum([0,1,2].map(function (i) { return Math.round(rgb[i]*0.8 + 255*0.2); }));
-        // The status line + dot sit at the bottom edge, on ~pure accent, and are 14px
-        // normal text, so they need the stricter AA normal bar of 4.5:1.
-        var accentLum = lum(rgb);
+        var dark  = "rgb(11,12,15)";
+        function tint(share) {
+          return lum([0,1,2].map(function (i) { return Math.round(rgb[i]*share + ground[i]*(1 - share)); }));
+        }
+        // The title sits at the LIGHTEST part of the backdrop, the gradient centre
+        // (accent 16% over the ground, matching the CSS color-mix), and is large
+        // text (66px/600), so it only needs the WCAG AA large bar of 3:1.
+        var centreLum = tint(0.16);
+        // The status line + dot sit on their own patch (accent 8% over the ground)
+        // and are 14px normal text, so they need the stricter AA normal bar of 4.5:1.
+        var patchLum = tint(0.08);
         var root = document.documentElement.style;
         root.setProperty("--ink",        ratio(white, centreLum) < 3.0 ? dark : "#ffffff");
-        root.setProperty("--ink-status", ratio(white, accentLum) < 4.5 ? dark : "#ffffff");
+        root.setProperty("--ink-status", ratio(white, patchLum) < 4.5 ? dark : "#ffffff");
         root.setProperty("--title-shadow",
           ratio(white, centreLum) < 3.0 ? "0 2px 12px rgba(0,0,0,0.10)" : "0 6px 34px rgba(0,0,0,0.30)");
       } catch (e) {}
     })();
 
-    var GHOST_SVG =
-      '<div class="float"><div class="tilt"><div class="pop"><svg class="g-svg" viewBox="255 110 745 980" fill="none" aria-hidden="true">' +
-        '<path d="M398.554 818.914C316.315 1001.03 491.477 1046.74 620.672 940.156C658.687 1059.66 801.052 970.473 852.234 877.795C964.787 673.567 919.318 465.357 907.64 422.374C827.637 129.443 427.623 128.946 358.8 423.865C342.651 475.544 342.402 534.18 333.458 595.051C328.986 625.86 325.507 645.488 313.83 677.785C306.873 696.424 297.68 712.819 282.773 740.645C259.915 783.881 269.604 867.113 387.87 823.883L399.051 818.914H398.554Z" fill="#ffffff"/>' +
+    // The gem character, generated by scripts/brand (mascot.plain_figure); do not hand-edit.
+    var GEM_SVG =
+      '<div class="float"><div class="tilt"><div class="pop"><svg class="g-svg" viewBox="-98.06 -54.25 196.11 175.85" fill="none" aria-hidden="true">' +
+        '<path d="M-85.14 -3.75Q-91.19 -3.75 -87 -8.11L-56.51 -39.82Q-52.32 -44.18 -51.17 -38.24L-45.68 -9.69Q-44.54 -3.75 -50.59 -3.75ZM-44.32 -42.31Q-45.46 -48.25 -39.41 -48.25L39.41 -48.25Q45.46 -48.25 44.32 -42.31L38.04 -9.69Q36.9 -3.75 30.85 -3.75L-30.85 -3.75Q-36.9 -3.75 -38.04 -9.69ZM51.17 -38.24Q52.32 -44.18 56.51 -39.82L87 -8.11Q91.19 -3.75 85.14 -3.75L50.59 -3.75Q44.54 -3.75 45.68 -9.69ZM81.06 3.75Q92.06 3.75 85.07 12.24L6.99 107.11Q0 115.6 -6.99 107.11L-85.07 12.24Q-92.06 3.75 -81.06 3.75Z" fill="#ffffff"/>' +
         '<g class="g-eyes">' +
-          '<path d="M636.123 549.353C603.328 549.353 598.359 510.097 598.359 486.742C598.359 465.623 602.086 448.977 609.293 438.293C615.504 428.852 624.697 424.131 636.123 424.131C647.555 424.131 657.492 428.852 664.447 438.541C672.398 449.474 676.623 466.12 676.623 486.742C676.623 525.998 661.471 549.353 636.375 549.353H636.123Z" fill="#000000"/>' +
-          '<path d="M771.24 549.353C738.445 549.353 733.477 510.097 733.477 486.742C733.477 465.623 737.203 448.977 744.41 438.293C750.621 428.852 759.814 424.131 771.24 424.131C782.672 424.131 792.609 428.852 799.564 438.541C807.516 449.474 811.74 466.12 811.74 486.742C811.74 525.998 796.588 549.353 771.492 549.353H771.24Z" fill="#000000"/>' +
+          '<path d="M-25 36A10 16.5 0 1 1 -5 36A10 16.5 0 1 1 -25 36Z" fill="#0B0C0F"/>' +
+          '<path d="M19 36A10 16.5 0 1 1 39 36A10 16.5 0 1 1 19 36Z" fill="#0B0C0F"/>' +
         '</g>' +
       '</svg></div></div></div>';
+    var GEM_ASPECT = 0.897;   // the figure's height over its width
 
     // edge drives base rotation so heads face INTO the frame:
     //   top → 180°, left → 90°, right → -90°, bottom → 0°, free → gentle tilt.
-    // ax/ay = ghost CENTRE as fraction of viewport (near 0/1 = clipped off-frame).
+    // ax/ay = gem CENTRE as fraction of viewport (near 0/1 = clipped off-frame).
     var GH = [
       { ax: .22, ay: .015, size: 152, edge: "top",    depth: 1,   flip: true  },
       { ax: .70, ay: .02,  size: 206, edge: "top",    depth: 1                },
       { ax: .012,ay: .40,  size: 178, edge: "left",   depth: .96              },
       { ax: .988,ay: .58,  size: 194, edge: "right",  depth: 1                },
-      { ax: .30, ay: .99,  size: 322, edge: "bottom", depth: 1                }, // foreground, off-centre (clears status)
+      { ax: .30, ay: .95,  size: 322, edge: "bottom", depth: 1                }, // foreground, off-centre (clears status)
       { ax: .85, ay: .19,  size: 100, edge: "free",   depth: .76, flip: true  },
       { ax: .13, ay: .74,  size: 122, edge: "free",   depth: .9               },
       { ax: .66, ay: .78,  size: 112, edge: "free",   depth: .82, flip: true  }
@@ -250,9 +258,9 @@
     var BASE_ROT = { top: 180, left: 90, right: -90, bottom: 0, free: 0 };
 
     // The GH sizes above were tuned against the default window (see main.js:994).
-    // Scaling the whole composition by the viewport-vs-baseline ratio keeps ghosts
-    // proportioned at any window size — so edge ghosts stay clipped by the same
-    // fraction instead of drifting when a fixed-size ghost meets a bigger viewport.
+    // Scaling the whole composition by the viewport-vs-baseline ratio keeps gems
+    // proportioned at any window size — so edge gems stay clipped by the same
+    // fraction instead of drifting when a fixed-size gem meets a bigger viewport.
     var REF_W = 1280, REF_H = 860;
     function viewScale() {
       // Uniform (min-ratio) scale preserves the layout's proportions; clamp keeps
@@ -261,45 +269,45 @@
     }
 
     var MIN_FLOOR_MS = 1600;   // never hand off before this (no sub-second flash)
-    var MIN_GHOSTS   = 5;
+    var MIN_GEMS   = 5;
     var STAGGER_MS   = 210;
     var CHURN_START  = 5000;   // only churn (leave + return) once boot exceeds this
     var CHURN_TICK   = [750, 950];
     var CHURN_GONE   = [1450, 1750];
 
     var stage = document.getElementById("stage");
-    var host  = document.getElementById("ghosts");
+    var host  = document.getElementById("gems");
     var title = document.getElementById("title");
     var statusText = document.getElementById("statusText");
 
     var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     var W = window.innerWidth, H = window.innerHeight;
-    var ghosts = [], nextIdx = 0, shownCount = 0;
+    var gems = [], nextIdx = 0, shownCount = 0;
     var ready = false, resolved = false, finished = false, startedAt = performance.now();
     var churnOrder = [], churnPtr = 0, latestStatus = "Starting gateway\u2026";
 
     function rnd(a, b) { return a + Math.random() * (b - a); }
 
-    // Lay out a ghost against the CURRENT viewport: both its size (scaled to the
+    // Lay out a gem against the CURRENT viewport: both its size (scaled to the
     // window) and its position (ax/ay are viewport fractions). Must re-run on any
-    // W/H change (resize / maximise) — otherwise ghosts keep the initial
+    // W/H change (resize / maximise) — otherwise gems keep the initial
     // small-window size + coordinates, clustering in a corner with clipped edges.
-    function layoutGhost(g) {
+    function layoutGem(g) {
       var cfg = g.cfg, s = viewScale();
-      var w = cfg.size * s, h = w * 1.31;
+      var w = cfg.size * s, h = w * GEM_ASPECT;
       g.el.style.width  = w + "px";
       g.el.style.height = h + "px";
       g.el.style.left = (cfg.ax * W - w / 2) + "px";
       g.el.style.top  = (cfg.ay * H - h / 2) + "px";
     }
 
-    function makeGhost(cfg) {
+    function makeGem(cfg) {
       var el = document.createElement("div");
-      el.className = "ghost";
+      el.className = "gem";
       el.style.filter = cfg.depth >= .9
-        ? "drop-shadow(0 7px 14px rgba(20,8,50,0.32))"
-        : "drop-shadow(0 5px 10px rgba(20,8,50,0.26)) blur(" + (1 - cfg.depth) * 2.6 + "px)";
-      el.innerHTML = GHOST_SVG;
+        ? "drop-shadow(0 7px 14px rgba(0,0,0,0.45))"
+        : "drop-shadow(0 5px 10px rgba(0,0,0,0.36)) blur(" + (1 - cfg.depth) * 2.6 + "px)";
+      el.innerHTML = GEM_SVG;
       host.appendChild(el);
       var g = {
         el: el, cfg: cfg,
@@ -309,7 +317,7 @@
         eyes: el.querySelector(".g-eyes"),
         visible: false
       };
-      layoutGhost(g);
+      layoutGem(g);
       var rot = BASE_ROT[cfg.edge] + rnd(-9, 9);
       g.tilt.style.transform = "rotate(" + rot + "deg)" + (cfg.flip ? " scaleX(-1)" : "");
       g.floatEl.style.animationDuration = rnd(2.4, 4.3).toFixed(2) + "s";
@@ -325,32 +333,32 @@
       resizeRAF = requestAnimationFrame(function () {
         resizeRAF = 0;
         W = window.innerWidth; H = window.innerHeight;
-        for (var i = 0; i < ghosts.length; i++) layoutGhost(ghosts[i]);
+        for (var i = 0; i < gems.length; i++) layoutGem(gems[i]);
       });
     });
 
     function popIn(g) { g.pop.classList.remove("popIn", "popOut"); void g.pop.offsetWidth; g.pop.classList.add("popIn"); }
-    function showGhost(g) { g.el.style.opacity = String(g.cfg.depth); g.visible = true; popIn(g); }
+    function showGem(g) { g.el.style.opacity = String(g.cfg.depth); g.visible = true; popIn(g); }
     function blink(g) { g.eyes.classList.add("blink"); setTimeout(function () { g.eyes.classList.remove("blink"); }, 130); }
 
-    function churnGhost(g) {
+    function churnGem(g) {
       if (resolved) return;
       g.visible = false;
       g.pop.classList.remove("popIn"); void g.pop.offsetWidth; g.pop.classList.add("popOut");
-      setTimeout(function () { if (!resolved) showGhost(g); }, rnd(CHURN_GONE[0], CHURN_GONE[1]));
+      setTimeout(function () { if (!resolved) showGem(g); }, rnd(CHURN_GONE[0], CHURN_GONE[1]));
     }
 
-    // one ghost at a time blinks
+    // one gem at a time blinks
     function blinkLoop() {
       if (resolved) return;
-      var vis = ghosts.filter(function (g) { return g.visible; });
+      var vis = gems.filter(function (g) { return g.visible; });
       if (vis.length) blink(vis[Math.floor(Math.random() * vis.length)]);
       setTimeout(blinkLoop, rnd(900, 2400));
     }
 
-    // rotation so DIFFERENT ghosts leave each time (no immediate repeats)
+    // rotation so DIFFERENT gems leave each time (no immediate repeats)
     function shuffle(a) { for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
-    function nextChurnGhost() {
+    function nextChurnGem() {
       for (var tries = 0; tries < churnOrder.length; tries++) {
         var g = churnOrder[churnPtr];
         churnPtr = (churnPtr + 1) % churnOrder.length;
@@ -361,8 +369,8 @@
 
     function peekNext() {
       if (resolved) return;
-      if (nextIdx < ghosts.length) {
-        showGhost(ghosts[nextIdx++]); shownCount++;
+      if (nextIdx < gems.length) {
+        showGem(gems[nextIdx++]); shownCount++;
         maybeResolve();
         setTimeout(peekNext, STAGGER_MS);
       } else if (!reduce) {
@@ -375,8 +383,8 @@
       if (resolved) return;
       var elapsed = performance.now() - startedAt;
       if (elapsed < CHURN_START) { setTimeout(churnLoop, CHURN_START - elapsed + 50); return; }
-      var g = nextChurnGhost();      // one at a time; a second leaves before the first returns
-      if (g) churnGhost(g);
+      var g = nextChurnGem();      // one at a time; a second leaves before the first returns
+      if (g) churnGem(g);
       setTimeout(churnLoop, rnd(CHURN_TICK[0], CHURN_TICK[1]));
     }
 
@@ -390,7 +398,7 @@
     }
 
     function maybeResolve() {
-      if (resolved || !ready || (!artOn && shownCount < MIN_GHOSTS)) return;
+      if (resolved || !ready || (!artOn && shownCount < MIN_GEMS)) return;
       var elapsed = performance.now() - startedAt;
       if (elapsed < MIN_FLOOR_MS) { setTimeout(maybeResolve, MIN_FLOOR_MS - elapsed + 20); return; }
       resolve();
@@ -399,7 +407,7 @@
     // Hold the composition; "Aj Crew" appears briefly; then hand off (fade → bootComplete).
     function resolve() {
       resolved = true;
-      ghosts.forEach(function (g) { if (!g.visible && Math.random() < 0.5) showGhost(g); });
+      gems.forEach(function (g) { if (!g.visible && Math.random() < 0.5) showGem(g); });
       if (!artOn) setTimeout(function () { title.classList.add("show"); }, 220);
       setTimeout(fadeOut, 1350);
     }
@@ -506,11 +514,11 @@
     }
 
     // ── kick off ──
-    function startGhosts() {
-      ghosts = GH.map(makeGhost);
-      churnOrder = shuffle(ghosts.slice()); churnPtr = 0;
+    function startGems() {
+      gems = GH.map(makeGem);
+      churnOrder = shuffle(gems.slice()); churnPtr = 0;
       if (reduce) {
-        ghosts.forEach(showGhost); shownCount = ghosts.length;   // calm, instant reveal
+        gems.forEach(showGem); shownCount = gems.length;   // calm, instant reveal
         maybeResolve();
       } else {
         setTimeout(peekNext, 200);
@@ -518,8 +526,8 @@
       }
     }
     // A theme pack's splash art (?splash=, a file: URL from theme-splash.js)
-    // takes the ghosts' place and the wordmark's; art that fails to load
-    // brings the stock ghosts back. Only the stored theme-splash.png|svg file
+    // takes the gems' place and the wordmark's; art that fails to load
+    // brings the stock gems back. Only the stored theme-splash.png|svg file
     // is accepted; any other value keeps the stock splash.
     function themeSplashSrc(raw) {
       var url;
@@ -558,9 +566,9 @@
     try { artSrc = themeSplashSrc(new URLSearchParams(location.search).get("splash") || ""); } catch (e) {}
     if (artSrc) {
       artOn = true;
-      showThemeArt(art, artStill, artSrc, reduce, function () { artOn = false; startGhosts(); });
+      showThemeArt(art, artStill, artSrc, reduce, function () { artOn = false; startGems(); });
     } else {
-      startGhosts();
+      startGems();
     }
   })();
   </script>

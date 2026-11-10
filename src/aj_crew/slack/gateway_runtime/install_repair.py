@@ -167,7 +167,7 @@ async def _check_missing_deps(self: GatewayOrchestrator) -> None:
         return
 
     logger.warning("Missing deps %s — installing directly", missing)
-    print(f"👻 Installing missing dependencies: {', '.join(missing)}")
+    print(f"💎 Installing missing dependencies: {', '.join(missing)}")
     proc = await asyncio.create_subprocess_exec(
         *platform_compat.isolated_python_argv(
             "-m",
@@ -264,7 +264,7 @@ async def _check_console_script(self: GatewayOrchestrator) -> None:
     venv_py, script, dep_sync_path = probed
 
     logger.warning("ajcrew console script missing/not executable at %s — reinstalling", script)
-    print("👻 Repairing ajcrew install (console script missing)…")
+    print("💎 Repairing ajcrew install (console script missing)…")
     # Run the stdlib-only module by absolute file path: the target venv may
     # not currently contain an importable aj_crew package. A dedicated
     # child session lets cancellation own pip and its build descendants.

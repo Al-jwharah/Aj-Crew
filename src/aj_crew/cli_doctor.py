@@ -558,7 +558,7 @@ def _doctor(platform_boot_error: "Exception | None" = None, bundle: bool = False
     ``--bundle`` mode has had its turn, so the ``aj_crew.cli`` import every command
     pays never loads them.
     """
-    print("Aj Crew Doctor 👻\n")
+    print("Aj Crew Doctor 💎\n")
     issues: list[str] = []
 
     # ── Diagnostics bundle (--bundle) ──

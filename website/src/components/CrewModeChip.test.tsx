@@ -4,11 +4,11 @@ import { CrewModeChip } from './CrewModeChip'
 import CrewModeWelcome, { CREW_WELCOME_PLAY_SECS } from './CrewModeWelcome'
 
 describe('CrewModeChip', () => {
-  it('wears the lightning bolt, not the ghost', () => {
+  it('wears the lightning bolt, not the gem', () => {
     render(<CrewModeChip onTurnOn={vi.fn()} />)
     const chip = screen.getByTestId('crew-mode-chip')
     expect(chip.querySelector('.lucide-zap')).not.toBeNull()
-    expect(chip.querySelector('[data-testid="kiro-ghost-mark"]')).toBeNull()
+    expect(chip.querySelector('[data-testid="aj-mark"]')).toBeNull()
   })
 
   it('reads off and reports it through aria-pressed', () => {
@@ -129,7 +129,7 @@ describe('CrewModeWelcome', () => {
     render(<CrewModeWelcome />)
     const page = screen.getByTestId('crew-mode-welcome')
     expect(within(page).queryAllByRole('img')).toHaveLength(0)
-    expect(within(page).getAllByTestId('kiro-ghost-mark').every(g => g.closest('[aria-hidden="true"]'))).toBe(true)
+    expect(within(page).getAllByTestId('aj-mark').every(g => g.closest('[aria-hidden="true"]'))).toBe(true)
   })
 
   it('draws no sample board', () => {

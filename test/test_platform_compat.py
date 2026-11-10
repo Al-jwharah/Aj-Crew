@@ -422,7 +422,7 @@ class TestReexecPythonModule:
             "import os\n"
             "from aj_crew.platform_compat import reexec_python_module\n"
             "if os.environ.get('_AJCREW_UTF8_REEXEC_PROBE') == '1':\n"
-            "    print('👻 restarted')\n"
+            "    print('💎 restarted')\n"
             "else:\n"
             "    os.environ['_AJCREW_UTF8_REEXEC_PROBE'] = '1'\n"
             "    reexec_python_module('utf8_reexec_probe', [])\n",
@@ -452,7 +452,7 @@ class TestReexecPythonModule:
         )
 
         assert result.returncode == 0, result.stderr.decode("utf-8", errors="replace")
-        assert "👻 restarted".encode() in result.stdout
+        assert "💎 restarted".encode() in result.stdout
 
 
 class TestCancelWheelAppliesInFlight:
@@ -1324,7 +1324,7 @@ class _TtyTextIOWrapper(io.TextIOWrapper):
 
 
 class TestLineBufferedStdout:
-    STATUS_LINE = "👻 Aj Crew gateway running — press Ctrl+C to stop"
+    STATUS_LINE = "💎 Aj Crew gateway running — press Ctrl+C to stop"
 
     def test_status_line_reaches_a_non_tty_stdout_as_printed(self, monkeypatch):
         # A pipe or a file (the journal under systemd, the Desktop supervisor's

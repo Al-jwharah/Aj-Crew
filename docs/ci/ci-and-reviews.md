@@ -2925,8 +2925,8 @@ workflows ran it. Off the default branch (a release branch cut earlier) such a
 run came from a `code-review.yml` that still hears `edited`, so it counts.
 
 - **`autosde-rules`** blocks unambiguous frontend violations on added lines: an
-  inline `<svg viewBox>` outside brand-mark components (`KiroGhost.tsx`, `*Logo.tsx`,
-  `*Ghost.tsx`), a `<div>`/`<span>` with `onClick` and no `role`, `.innerHTML =`,
+  inline `<svg viewBox>` in any `.tsx` file (brand marks are image assets, so no
+  file is exempt), a `<div>`/`<span>` with `onClick` and no `role`, `.innerHTML =`,
   Mermaid `securityLevel: 'loose'`, and an oversized `max-w-[>=900px]` page wrapper.
   It also blocks three backend keystones: a sensitive credential or keystone path
   read that does not go through `is_sensitive_path()`, `denied_commands.json`

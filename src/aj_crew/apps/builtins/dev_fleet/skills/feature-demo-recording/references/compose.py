@@ -22,7 +22,7 @@ Two alignment facts that are easy to get wrong and expensive to discover late:
    frames, which a seeking renderer will happily bake in.
 
 brand.json (all optional):
-{ "accent":"#8e48ff", "bg":"#19161d", "outro_eyebrow":"AJ CREW",
+{ "accent":"#2dd4bf", "bg":"#0b0c0f", "outro_eyebrow":"AJ CREW",
   "outro_title_lead":"Command", "outro_title_tail":" Bar",
   "font_stack":"\\"Inter\\",\\"Droid Sans Fallback\\",sans-serif",
   "font_face_local":"Droid Sans Fallback" }
@@ -146,10 +146,10 @@ def main() -> int:
     # here: useTheme.tsx sets DEFAULT_COLOR_THEME = "aj", so these are the colours
     # a viewer already sees in the product, and the capture is recorded on the same
     # theme so a slide and the dashboard behind it are the same product.
-    accent = _css(b, "accent", "#8e48ff", _COLOR_RE)
-    accent_h = _css(b, "accent_hi", "#9f63ff", _COLOR_RE)
-    bg = _css(b, "bg", "#19161d", _COLOR_RE)
-    bg_el = _css(b, "bg_el", "#211d25", _COLOR_RE)
+    accent = _css(b, "accent", "#2dd4bf", _COLOR_RE)
+    accent_h = _css(b, "accent_hi", "#5eead4", _COLOR_RE)
+    bg = _css(b, "bg", "#0b0c0f", _COLOR_RE)
+    bg_el = _css(b, "bg_el", "#15171c", _COLOR_RE)
     font_stack = _css(b, "font_stack", '"Inter","Droid Sans Fallback",sans-serif', _STACK_RE)
     font_local = _css(b, "font_face_local", "Droid Sans Fallback", _FAMILY_RE)
     # brand.json is the OTHER authored input, and its prose is rendered into the
@@ -302,7 +302,7 @@ def main() -> int:
      `src: local(...)` satisfies it for an OS-bundled face with no downloadable file. */
   @font-face{{font-family:'{font_local}';src:local('{font_local}');}}
   :root{{--accent:{accent};--accent-h:{accent_h};--bg:{bg};--bg-el:{bg_el};
-    --strong:#f2f1f4;--muted:#938f9b;--line:#352f3d;}}
+    --strong:#f4f5f7;--muted:#8e96a3;--line:#272a31;}}
   *{{box-sizing:border-box;}}
   body,html{{margin:0;width:{CW}px;height:{CH}px;overflow:hidden;background:var(--bg);font-family:{font_stack};}}
   #stage{{width:{CW}px;height:{CH}px;position:relative;background:var(--bg);overflow:hidden;}}
@@ -326,7 +326,7 @@ def main() -> int:
   /* A captured UI can be a LIGHT surface, where near-white caption text fails contrast
      no matter how heavy the shadow. A solid pill makes readability independent of the frame. */
   .cap{{position:absolute;left:0;right:0;bottom:0;text-align:center;}}
-  .cap .pill{{display:inline-block;background:rgba(14,16,21,.90);border:1px solid rgba(178,127,255,.28);
+  .cap .pill{{display:inline-block;background:rgba(14,16,21,.90);border:1px solid rgba(45,212,191,.28);
     color:var(--strong);font-weight:800;font-size:46px;line-height:1.3;padding:16px 34px;
     border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.45);}}
   .barwrap{{position:absolute;left:0;right:0;bottom:0;height:8px;background:var(--line);z-index:7;overflow:hidden;}}

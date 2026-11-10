@@ -64,7 +64,7 @@ async function main() {
       for (const s of SCENES) {
         const context = await browser.newContext({
           viewport: { width: 1400, height: 940 },
-          // The lit state is a low-contrast tinted background (#352f3d on the
+          // The lit state is a low-contrast tinted background (#272a31 on the
           // dark rail); a 1x shot loses it to PNG banding.
           deviceScaleFactor: 2,
         })

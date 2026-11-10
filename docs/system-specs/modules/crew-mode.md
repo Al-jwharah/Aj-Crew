@@ -1417,7 +1417,7 @@ when navigation permits. The cached conversation and its drafts remain available
 
 The Bots page (`/members`, titled "Mates") creates a Bot in place.
 Landing rule: with no Bots the page
-shows a single empty-state hero (ghost avatar, "No Bots yet", one line,
+shows a single empty-state hero (gem avatar, "No Bots yet", one line,
 "New mate") in place of a roster call to action and a "pick a member" pane;
 a roster containing only the first Bot (`mate`) is not an empty state.
 With Bots and no `?member=`, the page opens like a messages app: Bot, the
@@ -1668,7 +1668,7 @@ record for a picture or a pack. Apply pins the pick and sends it as
 `avatar: {kind: 'icon', pose, bg}`, and it survives a renamed draft; with no
 pick the create still carries that name-seeded icon as its `avatar` (frozen into
 a stored choice at create, never re-derived from a later rename), so a new Bot
-is born an icon rather than wearing the name's ghost. The **Advanced settings** row unfolds inline below
+is born an icon rather than wearing the name's gem. The **Advanced settings** row unfolds inline below
 the avatar, in the same card: Goal and the crew
 editor fields (workspace, model, triggers, session colour), ending with a second
 Create. It is folded by default; `startExpanded` opens it unfolded, which is what
@@ -3733,7 +3733,7 @@ BUBBLE — three bouncing dots in the Bot's own gray bubble (the same
 so a theme restyling those restyles this), the iMessage sign that a reply is
 being typed (#19997) — with ONE status line under it naming what the Bot
 is doing right now, both rendered by `CrewmateLiveActivity` in the footer
-column. The chat page's ghost-pose carousel (`ChatFooter`) is NOT mounted in a
+column. The chat page's gem-pose carousel (`ChatFooter`) is NOT mounted in a
 Bot chat: `ChatPane` draws one or the other, never both, so a DM reads as
 a conversation and not as a loader, and only one thing moves. The dots are
 decorative (`aria-hidden`); the caption is the live region. The dots are the

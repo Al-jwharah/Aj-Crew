@@ -369,7 +369,7 @@ def _setup_impl(
             sys.exit(1)
         return
 
-    print("Aj Crew Setup 👻\n")
+    print("Aj Crew Setup 💎\n")
 
     # Report on optional prerequisites.
     _ensure_prerequisites()
@@ -441,7 +441,7 @@ def _setup_impl(
                 f"\n  ⚠️  {flag} is ignored with --agent-only. Run "
                 f"'ajcrew setup {flag}' for its guided setup."
             )
-        print("\n👻 Done! Try: ajcrew gateway")
+        print("\n💎 Done! Try: ajcrew gateway")
         return
 
     # 3. Messaging channels (optional, configured after setup by default).
@@ -493,7 +493,7 @@ def _setup_impl(
     # 7. Cloud (run AjCrew on the user's own AWS EC2) — optional, delegated.
     _maybe_setup_cloud()
 
-    print("\n👻 Done! Try: ajcrew doctor && ajcrew gateway")
+    print("\n💎 Done! Try: ajcrew doctor && ajcrew gateway")
 
 
 def _builtin_cloud_lane_offered() -> bool:

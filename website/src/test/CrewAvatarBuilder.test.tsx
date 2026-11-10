@@ -13,7 +13,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import CrewAvatarBuilder from '../components/CrewAvatarBuilder'
 import type { CrewAvatarOverride } from '../components/CrewAvatar'
-import { ACCESSORIES, BROWS, BRAND_PURPLE, EYES, MOUTHS, PROPS, TILES } from '../lib/kiroGhostAvatar'
+import { ACCESSORIES, BROWS, BRAND_TILE, EYES, MOUTHS, PROPS, TILES } from '../lib/kiroGhostAvatar'
 import { POSE_IDS, seedIconPose } from '../lib/avatarPoses'
 
 vi.mock('framer-motion', async () => {
@@ -184,7 +184,7 @@ describe('CrewAvatarBuilder — ghost tier', () => {
     expect([...Object.keys(PROPS), 'none']).toContain(saved.traits.prop)
     expect(typeof saved.traits.blush).toBe('boolean')
     expect(typeof saved.traits.flip).toBe('boolean')
-    expect([BRAND_PURPLE, ...TILES]).toContain(saved.traits.tile)
+    expect([BRAND_TILE, ...TILES]).toContain(saved.traits.tile)
   })
 
   it('the Blush axis is a two-option tab: off first, then on', async () => {
@@ -236,7 +236,7 @@ describe('CrewAvatarBuilder — icon tier', () => {
   })
 
   it('a stored ghost crew still opens on the Ghost face pane', () => {
-    mount({ kind: 'ghost', traits: { eyes: 'wink', brows: 'none', mouth: 'smile', accessory: 'none', prop: 'none', blush: false, flip: false, tile: BRAND_PURPLE } })
+    mount({ kind: 'ghost', traits: { eyes: 'wink', brows: 'none', mouth: 'smile', accessory: 'none', prop: 'none', blush: false, flip: false, tile: BRAND_TILE } })
     expect(screen.getByTestId('avatar-builder-preview')).toBeInTheDocument()
     expect(screen.queryByTestId('avatar-icon-pane')).not.toBeInTheDocument()
   })

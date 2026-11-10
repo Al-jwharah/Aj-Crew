@@ -86,7 +86,7 @@ async function main() {
     if (PREFIX === 'after') {
       assert(badge === 0, `${theme}: no ghost badge before the title`)
       assert(spacing === '1px', `${theme}: eyebrow tracked a whole pixel`)
-      assert((await card.getByTestId('kiro-ghost-mark').count()) >= 1, `${theme}: inline ghost on the eyebrow line`)
+      assert((await card.getByTestId('aj-mark').count()) >= 1, `${theme}: inline gem on the eyebrow line`)
     }
     // The row and the rows around it: the whole session-list width, a little above and below.
     const box = await card.boundingBox()

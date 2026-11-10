@@ -28,7 +28,7 @@ cd "$_ajcrew_dir" || return 1
 # shellcheck source=scripts/lib/acp-adapter-pin.sh
 . "$_ajcrew_dir/scripts/lib/acp-adapter-pin.sh"
 
-echo "👻 AjCrew Setup"
+echo "💎 AjCrew Setup"
 echo ""
 
 # ── Ensure PATH includes common install locations ──
@@ -315,7 +315,7 @@ AJCREW_PROJECT_DIR="$_ajcrew_dir" ajcrew setup --agent-only \
     || echo "  ⚠️  ajcrew setup --agent-only failed (run manually later)"
 
 echo ""
-echo "👻 Setup complete!"
+echo "💎 Setup complete!"
 echo ""
 echo "  ajcrew doctor     # verify everything"
 echo "  ajcrew gateway    # start dashboard + gateway"

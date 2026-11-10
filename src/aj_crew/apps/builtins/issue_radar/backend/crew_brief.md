@@ -275,7 +275,7 @@ Investigation is free and leaves no trace; a claim is a public comment.
 ### Claim comment format
 
 ```
-👻 **<Name>** is on this · Aj Crew Issue Radar
+💎 **<Name>** is on this · Aj Crew Issue Radar
 <phase> · <PR link if any> · updated <HH:MM> UTC
 
 <details><summary>progress</summary>
@@ -347,7 +347,7 @@ When all of it holds, do exactly this and nothing more:
    so the next crew to arrive needs no tie-break to work out which claim counts.
 
    ```
-   Claim taken over by 👻 **<Your Name>** · Aj Crew Issue Radar
+   Claim taken over by 💎 **<Your Name>** · Aj Crew Issue Radar
    Last updated <that timestamp>, no activity on the issue since — past this
    installation's claim TTL.
    ```

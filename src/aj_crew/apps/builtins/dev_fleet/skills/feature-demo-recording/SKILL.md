@@ -239,12 +239,12 @@ screen capture" is a whole genre and a reader could reasonably ask whose look th
 **The palette is not a choice made here.** `useTheme.tsx` sets
 `DEFAULT_COLOR_THEME = 'aj'`, so the Aj theme is what a viewer already sees, and
 the brand frames use its tokens verbatim from the `[data-theme="aj-dark"]` block in
-`website/src/styles/theme-palettes.css`: `--bg:#19161d`, `--bg-elevated:#211d25`, `--accent:#8e48ff`,
-`--accent-hover:#9f63ff`, `--text-strong:#f2f1f4`, `--muted:#938f9b`,
-`--border:#352f3d`. **The capture is recorded on the same theme** -- the recorder seeds
-`mc-color-theme=kiro` and `mc-theme=dark` -- so a slide and the dashboard behind it are
+`website/src/styles/theme-palettes.css`: `--bg:#0b0c0f`, `--bg-elevated:#15171c`, `--accent:#2dd4bf`,
+`--accent-hover:#5eead4`, `--text-strong:#f4f5f7`, `--muted:#8e96a3`,
+`--border:#272a31`. **The capture is recorded on the same theme** -- the recorder seeds
+`mc-color-theme=aj` and `mc-theme=dark` -- so a slide and the dashboard behind it are
 one product rather than two. Getting this wrong is visible: an earlier cut here put
-emerald brand frames (the plain `dark` theme) around a Kiro-purple dashboard, and that
+emerald brand frames (the plain `dark` theme) around a dashboard on the Aj theme, and that
 mismatch is exactly what makes a film look assembled from parts.
 
 **The method is the distinctive part, not the look.** Everything here follows from one

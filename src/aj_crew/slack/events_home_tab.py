@@ -95,7 +95,7 @@ async def _publish_home_tab(orch: GatewayOrchestrator, user_id: str) -> None:
         # ── Status ──
         yolo = is_yolo_mode()
         blocks.append(
-            {"type": "header", "text": {"type": "plain_text", "text": "👻 Aj Crew Status"}}
+            {"type": "header", "text": {"type": "plain_text", "text": "💎 Aj Crew Status"}}
         )
         status_lines = [
             "*Gateway:* ✅ Online",

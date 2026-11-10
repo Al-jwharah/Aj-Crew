@@ -65,10 +65,8 @@ jobs:
         run: |
           echo "::group::use-lucide-icons — no inline SVGs"
           # website/AUTOSDE.yaml says this gate applies in every .tsx file with
-          # no exception (brand marks are image assets). KiroGhost.tsx is the one
-          # existing inline brand SVG kept as legacy; no other file is excluded.
+          # no exception: brand marks are image assets, the gem included.
           if git diff "$BASE".."$HEAD" -- ':(glob)src/**/*.tsx' \
-               ':(exclude)src/components/KiroGhost.tsx' \
              | grep -nP '^\+.*<svg[^>]*viewBox'; then
             echo "::error::Use lucide-react icons instead of inline SVGs"
             exit 1

@@ -74,7 +74,7 @@ describe('crew-member-mark.svg line weight', () => {
   // `mask-size:contain` into the same 16px box, so it lands on that identical
   // 1.33px ONLY while both numbers agree with Lucide's. A SQUARE viewBox is
   // load-bearing for that: `contain` letterboxes a non-square one (which is why
-  // the ghost mark's 805×1030 art reads slightly lighter), scaling the stroke by
+  // the Kiro harness logo's 805×1030 art reads slightly lighter), scaling the stroke by
   // something other than 16/24.
   it('is drawn on a square 24x24 viewBox, like every Lucide glyph', () => {
     expect(svg).toMatch(/viewBox="0 0 24 24"/)
@@ -82,32 +82,33 @@ describe('crew-member-mark.svg line weight', () => {
 
   it('strokes at width 2, so size=16 matches its Lucide neighbours', () => {
     // Asserted on the ROOT specifically. `stroke-width` inherits, so this is the
-    // weight of both ghosts — the part that has to sit at the same weight as the
+    // weight of both gems — the part that has to sit at the same weight as the
     // Lucide glyphs above and below it on the rail.
     expect(/<svg[^>]*stroke-width="2"/.test(svg)).toBe(true)
   })
 
-  it('draws both ghosts at the inherited weight, with no per-path override', () => {
-    // The pair is ONE weight on purpose. An earlier draft of this mark (a ghost
-    // inside a speech bubble) gave the interior a lighter 1.5 stroke; at the
-    // rail's 16px on a 1x display that lighter detail was the first thing to
-    // vanish, which is why that draft was dropped. A second weight creeping back
-    // in is the regression this pins.
+  it('draws both gems at the inherited weight, with no per-path override', () => {
+    // The pair is ONE weight on purpose. A lighter interior stroke is the first
+    // thing to vanish at the rail's 16px on a 1x display, so a second weight
+    // creeping in is the regression this pins. Three paths: the large gem's
+    // outline, its girdle line, and the small gem's outline.
     expect(svg).not.toMatch(/<path[^>]*stroke-width=/)
-    expect((svg.match(/<path /g) ?? []).length).toBe(2)
+    expect((svg.match(/<path /g) ?? []).length).toBe(3)
   })
 
-  it('draws the back ghost as an OPEN partial outline, occluded by the front one', () => {
-    // Lucide's `Users` idiom: the figure behind is drawn only where it is not
-    // covered, and each cut stops a gap short of the front stroke — that gap is
-    // the cue that reads as "behind" rather than "two overlapping outlines".
-    // The front ghost is a closed silhouette (ends in Z); the back one must NOT
-    // close, or the occlusion is gone and the mark reads as a knot.
+  it('draws two closed gems that never touch', () => {
+    // "Members, plural" is carried by two separate silhouettes. Each outline is
+    // closed (ends in Z); the girdle is the one open stroke. The small gem's
+    // points all lie to the right of the large one's, which is what keeps the
+    // two outlines from crossing into one knot at 16px.
     const paths = [...svg.matchAll(/<path d="([^"]+)"/g)].map((m) => m[1].trim())
-    expect(paths).toHaveLength(2)
-    const [front, back] = paths
-    expect(front).toMatch(/Z$/)
-    expect(back).not.toMatch(/Z/)
+    expect(paths).toHaveLength(3)
+    const [large, girdle, small] = paths
+    expect(large).toMatch(/Z$/)
+    expect(small).toMatch(/Z$/)
+    expect(girdle).not.toMatch(/Z/)
+    const xs = (d: string) => [...d.matchAll(/[MLH](-?[\d.]+)/g)].map((m) => parseFloat(m[1]))
+    expect(Math.min(...xs(small))).toBeGreaterThan(Math.max(...xs(large)))
   })
 
   it('is an outline, not a filled shape', () => {

@@ -176,7 +176,7 @@ def _serve_sign_in_first(args: argparse.Namespace, exc: BaseException) -> None:
     try:
         lock = GatewayLock(config_dir(), port=port or None, bind_address=signin.BIND_HOST).acquire()
     except GatewayLockError as lock_err:
-        print(f"👻 {lock_err}", file=sys.stderr)
+        print(f"💎 {lock_err}", file=sys.stderr)
         sys.exit(LIVE_HOLDER_EXIT_CODE if lock_err.live_holder else 1)
     try:
         _start_gateway_log_after_lock()
@@ -916,7 +916,7 @@ def main() -> None:
                 bind_address=_diagnostic_bind_address(),
             ).acquire()
         except GatewayLockError as exc:
-            print(f"👻 {exc}", file=sys.stderr)
+            print(f"💎 {exc}", file=sys.stderr)
             # A live holder is a sibling gateway already serving this home, so
             # retrying can only meet the same refusal: exit the code the systemd
             # unit's RestartPreventExitStatus= names (service/linux_unit.py) and let

@@ -30,25 +30,25 @@
 import coreCss from '../../../../index.css?inline'
 
 export const FALLBACK_PALETTE: Record<string, string> = {
-  '--bg': '#19161d',
-  '--bg-elevated': '#211d25',
-  '--bg-input': '#28242e',
-  '--border': '#352f3d',
-  '--border-focus': 'rgba(142,72,255,0.4)',
-  '--text': '#dcdadf',
-  '--text-muted': '#938f9b',
-  '--text-faint': '#5e5966',
-  '--bubble-user': 'rgba(178,127,255,0.18)',
+  '--bg': '#0b0c0f',
+  '--bg-elevated': '#15171c',
+  '--bg-input': '#1e2127',
+  '--border': '#272a31',
+  '--border-focus': 'rgba(45,212,191,0.4)',
+  '--text': '#d5d8de',
+  '--text-muted': '#8e96a3',
+  '--text-faint': '#59606b',
+  '--bubble-user': 'rgba(45,212,191,0.16)',
   '--bubble-assistant': 'rgba(255,255,255,0.04)',
-  '--accent': '#8e48ff',
-  '--accent-text': '#ffffff',
-  '--accent-glow': 'rgba(142,72,255,0.3)',
+  '--accent': '#2dd4bf',
+  '--accent-text': '#04110f',
+  '--accent-glow': 'rgba(45,212,191,0.28)',
   '--danger': '#f94359',
   '--success': '#008543',
-  '--header-bg': 'rgba(25,22,29,0.95)',
+  '--header-bg': 'rgba(11,12,15,0.95)',
   '--shadow': 'rgba(0,0,0,0.45)',
-  '--scrollbar': 'rgba(220,218,223,0.08)',
-  '--scrollbar-hover': 'rgba(220,218,223,0.15)',
+  '--scrollbar': 'rgba(213,216,222,0.08)',
+  '--scrollbar-hover': 'rgba(213,216,222,0.15)',
 }
 
 export function applyFallbackTheme(root: HTMLElement = document.documentElement): void {
@@ -202,7 +202,7 @@ export function applyTheme(_theme?: string | ThemeId): void {
  * values must be literal rather than resolved from a stylesheet.
  */
 export const BUBBLE_COLORS: Record<ThemeId, { bg: string; text: string; shadow: string }> = {
-  ajcrew: { bg: 'rgba(33,29,37,0.95)', text: '#f2f1f4', shadow: 'rgba(0,0,0,0.45)' },
+  ajcrew: { bg: 'rgba(21,23,28,0.95)', text: '#f4f5f7', shadow: 'rgba(0,0,0,0.45)' },
 }
 
 /**

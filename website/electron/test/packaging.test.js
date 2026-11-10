@@ -420,13 +420,17 @@ describe("first-download installer design contract", () => {
     );
     assert.deepEqual(bmpInfo(sidebar), { width: 164, height: 314, bitsPerPixel: 24 });
     assert.deepEqual(bmpInfo(header), { width: 150, height: 57, bitsPerPixel: 24 });
-    for (const eyeRegion of [
-      { left: 84, top: 15, right: 96, bottom: 29 },
-      { left: 106, top: 8, right: 119, bottom: 23 },
-      { left: 98, top: 32, right: 114, bottom: 47 },
+    // The header carries the gem mark on its dark tile (x 96-137, y 8-49):
+    // the tile's ground is dark above and below the gem, the gem's table is
+    // light, and the strip to the left of the wordmark stays the page's white.
+    for (const tileGround of [
+      { left: 102, top: 10, right: 131, bottom: 15 },
+      { left: 102, top: 42, right: 131, bottom: 47 },
     ]) {
-      assert.ok(bmpDarkPixelCount(header, eyeRegion) >= 6);
+      assert.ok(bmpDarkPixelCount(header, tileGround) >= 130);
     }
+    assert.equal(bmpDarkPixelCount(header, { left: 111, top: 18, right: 122, bottom: 21 }), 0);
+    assert.equal(bmpDarkPixelCount(header, { left: 0, top: 0, right: 60, bottom: 12 }), 0);
     assert.equal(pkg.build.nsis.oneClick, false);
     assert.equal(pkg.build.nsis.perMachine, false);
     assert.equal(pkg.build.nsis.allowToChangeInstallationDirectory, false);
@@ -1032,7 +1036,7 @@ describe("first-download installer design contract", () => {
     assert.equal(pkg.devDependencies["electron-builder"], "26.15.3");
   });
 
-  it("reuses the shipped logo and opening-animation ghost artwork", () => {
+  it("ships the gem artwork in the splash, the installers and the site logo", () => {
     const normalize = text => text.replaceAll(",", " ").replace(/\s+/g, " ");
     const loading = normalize(fs.readFileSync(path.join(ROOT, "loading.html"), "utf8"));
     const siteLogo = normalize(
@@ -1048,9 +1052,32 @@ describe("first-download installer design contract", () => {
       fs.readFileSync(path.join(INSTALLER_ASSETS, "windows-installer-header.svg"), "utf8")
     );
 
-    const openingGhost = "M398.554 818.914C316.315 1001.03";
-    const logoGhost = "M84.76 266.62c-19.2 42.53";
-    const logoEyes = [
+    // The gem is six straight-edged facets: three on the crown, three on the
+    // pavilion. Each is its own closed path, or one sub-path of a compound path.
+    const facetCount = text =>
+      [...text.matchAll(/ d="([^"]+)"/g)]
+        .flatMap(match => match[1].split(/(?<=Z)/))
+        .filter(sub => /^\s*M[-\d. ]+(?:L[-\d. ]+){2,3}Z$/.test(sub)).length;
+    assert.equal(facetCount(siteLogo), 6);
+    assert.equal(facetCount(sidebarSource), 6);
+    assert.equal(facetCount(headerSource), 6);
+    // The disk-image background repeats the gem as decoration.
+    assert.ok(facetCount(dmgSource) >= 6);
+    assert.equal(facetCount(dmgSource) % 6, 0);
+
+    // The splash draws the gem character: one body and a pair of eyes that blink.
+    const gem = loading.match(/var GEM_SVG =(.*?)<\/svg>/);
+    assert.ok(gem, "loading.html must carry the gem character");
+    assert.equal((gem[1].match(/<path /g) || []).length, 3);
+    const eyes = gem[1].split('<g class="g-eyes">')[1];
+    assert.ok(eyes, "the eyes are grouped so they blink together");
+    assert.equal((eyes.match(/<path /g) || []).length, 2);
+    assert.match(loading, /h = w \* GEM_ASPECT/);
+
+    // None of them still carries the artwork this identity replaced.
+    const replaced = [
+      "M398.554 818.914C316.315 1001.03",
+      "M84.76 266.62c-19.2 42.53",
       "M140.41 203.27c-7.67 0",
       "M171.94 203.27c-7.67 0",
       "M61.06 92.87c-1.57-4.01",
@@ -1058,16 +1085,10 @@ describe("first-download installer design contract", () => {
       "M194.79 60.97c3.96 2.55",
       "M178.51 50.47c3.96 2.55",
     ];
-    assert.ok(loading.includes(openingGhost));
-    assert.ok(dmgSource.includes(openingGhost));
-    assert.ok(sidebarSource.includes(openingGhost));
-    assert.ok(siteLogo.includes(logoGhost));
-    assert.ok(sidebarSource.includes(logoGhost));
-    assert.ok(headerSource.includes(logoGhost));
-    for (const eye of logoEyes) {
-      assert.ok(siteLogo.includes(eye));
-      assert.ok(sidebarSource.includes(eye));
-      assert.ok(headerSource.includes(eye));
+    for (const source of [loading, siteLogo, dmgSource, sidebarSource, headerSource]) {
+      for (const outline of replaced) {
+        assert.ok(!source.includes(outline));
+      }
     }
   });
 

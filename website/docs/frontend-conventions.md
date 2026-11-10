@@ -1007,7 +1007,7 @@ Three of those rules are enforced by `@shadcn/lint` inside the blocking
 
 - `shadcn/no-raw-colors` — a palette class or a literal SVG `fill`/`stroke`
   where a token belongs. Use the token; a logo whose colors are the artwork's
-  own gets a file-level override (see `KiroGhost.tsx`).
+  own ships as a static asset shown through `<img>` (see `AjGem.tsx`).
 - `shadcn/no-unknown-classes` — a class Tailwind emits no CSS for. Usually a
   typo, a v3 spelling (`outline-none`, `resize-vertical`), or a class whose
   stylesheet was deleted. A class that IS real but lives outside the theme's

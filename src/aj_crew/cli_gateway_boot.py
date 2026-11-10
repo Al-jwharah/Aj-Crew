@@ -189,13 +189,13 @@ def _resolve_gateway_args(args: argparse.Namespace) -> dict:
                 port_int = int(port)
             except ValueError:
                 print(
-                    f"👻 --port must be an integer or 'auto', got {port!r}.",
+                    f"💎 --port must be an integer or 'auto', got {port!r}.",
                     file=sys.stderr,
                 )
                 sys.exit(2)
             if not 1 <= port_int <= 65535:
                 print(
-                    f"👻 --port {port_int} out of range (1..65535).",
+                    f"💎 --port {port_int} out of range (1..65535).",
                     file=sys.stderr,
                 )
                 sys.exit(2)
@@ -205,7 +205,7 @@ def _resolve_gateway_args(args: argparse.Namespace) -> dict:
         home_env = os.environ.get("AJCREW_HOME", "")
         if not home_env:
             print(
-                "👻 --approval yolo refused: AJCREW_HOME must be explicitly set "
+                "💎 --approval yolo refused: AJCREW_HOME must be explicitly set "
                 "to an isolated path (not the default ~/.kiro/crew).",
                 file=sys.stderr,
             )
@@ -228,13 +228,13 @@ def _resolve_gateway_args(args: argparse.Namespace) -> dict:
                     protected_homes.add(home)
         except OSError as exc:
             print(
-                f"👻 --approval yolo refused: failed to resolve AJCREW_HOME: {exc}",
+                f"💎 --approval yolo refused: failed to resolve AJCREW_HOME: {exc}",
                 file=sys.stderr,
             )
             sys.exit(2)
         if home_resolved in protected_homes:
             print(
-                "👻 --approval yolo refused: AJCREW_HOME resolves to a main "
+                "💎 --approval yolo refused: AJCREW_HOME resolves to a main "
                 f"gateway home ({home_resolved}). Set AJCREW_HOME to an isolated "
                 "path before re-running.",
                 file=sys.stderr,

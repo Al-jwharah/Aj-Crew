@@ -10,7 +10,7 @@
 import { MessageSquare, Bell, Component, CalendarDays, Settings, ClipboardCheck, Compass, Webhook, BookOpen, Link2, Library, MessageSquareText, Workflow, ScrollText, Bot } from 'lucide-react'
 import type { ReactElement } from 'react'
 import { createSelector } from '@reduxjs/toolkit'
-import { KiroGhostMark } from '../components/KiroGhostMark'
+import { AjMark } from '../components/AjMark'
 import { CrewMemberMark } from '../components/CrewMemberMark'
 import { registerBuiltinSurface } from './registry'
 import { BUILTIN_SURFACE_NAV, CAPABILITY_SUB_ITEM_NAV, capabilitySubItemNav } from './surfaceData'
@@ -201,13 +201,13 @@ for (const s of CAPABILITY_SUB_ITEM_NAV) {
 // Custom agents, Connections, Skills, Hooks, and Prompts;
 // /agents redirects there (see App.tsx routes).
 //
-// Icon: the Kiro ghost brand mark (not a Lucide glyph) — this row is the
-// agent-identity destination, so it carries the mascot. `KiroGhostMark` paints
+// Icon: the Aj Crew gem mark (not a Lucide glyph) — this row is the
+// agent-identity destination, so it carries the brand. `AjMark` paints
 // the asset as a mask over `currentColor`, so it still follows the rail's
 // active/idle colour states.
 registerBuiltinSurface({
   ...BUILTIN_SURFACE_NAV.capabilities,
-  icon: <KiroGhostMark size={16} />,
+  icon: <AjMark size={16} />,
 })
 
 registerBuiltinSurface({

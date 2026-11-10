@@ -461,14 +461,6 @@ export default [
     },
   },
   {
-    // The ghost mascot is artwork: its white and black are the drawing's own
-    // colors, shared with the Electron boot sequence, not a theme surface.
-    files: ['src/components/KiroGhost.tsx'],
-    rules: {
-      'shadcn/no-raw-colors': 'off',
-    },
-  },
-  {
     // The Mochi renderer windows load neither Tailwind nor the theme tokens (see
     // the native-<select> override above), so "does Tailwind emit this class" and
     // "is this a theme color" have no meaning there: every class is a hook for

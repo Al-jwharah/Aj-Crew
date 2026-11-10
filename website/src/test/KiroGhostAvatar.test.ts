@@ -3,7 +3,7 @@
  *
  * Three properties here are load-bearing and cannot be checked by eye:
  *  - the silhouette and eye paths are the SHIPPED mark, read back out of
- *    `src/assets/kiro-ghost-mark.svg`, so the generator cannot drift from the art;
+ *    `src/assets/aj-gem-figure.svg`, so the generator cannot drift from the art;
  *  - tile colors keep a minimum CIEDE2000 distance, because sampling a hue circle
  *    produced pairs ~13 dE apart that read as a rendering bug rather than as two
  *    identities;
@@ -28,7 +28,7 @@ import {
   EYE_A,
   EYE_B,
   TILES,
-  BRAND_PURPLE,
+  BRAND_TILE,
   EYES,
   WORKING_EYES,
   BROWS,
@@ -38,7 +38,7 @@ import {
   type KiroGhostTraits,
 } from '../lib/kiroGhostAvatar'
 
-const MARK = join(__dirname, '..', 'assets', 'kiro-ghost-mark.svg')
+const MARK = join(__dirname, '..', 'assets', 'aj-gem-figure.svg')
 
 /** The fill every piece floating on the tile uses — see the module header. */
 const WHITE_FILL = 'fill="#ffffff"'
@@ -52,7 +52,7 @@ const BARE: KiroGhostTraits = {
   prop: 'none',
   blush: false,
   flip: false,
-  tile: BRAND_PURPLE,
+  tile: BRAND_TILE,
 }
 
 /* ---------- CIEDE2000, for the palette guard only ---------- */
@@ -203,14 +203,14 @@ describe('kiroGhost style', () => {
       tile: '#ee7e4f',
     })
     expect(traits('ajcrew')).toEqual({
-      eyes: 'wide',
-      brows: 'angry',
-      mouth: 'cat',
-      accessory: 'cap',
-      prop: 'term',
+      eyes: 'visor',
+      brows: 'none',
+      mouth: 'open',
+      accessory: 'none',
+      prop: 'none',
       blush: false,
       flip: true,
-      tile: '#eeae4f',
+      tile: '#de2121',
     })
     expect(traits('mochi')).toEqual({
       eyes: 'sparkle',

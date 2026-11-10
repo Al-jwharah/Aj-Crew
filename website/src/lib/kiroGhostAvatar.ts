@@ -38,7 +38,7 @@
  * several seeds to catch a violation.
  */
 import type { Style, StyleCreateProps } from '@dicebear/core'
-import markSvg from '../assets/kiro-ghost-mark.svg?raw'
+import markSvg from '../assets/aj-gem-figure.svg?raw'
 
 const WHITE = '#ffffff'
 /** Ink pieces sit ON the white body; anything floating on the tile is white instead. */
@@ -57,7 +57,7 @@ export function markPaths(svg: string): [string, string, string] {
   const found = [...svg.matchAll(/\sd="([^"]+)"/g)].map((m) => m[1])
   if (found.length !== 3) {
     throw new Error(
-      `kiro-ghost-mark.svg must hold exactly 3 paths (body, eye, eye); found ${found.length}`,
+      `aj-gem-figure.svg must hold exactly 3 paths (body, eye, eye); found ${found.length}`,
     )
   }
   return [found[0], found[1], found[2]]
@@ -66,8 +66,8 @@ export function markPaths(svg: string): [string, string, string] {
 /** Silhouette and eyes, bbox 272.9,202.7 654x795 inside the 1200 tile. */
 export const [BODY, EYE_A, EYE_B] = markPaths(markSvg)
 
-/** Brand purple, used for every tile when `hueTile` is off. */
-export const BRAND_PURPLE = '#9046ff'
+/** Brand graphite, used for every tile when `hueTile` is off. */
+export const BRAND_TILE = '#30343c'
 
 /**
  * Tile colors, chosen by farthest-point selection under CIEDE2000 rather than by
@@ -732,7 +732,7 @@ export interface KiroGhostOptions {
   blushProbability: number
   flipProbability: number
   propProbability: number
-  /** Off gives every tile the brand purple; on gives each seed a palette entry. */
+  /** Off gives every tile the brand graphite; on gives each seed a palette entry. */
   hueTile: boolean
   /** Render the working (animated) variant at this intensity. A render option,
    *  not a trait: it consumes no prng draw and defaults to the still frame. */
@@ -871,7 +871,7 @@ export const kiroGhost: Style<KiroGhostOptions> = {
     const blush = prng.bool(options.blushProbability ?? 35)
     // The mark faces right; mirroring gives a second reading of the same shape.
     const flip = prng.bool(options.flipProbability ?? 40)
-    const tile = (options.hueTile ?? true) ? prng.pick(TILES, TILES[0]) : BRAND_PURPLE
+    const tile = (options.hueTile ?? true) ? prng.pick(TILES, TILES[0]) : BRAND_TILE
     const brows = prng.pick(BROW_PICKS, 'none')
     const prop = prng.bool(options.propProbability ?? 30) ? prng.pick(PROP_PICKS, 'star') : 'none'
 

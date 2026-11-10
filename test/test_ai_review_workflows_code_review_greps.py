@@ -144,9 +144,9 @@ class TestCodeReviewGreps:
             ("src/a/b.tsx", '<div data-role="x" onClick={go}>x</div>', True),
             ("src/a/b.tsx", '<span onClick={() => go()} role="button">x</span>', False),
             ("src/a/b.tsx", "// a <div onClick> in a comment", False),
-            # Brand components are not exempt; only the legacy KiroGhost.tsx is excluded.
+            # Brand components are not exempt, the gem included.
             ("src/components/FooLogo.tsx", '<svg viewBox="0 0 1 1"></svg>', True),
-            ("src/components/KiroGhost.tsx", '<svg viewBox="0 0 1 1"></svg>', False),
+            ("src/components/AjGem.tsx", '<svg viewBox="0 0 1 1"></svg>', True),
         ),
     )
     def test_frontend_blocking_greps(self, tmp_path: Path, rel: str, line: str, blocks: bool):

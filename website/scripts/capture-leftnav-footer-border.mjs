@@ -5,7 +5,7 @@
  * `border-border-strong` (--border-strong) while every other separator in the
  * rail — including the hairline directly above it, under the brand mark — uses
  * `border-border` (--border). At the default aj-dark values that is #4a464f
- * against #352f3d: one contrast step apart, and visible as a mismatched pair of
+ * against #272a31: one contrast step apart, and visible as a mismatched pair of
  * lines in the same card.
  *
  * The subject is a single border-top-color, so each theme is photographed twice

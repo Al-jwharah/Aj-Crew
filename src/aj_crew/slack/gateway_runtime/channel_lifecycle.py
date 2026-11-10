@@ -273,7 +273,7 @@ async def _connect_slack(self: GatewayOrchestrator) -> bool:
         return False
     try:
         await self._socket_client.connect()
-        print("👻 Aj Crew gateway connected to Slack")
+        print("💎 Aj Crew gateway connected to Slack")
         return True
     except Exception as exc:
         # Keep a short reason for status surfaces (settings badge). Slack

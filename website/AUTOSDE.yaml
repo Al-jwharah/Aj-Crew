@@ -545,7 +545,7 @@ custom-rules:
            mark whose identity depends on its own colours (the channel logos) is rendered
            as a plain `<img>` — do not flatten it to `currentColor`.
         3. Brand identity, not affordance — it depicts an identity (a product, a
-           company, the Kiro ghost). Anything lucide-react can express — actions,
+           company, the Aj gem). Anything lucide-react can express — actions,
            objects, status, navigation verbs — MUST use lucide-react. "No exact Lucide
            match for the concept I want" is NOT a brand mark and does NOT qualify.
 

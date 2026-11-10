@@ -91,7 +91,7 @@ const { createReconnect } = require("./runtime/gateway/reconnect");
 const { createRemoteSwitch } = require("./runtime/gateway/remote-switch");
 const { createRespawnOwner, RESPAWN_SUPERSEDED } = require("./runtime/gateway/respawn-owner");
 
-const DEFAULT_THEME_ACCENT = "#8E48FF";
+const DEFAULT_THEME_ACCENT = "#2DD4BF";
 const THEME_ACCENT_RE = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
 const INSTALLING_STATUS = "Finishing installation…";
 // The splash line behind the pruned-backend dialog: nothing is installing, so

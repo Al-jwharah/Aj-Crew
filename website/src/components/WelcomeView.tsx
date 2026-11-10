@@ -4,7 +4,7 @@ import {
 } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import ErrorNotice from './ErrorNotice'
-import { KiroGhost } from './KiroGhost'
+import { AjGem } from './AjGem'
 import { useTheme } from '../hooks/useTheme'
 import { getThemeBranding } from '../themeBranding'
 import { api, type SuggestionItem, type SuggestionKind } from '../api/client'
@@ -179,14 +179,14 @@ export default function WelcomeView({ setInput }: WelcomeViewProps) {
 
   // Per-theme brand mark, resolved in the shell's order: compiled edition
   // branding (the themeBranding seam) first, then the installed pack's own
-  // welcome image, then its left-rail logo, then the stock KiroGhost (what the
+  // welcome image, then its left-rail logo, then the stock AjGem (what the
   // standalone build shows on its built-in themes). An animated image holds its
   // first frame under reduced motion, like the pack's loader art.
   const { colorTheme, brandWelcome, brandLogo } = useTheme()
   const heroImage = getThemeBranding(colorTheme)?.logo ?? brandWelcome ?? brandLogo
   const brandMark = heroImage
     ? <PackLoaderImage src={heroImage} className="w-12 h-12 drop-shadow-lg shrink-0 animate-float rounded-md object-contain" />
-    : <KiroGhost size={48} className="drop-shadow-lg shrink-0 animate-float" />
+    : <AjGem size={48} className="drop-shadow-lg shrink-0 animate-float" />
 
   // Explore's "Try today" (RFC 4.5): while any feature is untried, the last
   // suggestion card becomes one entry card that opens Explore. Only while the

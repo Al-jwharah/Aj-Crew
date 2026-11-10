@@ -172,7 +172,7 @@ def _status(args: argparse.Namespace) -> None:
         print("Aj Crew gateway is running but returned an unexpected response.")
         return
 
-    print(f"Aj Crew v{__version__} 👻\n")
+    print(f"Aj Crew v{__version__} 💎\n")
     print(f"  Uptime:      {data.get('uptime', '—')}")
     print(f"  Sessions:    {data.get('sessions', 0)}")
     if data.get("session_map_writes_refused"):
@@ -377,7 +377,7 @@ async def _gateway(
         # config lock guards loop-side handler writers, none of which exist
         # before run_gateway starts serving.
         await asyncio.to_thread(cfg.save)
-        print(f"👻 Created default config: {config_path()}")
+        print(f"💎 Created default config: {config_path()}")
 
     cfg = AjCrewConfig.load()
     await run_gateway(
@@ -524,9 +524,9 @@ async def _run_task(args: argparse.Namespace) -> None:
     await sessions.start_pool()
 
     if fresh:
-        print(f"👻 Running spec (fresh): {spec_path}")
+        print(f"💎 Running spec (fresh): {spec_path}")
     else:
-        print(f"👻 Running spec: {spec_path}")
+        print(f"💎 Running spec: {spec_path}")
     task_name = getattr(args, "name", "")
     result = await runner.run(spec_path, name=task_name)
 
@@ -704,7 +704,7 @@ def _logs_cmd(args: argparse.Namespace) -> None:
         # password prompt would block forever with no way to cancel.
         if not sys.stdin.isatty():
             print(
-                "👻 Insufficient permissions to read the journal without sudo, "
+                "💎 Insufficient permissions to read the journal without sudo, "
                 "and stdin is not a TTY so sudo can't prompt.\n"
                 "   Add your user to the `systemd-journal` or `adm` group, or run:\n"
                 f"   sudo journalctl -u {unit} -f",
@@ -743,7 +743,7 @@ def _logs_cmd(args: argparse.Namespace) -> None:
     fallback = config_dir() / "gateway.log"
     if not fallback.exists():
         print(
-            "👻 No gateway logs found. Either install the service "
+            "💎 No gateway logs found. Either install the service "
             "(`ajcrew service install`) or start the gateway "
             "(`ajcrew gateway`).",
             file=sys.stderr,

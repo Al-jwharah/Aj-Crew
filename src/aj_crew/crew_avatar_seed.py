@@ -52,11 +52,11 @@ POSE_IDS: tuple[str, ...] = (
 #: The pose a blank/whitespace seed falls back to (``DEFAULT_POSE``).
 DEFAULT_POSE: str = POSE_IDS[0]
 
-#: Brand purple -- the background a blank seed falls back to (``DEFAULT_POSE_BG``).
-DEFAULT_POSE_BG: str = "#9046ff"
+#: Brand graphite -- the background a blank seed falls back to (``DEFAULT_POSE_BG``).
+DEFAULT_POSE_BG: str = "#30343c"
 
-#: The icon background palette: brand purple followed by the ghost tile colours
-#: (``ICON_BG_PALETTE = [BRAND_PURPLE, ...TILES]`` in ``avatarPoses.ts`` /
+#: The icon background palette: brand graphite followed by the tile colours
+#: (``ICON_BG_PALETTE = [BRAND_TILE, ...TILES]`` in ``avatarPoses.ts`` /
 #: ``kiroGhostAvatar.ts``). Order is part of the parity contract.
 ICON_BG_PALETTE: tuple[str, ...] = (
     DEFAULT_POSE_BG,

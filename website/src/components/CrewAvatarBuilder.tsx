@@ -45,7 +45,7 @@ import { useIsMobile } from '../hooks/useIsMobile'
 import {
   ACCESSORIES,
   BROWS,
-  BRAND_PURPLE,
+  BRAND_TILE,
   EYES,
   MOTION_NAMES,
   MOTION_STATES,
@@ -195,8 +195,8 @@ const OPT_LABEL_KEYS: Record<string, string> = {
   term: 'components.avatarBuilder.opt_term',
 }
 
-/** Every pickable tile, brand purple first — the "no hue" spelling. */
-const TILE_OPTIONS = [BRAND_PURPLE, ...TILES]
+/** Every pickable tile, brand graphite first — the "no hue" spelling. */
+const TILE_OPTIONS = [BRAND_TILE, ...TILES]
 
 /**
  * Human color names for the tile swatches, keyed by hex. Screen readers get
@@ -207,7 +207,7 @@ const TILE_OPTIONS = [BRAND_PURPLE, ...TILES]
  * gate will not fire because every listed key ships in the catalog.
  */
 const TILE_LABEL_KEYS: Record<string, string> = {
-  '#9046ff': 'components.avatarBuilder.tile_purple',
+  '#30343c': 'components.avatarBuilder.tile_graphite',
   '#de2121': 'components.avatarBuilder.tile_red',
   '#21de21': 'components.avatarBuilder.tile_green',
   '#21a5de': 'components.avatarBuilder.tile_sky',

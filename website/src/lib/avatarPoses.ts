@@ -59,16 +59,16 @@ import {
   BODY_MOTION,
   BODY_ORIGINS,
   BODY_TILE,
-  BRAND_PURPLE,
+  BRAND_TILE,
   SWAY_TEMPO,
   TILES,
   type WorkingIntensity,
 } from './kiroGhostAvatar'
 
-/** The icon background palette offered in the avatar builder (brand purple +
+/** The icon background palette offered in the avatar builder (brand graphite +
  *  the tile colours) — the set a name-seeded default colour is drawn from, so
  *  it is always one the user could pick by hand. */
-export const ICON_BG_PALETTE: readonly string[] = [BRAND_PURPLE, ...TILES]
+export const ICON_BG_PALETTE: readonly string[] = [BRAND_TILE, ...TILES]
 
 /** The pose id as stored on the record (`{kind:'icon', pose}`) → its raw SVG. */
 const POSE_SVG: Record<string, string> = {
@@ -113,7 +113,7 @@ export const POSE_BG_RE = /^#[0-9a-f]{6}$/i
 /** The fallback background when a record names none, or names junk. Brand
  *  purple — the colour the source art ships with — so a pose with no stored bg
  *  still reads as intended rather than as a missing value. */
-export const DEFAULT_POSE_BG = '#9046ff'
+export const DEFAULT_POSE_BG = '#30343c'
 
 /** Does the pose map have THIS pose as its own key? `Object.hasOwn`, not a
  *  truthy `POSE_SVG[pose]` lookup: the latter walks the prototype chain, so a
@@ -192,7 +192,7 @@ function seededIconPick(seed: string, choices: readonly string[], fallback: stri
  * The background colour a FRESH icon default wears, derived from the name like
  * `seedIconPose` derives the pose — so the colour follows the name as the user
  * types, is stable for a given name, and spreads two names across the palette
- * instead of always opening on brand purple. It runs through the same DiceBear
+ * instead of always opening on brand graphite. It runs through the same DiceBear
  * seeded `prng`, salted with a `:bg` suffix so colour and pose are drawn from
  * independent streams and never move in lockstep. An empty/whitespace name
  * falls back to the brand default.
@@ -282,17 +282,17 @@ export function poseEyesDataUri(pose: string | undefined): string {
  * Measured with `getBBox()` over the two eye paths of each shipped file.
  */
 const EYE_CENTERS: Record<string, readonly [number, number]> = {
-  'pose-1': [181.9, 115.4],
-  'pose-2': [158.8, 108],
-  'pose-3': [231.8, 125.7],
-  'pose-4': [114.8, 117.4],
-  'pose-5': [172.5, 101.4],
-  'pose-6': [108.1, 95.5],
-  'pose-7': [206.4, 102.5],
-  'pose-8': [157.8, 105.1],
-  'pose-9': [181, 124.7],
-  'pose-10': [102.7, 102.3],
-  'pose-11': [198, 100.6],
+  'pose-1': [157.8, 152.6],
+  'pose-2': [145.8, 157.8],
+  'pose-3': [159.4, 156],
+  'pose-4': [148.8, 162.8],
+  'pose-5': [154, 144.7],
+  'pose-6': [140.3, 157.1],
+  'pose-7': [156.7, 167.5],
+  'pose-8': [150, 154.4],
+  'pose-9': [152.2, 149.6],
+  'pose-10': [144.1, 166.7],
+  'pose-11': [164.5, 161.1],
 }
 
 /** The pose canvas edge, in its own units. */

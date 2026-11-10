@@ -403,7 +403,7 @@ def _tailnet(args: argparse.Namespace) -> None:
     if action == "status":
         if tailnet.policy_off():
             # The enterprise policy does not turn tailnet on; no daemon is read.
-            print("👻 Tailnet dashboard access")
+            print("💎 Tailnet dashboard access")
             print(f"   Policy:     {tailnet.POLICY_OFF_DETAIL}")
             print(
                 f"   Trust:      {'enabled' if enabled else 'disabled'} "
@@ -418,7 +418,7 @@ def _tailnet(args: argparse.Namespace) -> None:
         # "in the allowlist".
         name = tailnet.self_dns_name()
         state = tailnet_serve.serve_state(port)
-        print("👻 Tailnet dashboard access")
+        print("💎 Tailnet dashboard access")
         if pinned:
             print(
                 "   Policy:     PINNED OFF by your administrator " "(capabilities.tailnet_origin)"
@@ -498,7 +498,7 @@ def _tailnet(args: argparse.Namespace) -> None:
 
     name = tailnet.self_dns_name()
     if name:
-        print(f"👻 URL:        https://{name}")
+        print(f"💎 URL:        https://{name}")
     else:
         print(
             "⚠️  No tailnet name is resolvable right now, so the gateway will not "
@@ -507,7 +507,7 @@ def _tailnet(args: argparse.Namespace) -> None:
     # Said unconditionally, including when the switch was already on: the origin
     # is resolved once at startup, so a gateway that booted before this command
     # has an allowlist that does not contain the name yet.
-    print("👻 Restart the gateway for the tailnet origin to be trusted.")
+    print("💎 Restart the gateway for the tailnet origin to be trusted.")
 
 
 def _telemetry(args: argparse.Namespace) -> None:

@@ -36,7 +36,7 @@ customization surface a theme (built-in, custom, or installed) can set.
 **Fills are flat.** The brand system is flat: a new decorative gradient fill
 (`linear-`, `radial-`, or `conic-gradient` used as a background or surface
 color) on chrome, a dialog, or an exported image such as a share card is a UX
-review finding. A fill is one solid token, or the brand purple `#7c3aed` on an
+review finding. A fill is one solid token, or the brand ink `#0b0c0f` on an
 outward-facing artifact. "Looks premium" is not an exception; a gradient also
 bands under every social platform's re-encode. Functional gradients are not
 fills and are fine: `mask-image` scroll-edge fades, loading shimmer, and the
@@ -270,9 +270,9 @@ branding/wordmark.svg   # reserved brand artwork for supporting surfaces
 `welcome` accepts `.svg`, `.png`, `.webp`, or `.gif` (256 KB), and an animated
 WebP/GIF/SVG plays in place; under `prefers-reduced-motion: reduce` it holds its
 first frame, like the loader art. The welcome screen shows `welcome`, else `logo`,
-else the stock ghost, in the 48px hero slot. `splash` accepts `.svg` or `.png`
-(512 KB) and takes the place of the ghosts on the desktop app's next boot
-splash, over the theme accent; under `prefers-reduced-motion: reduce` an
+else the stock gem, in the 48px hero slot. `splash` accepts `.svg` or `.png`
+(512 KB) and takes the place of the gems on the desktop app's next boot
+splash, over the accent-tinted ink ground; under `prefers-reduced-motion: reduce` an
 animated SVG holds still on one frame. Without it the stock splash stays.
 The backend serves only validated files from the installed pack, and the label is
 trimmed to 48 printable characters. When an asset or label is absent, the shell
@@ -438,8 +438,8 @@ components or inline SVG through this field.
 
 Allowed names: `cloud`, `flower`, `heart`, `moon`, `sparkles`, `star`, `sun`,
 `zap`. The existing four-slot carousel supplies the cross-fade, cascade timing,
-and reduced-motion behavior. An absent declaration preserves the default Kiro
-ghost poses. Invalid names, duplicates, fewer than four entries, or declarations
+and reduced-motion behavior. An absent declaration preserves the default gem
+poses. Invalid names, duplicates, fewer than four entries, or declarations
 on a Level-0 pack are rejected during install.
 
 ### Compiled themes: component seam

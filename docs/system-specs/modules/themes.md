@@ -44,7 +44,7 @@ names from the bundled stock-symbol allowlist (`cloud`, `flower`, `heart`,
 the names in the theme asset descriptor; the frontend maps them to bundled
 Lucide components and reuses the existing carousel. No component code, SVG, or
 asset path crosses the manifest boundary. Missing declarations preserve the
-Kiro ghost poses, and trusted compiled themes retain the broader
+default gem poses, and trusted compiled themes retain the broader
 `registerThemeBranding()` component seam.
 
 Level-1 and Level-2 manifests may also declare `codeTheme`,
@@ -81,7 +81,7 @@ Level-1 pack fills it with `branding/welcome.svg|png|webp|gif` (256 KB, served
 and rendered like the loader art through `PackLoaderImage`, so an animated image
 plays in place and holds its first frame under `prefers-reduced-motion: reduce`).
 Precedence: compiled `registerThemeBranding()` `logo` → pack welcome image →
-pack `logo` → the stock ghost. So a pack that ships only a logo shows it there
+pack `logo` → the stock gem. So a pack that ships only a logo shows it there
 too, matching the left rail.
 
 The desktop app's boot splash (`website/electron/loading.html`, the "waiting for
@@ -97,8 +97,8 @@ the stored art, as it keeps the render cache.
 in the shell's own userData directory and refuses any other type, an empty body
 or one over 512 KB, which clears the stored art. `splashQuery` passes the file as
 `?splash=` on every splash paint, cold boot and reconnect alike. The art takes the
-place of the ghosts and of the closing wordmark, over the theme accent the splash
-already follows; with no art, or art that fails to load, the stock ghosts play.
+place of the gems and of the closing wordmark, over the ink ground the splash
+tints with the theme accent; with no art, or art that fails to load, the stock gems play.
 Under `prefers-reduced-motion: reduce` the art's `<img>` stays hidden and only
 decodes it, and one frame is painted onto a canvas that never repaints, as the
 dashboard's `PackLoaderImage` does, so an animated SVG holds still.
@@ -140,10 +140,10 @@ runtime scoper still removes the pin, so the preference is protected either way.
 
 `ChatDropOverlay` renders its transparent file-chomper image with the stable
 class `chat-drop-art` and paints no inline colour. `website/src/styles/chat-transcript.css`
-(next to the loader-ghost block) gives that class a 1px black silhouette
+(next to the gem-pose loader block) gives that class a 1px black silhouette
 shadow (`drop-shadow`) under `[data-mode="light"]`, the resolved mode
 `useTheme` writes on `<html>`, so it applies to installed light palettes too.
-The white ghost and paper stay visible against light backgrounds without
+The white gem and paper stay visible against light backgrounds without
 recoloring the artwork or changing drag behavior. Dark palettes are excluded
 by the selector, not by an assumption about their `--bg`, and render the art
 as they did before. Only a compiled edition theme's own CSS can override the
