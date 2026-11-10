@@ -121,7 +121,7 @@ interface AppListEntry {
 }
 
 // Apps-nav fetch resilience (see refreshAppNav). The dashboard loads
-// `/api/apps` once on mount; right after a `ajcrew update` the gateway is
+// `/api/apps` once on mount; right after an `ajcrew update` the gateway is
 // mid-restart (cold backend, apps-dir scan) and that first request can fail or
 // time out. Retry with bounded backoff so the Apps rail self-heals instead of
 // staying empty until a manual reload or an app enable/disable.
@@ -719,7 +719,7 @@ export function useAppShell() {
         // only fills the console with the same refusal (#32031). The rail stays
         // without apps, which is what that caller has.
         if (isPermissionRefusal(e)) return
-        // A transient failure (e.g. the gateway mid-restart right after a
+        // A transient failure (e.g. the gateway mid-restart right after an
         // `ajcrew update`, or the cold apps-dir scan) used to be swallowed
         // here, leaving the Apps rail empty until a manual reload or an app
         // enable/disable. Retry with bounded exponential backoff so it
@@ -792,7 +792,7 @@ export function useAppShell() {
     }
   }, [refreshAppNav, queryClient])
   // Refetch the Apps nav when the gateway connection is *re*-established after a
-  // drop — e.g. a `ajcrew update` restart disconnects then reconnects the
+  // drop — e.g. an `ajcrew update` restart disconnects then reconnects the
   // WebSocket. Only fires on a connected→disconnected→connected cycle, NOT the
   // initial connect (the mount fetch already covers that), so a normal load
   // never double-fetches.

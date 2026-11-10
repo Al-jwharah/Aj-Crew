@@ -730,9 +730,7 @@ def test_census_truncates_wherever_the_reclaim_lease_scan_caps(native_tree, monk
     The census must then report ``truncated`` instead of promising a drain.
     """
     _home, agents, _project = native_tree
-    projection.atomic_write(
-        agents / "ajcrew-skill-view-orphan.json", "{}", restrict_to_owner=True
-    )
+    projection.atomic_write(agents / "ajcrew-skill-view-orphan.json", "{}", restrict_to_owner=True)
     leases = [
         projection._acquire_projection_lease(agents, {f"ajcrew-skill-view-live{n}"})
         for n in range(3)

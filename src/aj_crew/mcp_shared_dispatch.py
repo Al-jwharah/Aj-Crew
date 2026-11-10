@@ -839,7 +839,7 @@ def _run_stdio_dispatch_loop(
                         f"(no session token on this server, no gateway-injected "
                         f"session key), so the tool policy was not read. Refusing "
                         f"the call rather than ignoring an operator's exclusion "
-                        f"list; it succeeds once this server is started by a Kiro "
+                        f"list; it succeeds once this server is started by an Aj "
                         f"Crew session that gives it a signed session token."
                     )
                     _refusal += registry_identity_note(server_name)

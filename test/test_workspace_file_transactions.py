@@ -17,10 +17,10 @@ from types import SimpleNamespace
 
 import pytest
 
-from conftest import make_dir_link
 from aj_crew import platform_lock_compat
 from aj_crew.platform.governance import WORKSPACE_TOOL_KINDS, classify_tool_args
 from aj_crew.remote_session import workspace_tools as wt
+from conftest import make_dir_link
 
 
 def _call(ident, name, **arguments):

@@ -4617,7 +4617,7 @@ jobs:
   # The integration layer: the real gateway booted IN the pytest process.
   #
   # `test/integration/` sits between the unit shards (bare `web.Application()`
-  # shells, everything mocked) and the E2E jobs above (a `ajcrew gateway`
+  # shells, everything mocked) and the E2E jobs above (an `ajcrew gateway`
   # subprocess). Each test boots `GatewayOrchestrator.run()` on a scratch
   # `AJCREW_HOME` with the packaged fake ACP backend, then talks HTTP to the
   # port it bound -- same interpreter, same event loop. That is what lets a test

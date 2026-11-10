@@ -181,7 +181,7 @@ def credential_mask_applies(mode: str) -> bool:
     effective = _clamp_sandbox_mode_to_floor(mode, floor)
     if effective == "off":
         return False
-    # Already inside a Aj Crew sandbox: a nested re-wrap is impossible by design,
+    # Already inside an Aj Crew sandbox: a nested re-wrap is impossible by design,
     # wrap_argv passes the argv through (at most an env scrub) and never reaches a
     # backend that could apply the mask. The OUTER sandbox confines the child, but it
     # was built for the tier's own hidden dirs -- which deliberately leave ~/.aws,

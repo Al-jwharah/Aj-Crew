@@ -389,7 +389,11 @@ async def _resolve_manifest(entry: dict[str, Any]) -> dict[str, Any]:
     # below. The install path (``install.py``) calls ``_fetch_app_manifest``
     # directly and is not gated here -- an install needs the network anyway.
     if official_catalog.store_fetch_skipped():
-        logger.info("%s=1 — not fetching app.json for %s", official_catalog.SKIP_FETCH_ENV, name)
+        logger.info(
+            "app store is off the network (%s=0 opts in) — not fetching app.json for %s",
+            official_catalog.SKIP_FETCH_ENV,
+            name,
+        )
         return entry
 
     # A fetch for these exact source coordinates failed within

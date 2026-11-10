@@ -135,7 +135,7 @@ def _bundle_relative_spec(module_part: str, app_root: Path) -> str:
 def _data_home_spec(module_part: str) -> str:
     """Rebase the documented ``~/.kiro/crew/crons/...`` spelling onto ``config_dir()``.
 
-    ``expanduser`` alone maps it onto the real home, which under a
+    ``expanduser`` alone maps it onto the real home, which under an
     ``AJCREW_HOME`` override holds no ``crons/`` this resolver admits. Every
     other spec, ``~/.kiro/crew/dev/crons/...`` for an override nested in the
     default home included, keeps the plain expansion. Path arithmetic on the

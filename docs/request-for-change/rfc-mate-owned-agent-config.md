@@ -36,7 +36,7 @@ superseded-by: []
   changed an earlier reading, the change is called out inline (search
   "2026-10-17"). The open step-1 pull request
   [#21463](https://github.com/kirodotdev/KiroCrew/pull/21463) predates this
-  amendment: it names a `ajcrew-mate-conductor` spec but derives it from the
+  amendment: it names an `ajcrew-mate-conductor` spec but derives it from the
   default template, so its shape is the one §6 step 1 now says not to use.
 - Amended 2026-10-23 in #23010 (product owner's decision, rayrayxu). The
   conductor keeps the default template's built-ins, `execute_bash`,
@@ -104,7 +104,7 @@ lives.
   well as the user-level read scope, and `list_agents()`
   (`agent_discovery.py`) scans it (plus a project-local read-only scope) for the
   agents selectable via `session/set_mode`.
-- A crewmate's binding is a `AjCrewAgentConfig` record (`config/sections.py`).
+- A crewmate's binding is an `AjCrewAgentConfig` record (`config/sections.py`).
   Its crewmate-specific fields — `member_id`, `kiro_agent`, `workspace`,
   `memory_store`, `model`, `avatar`, `description`, `triggers`, `session_color`,
   `starred`, `source` — already live on the binding. `kiro_agent` is the pointer
@@ -122,7 +122,7 @@ lives.
   the whole tool surface loaded into its context. The work it hands to
   `spawn_run` without naming an agent runs the member's OWN template again
   (`subagent_parts/agent_policy._inherited_member_agent`,
-  `subagent_manager/run_turn.py`: `info.agent or execution.template_id`) — for a
+  `subagent_manager/run_turn.py`: `info.agent or execution.template_id`) — for an
   `ajcrew`-bound crewmate, the full default once more. `ajcrew-worker`, the
   disk mirror of that default (`agent_materialization/worker_agent.py`), is
   what a plain session's unnamed spawn runs.
@@ -593,7 +593,7 @@ Exit criteria:
   `fs_write` and `code`; the earlier "no shell" criterion is retired.)*
 - A mate-conductor-bound member's unnamed `spawn_run` runs `ajcrew-worker`,
   not the member's own template: the member-template inheritance that today
-  re-runs `ajcrew` for a `ajcrew`-bound member would otherwise run the
+  re-runs `ajcrew` for an `ajcrew`-bound member would otherwise run the
   dispatch-only conductor as its own worker, with no write tool and no shell.
   The step maps that one template to the worker spec at the two inheritance
   sites; every other member template inherits as before.

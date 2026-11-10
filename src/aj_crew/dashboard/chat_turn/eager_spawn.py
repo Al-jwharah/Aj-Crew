@@ -20,8 +20,8 @@ from aj_crew.start_priority import StartPriority
 
 if TYPE_CHECKING:
     from aj_crew.dashboard.chat_runner import (
-        DashboardState,
         AjCrewConfig,
+        DashboardState,
         SessionClosingError,
         SpeculativeResumeRefused,
         _arm_generation,

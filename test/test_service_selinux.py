@@ -434,7 +434,7 @@ class TestUserScopeUnitRendering:
 class TestStartFailureCoversWhatThePreflightCannotProve:
     """The pre-flight only judges the file systemd itself execs.
 
-    A `AJCREW_SERVICE_BIN` override naming a system-labelled WRAPPER that later
+    An `AJCREW_SERVICE_BIN` override naming a system-labelled WRAPPER that later
     runs a binary under $HOME passes the gate and still cannot serve -- as the
     shell's exit 126, not 203/EXEC, because the wrapper execs fine. Following the
     delegation is not decidable and scanning the wrapper for path literals would

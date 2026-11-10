@@ -676,7 +676,7 @@ def ajcrew_managed_names() -> set[str]:
     precondition for every write to a config surface we do not own -- the
     kiro-global ``mcp.json``, the Claude Code ``~/.mcp.json`` sidecar. Discovery
     merges ALL scopes, so a name present only in a user's global file reaches the
-    sync set exactly like a managed one; without the gate a Aj Crew sync would
+    sync set exactly like a managed one; without the gate an Aj Crew sync would
     rewrite a server the user configured by hand.
 
     It is deliberately NOT sufficient. Managing a NAME says nothing about who
@@ -798,9 +798,7 @@ def register_servers_for_cc(
 
     if changed:
         mcp_json_path.parent.mkdir(parents=True, exist_ok=True)
-        from aj_crew.agent import (
-            _atomic_json_write,  # circular import: agent imports mcp_discovery
-        )
+        from aj_crew.agent import _atomic_json_write  # circular import: agent imports mcp_discovery
 
         _atomic_json_write(mcp_json_path, existing)
 

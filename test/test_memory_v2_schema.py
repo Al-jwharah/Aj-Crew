@@ -27,7 +27,6 @@ from unittest import mock
 
 import pytest
 
-from conftest import make_dir_link
 from aj_crew import memory_schema, vector_memory
 from aj_crew.config import loader as loader_mod
 from aj_crew.config.loader import config_dir
@@ -47,6 +46,7 @@ from aj_crew.vector_memory import (
     VectorMemoryStore,
     _migrate_v2,
 )
+from conftest import make_dir_link
 
 # Every test writes ``config.json`` into its own data home and drops the process-wide
 # config cache, so two workers racing that global is a flake. One xdist group for the

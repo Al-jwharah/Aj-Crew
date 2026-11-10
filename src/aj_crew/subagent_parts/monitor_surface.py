@@ -187,7 +187,7 @@ def _note_tool_dispatch(info: SubagentInfo, event: Any) -> None:
         # dashboard dispatch loop's can.
         dispatch_parked_secs=0.0,
         is_shell=bool(getattr(event, "is_shell", False)),
-        # Only a provenance-verified identity, or KAS's half-identity for a
+        # Only a provenance-verified identity, or KAS's half-identity for an
         # ajcrew-core call, names the server, so a frame without one cannot
         # select the trusted wait contract.
         mcp_server_name=server,

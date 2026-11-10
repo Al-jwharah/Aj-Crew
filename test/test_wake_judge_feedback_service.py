@@ -248,11 +248,7 @@ class TestTurnCompleteLabelling:
 
     def test_runner_labels_only_landed_nudge_turns(self):
         runner_path = (
-            Path(__file__).resolve().parents[1]
-            / "src"
-            / "aj_crew"
-            / "dashboard"
-            / "chat_runner.py"
+            Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "dashboard" / "chat_runner.py"
         )
         tree = ast.parse(
             "\n".join(

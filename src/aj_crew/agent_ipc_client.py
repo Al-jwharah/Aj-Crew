@@ -1,7 +1,7 @@
 """The in-sandbox half of the agent socket: redeem a pickup, then send by capability.
 
 Phase 1 of ``docs/request-for-change/rfc-sandbox-ipc-capability.md``; the gateway
-half is :mod:`aj_crew.dashboard.agent_ipc`. A Aj Crew server under an enforced
+half is :mod:`aj_crew.dashboard.agent_ipc`. An Aj Crew server under an enforced
 harness is withheld the internal secret, so the gateway hands its element a one-time
 pickup instead (:data:`~aj_crew.agent_ipc_wire.PICKUP_ENV`) beside the pid of the
 gateway that issued it (:data:`~aj_crew.agent_ipc_wire.GATEWAY_PID_ENV`). At

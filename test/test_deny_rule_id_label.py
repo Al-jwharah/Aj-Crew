@@ -118,7 +118,7 @@ def test_a_refused_chained_command_is_reported_as_none_of_it_ran():
     result = HookManager().on_tool_call(title, command=command, is_shell=True)
     assert result.action == TOOL_DENY
     notice = build_refusal_steer_notice(title, result.reason, cause=DENY_CAUSE_POLICY)
-    assert "blocked by a Aj Crew safety policy before any of it ran" in notice
+    assert "blocked by an Aj Crew safety policy before any of it ran" in notice
     assert "none of them ran, the earlier ones included" in notice
     assert f"{title}: blocked by rule git-publish-push-bare. " in notice
     # The fallback a harness without steer gets says the same.

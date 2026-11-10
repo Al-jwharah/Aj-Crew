@@ -143,7 +143,7 @@ def _port_wait_message(outcome: str) -> str:
 def _log_port_still_in_use(port: int, waited: float, outcome: str) -> None:
     """Log the final give-up error for a port that never freed, by holder kind.
 
-    *outcome* is the reclaim probe's verdict from the first EADDRINUSE. A
+    *outcome* is the reclaim probe's verdict from the first EADDRINUSE. An
     Aj Crew holder gets ``ajcrew stop`` (which also stops an installed
     systemd/launchd service, so no platform-specific command is named); a
     holder known to be another program gets only the other-port remedy; an
@@ -157,7 +157,7 @@ def _log_port_still_in_use(port: int, waited: float, outcome: str) -> None:
     if outcome == FOREIGN_HOLDER:
         logger.error(
             "Port %d still in use after %.0fs — it is held by another program, "
-            "not a Aj Crew gateway.\nFree it, or %s",
+            "not an Aj Crew gateway.\nFree it, or %s",
             port,
             waited,
             other_port,
@@ -173,7 +173,7 @@ def _log_port_still_in_use(port: int, waited: float, outcome: str) -> None:
     else:
         logger.error(
             "Port %d still in use after %.0fs — held by another program or another "
-            "Aj Crew gateway.\nIf it is a Aj Crew gateway, stop it with: "
+            "Aj Crew gateway.\nIf it is an Aj Crew gateway, stop it with: "
             "ajcrew stop\nOtherwise, %s",
             port,
             waited,

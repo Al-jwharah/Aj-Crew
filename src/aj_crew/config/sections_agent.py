@@ -370,7 +370,7 @@ class AgentConfig:
         default=True,
         metadata=_meta(
             "Native skill views for kiro-cli",
-            "When true (the default), the 'kiro' backend launches each agent under a "
+            "When true (the default), the 'kiro' backend launches each agent under an "
             "Aj Crew managed view (ajcrew-skill-view-*.json in the kiro agents "
             "directory) that serves skills through Aj Crew's skill search, and "
             "overlays the workspace's .kiro/settings/cli.json while it runs. When "
@@ -448,7 +448,7 @@ class AgentConfig:
             "The Strands Python project the 'strands' backend runs: the path of its "
             "agent.py, or of a folder holding one. Empty runs Aj Crew's bundled "
             "minimal project. Either way Aj Crew loads it through its own gate "
-            "module, which makes every Strands Agent the project builds ask Kiro "
+            "module, which makes every Strands Agent the project builds ask Aj "
             "Crew before each tool call, so a project needs no change of its own. "
             "Its imports must be installed in the Python environment Aj Crew runs "
             "Strands with. A project of yours runs only as the version recorded in "

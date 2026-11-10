@@ -21,7 +21,6 @@ from pathlib import Path
 
 import pytest
 
-from conftest import requires_symlinks
 from aj_crew.agent_discovery import (
     _extract_skills,
     agent_skill_globs,
@@ -43,6 +42,7 @@ from aj_crew.dashboard.handlers._shared import (
 from aj_crew.learn import LessonStore
 from aj_crew.memory import MemoryStore
 from aj_crew.skills import SkillsLoader
+from conftest import requires_symlinks
 
 
 @pytest.fixture(autouse=True)

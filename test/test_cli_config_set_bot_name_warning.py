@@ -184,9 +184,7 @@ class TestBaseWriteShadowedByOverlay:
             json.dumps({"workspaces": {"project": "/projects/old"}, "agent": {"model": "m"}}),
             encoding="utf-8",
         )
-        with patch(
-            "aj_crew.cli_config.config_local_path", return_value=home / "config.local.json"
-        ):
+        with patch("aj_crew.cli_config.config_local_path", return_value=home / "config.local.json"):
             found = _overlay_shadowing_keys(
                 [
                     ("workspaces", "project", "dir"),
@@ -211,9 +209,7 @@ class TestBaseWriteShadowedByOverlay:
         )
         paths = _written_leaf_paths("agent.model_context_tokens", {"custom.v1": 4096})
         assert paths == [("agent", "model_context_tokens", "custom.v1")]
-        with patch(
-            "aj_crew.cli_config.config_local_path", return_value=home / "config.local.json"
-        ):
+        with patch("aj_crew.cli_config.config_local_path", return_value=home / "config.local.json"):
             found = _overlay_shadowing_keys(paths)
         assert found == {("agent", "model_context_tokens", "custom.v1")}
         # The advice names the parent, the deepest key a dotted key can spell.

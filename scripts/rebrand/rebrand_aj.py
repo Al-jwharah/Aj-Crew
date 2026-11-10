@@ -43,7 +43,13 @@ FORK_SLUG = b"Al-jwharah/Aj-Crew"
 APP_ID = b"io.github.al-jwharah.ajcrew"
 
 # Files whose bytes must not change.
-SKIP_EXACT = {b"LICENSE"}
+SKIP_EXACT = {
+    b"LICENSE",
+    # Byte-exact copies of files that older installs wrote to disk. The cleanup
+    # that removes them recognises them by SHA-256, so they keep upstream's bytes.
+    b"test/fixtures/retired_conductor_skill/select-crew-v1.md",
+    b"test/fixtures/retired_conductor_skill/select-crew-v2.md",
+}
 # Legal notices: the attribution text stays exactly as upstream wrote it. Only
 # the repository paths and module names they cite are updated, so every pointer
 # in them still resolves in this tree.
@@ -88,6 +94,15 @@ _UPSTREAM_ONLY_TAIL = re.compile(
     rb")"
 )
 
+# An upstream link pinned to a commit names a file as it was at that commit:
+# under upstream's repository and under the old paths. The whole link is kept,
+# path included, or it would point at a file that never existed there. A
+# ``{}`` placeholder stands for the commit in link templates.
+_PINNED_UPSTREAM_LINK = re.compile(
+    rb"(?i)github\.com[/:]kirodotdev/KiroCrew/(?:blob|tree|raw|blame)/"
+    rb"(?:[0-9a-f]{7,40}|\{\})(?![0-9A-Za-z_-])[^\s\"'<>)\]`]*"
+)
+
 _GITHUB_REPO = re.compile(rb"(?i)(github\.com[/:])kirodotdev/KiroCrew(?![A-Za-z0-9_-])")
 _RAW_REPO = re.compile(
     rb"(?i)(raw\.githubusercontent\.com/)kirodotdev/KiroCrew(?=/(?:main|HEAD|refs/heads/main)/)"
@@ -100,6 +115,15 @@ _GITHUB_REPO_ESCAPED = re.compile(
 
 # The path part alone, as a pattern over a "this project" file link.
 _REPO_PATH_ESCAPED = re.compile(rb"(?i)\\/kirodotdev\\/KiroCrew(?=\\/(?:blob|tree)\\/main\\/)")
+
+# This fork naming the project it was forked from. Upstream never writes
+# "fork of Kiro Crew" or "upstream Kiro Crew" about itself, so the phrase is
+# unambiguous, and renaming it would make the attribution point at this fork.
+# Hidden before the link rewrite, which would otherwise retarget the URL.
+_FORKED_FROM = re.compile(
+    rb"(?:\bfork of|\bupstream)\s+\[?Kiro Crew\]?"
+    rb"(?:\(https://github\.com/kirodotdev/KiroCrew\))?"
+)
 
 _PROTECT = [
     # The upstream organisation and anything addressed under it, including the
@@ -114,6 +138,8 @@ _PROTECT = [
     re.compile(rb"(?i)launchdarkly[A-Za-z0-9_./-]*kiro-crew-app"),
     # Amazon's security contact (SECURITY.md is rewritten by hand).
     re.compile(rb"kiro-crew-security-support@amazon\.com"),
+    # A test that parses an upstream link expects upstream's repository name back.
+    re.compile(rb'"KiroCrew"\)?  # brand-ok: [^\n]*repo[^\n]*name'),
 ]
 
 
@@ -130,7 +156,14 @@ class _Vault:
     def restore(self, data: bytes) -> bytes:
         if not self.items:
             return data
-        return re.sub(rb"\x00P(\d+)\x00", lambda m: self.items[int(m.group(1))], data)
+        # A protected span can enclose one hidden earlier, so unwind until none is left.
+        for _ in range(len(self.items) + 1):
+            data, count = re.subn(
+                rb"\x00P(\d+)\x00", lambda m: self.items[int(m.group(1))], data
+            )
+            if not count:
+                break
+        return data
 
 
 def _fork_links(data: bytes, vault: _Vault) -> bytes:
@@ -140,6 +173,8 @@ def _fork_links(data: bytes, vault: _Vault) -> bytes:
             return vault.hide(m.group(0))
         return m.group(1) + vault.hide(FORK_SLUG)
 
+    data = _FORKED_FROM.sub(lambda m: vault.hide(m.group(0)), data)
+    data = _PINNED_UPSTREAM_LINK.sub(lambda m: vault.hide(m.group(0)), data)
     data = _GITHUB_REPO.sub(repo, data)
     data = _GITHUB_REPO_ESCAPED.sub(
         lambda m: m.group(1) + vault.hide(FORK_SLUG.replace(b"/", b"\\/")), data
@@ -212,7 +247,15 @@ _OBFUSCATED = re.compile(rb"(?i)(kiro)(" + rb"|".join(_OBFUSCATED_SEPARATORS) + 
 # "Kiro" at the end of one line, "Crew" opening the next (wrapped prose, with an
 # optional comment / quote / list prefix on the continuation line).
 _WRAPPED = re.compile(
-    rb"\b(Kiro|KIRO)([ \t]*\r?\n[ \t]*(?:(?:\#+|//+!?|\*|>|;+|--|\|)[ \t]*)*)(Crew|CREW)\b"
+    rb"\b(Kiro|KIRO)([ \t]*\r?\n[ \t]*(?:(?:\#+:?|//+!?|\*|>|;+|--|\|)[ \t]*)*)(Crew|CREW)\b"
+)
+# The same wrap inside source code: one message written as adjacent string
+# literals, "... Kiro " at the end of one and "Crew ..." opening the next. The
+# program prints them joined, so this is the name as a user reads it.
+_SPLIT_LITERAL = re.compile(
+    rb"\b(Kiro|KIRO)"
+    rb"([ \t]?[\"'][ \t]*\+?[ \t]*\r?\n[ \t]*\+?[ \t]*[fFrRbBuU]{0,2}[\"'][ \t]?)"
+    rb"(Crew|CREW)\b"
 )
 
 
@@ -296,6 +339,51 @@ _EXTRA = [
     (re.compile(rb"\bkiro_(dark|light)\b"), rb"aj_\1"),
     # The bot share file (<name>.kirobot, format "kirocrew.kirobot").
     (re.compile(rb"(?<![A-Za-z0-9])kirobot(?![A-Za-z0-9])"), rb"ajbot"),
+    # The default colour theme's slug. Bare ``kiro`` is also the kiro-cli harness
+    # id, so only the spellings that name the theme are listed. The slug and the
+    # ``data-theme`` attribute built from it (``<slug>-dark``) must move together.
+    (re.compile(rb"""(mc-color-theme['"]\s*[,:]\s*['"])kiro(?=['"])"""), rb"\1aj"),
+    (
+        re.compile(
+            rb"""(mc-color-theme['"]\)(?:\s*as ColorTheme\))?\s*\|\|\s*['"])kiro(?=['"])"""
+        ),
+        rb"\1aj",
+    ),
+    (re.compile(rb"""(mc-color-theme['"]\)\)\.(?:not\.)?toBe\(['"])kiro(?=['"])"""), rb"\1aj"),
+    (
+        re.compile(
+            rb"""(\b(?:colorTheme|DEFAULT_COLOR_THEME|theme_color|palette)(?:: ColorTheme)?"""
+            rb"""['"]?\s*[:=]\s*['"])kiro(?=['"])"""
+        ),
+        rb"\1aj",
+    ),
+    (
+        re.compile(rb"""(\b(?:colorTheme\)\.(?:not\.)?toBe|setColorTheme)\(['"])kiro(?=['"])"""),
+        rb"\1aj",
+    ),
+    (
+        re.compile(rb"""(\bmode['"]?(?::\s*[\w.'"]+)?,\s*['"]?color['"]?:\s*['"])kiro(?=['"])"""),
+        rb"\1aj",
+    ),
+    (re.compile(rb"""("mode": "dark",\n\s*"color": ")kiro(?=")"""), rb"\1aj"),
+    (re.compile(rb"""(toHaveBeenCalledWith\(\{ color: ')kiro(?=')"""), rb"\1aj"),
+    (
+        re.compile(rb"""(\{ value: ')kiro(', label: '(?:\xf0\x9f\x91\xbb )?)Kiro(?=')"""),
+        rb"\1aj\2Aj",
+    ),
+    (re.compile(rb"""(registerTheme\(\[\{ value: ')kiro(?=')"""), rb"\1aj"),
+    (re.compile(rb"""(e\.g\. ['"])kiro(?=['"], ['"]emerald)"""), rb"\1aj"),
+    (
+        re.compile(
+            rb"""(dataset\.theme = `|'data-theme', `|=== `|palette (?:is )?|theme )kiro(?=-\$\{)"""
+        ),
+        rb"\1aj",
+    ),
+    (re.compile(rb"\ba Kiro theme\b"), rb"an Aj theme"),
+    (re.compile(rb"\bKiro (themes?|palette)\b"), rb"Aj \1"),
+    (re.compile(rb"\bkiro (themes?|palette)\b"), rb"aj \1"),
+    (re.compile(rb"(pinned )Kiro(?= \$\{theme\})"), rb"\1Aj"),
+    (re.compile(rb"(default ')kiro(?='\.)"), rb"\1aj"),
 ]
 
 # UI strings where "Kiro" is the assistant's own display name rather than
@@ -415,15 +503,110 @@ _PERSONA_PHRASES_UI = [
 ]
 
 
+# English takes "an" before the new name ("an Aj Crew checkout", "an ``ajcrew``
+# unit"), where the old one took "a". The article may sit at the end of a
+# wrapped line, with a comment leader opening the next one. Catalogs for other
+# languages are left alone: there "a Aj Crew" is a preposition, not an article.
+#
+# Three joins are recognised between the article and the name: a space, a
+# wrapped line (with a comment leader), and a string literal that closes after
+# the article and reopens on the next line (``"... INTO a "`` / ``f"Aj Crew"``).
+# ``{{productName}}`` is the dashboard's placeholder for the name and reads as
+# the name does.
+_ARTICLE = re.compile(
+    rb"(?<![\w\-/.])([Aa])"
+    rb"(?=(?:[ \t]`{0,2}"
+    rb"|[ \t]*\r?\n[ \t]*(?:(?:#|//|\*|>|--|;|REM)[ \t]*)?`{0,2}"
+    rb"|[ \t][\"'`][ \t]*\+?[ \t]*\r?\n[ \t]*\+?[ \t]*[fFrRbBuU]{0,2}[\"'`]`{0,2})"
+    rb"(?:Aj Crew|AjCrew|ajcrew|aj_crew|Aj-Crew|AJCREW|aj-crew|Aj(?![\w])"
+    rb"|\{\{ ?productName ?\}\}))"
+)
+_NON_ENGLISH_CATALOG = re.compile(rb"website/src/i18n/locales/(?!en(?:-XA|\.manual)?\.json$)")
+
+# Edits no pattern can express, applied to the renamed text of one file each.
+#
+# * An article before a placeholder that always holds one of the product's own
+#   names ("a {server} entry", where every server is ``ajcrew-*``).
+# * A bare ``owner/repo`` slug that tells a person or an agent WHERE TO ACT:
+#   the repository a feature request is filed on, the default of a ``--repo``
+#   flag, the scope a security audit is allowed to touch. Elsewhere a bare
+#   slug is kept, because nearly all of them are upstream issue references
+#   (``kirodotdev/KiroCrew#123``) or sample data; these few would send the
+#   fork's users and their reports to another project.
+_SITE_EDITS = {
+    b"src/aj_crew/mcp_shared_policy.py": [
+        (b", and a {server} entry in", b", and an {server} entry in"),
+    ],
+    b"website/src/prompts/featureRequest.ts": [
+        (b"--repo kirodotdev/KiroCrew", b"--repo Al-jwharah/Aj-Crew"),
+        (b"gh repo view kirodotdev/KiroCrew", b"gh repo view Al-jwharah/Aj-Crew"),
+    ],
+    b"scripts/audit_bypass_merge.py": [
+        (b'default="kirodotdev/KiroCrew"', b'default="Al-jwharah/Aj-Crew"'),
+    ],
+    b"src/aj_crew/builtin_skills/security-conductor/rules-of-engagement.json": [
+        (b'"repo:kirodotdev/KiroCrew"', b'"repo:Al-jwharah/Aj-Crew"'),
+    ],
+    b"src/aj_crew/builtin_skills/ajcrew-dev/ajcrew-prepare-pr/scripts/gate_map.json": [
+        (b"runs for kirodotdev/KiroCrew.", b"runs for Al-jwharah/Aj-Crew."),
+    ],
+    # The gate that keeps "act on this repository" instructions out of shipped
+    # skills has to know the repository by the name it has here too.
+    b"scripts/check_builtin_skill_scope.py": [
+        (
+            b'r"(?<!github\\.com/)kirodotdev/KiroCrew",',
+            b'r"(?<!github\\.com/)(?:kirodotdev/KiroCrew|Al-jwharah/Aj-Crew)",',
+        ),
+    ],
+    b"test/test_strict_identity_diagnostics.py": [
+        (b'f"a {server} entry in', b'f"an {server} entry in'),
+    ],
+    # The image name is derived from the repository owner, and the image is
+    # the fork's; the repository the test promotes from has to be the fork too.
+    b"test/test_release_promotion.py": [
+        (b'repository == "kirodotdev/KiroCrew"', b'repository == "Al-jwharah/Aj-Crew"'),
+        (b'repository="kirodotdev/KiroCrew"', b'repository="Al-jwharah/Aj-Crew"'),
+    ],
+    b"test/test_dev_fleet_app_sync.py": [
+        (b'assert result == "kirodotdev/KiroCrew"', b'assert result == "Al-jwharah/Aj-Crew"'),
+    ],
+}
+
+
+# ``git clone <url>`` with no target names the directory after the repository,
+# which is ``Aj-Crew``. Instructions that clone that way and then ``cd`` into
+# the product's name would send the reader to a directory that does not exist.
+_CLONE_NO_TARGET = re.compile(
+    rb"git clone (?:-\S+ )*https://github\.com/Al-jwharah/Aj-Crew(?:\.git)?"
+    rb"(?=[ \t]*(?:\r?\n|\\n|&&|;|\"|'|`|$))"
+)
+_CD_CHECKOUT = re.compile(rb"(?:(?<=\\n)|(?<![\w-]))cd (?:AjCrew|ajcrew)(?![\w./-])")
+
+
 def transform(data: bytes, path: bytes = b"") -> bytes:
     """Return *data* with the product name rewritten."""
     if path in PATHS_ONLY:
         return _NOTICE_PATH.sub(lambda m: _aj(m.group(1)) + m.group(2), data)
+    data = _rename(data, path)
+    if _CLONE_NO_TARGET.search(data):
+        data = _CD_CHECKOUT.sub(b"cd Aj-Crew", data)
+    if _NON_ENGLISH_CATALOG.match(path):
+        return data
+    for old, new in _SITE_EDITS.get(transform_path(path), ()):
+        data = data.replace(old, new)
+    return _ARTICLE.sub(lambda m: m.group(1) + b"n", data)
+
+
+def _rename(data: bytes, path: bytes) -> bytes:
+    """The name itself: every spelling of it, links, identifiers, persona."""
     if _B64_HINT.search(data):
         data = _B64_LITERAL.sub(_b64, data)
     if not _HAS_KIRO.search(data):
         return data
     vault = _Vault()
+    # The container image is published per fork (release tooling derives
+    # ghcr.io/<owner>/<product>), so it follows the fork rather than upstream.
+    data = data.replace(b"ghcr.io/kirodotdev/kirocrew", b"ghcr.io/al-jwharah/ajcrew")
     data = _fork_links(data, vault)
     for pat in _PROTECT:
         data = pat.sub(lambda m: vault.hide(m.group(0)), data)
@@ -431,6 +614,7 @@ def transform(data: bytes, path: bytes = b"") -> bytes:
     data = _PLAIN.sub(_join, data)
     data = _OBFUSCATED.sub(_join, data)
     data = _WRAPPED.sub(_join, data)
+    data = _SPLIT_LITERAL.sub(_join, data)
     for pat, rep in _FLOOR_SPELLINGS + _EXTRA:
         data = pat.sub(rep, data)
     if b"/i18n/" in path and path.endswith(b".json"):
@@ -490,6 +674,8 @@ def main(argv: list[str]) -> int:
                 new = transform(data, rel)
                 if new != data:
                     changed += 1
+                    if args.dry_run:
+                        print("would change:", os.fsdecode(rel))
                     if not args.dry_run:
                         with open(src, "wb") as fh:
                             fh.write(new)

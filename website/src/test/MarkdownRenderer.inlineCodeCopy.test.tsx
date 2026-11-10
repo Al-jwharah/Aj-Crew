@@ -420,7 +420,7 @@ describe('InlineCode click-to-copy (non-path chips)', () => {
 
   it('a raw-HTML class cannot redress a chip: the renderer owns the cue classes', () => {
     // `class` is allowlisted on every element, so a message could carry
-    // `<code class="text-accent hover:underline">`: on the nine non-Kiro themes
+    // `<code class="text-accent hover:underline">`: on the nine non-Aj themes
     // that is the navigate look on a chip whose click copies — the very
     // confusion this cue exists to end — and `class=""` would strip the cursor,
     // the underline and the mono face. Neither reaches the chip: the `code`

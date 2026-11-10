@@ -29,7 +29,7 @@ const AJCREW_MODULE_RE = /^(?:aj_crew|ajcrew_[a-z0-9][a-z0-9_]*)$/;
 // A gateway module is only a gateway when argparse's first positional after it
 // is a server subcommand -- the same set `port_resolution._AJCREW_SERVER_SUBCOMMANDS`
 // gates `ajcrew stop` on. Without this the module name alone would authorize a
-// SIGKILL of any process that merely imports a `ajcrew_*` module on our port.
+// SIGKILL of any process that merely imports an `ajcrew_*` module on our port.
 // Both constants are pinned to their Python twins by
 // `test/test_cli_stop.py::TestDesktopGatewayIdentityParity`; change them together.
 const AJCREW_SERVER_SUBCOMMANDS = new Set(["gateway", "dashboard", "start"]);
@@ -108,10 +108,10 @@ function executableSelector(tokens) {
 }
 
 /**
- * Match only a Aj Crew executable, or a Python process whose first execution
- * selector invokes a Aj Crew gateway module (`aj_crew`, or a composed
+ * Match only an Aj Crew executable, or a Python process whose first execution
+ * selector invokes an Aj Crew gateway module (`aj_crew`, or a composed
  * edition's `ajcrew_<edition>` companion — `AJCREW_MODULE_RE`) followed by
- * a server subcommand (`AJCREW_SERVER_SUBCOMMANDS`), or a Aj Crew script.
+ * a server subcommand (`AJCREW_SERVER_SUBCOMMANDS`), or an Aj Crew script.
  * Later process arguments never establish ownership, so SSH aliases and
  * unrelated script arguments cannot authorize a kill.
  *
@@ -131,7 +131,7 @@ function isAjcrewCommand(commandLine, options) {
 }
 
 /**
- * `isAjcrewCommand`, narrowed to a Aj Crew SERVER: argparse's first
+ * `isAjcrewCommand`, narrowed to an Aj Crew SERVER: argparse's first
  * positional after the executable (or after the console script) must be one of
  * `AJCREW_SERVER_SUBCOMMANDS`, exactly as the Python twin
  * `port_resolution._args_look_like_ajcrew` gates its console-script form.
@@ -204,7 +204,7 @@ function strictWindowsArguments(commandLine, count) {
  * a launcher spelled as argv0 would leave Python running whatever the next
  * argument names. An interpreter option, another script, another venv's
  * launcher, a non-server subcommand or an ambiguous argument boundary stays
- * foreign: the shared interpreter alone never names a Aj Crew gateway.
+ * foreign: the shared interpreter alone never names an Aj Crew gateway.
  *
  * This is command-line attribution, like every other Windows rule here: a
  * process of this account that starts the interpreter with this exact command
@@ -243,7 +243,7 @@ function venvBaseInterpreterShape(commandLine, observed, launches, canonical) {
 }
 
 /**
- * Classify a command line: `null` when it is not a Aj Crew command, else
+ * Classify a command line: `null` when it is not an Aj Crew command, else
  * `{ serverSubcommand }` -- whether argparse's first positional selects a
  * server subcommand. The `-m <module>` shape only ever matches WITH that
  * subcommand, so it is always `true` there.
@@ -429,8 +429,8 @@ function readCommandBounded(getCommandFn, pid, timeoutMs = SURVIVOR_COMMAND_READ
  * `deadline` has passed AND `graceMs` has elapsed since the last SIGTERM was
  * sent. Identity is re-read right before each signal, so a pid that exited and
  * was reused by an unrelated process is never signalled. The identity test is
- * the SERVER one (`isAjcrewGatewayCommand`): a `ajcrew mcp-core` /
- * `mcp-cron` descendant is a Aj Crew executable too, but it belongs to the
+ * the SERVER one (`isAjcrewGatewayCommand`): an `ajcrew mcp-core` /
+ * `mcp-cron` descendant is an Aj Crew executable too, but it belongs to the
  * backend's own orphan sweep, not to this one.
  */
 async function stopForkedGatewaySurvivors(pids, { deadline, graceMs, getCommandFn, signalPidFn, pollMs }) {
@@ -821,7 +821,7 @@ async function forceStopPort(
         log(`force-stop: kill pid=${pid} failed: ${e && e.message}`);
       }
     } else {
-      log(`force-stop: SKIP pid=${pid} — not a AjCrew process (${cmd.slice(0, 80)})`);
+      log(`force-stop: SKIP pid=${pid} — not an AjCrew process (${cmd.slice(0, 80)})`);
     }
   }
 

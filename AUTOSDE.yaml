@@ -1041,7 +1041,7 @@ custom-rules:
       `no-blocking-call-on-event-loop`: those are kernel-blocking syscalls, and a
       store call looks harmless because it usually returns in under a
       millisecond. It stops being harmless the moment a SECOND connection exists
-      — a `ajcrew doctor` reader, a second gateway on the same home, a
+      — an `ajcrew doctor` reader, a second gateway on the same home, a
       `sqlite3` shell, or `journal_mode=DELETE` on a network home — because then
       `PRAGMA busy_timeout` can hold the loop for its full window per call.
 

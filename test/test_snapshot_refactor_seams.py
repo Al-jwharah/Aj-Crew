@@ -34,7 +34,6 @@ from unittest import mock
 import pytest
 from test_snapshot import _make_snapshot, _setup_fake_ajcrew, unpinnable_argv
 
-from conftest import requires_o_nofollow
 from aj_crew import snapshot as snap
 from aj_crew import (
     snapshot_archive,
@@ -45,6 +44,7 @@ from aj_crew import (
     snapshot_restore,
 )
 from aj_crew.jsonl_util import OversizedRecord
+from conftest import requires_o_nofollow
 
 _OWNERS = (
     snapshot_components,

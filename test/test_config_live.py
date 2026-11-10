@@ -843,9 +843,7 @@ class TestEveryWritePathNotifies:
         calls: list[int] = []
         with (
             patch.object(loader_mod, "_apply_document_migrations", return_value=True),
-            patch(
-                "aj_crew.config.live.notify_config_written", side_effect=lambda: calls.append(1)
-            ),
+            patch("aj_crew.config.live.notify_config_written", side_effect=lambda: calls.append(1)),
         ):
             wrote = loader_mod._persist_config_migration(
                 cfg_file,
@@ -863,9 +861,7 @@ class TestEveryWritePathNotifies:
         calls: list[int] = []
         with (
             patch.object(loader_mod, "_apply_document_migrations", return_value=False),
-            patch(
-                "aj_crew.config.live.notify_config_written", side_effect=lambda: calls.append(1)
-            ),
+            patch("aj_crew.config.live.notify_config_written", side_effect=lambda: calls.append(1)),
         ):
             assert (
                 loader_mod._persist_config_migration(
@@ -910,9 +906,7 @@ class TestEveryWritePathNotifies:
         calls: list[int] = []
         with (
             patch.object(agent_mod, "_mc_config_path", return_value=target),
-            patch(
-                "aj_crew.config.live.notify_config_written", side_effect=lambda: calls.append(1)
-            ),
+            patch("aj_crew.config.live.notify_config_written", side_effect=lambda: calls.append(1)),
         ):
             agent_mod._atomic_json_write(target, {"agent": {"model": "m"}})
         assert calls == [1]
@@ -924,9 +918,7 @@ class TestEveryWritePathNotifies:
         calls: list[int] = []
         with (
             patch.object(agent_mod, "_mc_config_path", return_value=tmp_path / "config.json"),
-            patch(
-                "aj_crew.config.live.notify_config_written", side_effect=lambda: calls.append(1)
-            ),
+            patch("aj_crew.config.live.notify_config_written", side_effect=lambda: calls.append(1)),
         ):
             agent_mod._atomic_json_write(spec, {"name": "ajcrew"})
         assert calls == []

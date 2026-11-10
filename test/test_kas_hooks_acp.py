@@ -950,9 +950,7 @@ class TestExecuteHook:
         await _execute(handle, {"hookId": f"crew:script:{created.id}"})
 
         assert handle._runtime.responses == []
-        assert [e[2] for e in handle._runtime.errors] == [
-            f"Refused by Aj Crew: {expected.reason}"
-        ]
+        assert [e[2] for e in handle._runtime.errors] == [f"Refused by Aj Crew: {expected.reason}"]
         # Refused before governance was even asked.
         assert governance_permits == []
 

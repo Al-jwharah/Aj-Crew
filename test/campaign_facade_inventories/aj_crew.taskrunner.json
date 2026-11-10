@@ -1,9 +1,9 @@
 {
  "base_public_names": [
+  "AjCrewConfig",
   "BACKGROUND_KEY",
   "DEFAULT_TOKEN_BUDGET",
   "ExecutionContext",
-  "AjCrewConfig",
   "Lesson",
   "MAX_RECOVERIES",
   "MAX_REPLAN",

@@ -73,9 +73,7 @@ def _mock_base_stack(_floor_monkeypatch):
     """
     import json as _json
 
-    _base_outputs = _json.dumps(
-        [{"OutputKey": "BucketName", "OutputValue": "ajcrew-base-bucket"}]
-    )
+    _base_outputs = _json.dumps([{"OutputKey": "BucketName", "OutputValue": "ajcrew-base-bucket"}])
     _floor_monkeypatch.setattr(engine, "run_aws", lambda *a, **kw: (0, _base_outputs, ""))
 
 

@@ -1,12 +1,12 @@
 {
  "base_public_names": [
+  "AjCrewConfig",
   "BUILTIN_NAMES",
   "ConfigReadError",
   "CronStoreBusy",
   "CronStoreUnreadable",
   "DEPLOY_WEB_PROVIDER_ID",
   "Dependencies",
-  "AjCrewConfig",
   "PRINCIPAL_AGENT_TOOL",
   "PRINCIPAL_APP_TOKEN",
   "PRINCIPAL_NONE",
@@ -125,15 +125,15 @@
   "wrap_argv",
   "wrap_argv_async"
  ],
- "note": "Frozen at the split of src/aj_crew/apps/routes.py (S51): every public name it defined, and every name it bound from the rest of aj_crew. A aj_crew._facade_mirror facade that keeps only the route table: each other name is served from the owner that binds it, so a read through the facade is the owner's own object.",
+ "note": "Frozen at the split of src/aj_crew/apps/routes.py (S51): every public name it defined, and every name it bound from the rest of aj_crew. An aj_crew._facade_mirror facade that keeps only the route table: each other name is served from the owner that binds it, so a read through the facade is the owner's own object.",
  "rebound": {
+  "AjCrewConfig": "aj_crew.config.loader",
   "BUILTIN_NAMES": "aj_crew.apps.builtins",
   "ConfigReadError": "aj_crew.config.loader",
   "CronStoreBusy": "aj_crew.cron",
   "CronStoreUnreadable": "aj_crew.cron",
   "DEPLOY_WEB_PROVIDER_ID": "aj_crew.publish_governance",
   "Dependencies": "aj_crew.apps.manifest",
-  "AjCrewConfig": "aj_crew.config.loader",
   "PRINCIPAL_AGENT_TOOL": "aj_crew.apps.proxy_auth",
   "PRINCIPAL_APP_TOKEN": "aj_crew.apps.proxy_auth",
   "PRINCIPAL_NONE": "aj_crew.apps.proxy_auth",

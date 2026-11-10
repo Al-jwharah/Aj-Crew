@@ -13,7 +13,6 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from conftest import MockSlackClient
 from aj_crew.context import ContextBuilder
 from aj_crew.memory import MemoryStore
 from aj_crew.providers.base import LLMEvent
@@ -21,6 +20,7 @@ from aj_crew.skills import SkillsLoader
 from aj_crew.slack import handler as slack_handler
 from aj_crew.slack.client import RealSlackClient
 from aj_crew.slack.handler import handle_message, set_allowed_users, set_owner_id
+from conftest import MockSlackClient
 
 if TYPE_CHECKING:
     from aj_crew.session import SessionManager

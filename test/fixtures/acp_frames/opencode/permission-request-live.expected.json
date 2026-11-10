@@ -162,8 +162,8 @@
         "kind": "tool_result",
         "tool_call_id": "call_tkctdm9o",
         "tool_output": "ajcrew-opencode-live\n",
-        "tool_output_bytes": 23,
-        "tool_output_digest": "38b8f2d49d0a7dbe4e4470c261be27db3cccef718f9b3770949e7e3754780160",
+        "tool_output_bytes": 21,
+        "tool_output_digest": "4a71597e65d71573a5060bd3f5c77b7b031b615627392df85265abdb26be9f64",
         "tool_status": "in_progress"
       },
       {
@@ -191,8 +191,8 @@
         "tool_call_id": "call_tkctdm9o",
         "tool_final": true,
         "tool_output": "ajcrew-opencode-live\n",
-        "tool_output_bytes": 23,
-        "tool_output_digest": "38b8f2d49d0a7dbe4e4470c261be27db3cccef718f9b3770949e7e3754780160",
+        "tool_output_bytes": 21,
+        "tool_output_digest": "4a71597e65d71573a5060bd3f5c77b7b031b615627392df85265abdb26be9f64",
         "tool_status": "completed"
       },
       {

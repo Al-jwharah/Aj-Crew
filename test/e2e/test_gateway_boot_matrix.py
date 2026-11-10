@@ -463,7 +463,7 @@ def test_seeded_sandbox_mode_boots_and_runs_a_turn(fixture: str) -> None:
         status, _body = _health(handle.port)
         assert status == 200, f"/api/health returned {status} under sandbox={seeded}"
 
-        # ``off`` defers isolation to the agent's own sandbox and never needs a
+        # ``off`` defers isolation to the agent's own sandbox and never needs an
         # Aj Crew backend, so the turn must complete everywhere.
         turn_expected = seeded == "off" or platform_compat.IS_WINDOWS
         if not turn_expected:

@@ -29,7 +29,7 @@ from aj_crew.apps.registry import (
     is_clone_host_trusted,
 )
 from aj_crew.config import loader as loader_mod
-from aj_crew.config.loader import ExternalRegistryConfig, AjCrewConfig
+from aj_crew.config.loader import AjCrewConfig, ExternalRegistryConfig
 from aj_crew.platform.bootstrap import build_default_context
 from aj_crew.platform.defaults import DefaultAppsLoader
 

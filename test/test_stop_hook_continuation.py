@@ -565,7 +565,7 @@ class TestStopHookNudgeCap:
 
     @staticmethod
     def _capped_load(cap: int):
-        """A AjCrewConfig.load replacement pinning the cap, fresh per call.
+        """An AjCrewConfig.load replacement pinning the cap, fresh per call.
 
         ``dataclasses.replace`` returns a new object each time, so no config
         cache is mutated across tests.

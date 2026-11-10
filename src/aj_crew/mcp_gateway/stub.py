@@ -313,10 +313,10 @@ if TYPE_CHECKING:  # every owner-defined name in _EXPORTS, for type checkers and
         _write_stdout_line,
     )
     from aj_crew.mcp_gateway.stub_register import (  # noqa: F401
+        _AJCREW_MCP_SUBCOMMANDS,
         _ANCESTOR_WALK_MAX,
         _BINARY_HASH_CAP_BYTES,
         _CONFIG_SNAPSHOT_PLACEHOLDER,
-        _AJCREW_MCP_SUBCOMMANDS,
         _ancestor_pids,
         _binary_version,
         _crew_home,

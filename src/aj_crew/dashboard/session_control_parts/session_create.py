@@ -22,8 +22,8 @@ from aj_crew.config.loader import (
 )
 from aj_crew.config.sections import (
     DEFAULT_MODEL,
-    AutocompactPctError,
     AjCrewAgentConfig,
+    AutocompactPctError,
     coerce_effort,
     parse_autocompact_pct,
     worker_session_defaults,

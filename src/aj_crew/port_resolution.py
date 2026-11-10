@@ -414,10 +414,10 @@ def _basename_stem(tok: str) -> str:
 
 @functools.lru_cache(maxsize=1)
 def _gateway_module_roots() -> frozenset[str]:
-    """Top-level module names a Aj Crew gateway can be booted from with ``-m``.
+    """Top-level module names an Aj Crew gateway can be booted from with ``-m``.
 
     Always ``aj_crew``. A **composed edition** additionally boots from its
-    companion's own module: the companion registers a ``ajcrew.plugins`` entry
+    companion's own module: the companion registers an ``ajcrew.plugins`` entry
     point, and its launcher execs ``-m <that module>`` so the composition root is
     entered instead of the core CLI (execing ``-m aj_crew`` skips the
     companion's own ``cli.main``). Hardcoding ``aj_crew`` therefore made
@@ -452,7 +452,7 @@ def _gateway_module_roots() -> frozenset[str]:
 
 
 def _args_look_like_ajcrew(args: str) -> bool:
-    """Return ``True`` if a process command-line *args* string is a Aj Crew server.
+    """Return ``True`` if a process command-line *args* string is an Aj Crew server.
 
     This gates ``os.kill(pid, SIGTERM)`` in ``cli_server._stop``, so it must be
     **precise** (never match an unrelated process that merely mentions
@@ -524,10 +524,7 @@ def _args_look_like_ajcrew(args: str) -> bool:
                     # positional/flag value cannot match — e.g.
                     # ``-m aj_crew run gateway`` ("gateway" is a file argument
                     # to the task runner) must NOT be treated as a server.
-                    if (
-                        index + 2 < len(tokens)
-                        and tokens[index + 2] in _AJCREW_SERVER_SUBCOMMANDS
-                    ):
+                    if index + 2 < len(tokens) and tokens[index + 2] in _AJCREW_SERVER_SUBCOMMANDS:
                         return True
 
         # --- Console-script form: ".../ajcrew <subcmd>" (or ajcrew.exe on Win)
@@ -542,7 +539,7 @@ def _args_look_like_ajcrew(args: str) -> bool:
 
 
 def _is_ajcrew_process(pid: int) -> bool:
-    """Return ``True`` if *pid* looks like a Aj Crew gateway process.
+    """Return ``True`` if *pid* looks like an Aj Crew gateway process.
 
     Resolves the process command line cross-platform via
     :func:`platform_compat.process_command_line` (Linux ``/proc``, macOS ``ps``,

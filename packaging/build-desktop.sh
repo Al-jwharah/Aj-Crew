@@ -1715,7 +1715,7 @@ log "Packaging desktop app (electron-builder, version: $KC_VERSION)…"
     #   requirement (which pins the bundle id); a distinct nightly id would
     #   strand every existing install at the identity switch.
     # - CDSigner authz is per-identifier; the shared id is already onboarded.
-    # Cost accepted: shared TCC/notification identity, and a ajcrew:// URL
+    # Cost accepted: shared TCC/notification identity, and an ajcrew:// URL
     # scheme could not disambiguate the two apps (none is registered today).
     EB_ARGS+=(
       "-c.productName=AjCrew Nightly"

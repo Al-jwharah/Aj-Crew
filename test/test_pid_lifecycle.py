@@ -446,9 +446,7 @@ class TestTrackUntrack:
         )
         assert _untrack_root_by_identity(4242, None) is False
         assert _untrack_root_by_identity(4242, "") is False
-        monkeypatch.setattr(
-            "aj_crew.session_pid._session_pid_file_path", lambda: session_pid_file
-        )
+        monkeypatch.setattr("aj_crew.session_pid._session_pid_file_path", lambda: session_pid_file)
         assert _untrack_root_by_identity(4242, "tok-a") is False
         assert session_pid_file.read_text(encoding="utf-8").strip() == f"{os.getpid()}:4242"
         assert pid_file.read_text(encoding="utf-8").strip() == "4242"

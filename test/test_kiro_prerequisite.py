@@ -669,7 +669,7 @@ class TestKiroPrerequisiteHelpers:
     def test_off_path_override_serves_its_absolute_path(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """A ``AJCREW_KIRO_BIN`` the user's shell would not find as ``kiro-cli``
+        """An ``AJCREW_KIRO_BIN`` the user's shell would not find as ``kiro-cli``
         gets the quoted absolute path, like the bundled copy: the bare command
         would fail or sign in a different install."""
         binary = tmp_path / "opt" / "kiro build" / "kiro-cli"

@@ -1,6 +1,6 @@
 # Attribution
 
-Papyrus was written by **tricatte** as a standalone app named `Papyrus` for a
+Papyrus was written by **tricatte** as a standalone app named `Papyrus` for an
 AjCrew-family dashboard, and is included here as a first-party builtin app with
 the original author's name preserved in `app.json`.
 

@@ -9,7 +9,7 @@ Guide for building external Aj Crew apps against the current App Kit manifest, l
 
 ## When to Use
 
-- User says "create a ajcrew app", "build an app", "make an app for ajcrew"
+- User says "create an ajcrew app", "build an app", "make an app for ajcrew"
 - User says "package this as an app", "publish this to the app store"
 - User is building UI pages, crons, or skills that should be distributable
 
@@ -177,7 +177,7 @@ Visual mock of the target style:
 
 ```html
 <!--
-  Legacy geometry reference for a Aj Crew app header and card.
+  Legacy geometry reference for an Aj Crew app header and card.
   Use host components and theme tokens instead of copying the hardcoded colors.
 -->
 <div style="max-width:1200px; margin:0 auto; padding:16px; font-family:system-ui; color:#e2e8f0; background:#1a1b26">
@@ -593,9 +593,10 @@ Open a pull request to the Aj Crew repo adding an entry to
 `gitUrl` alone resolves. `repo` is a legacy alias for the same clone URL and is
 only read when `gitUrl` is absent; it is never a slug.
 
-That file is the offline seed. The live App Store reads `official-registry.json`
-from the hosted catalog at `https://apps.crew.kiro.dev/`, so a listing lands there
-too, alongside its editorial and category-order files.
+That file is the offline seed, and in this build it is what the App Store shows.
+The only hosted catalog, `https://apps.crew.kiro.dev/`, is the upstream project's:
+this build reads its `official-registry.json` only when
+`AJCREW_SKIP_APP_STORE_FETCH=0`, and nobody on this fork can publish a listing there.
 
 Display metadata (description, tags, author) comes from `app.json` in the app's own repo (cached 24h).
 

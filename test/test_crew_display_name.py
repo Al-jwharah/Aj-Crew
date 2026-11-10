@@ -250,9 +250,7 @@ class TestCreateEndpoint:
     )
     async def test_an_explicit_label_another_crew_shows_is_taken(self, body):
         cfg = self._fake_config()
-        cfg.agents["legacy"] = AjCrewAgentConfig(
-            kiro_agent="ajcrew", display_name="Release Writer"
-        )
+        cfg.agents["legacy"] = AjCrewAgentConfig(kiro_agent="ajcrew", display_name="Release Writer")
         status, data = await self._post({**body, "kiro_agent": "ajcrew"}, cfg)
         assert status == 409
         assert data["code"] == "agent_exists"
@@ -263,9 +261,7 @@ class TestCreateEndpoint:
         """The check is on what the crew will show: a typed name another crew
         shows is fine when this crew shows a different label."""
         cfg = self._fake_config()
-        cfg.agents["legacy"] = AjCrewAgentConfig(
-            kiro_agent="ajcrew", display_name="Release Writer"
-        )
+        cfg.agents["legacy"] = AjCrewAgentConfig(kiro_agent="ajcrew", display_name="Release Writer")
         status, data = await self._post(
             {"name": "Release Writer", "display_name": "Scribe", "kiro_agent": "ajcrew"}, cfg
         )

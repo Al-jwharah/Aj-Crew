@@ -1072,7 +1072,7 @@ def _setup_whatsapp() -> None:
 
     # The read above answered "may this step run"; it is NOT the read the write
     # is derived from. That one happens inside ``update_config_locked``'s hold on
-    # the ``<config>.lock`` sidecar, so a dashboard settings write or a
+    # the ``<config>.lock`` sidecar, so a dashboard settings write or an
     # ``ajcrew config set`` landing between the two is carried forward instead
     # of being replaced by this older snapshot.
     section_clash: list[str] = []
@@ -1135,7 +1135,7 @@ class _SetupAborted(Exception):
     The wizard is a sequential chain of interactive prompts; if stdin closes at
     ANY prompt, every subsequent bare ``input()`` would traceback. Callers use
     ``_input_or_skip`` for guarded prompts (workspace, slash-command, timezone);
-    the top-level ``_setup`` catches this and exits cleanly, so a
+    the top-level ``_setup`` catches this and exits cleanly, so an
     ``ajcrew setup < /dev/null`` — or a Windows console quirk that closes
     stdin — surfaces one clean message instead of a stack trace.
     """
@@ -1190,9 +1190,7 @@ def _setup_slash_command() -> None:
     # way the validated loader degrades a mistyped field.
     current = coerce_config_field(slack_section or {}, "command", str, "ajcrew")
     # EOF keeps the current value (same reasoning as the workspace step).
-    prompt = (
-        f"  Slash command name (must match your Slack app, e.g. ajcrew-<alias>) [{current}]: "
-    )
+    prompt = f"  Slash command name (must match your Slack app, e.g. ajcrew-<alias>) [{current}]: "
     raw = _input_or_skip(prompt) or ""
     if raw:
         raw = raw.lstrip("/").strip()

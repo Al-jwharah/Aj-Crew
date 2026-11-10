@@ -201,7 +201,7 @@ class TestStagingDoesNotWriteToTheLiveDatabase:
         """A symlinked data home reaches a decision instead of dying on a traceback.
 
         `PinnedPathRefusal` from the root open is left for `snapshot_main` to handle and
-        audit. A `AJCREW_HOME` override is `.resolve()`d and can never present a
+        audit. An `AJCREW_HOME` override is `.resolve()`d and can never present a
         symlink; the default `_default_home()` is not, so the test patches `_mc_dir`.
         """
         if not pinned_fs.supports_pinned_walk():

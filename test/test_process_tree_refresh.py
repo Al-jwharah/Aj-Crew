@@ -224,9 +224,7 @@ class TestRefreshOnlyWalksAVerifiedLiveLeader:
         client = _fake_client(returncode=None)
         with (
             patch("aj_crew.platform_compat.get_process_start_id", return_value="999"),
-            patch(
-                "aj_crew.acp.runtime_process_tree._get_child_pids", return_value=[5151]
-            ) as walk,
+            patch("aj_crew.acp.runtime_process_tree._get_child_pids", return_value=[5151]) as walk,
             patch(
                 "aj_crew.acp.runtime_process_tree._capture_child_records",
                 return_value={5151: ("999", b"sleep")},

@@ -170,9 +170,7 @@ if TYPE_CHECKING:  # names it serves from outside the family, from their homes
     from aj_crew.platform_compat import is_link_or_junction  # noqa: F401
     from aj_crew.security import redact_credentials  # noqa: F401
     from aj_crew.security import redact_exfiltration_urls  # noqa: F401
-    from aj_crew.skill_trust import (  # noqa: F401
-        ReviewedProjectChanged as _ReviewedProjectChanged,
-    )
+    from aj_crew.skill_trust import ReviewedProjectChanged as _ReviewedProjectChanged  # noqa: F401
     from aj_crew.skill_trust import TrustStoreFull  # noqa: F401
     from aj_crew.skill_trust import TrustStoreUnreadable  # noqa: F401
     from aj_crew.skill_trust import canonical_key  # noqa: F401

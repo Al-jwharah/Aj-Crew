@@ -24,8 +24,8 @@ from aiohttp import web
 from aj_crew.apps.registry import minimal_env
 from aj_crew.config.fields import _coerce_bool
 from aj_crew.config.loader import (
-    ConfigReadError,
     AjCrewConfig,
+    ConfigReadError,
     config_path,
     update_config_locked,
 )

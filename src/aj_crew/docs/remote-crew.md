@@ -91,7 +91,7 @@ launcher registers that record for you, and the task runs no gateway to reach.
 The registry file (`~/.kiro/crew/instances.json`) holds connection coordinates
 only. No key, password or token is ever written there.
 
-**From a link (desktop app).** A page that lists your machines can offer a
+**From a link (desktop app).** A page that lists your machines can offer an
 `ajcrew://remote-crew/add?host=<ssh host>&user=<user>&port=<n>&name=<label>`
 link. Opening it brings the desktop app forward on this panel with the add form
 filled in and a line saying so. Only `host` is required; `user` becomes
@@ -162,7 +162,7 @@ Removing a crew also removes every crew reached through it.
 a crew window. It is a feature preview: turn on **Settings → Developer → Feature
 Previews → Chat on a crew**, then pick it from the new-chat menu and choose one of
 your connected machines. Only connected ones are offered, and creating one fails
-outright when the machine runs a Aj Crew version too far from yours.
+outright when the machine runs an Aj Crew version too far from yours.
 
 The window shows the remote's own transcript, running state and pending approval.
 Send, stop, approve, continue, regenerate and rewind call the remote's own routes,
@@ -414,7 +414,7 @@ reports the first broken link, which is usually the whole answer.
 | `ssm_target_missing` | SSM lists no managed node with this crew's `ssm_target`. If the instance was terminated or replaced (an Auto Scaling instance refresh gives it a new id), edit the crew and set `ssm_target` to the new id. Otherwise check the AWS profile and region, and that the instance has registered with SSM (agent running, instance profile granting `AmazonSSMManagedInstanceCore`). |
 | `ssm_access_denied` | Your AWS profile was refused `ssm:SendCommand` on the instance. Add the three SSM permissions under [SSH or SSM](#ssh-or-ssm-which-transport) to the profile's IAM policy. |
 | `ssm_user_unknown` | The **Remote user** does not exist on the instance (Ubuntu images use `ubuntu`, not `ec2-user`). Set **Remote user** in **Edit settings**. |
-| `remote_wrong_port` | A Aj Crew gateway answers on the instance, on another port than the one you configured. Set **Remote port** to the port the reason names. |
+| `remote_wrong_port` | An Aj Crew gateway answers on the instance, on another port than the one you configured. Set **Remote port** to the port the reason names. |
 | `remote_not_installed` | No `ajcrew` launcher for the **Remote user** where the token mint looks for one, and no sign a gateway ever ran there. Install Aj Crew there as that user, or set **Remote ajcrew path**. |
 | `remote_down` | The machine is reachable but no gateway is listening on the port you configured. |
 | `not_connected` | Everything is fine; this instance just has no tunnel yet. Click **Connect**. |

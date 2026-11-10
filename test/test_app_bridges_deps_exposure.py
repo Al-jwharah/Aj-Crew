@@ -669,7 +669,7 @@ class TestStdioDepsDirExposure:
 
     def test_a_path_based_gateway_module_server_gets_no_deps_env(self, tmp_path):
         """The gateway-module exclusion survives the hoist: even a path-based
-        command whose args launch a aj_crew module must not see the app
+        command whose args launch an aj_crew module must not see the app
         deps dir on PYTHONPATH."""
         from aj_crew.apps.bridges import resolve_stdio_command
         from aj_crew.apps.interpreter import app_deps_dir

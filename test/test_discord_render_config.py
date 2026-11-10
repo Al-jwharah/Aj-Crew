@@ -18,7 +18,7 @@ from typing import Any
 import pytest
 
 from aj_crew.config import loader as loader_mod
-from aj_crew.config.loader import DiscordConfig, AjCrewConfig, SlackConfig
+from aj_crew.config.loader import AjCrewConfig, DiscordConfig, SlackConfig
 from aj_crew.discord import renderer as renderer_mod
 from aj_crew.discord.client import (
     DISCORD_OK,

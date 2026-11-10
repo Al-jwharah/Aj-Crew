@@ -311,9 +311,7 @@ class TestTheKeyIsPublishedBeforeAdmission:
             if verdict["admit"] == "refuse":
                 raise MemoryStartupUnavailable("Memory preparation is still running.")
 
-        monkeypatch.setattr(
-            "aj_crew.memory_startup.wait_for_memory_preparation", _park_then_decide
-        )
+        monkeypatch.setattr("aj_crew.memory_startup.wait_for_memory_preparation", _park_then_decide)
 
         # Phase 1: the key is visible while the turn is parked on admission,
         # and a routing rebind landing in that window does not move it.

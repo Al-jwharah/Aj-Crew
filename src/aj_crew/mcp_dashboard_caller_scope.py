@@ -1,4 +1,4 @@
-"""Who is calling a ``ajcrew-dashboard`` tool, and what that caller may see or shape.
+"""Who is calling an ``ajcrew-dashboard`` tool, and what that caller may see or shape.
 
 The strict checks the folder and tag tools run before they read the session list or write
 the tree, the app scope that narrows both (``_caller_app_scope``), the caller's own

@@ -127,9 +127,7 @@ def unmapped_custom(tmp_path, monkeypatch):
         lambda **kw: [SimpleNamespace(name="custom", filename="custom.json", scope="global")],
     )
     # The configured provider is the ACP label on every ACP backend, KAS included.
-    monkeypatch.setattr(
-        AjCrewConfig, "load", classmethod(lambda cls, *a, **k: _config_with_acp())
-    )
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls, *a, **k: _config_with_acp()))
 
     async def _no_store(ctx_builder, session_key):
         return ""

@@ -85,7 +85,7 @@ class TestKiroPrerequisiteHandlers:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        # The owner can READ readiness. Neither setup step is a Aj Crew verb:
+        # The owner can READ readiness. Neither setup step is an Aj Crew verb:
         # obtaining the CLI and signing in both belong to Kiro CLI, so both
         # routes are absent by construction rather than guarded.
         service = KiroPrerequisiteService(

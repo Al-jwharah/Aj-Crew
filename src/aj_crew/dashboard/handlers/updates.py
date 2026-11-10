@@ -158,8 +158,8 @@ if TYPE_CHECKING:  # names it serves from outside the family, from their homes
     from aj_crew.changelog import build_release_list  # noqa: F401
     from aj_crew.changelog import release_of_build  # noqa: F401
     from aj_crew.config.live import ConfigChange  # noqa: F401
-    from aj_crew.config.loader import ConfigReadError  # noqa: F401
     from aj_crew.config.loader import AjCrewConfig  # noqa: F401
+    from aj_crew.config.loader import ConfigReadError  # noqa: F401
     from aj_crew.config.loader import coerce_dict_section  # noqa: F401
     from aj_crew.config.loader import config_path  # noqa: F401
     from aj_crew.config.loader import overlay_pins  # noqa: F401

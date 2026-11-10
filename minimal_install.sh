@@ -6,14 +6,14 @@
 # (backend) and npm + vite (frontend). No Brazil, no Builder Toolbox, no
 # internal registries.
 #
-# This is NOT the end-user install: the result follows the clone's branch, and
-# `main` is the Nightly lane (dev builds ahead of Stable). For Stable on a laptop
-# or server, use the signed wheel:
-#   curl -fsSL https://download.crew.kiro.dev/cli.sh | sh
+# The result follows the clone's branch, and `main` is the Nightly lane (dev
+# builds ahead of the tagged releases). Aj Crew publishes no prebuilt wheels
+# yet, so a source install is the supported one; install.sh is the full version
+# of this script.
 #
 # Run from inside a cloned repo:
 #   git clone https://github.com/Al-jwharah/Aj-Crew.git
-#   cd ajcrew
+#   cd Aj-Crew
 #   bash minimal_install.sh
 #
 # Prerequisites: Python 3.12+, Node.js 22.12+ (24 LTS recommended), npm, git

@@ -962,9 +962,7 @@ def test_imported_modules_reads_every_form_an_import_can_take(mod) -> None:
 
 def test_import_matching_runs_in_both_directions_on_a_dot_boundary(mod) -> None:
     # Module below a changed package.
-    assert mod._imports_touch({"aj_crew.ledger.store"}, {"aj_crew.ledger"}) == (
-        "aj_crew.ledger"
-    )
+    assert mod._imports_touch({"aj_crew.ledger.store"}, {"aj_crew.ledger"}) == ("aj_crew.ledger")
     # Package above a changed module.
     assert mod._imports_touch({"aj_crew.ledger"}, {"aj_crew.ledger.store"}) == (
         "aj_crew.ledger.store"

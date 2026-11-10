@@ -45,7 +45,7 @@ logger = logging.getLogger("aj_crew.taskrunner")
 
 
 def _home_runs_file(work_dir: Path, default: str) -> str:
-    """``runs-<data_home_id>.json`` for a ``AJCREW_HOME`` override in the shared root.
+    """``runs-<data_home_id>.json`` for an ``AJCREW_HOME`` override in the shared root.
 
     The default workspace root is one folder per OS user, so every data home with no
     workspace of its own runs its task runner in the same folder; there an override

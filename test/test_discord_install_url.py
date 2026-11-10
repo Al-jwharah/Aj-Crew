@@ -28,7 +28,7 @@ _DOC = Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "docs" / "disco
 #: so this file states the expected value independently of the code under test.
 _DOCUMENTED_PERMISSIONS = 309237711936
 
-#: Discord's SEND_MESSAGES bit, deliberately NOT requested: a Aj Crew turn
+#: Discord's SEND_MESSAGES bit, deliberately NOT requested: an Aj Crew turn
 #: runs in a thread, and the bot must not be able to post in a shared channel.
 _PERM_SEND_MESSAGES = 1 << 11
 

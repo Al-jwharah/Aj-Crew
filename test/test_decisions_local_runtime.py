@@ -21,11 +21,11 @@ from pathlib import Path
 import pytest
 from loopback_servers import LoopbackHTTPServer
 
-from conftest import requires_symlinks
 from aj_crew import sandbox, sandbox_plan
 from aj_crew.decisions import local_models
 from aj_crew.decisions import local_runtime as lr
 from aj_crew.testing.wait import wait_until
+from conftest import requires_symlinks
 
 _LAYA = local_models.get("laya")
 
@@ -290,9 +290,7 @@ class TestVerification:
         h.runtime.activate(m, 41013)
         _wait_for(h.runtime, "running")
         h.runtime.deactivate(wait=True)
-        (tmp_path / "laya" / "env" / ".ajcrew-ready").write_text(
-            "an older lock", encoding="utf-8"
-        )
+        (tmp_path / "laya" / "env" / ".ajcrew-ready").write_text("an older lock", encoding="utf-8")
         h.commands.clear()
         h.runtime.activate(m, 41013)
         _wait_for(h.runtime, "running")

@@ -513,9 +513,7 @@ class TestContinuationAgentInheritance:
         with (
             patch("aj_crew.subagent.Stats"),
             patch("aj_crew.subagent.sel"),
-            patch(
-                "aj_crew.subagent._validate_agent", side_effect=lambda name, cwd: (name, "", "")
-            ),
+            patch("aj_crew.subagent._validate_agent", side_effect=lambda name, cwd: (name, "", "")),
         ):
             original = manager.spawn(
                 "original task", parent_session_key="dashboard:owner", keep=True
@@ -685,9 +683,7 @@ class TestContinuationAgentInheritance:
         with (
             patch("aj_crew.subagent.Stats"),
             patch("aj_crew.subagent.sel"),
-            patch(
-                "aj_crew.subagent._validate_agent", side_effect=lambda name, cwd: (name, "", "")
-            ),
+            patch("aj_crew.subagent._validate_agent", side_effect=lambda name, cwd: (name, "", "")),
         ):
             original = manager.spawn(
                 "private task",
@@ -762,9 +758,7 @@ class TestContinuationAgentInheritance:
         with (
             patch("aj_crew.subagent.Stats"),
             patch("aj_crew.subagent.sel"),
-            patch(
-                "aj_crew.subagent._validate_agent", side_effect=lambda name, cwd: (name, "", "")
-            ),
+            patch("aj_crew.subagent._validate_agent", side_effect=lambda name, cwd: (name, "", "")),
             patch(
                 "aj_crew.subagent._vet_spawn_governance",
                 side_effect=lambda parent, agent, app="": (
@@ -803,9 +797,7 @@ class TestContinuationAgentInheritance:
         with (
             patch("aj_crew.subagent.Stats"),
             patch("aj_crew.subagent.sel"),
-            patch(
-                "aj_crew.subagent._validate_agent", side_effect=lambda name, cwd: (name, "", "")
-            ),
+            patch("aj_crew.subagent._validate_agent", side_effect=lambda name, cwd: (name, "", "")),
             patch.object(manager, "_promote_conversation", return_value=object()),
         ):
             info = manager.continue_conversation(
@@ -845,9 +837,7 @@ class TestContinuationAgentInheritance:
         with (
             patch("aj_crew.subagent.Stats"),
             patch("aj_crew.subagent.sel"),
-            patch(
-                "aj_crew.subagent._validate_agent", side_effect=lambda name, cwd: (name, "", "")
-            ),
+            patch("aj_crew.subagent._validate_agent", side_effect=lambda name, cwd: (name, "", "")),
             patch.object(restored, "_promote_conversation", return_value=object()),
         ):
             followup = restored.continue_conversation(
@@ -919,9 +909,7 @@ class TestContinuationAgentInheritance:
         with (
             patch("aj_crew.subagent.Stats"),
             patch("aj_crew.subagent.sel"),
-            patch(
-                "aj_crew.subagent._validate_agent", side_effect=lambda name, cwd: (name, "", "")
-            ),
+            patch("aj_crew.subagent._validate_agent", side_effect=lambda name, cwd: (name, "", "")),
             patch.object(manager, "_promote_conversation", return_value=object()),
         ):
             info = manager.continue_conversation(
@@ -946,9 +934,7 @@ class TestContinuationAgentInheritance:
         with (
             patch("aj_crew.subagent.Stats"),
             patch("aj_crew.subagent.sel"),
-            patch(
-                "aj_crew.subagent._validate_agent", side_effect=lambda name, cwd: (name, "", "")
-            ),
+            patch("aj_crew.subagent._validate_agent", side_effect=lambda name, cwd: (name, "", "")),
             patch.object(
                 type(manager._run_events),
                 "_write_run_agent",

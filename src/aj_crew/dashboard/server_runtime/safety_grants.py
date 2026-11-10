@@ -13,8 +13,8 @@ if TYPE_CHECKING:
     from aj_crew.dashboard.server import (
         _UNATTENDED_EXPIRY_TITLE,
         POLICY_REVOKED_SOURCE,
-        DashboardState,
         AjCrewConfig,
+        DashboardState,
         _autonudge_get,
         _dm_owner,
         apply_config_duration,

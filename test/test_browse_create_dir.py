@@ -18,13 +18,13 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-from conftest import make_dir_link
 from aj_crew import platform_compat
 from aj_crew.dashboard import handlers
 from aj_crew.dashboard.handlers import api_browse_create_dir
 from aj_crew.dashboard.handlers import files as files_mod
 from aj_crew.dashboard.handlers.files import _create_browse_dir_sync
 from aj_crew.dashboard.routes import taskrunner
+from conftest import make_dir_link
 
 ROUTE = "/api/browse-dirs/create"
 

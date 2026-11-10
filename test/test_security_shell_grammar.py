@@ -464,7 +464,7 @@ class TestSelfTokensFoldLineContinuations:
 
     def test_a_continuation_inside_the_program_name_still_denies(self) -> None:
         """``kiro\\`` + newline + ``crew token`` is one word to bash, so it denies."""
-        assert security.is_denied(f"{self.NAME[:4]}\\\n{self.NAME[4:]} {self.VERB}") is not None
+        assert security.is_denied(f"{self.NAME[:2]}\\\n{self.NAME[2:]} {self.VERB}") is not None
 
     def test_a_continuation_inside_a_module_name_reaches_the_floor(self) -> None:
         """The cheap floor prefilter must fold before it decides it cannot fire.
@@ -475,7 +475,7 @@ class TestSelfTokensFoldLineContinuations:
         the hint's one-separator budget -- so the gate answered "provably cannot
         fire" and the whole argv scan was skipped for a command bash mints from.
         """
-        command = f"python -m {self.NAME[:4]}\\\n_crew {self.VERB}"
+        command = f"python -m {self.NAME[:2]}\\\n_crew {self.VERB}"
         assert security.argv_floor._self_floor_can_fire(command) is True
         assert security.is_denied(command) is not None
 
@@ -589,7 +589,7 @@ class TestSubstitutionBodiesReadFoldedOpeners:
     @pytest.mark.parametrize("opener", OPENERS)
     def test_a_continuation_inside_the_program_name_is_denied(self, opener: str) -> None:
         """``<(kiro\\`` + newline + ``crew <verb>)`` is one program word to bash."""
-        split = f"cat {opener}{self.NAME[:4]}\\\n{self.NAME[4:]} {self.VERB})"
+        split = f"cat {opener}{self.NAME[:2]}\\\n{self.NAME[2:]} {self.VERB})"
         assert security.is_denied(split) is not None
 
     @pytest.mark.parametrize("opener", OPENERS)
@@ -638,10 +638,10 @@ class TestSubstitutionBodiesReadFoldedOpeners:
         assert security.is_denied(two_lines) is not None
         folded_body = security._substitution_bodies(
             security._fold_line_continuations(
-                f"cat {opener}{self.NAME[:4]}\\\r\n{self.NAME[4:]} x)"
+                f"cat {opener}{self.NAME[:2]}\\\r\n{self.NAME[2:]} x)"
             )
         )
-        assert folded_body == [f"{self.NAME[:4]}\\\r\n{self.NAME[4:]} x"], folded_body
+        assert folded_body == [f"{self.NAME[:2]}\\\r\n{self.NAME[2:]} x"], folded_body
 
     def test_a_real_newline_inside_the_body_keeps_its_verdict(self) -> None:
         """An UNESCAPED newline is a separator inside a body too; the fold leaves it."""
@@ -651,14 +651,14 @@ class TestSubstitutionBodiesReadFoldedOpeners:
     def test_a_single_quoted_continuation_inside_the_body_is_literal(self) -> None:
         """Single quotes keep ``\\`` + newline literal, so no mint is fabricated."""
         assert (
-            security.is_denied(f"cat <(echo '{self.NAME[:4]}\\\n{self.NAME[4:]} {self.VERB}')")
+            security.is_denied(f"cat <(echo '{self.NAME[:2]}\\\n{self.NAME[2:]} {self.VERB}')")
             is None
         )
 
     def test_an_ansi_c_continuation_inside_the_body_is_literal(self) -> None:
         """``$'…'`` keeps ``\\`` + newline literal, so no mint is fabricated."""
         assert (
-            security.is_denied(f"cat <(echo $'{self.NAME[:4]}\\\n{self.NAME[4:]} {self.VERB}')")
+            security.is_denied(f"cat <(echo $'{self.NAME[:2]}\\\n{self.NAME[2:]} {self.VERB}')")
             is None
         )
 

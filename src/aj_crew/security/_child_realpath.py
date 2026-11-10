@@ -43,7 +43,7 @@ import sys
 
 # Protocol constants.  Mirrored in ``subprocess_pool``; the two copies are pinned
 # against each other by ``test_protocol_round_trips``.  They are duplicated
-# rather than shared because sharing them would mean importing a ``aj_crew``
+# rather than shared because sharing them would mean importing an ``aj_crew``
 # module here, which is the one thing this file may not do.
 _LEN = struct.Struct(">I")
 _REQ_HEADER = struct.Struct(">IB")  # request id, op code

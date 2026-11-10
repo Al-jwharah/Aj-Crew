@@ -137,7 +137,7 @@ def audit(repo: str, pr: int | None, commit: str | None) -> tuple[int, str]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--repo", default="kirodotdev/KiroCrew")
+    parser.add_argument("--repo", default="Al-jwharah/Aj-Crew")
     target = parser.add_mutually_exclusive_group(required=True)
     target.add_argument("--pr", type=int)
     target.add_argument("--commit")

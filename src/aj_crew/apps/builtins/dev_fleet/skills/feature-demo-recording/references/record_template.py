@@ -109,7 +109,7 @@ SEED = {
     "mc-onboarded": "1",
     "mc-import-onboarded": "1",
     "mc-privacy-acked": "1",
-    "mc-color-theme": "kiro",
+    "mc-color-theme": "aj",
     "mc-theme": "dark",
 }
 

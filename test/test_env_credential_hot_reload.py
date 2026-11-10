@@ -28,10 +28,10 @@ from unittest.mock import patch
 
 import pytest
 
-from conftest import forget_env_at_teardown
 from aj_crew.config import live
 from aj_crew.config.live import ConfigWatch
 from aj_crew.config.loader import AjCrewConfig
+from conftest import forget_env_at_teardown
 
 
 class _FoldedEnviron(dict):

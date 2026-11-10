@@ -88,9 +88,7 @@ def _install(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, installer: str, fi
             "allowedTools": [],
         },
     )
-    monkeypatch.setattr(
-        agent, "_ajcrew_mcp_invocation", lambda sub: ("/resolved/ajcrew", [sub])
-    )
+    monkeypatch.setattr(agent, "_ajcrew_mcp_invocation", lambda sub: ("/resolved/ajcrew", [sub]))
     monkeypatch.setattr(agent, "_may_auto_approve", lambda ref: True)
     assert getattr(agent, installer)() is True
     return json.loads((tmp_path / filename).read_text(encoding="utf-8"))

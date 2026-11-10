@@ -7,7 +7,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from conftest import MockSlackClient
 from aj_crew.slack.handler import (
     _discover_project_agents,
     _hydrate_thread_overrides,
@@ -16,6 +15,7 @@ from aj_crew.slack.handler import (
     _thread_agents,
     _thread_projects,
 )
+from conftest import MockSlackClient
 
 
 @pytest.fixture(autouse=True)
@@ -478,9 +478,7 @@ class TestProjectSensitivePathCheck:
         sessions = FakeSessionManager()
         with patch("aj_crew.slack.handler.sel") as mock_sel:
             with patch("aj_crew.slack.handler.is_sensitive_path", return_value=True):
-                with patch(
-                    "aj_crew.slack.handler.os.path.realpath", return_value="/sensitive/dir"
-                ):
+                with patch("aj_crew.slack.handler.os.path.realpath", return_value="/sensitive/dir"):
                     with patch(
                         "aj_crew.slack.handler.os.path.expanduser", return_value="/sensitive/dir"
                     ):

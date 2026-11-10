@@ -435,7 +435,7 @@ async def test_nudge_loop_removal_keeps_the_fsync_off_the_loop(tmp_path, monkeyp
 
 def test_route_registration_touches_no_filesystem():
     """The reported startup stall: register_routes ran STATE_DIR.mkdir on the event
-    loop during start_dashboard, so a AJCREW_HOME on stalled network storage
+    loop during start_dashboard, so an AJCREW_HOME on stalled network storage
     froze gateway startup -- on a directory the app may never need. Registration
     must create nothing; the off-loop writers mkdir themselves."""
     src = inspect.getsource(routes.register_routes)

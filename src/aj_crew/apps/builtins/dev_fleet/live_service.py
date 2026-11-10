@@ -400,7 +400,7 @@ async def _live_user_unit_status() -> str:
     """Classify the live gateway unit for make-live eligibility.
 
     make-live writes a ``systemctl --user`` drop-in and restarts the --user
-    unit. A ``ajcrew service install`` SYSTEM unit
+    unit. An ``ajcrew service install`` SYSTEM unit
     (``/etc/systemd/system/ajcrew.service``) is NOT controllable that way:
     the drop-in would be written and the cutover would "succeed" while the
     detached ``--user restart`` bounces nothing (a silent false success).

@@ -944,8 +944,7 @@ class TestALearnedWholeTreePeakNeverPricesAStart:
         now = time.time()
         log.write_text(
             "".join(
-                json.dumps({"agent": "ajcrew", "mem_gb": v, "cpu_cores": 1.0, "ts": now - i})
-                + "\n"
+                json.dumps({"agent": "ajcrew", "mem_gb": v, "cpu_cores": 1.0, "ts": now - i}) + "\n"
                 for i, v in enumerate([1.2] * 5 + [132.3] * 5)
             )
         )

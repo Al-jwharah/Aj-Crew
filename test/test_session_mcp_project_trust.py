@@ -83,9 +83,7 @@ def _plant_checkout(root: Path) -> Path:
 def _array(backend: str, work_dir: Path) -> list[dict]:
     mirror = mirror_for(backend)
     assert mirror is not None, f"precondition: {backend} has a mirror"
-    params = mirror.session_params(
-        "ajcrew", work_dir=str(work_dir), permission_surface_owned=True
-    )
+    params = mirror.session_params("ajcrew", work_dir=str(work_dir), permission_surface_owned=True)
     servers = params.get("mcpServers")
     assert isinstance(servers, list)
     return servers

@@ -473,7 +473,7 @@ async def test_empty_answer_after_text_streamed_still_produces_the_fallback(tmp_
 
 @pytest.mark.asyncio
 async def test_side_turn_resolves_slot_agent_to_kiro_agent(tmp_path, monkeypatch):
-    """slot.agent (a AjCrew name like "default") is resolved to the real
+    """slot.agent (an AjCrew name like "default") is resolved to the real
     kiro-cli agent before get_or_create -> create_session -> set_mode.
 
     Regression: passing the raw slot name straight through made kiro-cli reject

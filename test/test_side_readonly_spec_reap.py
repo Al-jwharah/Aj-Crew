@@ -16,10 +16,10 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from conftest import requires_symlinks
 from aj_crew import agent as agent_mod
 from aj_crew import agent_discovery
 from aj_crew.dashboard import side_readonly_spec as srs
+from conftest import requires_symlinks
 
 #: A checkout name that needs quoting in JSON (a double quote is not a legal
 #: Windows file name character, so it is left out there).

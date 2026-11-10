@@ -72,8 +72,8 @@ if TYPE_CHECKING:  # every owner-defined name in _EXPORTS, for type checkers and
     from aj_crew.dashboard.handlers.members_roster import (  # noqa: F401
         _SEQ_NO_LOG,
         _SEQ_UNATTRIBUTABLE,
-        _SOURCE_BUILTIN,
         _SOURCE_AJCREW,
+        _SOURCE_BUILTIN,
         _SOURCE_PACKAGE,
         RESERVED_DEFAULT_MEMBER,
         _absence_is_confirmed,

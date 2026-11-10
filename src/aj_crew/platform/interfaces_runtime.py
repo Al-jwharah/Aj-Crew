@@ -170,7 +170,7 @@ class MobileConnectProvider(Protocol):
 
 @dataclass(frozen=True)
 class RemoteProvisioner:
-    """One way this deployment can CREATE a machine that runs a Aj Crew
+    """One way this deployment can CREATE a machine that runs an Aj Crew
     gateway and register it as a remote instance.
 
     A descriptor says WHICH provisioners exist and how the dashboard should

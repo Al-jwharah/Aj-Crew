@@ -279,7 +279,7 @@ gateway started from the Dock or Finder has a minimal `PATH`.
   `/usr/local/bin` (a location Aj Crew searches; it's not in the AL2023 repos),
   or fetch a decoder from the dashboard Speech-to-Text card
   (Settings → Voice, then Download decoder).
-- **`source dir: not set`** — cosmetic. It is set from a Aj Crew source
+- **`source dir: not set`** — cosmetic. It is set from an Aj Crew source
   checkout by `ajcrew setup`; wheel installs do not need it.
 
 ### A warning doctor counts as an issue

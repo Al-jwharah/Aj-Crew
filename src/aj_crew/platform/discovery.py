@@ -1,6 +1,6 @@
 """Fail-closed companion discovery via ``importlib.metadata`` entry points.
 
-A non-standalone edition is supplied by a companion package that registers a
+A non-standalone edition is supplied by a companion package that registers an
 ``ajcrew.plugins`` entry point pointing at its composition root
 (``build_enterprise_context``).  Discovery is **fail-closed**: when the profile is
 non-standalone but no compatible companion is found, boot aborts rather than silently

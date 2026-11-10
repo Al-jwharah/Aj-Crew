@@ -303,6 +303,7 @@ from aj_crew.config.sections import (  # noqa: F401
     TOOL_APPROVAL_TIMEOUT_MIN,
     YOLO_UNTIL_SHUTDOWN,
     AgentConfig,
+    AjCrewAgentConfig,
     ChannelConfig,
     ComputerUseConfig,
     CronHistoryConfig,
@@ -315,7 +316,6 @@ from aj_crew.config.sections import (  # noqa: F401
     IMessageConfig,
     InstancesConfig,
     JiraAuthEntry,
-    AjCrewAgentConfig,
     KnowledgeConfig,
     McpConfig,
     McpGatewayConfig,
@@ -453,9 +453,7 @@ from aj_crew.memory_stores import (  # noqa: F401
 from aj_crew.owner_only_files import GROUP_OTHER_BITS, is_owner_only_target  # noqa: F401
 from aj_crew.session_start_sizing import AUTO as _SESSION_START_AUTO  # noqa: F401
 from aj_crew.session_start_sizing import is_auto as _session_start_is_auto  # noqa: F401
-from aj_crew.stt.limits import (  # noqa: F401
-    DEFAULT_IDLE_EVICT_SECS as _STT_DEFAULT_IDLE_EVICT_SECS,
-)
+from aj_crew.stt.limits import DEFAULT_IDLE_EVICT_SECS as _STT_DEFAULT_IDLE_EVICT_SECS  # noqa: F401
 from aj_crew.stt.limits import (  # noqa: F401
     DEFAULT_PARTIAL_INTERVAL_MS as _STT_DEFAULT_PARTIAL_INTERVAL_MS,
 )

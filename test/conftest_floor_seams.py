@@ -496,7 +496,7 @@ def _reset_platform_context(_floor_monkeypatch):
     Also pins ``AJCREW_PROFILE=standalone`` so the profile a test boots under
     comes from the test, never from the operator's shell: a dev box with a real
     SSO-marker directory, or a shell whose parent process exported
-    ``AJCREW_PROFILE`` set to the enterprise profile (a Aj Crew agent session
+    ``AJCREW_PROFILE`` set to the enterprise profile (an Aj Crew agent session
     does exactly that for every child it spawns), would otherwise make
     ``boot_platform`` resolve the enterprise profile and fail CLOSED (no companion installed) for every test
     that drives ``run_gateway`` / boot / the governance hook.  A test that wants

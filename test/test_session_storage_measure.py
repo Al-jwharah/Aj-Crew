@@ -29,10 +29,10 @@ from session_storage_helpers import (  # noqa: F401 -- fixtures are requested by
     stores_fixture,
 )
 
-from conftest import requires_symlinks
 from aj_crew import session_storage
 from aj_crew.history import transcript_stem
 from aj_crew.session_storage import SessionIndex, SessionStorageError
+from conftest import requires_symlinks
 
 
 def _multi_index(stem_to_sid: dict[str, str], active: set[str] | None = None) -> SessionIndex:

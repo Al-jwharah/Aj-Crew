@@ -94,7 +94,7 @@ describe('applyThemeId — copies the dashboard theme selection onto <html>', ()
   })
 
   it('resolves `system` preference through prefers-color-scheme: dark', () => {
-    localStorage.setItem('mc-color-theme', 'kiro')
+    localStorage.setItem('mc-color-theme', 'aj')
     localStorage.setItem('mc-theme', 'system')
     window.matchMedia = vi.fn().mockReturnValue({ matches: true }) as unknown as typeof window.matchMedia
     applyThemeId()

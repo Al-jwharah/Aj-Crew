@@ -71,7 +71,7 @@ def spool_dir() -> Path:
     when the dir is absent.
 
     MUST resolve identically to ``mcp_apps_render._spool_dir`` (the dashboard
-    reader) — both go through :func:`aj_crew.config.paths.config_dir` so a
+    reader) — both go through :func:`aj_crew.config.paths.config_dir` so an
     ``AJCREW_HOME`` override (pods, tests) moves writer and reader together.
     A ``Path.home()`` hardcode here once split them: the pod's gateway wrote
     into the LIVE plane's home and the pod's reader found nothing.

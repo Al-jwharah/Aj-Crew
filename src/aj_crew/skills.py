@@ -5,7 +5,7 @@ its behaviour lives in two families of owner modules. A member that delegates to
 :mod:`aj_crew.skill_runtime` keeps a one-line body here that calls the function of
 the same name; those owners read this module's constants, and every name it imports
 from another ``aj_crew`` module, through it at call time. A member whose body lives
-in a ``aj_crew.skills_*`` owner is bound by name (``member = _owner.member``), and
+in an ``aj_crew.skills_*`` owner is bound by name (``member = _owner.member``), and
 the module-level code those owners hold is re-imported here, so every public name, and
 every name a test patches here, stays importable from this module as the same object.
 The facade mirror at the end of this file sends a write of a name this module binds to

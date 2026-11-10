@@ -505,7 +505,7 @@ def _working_tool_bound_reached(self: AcpSessionHandle, evidence: str, tool_idle
     was lost to the turn's deadline. The bound is
     ``watchdog.tool_stall_hard_cap_secs``, the same ceiling an UNKNOWN
     reading gets, measured on the session's own frame clock. A matched
-    shell child, the declared-duration ``wait`` verdict and a ajcrew-core
+    shell child, the declared-duration ``wait`` verdict and an ajcrew-core
     tool that pings the session keepalive
     (:meth:`ToolCallState.is_trusted_keepalive_tool`) keep deferring.
     """

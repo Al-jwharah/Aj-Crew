@@ -1,5 +1,6 @@
 {
  "base_public_names": [
+  "AjCrewConfig",
   "CapabilityError",
   "CapabilityStartupError",
   "DENY_CAUSE_AUDIT_UNAVAILABLE",
@@ -8,7 +9,6 @@
   "DENY_CAUSE_SURFACE_POLICY",
   "DashboardState",
   "ExecutionContext",
-  "AjCrewConfig",
   "MemoryStartupUnavailable",
   "OUTCOME_PENDING_APPROVAL",
   "OUTCOME_REJECTED_TRANSPORT_FLOOR",
@@ -44,6 +44,7 @@
  ],
  "note": "A mirror facade (aj_crew._facade_mirror) over the hooks_webhook_intake, hooks_scripts and hooks_webhooks owners beside it: names an owner holds are served from that owner, and a write through the facade reaches every module holding the name.",
  "rebound": {
+  "AjCrewConfig": "aj_crew.config.loader",
   "CapabilityError": "aj_crew.agent_capabilities",
   "CapabilityStartupError": "aj_crew.session_capabilities",
   "DENY_CAUSE_AUDIT_UNAVAILABLE": "aj_crew.constants",
@@ -52,7 +53,6 @@
   "DENY_CAUSE_SURFACE_POLICY": "aj_crew.constants",
   "DashboardState": "aj_crew.dashboard.state",
   "ExecutionContext": "aj_crew.execution_context",
-  "AjCrewConfig": "aj_crew.config.loader",
   "MemoryStartupUnavailable": "aj_crew.memory_startup",
   "OUTCOME_PENDING_APPROVAL": "aj_crew.permission_floor",
   "OUTCOME_REJECTED_TRANSPORT_FLOOR": "aj_crew.permission_floor",

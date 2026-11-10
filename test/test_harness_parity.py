@@ -529,7 +529,7 @@ def test_is_kiro_cli_is_positive(tmp_path) -> None:
         "Aj Crew's own seatbelt for that harness on macOS"
     )
     assert ACP_BACKENDS_RELAY_INTERNAL_SANDBOX == frozenset({ACP_BACKEND_KAS}), (
-        "only KAS has a kiro-cli relay route; adding a member here waives Kiro "
+        "only KAS has a kiro-cli relay route; adding a member here waives Aj "
         "Crew's own seatbelt on that harness's relay route on macOS"
     )
 

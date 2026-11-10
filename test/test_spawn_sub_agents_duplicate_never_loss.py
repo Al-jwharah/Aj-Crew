@@ -1432,7 +1432,7 @@ async def test_mark_collected_flags_only_the_callers_own_children(tmp_path) -> N
     assert own._seen_done_under == state.sessions.turn_token("cron:j1:r1")
     assert foreign._seen_done_under is None, "another parent's tool named this turn"
 
-    # A ajcrew-core that marks without saying the frame was written (one from
+    # An ajcrew-core that marks without saying the frame was written (one from
     # before the mark moved behind the write) flags nothing.
     legacy = {"ids": ["c1"], "parent_session": "cron:j1:r1"}
     assert (await messaging.api_spawn_mark_collected(_Req(state, body=legacy))).status == 200

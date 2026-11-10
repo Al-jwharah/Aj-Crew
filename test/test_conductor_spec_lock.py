@@ -95,9 +95,7 @@ def agents_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
             "allowedTools": ["@ajcrew-core"],
         },
     )
-    monkeypatch.setattr(
-        agent, "_ajcrew_mcp_invocation", lambda sub: ("/resolved/ajcrew", [sub])
-    )
+    monkeypatch.setattr(agent, "_ajcrew_mcp_invocation", lambda sub: ("/resolved/ajcrew", [sub]))
     monkeypatch.setattr(agent, "_may_auto_approve", lambda ref: governance.may_skip_gate(ref, None))
     return agents
 

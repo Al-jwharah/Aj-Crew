@@ -53,7 +53,7 @@ logger = logging.getLogger("aj_crew.sandbox")
 #: resolve to one managed path on the platforms this mask runs, so a link is not a
 #: relocation the product offers here:
 #:
-#: * ``scratch`` -- ``agent_scratch.scratch_root()`` honours a ``AJCREW_SCRATCH_ROOT``
+#: * ``scratch`` -- ``agent_scratch.scratch_root()`` honours an ``AJCREW_SCRATCH_ROOT``
 #:   override, but only on Windows, where no Crew OS sandbox (and so no mask) runs; on
 #:   Linux and macOS the override is ignored and ``scratch_root()`` is always
 #:   ``config_dir() / "scratch"``, so the mask's scratch root is always the default;
@@ -450,7 +450,7 @@ def _refuse_multilinked_credential_leaves(
 
     Every masked home is INSPECTED, not only the live one, because the masks cover every home
     (see :func:`_masked_crew_home_roots`) while ``config_dir()`` names one: a ``.env`` under
-    an un-migrated ``~/.ajcrew``, or one left in the default home by a ``AJCREW_HOME``
+    an un-migrated ``~/.ajcrew``, or one left in the default home by an ``AJCREW_HOME``
     relocation, holds live channel tokens and is masked.
 
     Only the live home REFUSES, and only in the unlocatable case. A mask target is bound only

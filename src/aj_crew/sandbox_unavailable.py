@@ -815,7 +815,7 @@ SandboxUnavailableError.__module__ = "aj_crew.sandbox"
 #: ``sandbox: BLOCKED``, the two unshare steps say ``sandbox: unshare(``, a
 #: broken parent/child handshake, an unreadable ``known_hosts`` or a command
 #: the kernel will not exec says ``sandbox: FATAL``, and a launcher invoked
-#: with no command says ``sandbox_launcher:``. The launcher is the only Kiro
+#: with no command says ``sandbox_launcher:``. The launcher is the only Aj
 #: Crew code that writes a line shaped this way to a child's stderr, and it
 #: exits right after, so a refused child's captured output carries exactly one
 #: of these. Public because

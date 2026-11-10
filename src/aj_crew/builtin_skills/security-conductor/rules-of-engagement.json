@@ -14,7 +14,7 @@
   "rules": {
     "scope": [
       {
-        "value": "repo:kirodotdev/KiroCrew",
+        "value": "repo:Al-jwharah/Aj-Crew",
         "reason": "The pilot target is this project's own repository; every other repository is out of scope by default."
       },
       {

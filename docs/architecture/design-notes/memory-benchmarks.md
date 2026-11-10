@@ -61,7 +61,7 @@ usefulness. `recall_any`, `recall_micro` and `ndcg` are reported alongside it.
 
 One deliberate divergence: upstream stems with nltk's `PorterStemmer`, which
 defaults to `NLTK_EXTENSIONS` (an irregular-form table, and words of length ≤ 2 left
-alone). nltk is not a Aj Crew dependency, so the port uses `snowballstemmer`'s
+alone). nltk is not an Aj Crew dependency, so the port uses `snowballstemmer`'s
 original Porter algorithm, already a hard dependency. They agree on the large
 majority of English tokens but are not bit-identical, so a LoCoMo number from this
 harness can differ from a published one in the third decimal.

@@ -462,9 +462,7 @@ class TestApiMembersProjections:
 
         # Phase 1: the member is not in the config, so the header keeps the slug.
         empty = _fake_config({})
-        monkeypatch.setattr(
-            "aj_crew.dashboard.handlers.members.AjCrewConfig.load", lambda: empty
-        )
+        monkeypatch.setattr("aj_crew.dashboard.handlers.members.AjCrewConfig.load", lambda: empty)
         svc = get_service()
         svc.ensure(slug, slug)
         svc.append(slug, types.SLOT_OPENED, {"slot_key": "member-code-reviewer"})
@@ -493,9 +491,7 @@ class TestApiMembersProjections:
         named = "Code_Reviewer"
         slug = members.slug_for_name(named)
         empty = _fake_config({})
-        monkeypatch.setattr(
-            "aj_crew.dashboard.handlers.members.AjCrewConfig.load", lambda: empty
-        )
+        monkeypatch.setattr("aj_crew.dashboard.handlers.members.AjCrewConfig.load", lambda: empty)
         svc = get_service()
         svc.ensure(slug, slug)
         svc.append(slug, types.SLOT_OPENED, {"slot_key": "member-code-reviewer"})

@@ -23,7 +23,6 @@ widen anything else.
 
 from __future__ import annotations
 
-from conftest import assert_rejected_without_backtracking
 from aj_crew.constants import (
     MARKER_CLOSERS,
     MARKER_OPENERS,
@@ -32,6 +31,7 @@ from aj_crew.constants import (
     OPTIONS_RE_TRAILER,
     split_trailing_protocol_suffix,
 )
+from conftest import assert_rejected_without_backtracking
 
 
 class TestLookalikeClosersAccepted:

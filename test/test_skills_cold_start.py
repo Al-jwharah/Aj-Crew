@@ -11,12 +11,12 @@ from types import SimpleNamespace
 
 import pytest
 
-from conftest import make_dir_link
 from aj_crew import skills
 from aj_crew.config.loader import AjCrewConfig
 from aj_crew.security import paths
 from aj_crew.skill_search_index import SkillSearchIndex
 from aj_crew.testing.wait import wait_until
+from conftest import make_dir_link
 
 
 def _skill(root: Path, key: str, *, always: bool = False) -> Path:

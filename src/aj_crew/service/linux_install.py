@@ -276,7 +276,7 @@ def selinux_refusal(reason: str) -> str:
 def selinux_start_failure_hint() -> str:
     """SELinux context to append when the unit was written but would not start.
 
-    The pre-flight checks only the file systemd ``execve``s, so a
+    The pre-flight checks only the file systemd ``execve``s, so an
     ``AJCREW_SERVICE_BIN`` wrapper that later runs a binary under ``$HOME``
     passes it and still fails (exit 126, not ``203/EXEC``). Rather than guess at
     a wrapper's contents (see :mod:`aj_crew.service.selinux`), SELinux is

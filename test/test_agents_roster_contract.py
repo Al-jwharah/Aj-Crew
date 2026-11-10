@@ -701,9 +701,7 @@ class TestCredentialShapedNamesAreRefusedAtCreation:
             app["state"] = types.SimpleNamespace(owner_id="owner-1", conversation_log=None)
             app.router.add_post("/api/agents", api_ajcrew_agents_create)
             async with TestClient(TestServer(app)) as client:
-                resp = await client.post(
-                    "/api/agents", json={"name": bad, "kiro_agent": "ajcrew"}
-                )
+                resp = await client.post("/api/agents", json={"name": bad, "kiro_agent": "ajcrew"})
                 assert resp.status == 400, await resp.text()
                 payload = await resp.json()
                 assert payload["code"] == "invalid_member_name"

@@ -1427,8 +1427,7 @@ class TestTheOwnersReadTheSeamsThroughTheFacade:
                 if isinstance(node, ast.ImportFrom):
                     assert node.module != "aj_crew.autonudge", name
                     assert not (
-                        node.module == "aj_crew"
-                        and any(a.name == "autonudge" for a in node.names)
+                        node.module == "aj_crew" and any(a.name == "autonudge" for a in node.names)
                     ), name
                     assert node.module not in later, f"{name} imports {node.module}"
                 if isinstance(node, ast.Import):

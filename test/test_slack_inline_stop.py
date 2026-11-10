@@ -456,9 +456,9 @@ class TestWorkingBlockPostFailure:
         never tries to delete a working block that was never posted."""
         import importlib
 
-        from conftest import MockSlackClient
         from aj_crew.providers.base import LLMEvent
         from aj_crew.slack.handler import handle_message
+        from conftest import MockSlackClient
 
         handler_tests = importlib.import_module("test_slack_handler")
 
@@ -510,9 +510,9 @@ class TestWorkingBlockDashboardLinkGate:
         """
         import importlib
 
-        from conftest import MockSlackClient
         from aj_crew.providers.base import LLMEvent
         from aj_crew.slack import handler
+        from conftest import MockSlackClient
 
         handler_tests = importlib.import_module("test_slack_handler")
         provider = handler_tests.FakeProvider([LLMEvent(kind="text_chunk", text="answer")])
@@ -614,11 +614,11 @@ async def test_a_mid_turn_link_ends_with_the_turns_final_answer(
 
     from chat_test_helpers import _make_state
 
-    from conftest import MockSlackClient
     from aj_crew.acp.types import EVENT_TOOL_CALL
     from aj_crew.dashboard import chat_persistence
     from aj_crew.providers.base import LLMEvent
     from aj_crew.slack import handler, interactions
+    from conftest import MockSlackClient
 
     handler_tests = importlib.import_module("test_slack_handler")
     provider = handler_tests.FakeProvider(

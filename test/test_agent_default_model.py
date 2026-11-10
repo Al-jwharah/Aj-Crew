@@ -320,7 +320,7 @@ class TestSessionModelCoversEverySurface:
     """The crew tier must apply to Slack / cron / spawn, not just dashboard chat.
 
     They reach ``SessionManager.get_or_create`` directly, whose ``_session_model`` gets a
-    kiro template name from the dashboard and a Aj Crew agent name from Slack and
+    kiro template name from the dashboard and an Aj Crew agent name from Slack and
     cron, so both namespaces must work.
     """
 

@@ -84,9 +84,7 @@ class TestNeverReported:
         # must still never pass for absent, or a global server carrying another
         # identity would mount under Crew's name.
         ready = KasMcpReadiness(_SID, ("ajcrew-core",))
-        ready.record(
-            _status(_entry("ajcrew-core", "connected", _GLOBAL), _entry("x", "connected"))
-        )
+        ready.record(_status(_entry("ajcrew-core", "connected", _GLOBAL), _entry("x", "connected")))
         assert ready.pending == "ajcrew-core: unreported"
         assert ready.never_reported == ()
 
@@ -214,9 +212,7 @@ class TestGovernedStart:
         monkeypatch.setattr(session_handle_mcp, "GOVERNED_SETTLE_SECS", 0.1)
         handle = _handle(_status(_entry("ajcrew-core", "connecting")))
         loop = asyncio.get_running_loop()
-        loop.call_later(
-            0.3, handle._queue.put_nowait, _status(_entry("ajcrew-core", "connected"))
-        )
+        loop.call_later(0.3, handle._queue.put_nowait, _status(_entry("ajcrew-core", "connected")))
         await handle.wait_mcp_ready(("ajcrew-core",), 30.0, governed=True)
         assert handle._mcp_report._failed == []
         assert "ajcrew-core" in handle._mcp_report._ready
@@ -354,18 +350,14 @@ class TestRegistryFilteredSnapshot:
 
     @pytest.mark.asyncio
     async def test_undeclared_fails_at_once_when_only_one_is_filtered(self):
-        handle = _handle(
-            _filtered("ajcrew-core", servers=(_entry("ajcrew-cron", "connecting"),))
-        )
+        handle = _handle(_filtered("ajcrew-core", servers=(_entry("ajcrew-cron", "connecting"),)))
         with pytest.raises(AcpRuntimeError, match="ajcrew-core"):
             await handle.wait_mcp_ready(_REQUIRED, 30.0)
 
     @pytest.mark.asyncio
     async def test_governed_starts_at_once_without_the_settle(self, monkeypatch):
         monkeypatch.setattr(session_handle_mcp, "GOVERNED_SETTLE_SECS", 25.0)
-        handle = _handle(
-            _filtered("ajcrew-core", servers=(_entry("ajcrew-cron", "connected"),))
-        )
+        handle = _handle(_filtered("ajcrew-core", servers=(_entry("ajcrew-cron", "connected"),)))
         await handle.wait_mcp_ready(_REQUIRED, 30.0, governed=True)
         report = handle._mcp_report
         assert report._failed == ["ajcrew-core"]
@@ -374,8 +366,6 @@ class TestRegistryFilteredSnapshot:
 
     @pytest.mark.asyncio
     async def test_governed_keeps_waiting_for_a_server_still_connecting(self):
-        handle = _handle(
-            _filtered("ajcrew-core", servers=(_entry("ajcrew-cron", "connecting"),))
-        )
+        handle = _handle(_filtered("ajcrew-core", servers=(_entry("ajcrew-cron", "connecting"),)))
         with pytest.raises(AcpRequestTimeout, match="ajcrew-cron: connecting"):
             await handle.wait_mcp_ready(_REQUIRED, 0.2, governed=True)

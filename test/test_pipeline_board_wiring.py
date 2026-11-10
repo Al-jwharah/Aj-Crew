@@ -444,9 +444,7 @@ def test_the_document_carries_the_board_and_the_docked_data_stays_published(
     assert html is not None
 
     island = json.loads(
-        html.split('id="ajcrew-panel-data">', 1)[1]
-        .split("</script>", 1)[0]
-        .replace("\\u003c", "<")
+        html.split('id="ajcrew-panel-data">', 1)[1].split("</script>", 1)[0].replace("\\u003c", "<")
     )
     assert island["progress"]["total"] == 2, "the document did not get the derived board"
     assert island["contract_version"] == CONTRACT_VERSION
@@ -464,8 +462,6 @@ def test_a_record_with_no_board_still_composes_from_its_published_data(monkeypat
     html = agent_panel.render_record(served)
     assert html is not None
     island = json.loads(
-        html.split('id="ajcrew-panel-data">', 1)[1]
-        .split("</script>", 1)[0]
-        .replace("\\u003c", "<")
+        html.split('id="ajcrew-panel-data">', 1)[1].split("</script>", 1)[0].replace("\\u003c", "<")
     )
     assert island == {"cycle": 3, "holding": "two workers"}

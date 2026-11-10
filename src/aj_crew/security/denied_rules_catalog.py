@@ -451,7 +451,7 @@ BUILTIN_DENIED_RULES: list[DeniedCommandRule] = [
         ),
         category="self-protection",
         description=(
-            "Blocks an interpreter payload that terminates a ajcrew process through a "
+            "Blocks an interpreter payload that terminates an ajcrew process through a "
             "library call rather than as a shell command -- a pkill/killall command and the "
             "product name inside one quoted string passed to an executing sink such as "
             "``os.system(...)`` or ``execSync(...)``. Sink-qualified so prose, a commit message "
@@ -1444,7 +1444,7 @@ BUILTIN_DENIED_RULES: list[DeniedCommandRule] = [
         ),
         category="self-protection",
         description=(
-            "Blocks pkill/killall naming a ajcrew process, and a bare kill whose PID comes "
+            "Blocks pkill/killall naming an ajcrew process, and a bare kill whose PID comes "
             "from a command substitution that resolves the ajcrew name, so the agent cannot "
             "terminate its own gateway or supervisor and disable the controls governing it. "
             "Scoped to the kill target within one command segment: an incidental mention of the "

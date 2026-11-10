@@ -312,7 +312,7 @@ class TestShippedScenarios:
     def test_every_shipped_scenario_is_classified(self) -> None:
         for sc in scenarios.load_all(SCENARIOS_DIR):
             assert sc.feature in scenarios.FEATURES
-            assert sc.user_story.startswith("As a "), sc.name
+            assert sc.user_story.startswith(("As a ", "As an ")), sc.name
             assert sc.docs_url.startswith("docs/") or sc.docs_url.startswith("https://")
             if sc.docs_url.startswith("docs/"):
                 assert (Path(__file__).parents[2] / sc.docs_url.split("#")[0]).is_file(), sc.name

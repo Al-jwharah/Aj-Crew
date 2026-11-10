@@ -87,7 +87,7 @@ cloned.
 ```bash
 # With push access: clone this repository
 git clone https://github.com/Al-jwharah/Aj-Crew.git
-cd AjCrew
+cd Aj-Crew
 git remote add upstream https://github.com/Al-jwharah/Aj-Crew.git
 ```
 
@@ -96,7 +96,7 @@ Without push access, fork first:
 ```bash
 # Fork the repo on GitHub, then clone your fork
 git clone https://github.com/<your-username>/AjCrew.git
-cd AjCrew
+cd Aj-Crew
 git remote add upstream https://github.com/Al-jwharah/Aj-Crew.git
 ```
 
@@ -272,7 +272,7 @@ index, no changelog narration, run `./scripts/docs-lint.sh` — plus the
 ## Extending Aj Crew
 
 - **Skills** — a skill is a directory holding a `SKILL.md`. See [skills/README.md](skills/README.md) for the format and where skills are installed
-- **MCP tools** — a `ajcrew-core` tool is a `schemas()` descriptor plus a `HANDLERS` entry in `src/aj_crew/mcp_tools/<domain>.py`; cron tools live in `mcp_cron.py` (their bodies) and `mcp_cron_tool_list.py` (their schemas). See [MCP](docs/architecture/mcp.md#a-ajcrew-core-tool-has-two-halves). Every LLM-facing command must have an MCP tool
+- **MCP tools** — an `ajcrew-core` tool is a `schemas()` descriptor plus a `HANDLERS` entry in `src/aj_crew/mcp_tools/<domain>.py`; cron tools live in `mcp_cron.py` (their bodies) and `mcp_cron_tool_list.py` (their schemas). See [MCP](docs/architecture/mcp.md#a-ajcrew-core-tool-has-two-halves). Every LLM-facing command must have an MCP tool
 - **Hooks** — see [Steering files, prompts and hooks](src/aj_crew/docs/steering-and-hooks.md)
 - **Lessons** — self-learned from corrections and stored in the memory store (`lessons.jsonl` is a legacy fallback); see [Memory & Learning](src/aj_crew/docs/memory-and-learning.md#lessons)
 

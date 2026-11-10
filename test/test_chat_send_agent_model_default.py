@@ -46,9 +46,7 @@ def _load_config(tmp_path: Path, data: dict) -> AjCrewConfig:
         return AjCrewConfig.load()
 
 
-def _config(
-    tmp_path: Path, *, crew_model: str = "", default: str = GLOBAL_DEFAULT
-) -> AjCrewConfig:
+def _config(tmp_path: Path, *, crew_model: str = "", default: str = GLOBAL_DEFAULT) -> AjCrewConfig:
     """Global ``agent.model`` is *default*; the crews pin nothing unless *crew_model*."""
     cfg = _load_config(
         tmp_path,
@@ -489,9 +487,7 @@ class TestLiveSessionFollowsDefaultChange:
         client.client._model = SLOT_PIN
         slot = _slot()
 
-        with unittest.mock.patch(
-            "aj_crew.config.loader.resolve_effective_model", return_value=""
-        ):
+        with unittest.mock.patch("aj_crew.config.loader.resolve_effective_model", return_value=""):
             await _drive(state, slot)
 
         assert slot.model == ""

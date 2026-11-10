@@ -1247,9 +1247,7 @@ class TestQuietEndRowPredicate:
     def test_an_unstamped_row_never_closes_the_turn(self):
         from aj_crew.dashboard.state import is_quiet_end_row
 
-        assert not is_quiet_end_row(
-            self._row(tool_name="nothing_to_do", mcp_server="ajcrew-core")
-        )
+        assert not is_quiet_end_row(self._row(tool_name="nothing_to_do", mcp_server="ajcrew-core"))
         assert not is_quiet_end_row(self._row(mcp_server="ajcrew-core", ends_turn="true"))
 
     def test_a_contradicting_identity_never_closes_the_turn(self):

@@ -165,7 +165,6 @@ def test_every_aj_crew_function_a_split_class_binds_reads_as_its_method(
         f"{attr}: {fn.__qualname__} ({fn.__module__})"
         for attr, member in vars(cls).items()
         for fn in _reachable(member)
-        if fn.__module__.startswith("aj_crew.")
-        and fn.__qualname__ != f"{cls.__qualname__}.{attr}"
+        if fn.__module__.startswith("aj_crew.") and fn.__qualname__ != f"{cls.__qualname__}.{attr}"
     )
     assert not wrong

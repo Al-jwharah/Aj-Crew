@@ -76,7 +76,7 @@ def self_sandbox_remedy() -> str:
         )
     if own_tier == "off":
         return (
-            f'Do NOT just set "{key}" to false here: agent.sandbox is "off" too, so Kiro '
+            f'Do NOT just set "{key}" to false here: agent.sandbox is "off" too, so Aj '
             "Crew builds no profile and turning this key off would leave the spawn with "
             "no OS confinement at all, making credential paths such as ~/.aws and ~/.ssh "
             'readable. Set agent.sandbox to "auto" first, then either layer owns isolation.'

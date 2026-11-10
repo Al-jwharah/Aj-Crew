@@ -25,7 +25,7 @@ compose. Re-create the container with the correct mapping:
 docker run -d --name ajcrew \
   -p 127.0.0.1:5476:5476 \
   -v ajcrew-home:/home/ajcrew \
-  ghcr.io/kirodotdev/kirocrew:stable
+  ghcr.io/al-jwharah/ajcrew:stable
 ```
 
 ### Check AJCREW_BIND
@@ -51,7 +51,7 @@ docker run -d --name ajcrew \
   -p 127.0.0.1:8080:8080 \
   -e AJCREW_PORT=8080 \
   -v ajcrew-home:/home/ajcrew \
-  ghcr.io/kirodotdev/kirocrew:stable
+  ghcr.io/al-jwharah/ajcrew:stable
 ```
 
 ### Firewall / Docker Desktop
@@ -137,7 +137,7 @@ sudo chown -R 1000:1000 /path/to/host/dir
 docker run -d --name ajcrew \
   -p 127.0.0.1:5476:5476 \
   -v /path/to/host/dir:/home/ajcrew \
-  ghcr.io/kirodotdev/kirocrew:stable
+  ghcr.io/al-jwharah/ajcrew:stable
 ```
 
 ### Read-only filesystem
@@ -334,13 +334,13 @@ layer and vanishes on removal:
 
 ```bash
 # WRONG — no volume:
-docker run -d --name ajcrew -p 5476:5476 ghcr.io/kirodotdev/kirocrew:stable
+docker run -d --name ajcrew -p 5476:5476 ghcr.io/al-jwharah/ajcrew:stable
 
 # CORRECT — named volume:
 docker run -d --name ajcrew \
   -p 127.0.0.1:5476:5476 \
   -v ajcrew-home:/home/ajcrew \
-  ghcr.io/kirodotdev/kirocrew:stable
+  ghcr.io/al-jwharah/ajcrew:stable
 ```
 
 ### `docker compose down -v` removes volumes
@@ -393,7 +393,7 @@ there, being Python's and Debian's own).
 1. **Build a custom image** extending the official one — the reliable route:
 
    ```dockerfile
-   FROM ghcr.io/kirodotdev/kirocrew:stable
+   FROM ghcr.io/al-jwharah/ajcrew:stable
    USER root
    RUN apt-get update && apt-get install -y nodejs npm && rm -rf /var/lib/apt/lists/*
    USER ajcrew

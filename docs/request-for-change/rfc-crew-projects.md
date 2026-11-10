@@ -606,7 +606,7 @@ Provider tiers:
    entries (a Jira "space", a Linear team) and item-level pins (one ticket)
    are both just provider config — `items:` narrows scope, it does not change
    the shape.
-3. **Third-party providers**: a Aj Crew app can contribute a provider the same
+3. **Third-party providers**: an Aj Crew app can contribute a provider the same
    way apps contribute skills and crons today, and a generic `mcp` provider
    wraps any MCP server as a source (weaker caching/search federation, but an
    escape hatch for long-tail systems).

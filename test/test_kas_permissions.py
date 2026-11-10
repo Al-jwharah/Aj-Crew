@@ -454,9 +454,9 @@ class TestTheDiskWriter:
         )
         _seed_kas_permissions(config)
         assert config["permissions"]["rules"] == [{"capability": "web_fetch", "effect": "allow"}]
-        assert to_client_custom_agent("ajcrew", {**config, "prompt": "p"}, "p")[
-            "permissions"
-        ] == {"rules": [{"capability": "mcp", "match": ["srv/*"], "effect": "allow"}]}
+        assert to_client_custom_agent("ajcrew", {**config, "prompt": "p"}, "p")["permissions"] == {
+            "rules": [{"capability": "mcp", "match": ["srv/*"], "effect": "allow"}]
+        }
 
     def test_a_stale_block_cannot_outlive_the_ceiling_that_now_withholds_it(self):
         """The half of "bounded" that matters: the ceiling is re-asked at

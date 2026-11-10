@@ -1,7 +1,7 @@
 """Low-level iLink Bot API client for the Weixin channel.
 
 Ported from Nous Research's Hermes Agent ``gateway/platforms/weixin.py``
-(MIT License). Kept dependency-light: only ``aiohttp`` (already a AjCrew dep),
+(MIT License). Kept dependency-light: only ``aiohttp`` (already an AjCrew dep),
 imported lazily inside :meth:`WeixinClient.connect` so a missing extra never
 breaks boot.
 

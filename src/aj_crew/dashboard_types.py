@@ -183,7 +183,7 @@ _NULLABLE: Final[dict[str, dict[str, Any]]] = {
             "blocks": {
                 "type": "object",
                 "opaque": True,
-                "keyed_by": "a Aj Crew context block's name",
+                "keyed_by": "an Aj Crew context block's name",
             },
             "blocks_omitted": {"type": "number", "integer": True},
         },

@@ -503,7 +503,7 @@ def test_a_crewmate_without_mate_tools_gets_no_offer_line(monkeypatch: Any) -> N
     monkeypatch.setattr(dashboard_agentic, "tab_shows_suggestions", lambda _s: False)
     monkeypatch.setattr(page_offer, "offer_line", lambda _s, _r: "OFFER")
     assert goal_reminder.dashboard_line(SLUG, rec) == "OFFER"
-    # offer_dashboard_page is a ajcrew-mate tool: without it the line could never be acted on.
+    # offer_dashboard_page is an ajcrew-mate tool: without it the line could never be acted on.
     assert goal_reminder.dashboard_line(SLUG, rec, has_mate_tools=False) == ""
 
 

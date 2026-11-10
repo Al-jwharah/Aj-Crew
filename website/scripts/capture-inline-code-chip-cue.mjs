@@ -6,7 +6,7 @@
  *     underline on hover, the `copy` cursor) while a backend-confirmed path chip
  *     keeps the actionable look (accent, hover underline, pointer, glyph) — and
  *     each chip's accessible name states ITS click ("Copy …" vs "Open …"). The
- *     colours are asserted as COMPUTED values on both Kiro themes: the theme's
+ *     colours are asserted as COMPUTED values on both Aj themes: the theme's
  *     inline-code rule outranks the `text-accent` utility, so only a chip rule
  *     keyed on `data-chip-action` makes the accent actually paint.
  *  2. Hovering the copy chip shows the tooltip that names the action.
@@ -246,7 +246,7 @@ async function main() {
     // utility (0,1,0) loses to it, so the class alone painted nothing — every chip
     // wore the code colour, and even with the accent restored the two purples
     // (#c19aff / #b07fff) read as one kind of chip. The rule: a copy chip is
-    // NEUTRAL (the prose colour, as on every non-Kiro theme) with a dotted
+    // NEUTRAL (the prose colour, as on every non-Aj theme) with a dotted
     // underline; a chip whose click navigates is the accent. Keyed on
     // `data-chip-action`.
     const ACCENT_COLOUR = { dark: 'rgb(176, 127, 255)', light: 'rgb(142, 72, 255)' } // #b07fff (message links) / --accent

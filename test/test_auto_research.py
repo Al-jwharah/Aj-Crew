@@ -23,7 +23,6 @@ from unittest.mock import MagicMock, patch
 import pytest
 from auto_research_helpers import isolate_fixture  # noqa: F401 - fixture
 
-from conftest import requires_symlinks
 from aj_crew.apps.builtins.auto_research.handlers import (
     DEFAULT_DEPTH_DECAY,
     DEFAULT_EXECUTION_MODE,
@@ -51,6 +50,7 @@ from aj_crew.apps.builtins.auto_research.handlers import (
     write_guidance,
     write_status,
 )
+from conftest import requires_symlinks
 
 
 class TestPathValidation:

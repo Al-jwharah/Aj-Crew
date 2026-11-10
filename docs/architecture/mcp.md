@@ -2097,7 +2097,7 @@ server is never handed a session token (identity rides only the
 control plane), so the read could only refuse every call. The app's tools stay gated
 by its spec's `tools` / `allowedTools` and kiro-cli's `disabledTools`. The check runs
 inside the server's own process and is not a boundary against the app; what it must
-not do is let a Aj Crew server out, so a handler whose code location cannot be read
+not do is let an Aj Crew server out, so a handler whose code location cannot be read
 keeps the policy.
 
 `tools/call` fails **closed** on the four reasons in `_UNRESOLVED_REFUSES_CALL`
@@ -2152,11 +2152,11 @@ onto the same established-session refusal instead of echoing the header name). W
 process carries neither the session token nor a launcher host pid
 (`mcp_shared.spawned_without_gateway_identity`), nothing the gateway does at spawn
 happened to it, and all three append the same `mcp_shared.external_client_identity_note`:
-a server started outside a Aj Crew session (an editor's own MCP config) has no identity
+a server started outside an Aj Crew session (an editor's own MCP config) has no identity
 channel and its identity-bearing tools are not supported; `AJCREW_SESSION_KEY` is a
 gateway-injected fallback, not a credential, and set by hand it turns the partial
 refusals into `identity_unattested` on every call; the read-only tools work without it;
-the supported editor direction is connecting into a Aj Crew session rather than
+the supported editor direction is connecting into an Aj Crew session rather than
 spawning the server, and that server's entry in `~/.kiro/settings/mcp.json` is the
 leftover state the design invariant at the top of this document names. The note
 decorates a denial and never grants: which calls are refused is unchanged, and a server
@@ -2944,7 +2944,7 @@ tool rather than a bash-shaped CLI command — the model has one. Two conditions
 have to hold for that reading to be honest, and both are checked in
 `test_knowledge_stats.py`: the tool must actually surface the numbers (its
 descriptor advertises them, so deferral still selects it), and the capability
-must not be one an agent should be granted SEPARATELY, which would make it a
+must not be one an agent should be granted SEPARATELY, which would make it an
 `ajcrew-dashboard`-shaped opt-in server instead. It is not: anyone who may list
 sources already reads this data from that store, so the counts add no reach.
 
@@ -3087,7 +3087,7 @@ answers `tools/list` from):
 
 ### Server instructions travel with the server
 
-A Aj Crew server can describe its own tools in its MCP `instructions`, the
+An Aj Crew server can describe its own tools in its MCP `instructions`, the
 `initialize` result field the spec calls a hint the client MAY add to the system
 prompt. `mcp_shared.run_mcp_stdio_loop(..., instructions=...)` returns the text, and
 `aj_crew/mcp_instructions.py` holds it, one entry per server in `BY_SERVER`:
@@ -3133,7 +3133,7 @@ respawned backend's result replaces the cache. Pinned by
 `test_pooled_stubs_get_the_backends_instructions_after_a_respawn_too` and
 `test_mcp_instructions.py`.
 
-### A `ajcrew-core` tool's own rules live in its description
+### An `ajcrew-core` tool's own rules live in its description
 
 `ajcrew-core` passes no `instructions` yet. Its per-tool text is split by when it
 matters:
@@ -3273,7 +3273,7 @@ change card, and the server is written to the template's additions record
   answers `503 spec_not_rewritten`: the card stays as it was (an Undo stays
   available to retry).
 
-### A `ajcrew-core` tool has two halves
+### An `ajcrew-core` tool has two halves
 
 Each tool is declared twice in the same per-domain module under
 `aj_crew/mcp_tools/` (`learn.py`, `artifacts.py`, `workflows.py`, …), and
@@ -3447,7 +3447,7 @@ Descriptors carry no per-caller state and are rebuilt per call, not cached: some
 quote a live value (the concurrent sub-agent cap), and a cache would pin the
 first reading for the life of the server process.
 
-### A `ajcrew-dashboard` tool is one row
+### An `ajcrew-dashboard` tool is one row
 
 `ajcrew-dashboard` is built on `mcp_tools.table.ToolTable`: each tool is one
 `Tool` row in `mcp_dashboard.TABLE` carrying its descriptor, its identity
@@ -5014,7 +5014,7 @@ parent's tree. `mcp_core.py` offers two resolvers (both defined in
   it through the same `host_pid_is_shared` read, an unsigned denies-only read:
   the var is stamped once per runtime and inherited by every MCP child, so on a
   multi-session runtime it names one tenant and cannot say which is calling), or
-  a `AJCREW_HOST_PID` lookup whose HMAC sidecar verifies against the
+  an `AJCREW_HOST_PID` lookup whose HMAC sidecar verifies against the
   keystone-protected `sel_hmac.key`. It deliberately **drops** the `/proc`
   ancestor walk and the bare `session_pid_<pid>.txt` fallback: the `.txt` file is
   agent-writable and therefore forgeable, and a sub-agent walking ancestors from

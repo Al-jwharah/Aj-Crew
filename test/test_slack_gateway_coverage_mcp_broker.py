@@ -319,18 +319,14 @@ class TestFailedMcpBrokerStartIsRetried:
         The setter is patched so a test never leaves its orchestrator installed in
         the process-wide refresher slot.
         """
-        stack.enter_context(
-            patch("aj_crew.slack.gateway.is_gateway_supported", return_value=True)
-        )
+        stack.enter_context(patch("aj_crew.slack.gateway.is_gateway_supported", return_value=True))
         stack.enter_context(
             patch(
                 "aj_crew.slack.gateway.rewrite_kwargs",
                 side_effect=_gateway_rewrite_inputs(tmp_path),
             )
         )
-        stack.enter_context(
-            patch("aj_crew.slack.gateway.rewrite_agents", return_value=(None, {}))
-        )
+        stack.enter_context(patch("aj_crew.slack.gateway.rewrite_agents", return_value=(None, {})))
         stack.enter_context(patch("aj_crew.slack.gateway.GatewayManager", manager_cls))
         return stack.enter_context(
             patch("aj_crew.mcp_gateway.overlay_refresh.set_overlay_refresher")

@@ -141,7 +141,7 @@ class TestTheLatchWaitsForAnAnswerWorthKeeping:
 
         assert repository.MAIN_REPO == malformed
         assert repository._DISCOVERY_DONE is True
-        with pytest.raises(repository.RepoUnreadable, match="not a Aj Crew checkout"):
+        with pytest.raises(repository.RepoUnreadable, match="not an Aj Crew checkout"):
             repository._repo()
 
 
@@ -155,7 +155,7 @@ class TestNoVerdictOutlivesTheAttemptThatProducedIt:
         — and ``worktree remove``, ``update-ref -d`` and ``pip install -e`` run
         inside whatever that is.
         """
-        monkeypatch.setattr(repository, "_REPO_INVALID_MSG", "not a Aj Crew checkout: /gone")
+        monkeypatch.setattr(repository, "_REPO_INVALID_MSG", "not an Aj Crew checkout: /gone")
         _discovers(monkeypatch, "")
         await repository.ensure_main_repo_discovered()
         assert repository._REPO_INVALID_MSG is None
@@ -330,9 +330,7 @@ class TestACorrectedPathIsNotFrozenBehindTheLatch:
         """
         state = _configured_tiers(monkeypatch, valid=False)
         state["configured"] = "/somewhere/ajcrew/wt/feature"
-        monkeypatch.setattr(
-            repository, "_resolve_primary_checkout", lambda p: "/somewhere/ajcrew"
-        )
+        monkeypatch.setattr(repository, "_resolve_primary_checkout", lambda p: "/somewhere/ajcrew")
         await repository.ensure_main_repo_discovered()
         assert repository.MAIN_REPO == "/somewhere/ajcrew"
         assert repository._LATCHED_CONFIGURED == "/somewhere/ajcrew/wt/feature"
@@ -378,7 +376,7 @@ class TestACorrectedPathIsNotFrozenBehindTheLatch:
     ) -> None:
         monkeypatch.setattr(repository, "MAIN_REPO", "/somewhere/kirocrw")
         monkeypatch.setattr(
-            repository, "_REPO_INVALID_MSG", "not a Aj Crew checkout: /somewhere/kirocrw"
+            repository, "_REPO_INVALID_MSG", "not an Aj Crew checkout: /somewhere/kirocrw"
         )
         monkeypatch.setattr(worktree_ops, "_refresher_task", None)
         monkeypatch.setattr(worktree_ops, "_background_tasks_disabled", lambda: False)
@@ -414,7 +412,7 @@ class TestAConfigReadThatFailedIsNotAConfigChange:
     async def test_a_partial_config_read_does_not_reopen_the_latch(self, monkeypatch) -> None:
         """The whole point: no whole read, no verdict about what the operator wants."""
         monkeypatch.setattr(repository, "_DISCOVERY_DONE", True)
-        monkeypatch.setattr(repository, "_REPO_INVALID_MSG", "not a Aj Crew checkout")
+        monkeypatch.setattr(repository, "_REPO_INVALID_MSG", "not an Aj Crew checkout")
         monkeypatch.setattr(repository, "MAIN_REPO", "/opt/typo")
         monkeypatch.setattr(repository, "_LATCHED_CONFIGURED", "/opt/typo")
         monkeypatch.setattr(
@@ -433,7 +431,7 @@ class TestAConfigReadThatFailedIsNotAConfigChange:
         FAILED carries no evidence.
         """
         monkeypatch.setattr(repository, "_DISCOVERY_DONE", True)
-        monkeypatch.setattr(repository, "_REPO_INVALID_MSG", "not a Aj Crew checkout")
+        monkeypatch.setattr(repository, "_REPO_INVALID_MSG", "not an Aj Crew checkout")
         monkeypatch.setattr(repository, "MAIN_REPO", "/opt/typo")
         monkeypatch.setattr(repository, "_LATCHED_CONFIGURED", "/opt/typo")
         monkeypatch.setattr(
@@ -671,7 +669,7 @@ class TestAPartialReadAtDiscoveryLatchesNothing:
 
         monkeypatch.setattr(repository, "_DISCOVERY_DONE", True)
         monkeypatch.setattr(repository, "MAIN_REPO", "/opt/latched-invalid")
-        monkeypatch.setattr(repository, "_REPO_INVALID_MSG", "not a ajcrew checkout")
+        monkeypatch.setattr(repository, "_REPO_INVALID_MSG", "not an ajcrew checkout")
         monkeypatch.setattr(repository, "_invalid_resolution_is_stale", lambda: True)
         monkeypatch.setattr(repository, "_configured_main_repo_checked", _checked)
         monkeypatch.setattr(repository, "_discover_main_repo", lambda configured=None: "")

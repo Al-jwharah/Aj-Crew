@@ -21,8 +21,8 @@ from typing import Any
 import pytest
 
 import aj_crew.apps.backend as bmod
-from conftest import requires_symlinks
 from aj_crew.apps.backend import AppProcess, HealthProbeOutcome
+from conftest import requires_symlinks
 
 
 class _Sel:

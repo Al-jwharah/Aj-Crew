@@ -14,7 +14,7 @@ from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 import pytest
 
-from aj_crew.config.loader import DashboardConfig, AjCrewConfig
+from aj_crew.config.loader import AjCrewConfig, DashboardConfig
 
 
 def _load_from_raw_string(content: str, tmp_path: Path) -> AjCrewConfig:

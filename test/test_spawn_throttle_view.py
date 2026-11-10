@@ -120,9 +120,7 @@ def test_start_caps_match_a_real_policy_and_its_fresh_caps() -> None:
     from aj_crew.adaptive.policy import AdaptivePolicy, PolicyParams
 
     policy = AdaptivePolicy(PolicyParams(exec_ceiling=8, gate_initial=4, gate_ceiling=32))
-    with patch(
-        "aj_crew.adaptive.controller.current", return_value=SimpleNamespace(policy=policy)
-    ):
+    with patch("aj_crew.adaptive.controller.current", return_value=SimpleNamespace(policy=policy)):
         exec_start, gate_start = spawn_resume._start_caps()
     assert (exec_start, gate_start) == (8, 4)
     fresh = {"enabled": True, **policy.snapshot()}

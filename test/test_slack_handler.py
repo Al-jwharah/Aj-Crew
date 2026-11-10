@@ -14,7 +14,6 @@ from slack_handler_helpers import (
     _within_lost_run,
 )
 
-from conftest import MockSlackClient
 from aj_crew.context import ContextBuilder
 from aj_crew.hooks import AutoReplyHook, HookManager, HooksConfig
 from aj_crew.providers.base import LLMEvent
@@ -27,6 +26,7 @@ from aj_crew.slack.handler import (
     set_owner_id,
 )
 from aj_crew.testing.wait import finished
+from conftest import MockSlackClient
 
 
 class TestHandleMessage:

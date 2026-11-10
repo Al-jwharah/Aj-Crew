@@ -680,7 +680,7 @@ if (Test-Path -LiteralPath $installLocation) {
     Select-Object -First 40 -ExpandProperty FullName |
     ForEach-Object { Write-Host "  left: $_" }
   # The bytecode residue too, by module: which interpreter wrote it is what the
-  # names tell (a `aj_crew\testing` pyc is the fake backend shim's).
+  # names tell (an `aj_crew\testing` pyc is the fake backend shim's).
   $files |
     Where-Object { $_.FullName -match '__pycache__' } |
     Select-Object -First 20 -ExpandProperty FullName |

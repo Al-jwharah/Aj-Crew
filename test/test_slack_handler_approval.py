@@ -19,7 +19,6 @@ from slack_handler_helpers import (
     _within_lost_run,
 )
 
-from conftest import MockSlackClient
 from aj_crew.providers.base import LLMEvent
 from aj_crew.slack.handler import (
     _pending_approvals,
@@ -31,6 +30,7 @@ from aj_crew.slack.handler import (
     set_allowed_users,
     set_owner_id,
 )
+from conftest import MockSlackClient
 
 
 class TestAllowedUsers:

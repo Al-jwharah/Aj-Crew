@@ -418,7 +418,7 @@ async def reclaim_stale_gateway_port(
         return UNAVAILABLE
     if booting:
         log.error(
-            "Port %d is held by a Aj Crew gateway that is still starting (pid %s) "
+            "Port %d is held by an Aj Crew gateway that is still starting (pid %s) "
             "— not reclaiming. Stop it with `ajcrew stop` or use a different port.",
             port,
             _describe_holders(booting),

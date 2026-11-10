@@ -22,11 +22,11 @@ import connections_mint_helpers
 import pytest
 from connections_mint_helpers import _URL
 
-from conftest import requires_symlinks
 from aj_crew import mcp_grant
 from aj_crew.connections import mint
 from aj_crew.runtime_ownership import RUNTIME_TENANCY, release_runtime_tenancy
 from aj_crew.testing.wait import async_wait_until, await_until
+from conftest import requires_symlinks
 
 # The shared autouse fixture, bound here by name so pytest registers it for this module.
 _isolated_mint = connections_mint_helpers._isolated_mint

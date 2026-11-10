@@ -1116,9 +1116,7 @@ class TestAutomaticMirrorOptOut:
         assert _opt_out_key("unified:ajcrew:gen3") == "unified:ajcrew"
         assert _opt_out_key("unified:ajcrew") == "unified:ajcrew"
         # A trailing segment that merely starts with "gen" is not a generation.
-        assert _opt_out_key("telegram:ajcrew:direct:general") == (
-            "telegram:ajcrew:direct:general"
-        )
+        assert _opt_out_key("telegram:ajcrew:direct:general") == ("telegram:ajcrew:direct:general")
 
     def test_every_generation_shares_one_flag_row(self, session_map):
         """Bucket-keying is what bounds the unprunable rows to one per chat."""

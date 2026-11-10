@@ -794,9 +794,7 @@ def dashboard_spec(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(mcp_sources, "_app_owned_mcp_keys", dict)
     with (
         patch("aj_crew.dashboard.handlers.mcp._GLOBAL_MCP_JSON", mcp_json),
-        patch(
-            "aj_crew.dashboard.handlers.agents._installed_agent_config", return_value=agent_cfg
-        ),
+        patch("aj_crew.dashboard.handlers.agents._installed_agent_config", return_value=agent_cfg),
     ):
         yield agent_cfg
 

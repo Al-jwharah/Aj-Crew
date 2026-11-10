@@ -8,7 +8,7 @@ tags: [skill, ajcrew, monitor, babysit]
 
 # Babysit
 
-General-purpose monitoring: this skill works without a Aj Crew checkout or
+General-purpose monitoring: this skill works without an Aj Crew checkout or
 ajcrew-prepare-pr installed. It owns loop mechanics, not a repository's repair policy.
 For Aj Crew PR CI AI comments ONLY, MUST load
 [ajcrew-prepare-pr: Review repair routing](../ajcrew-prepare-pr/SKILL.md#review-repair-routing)

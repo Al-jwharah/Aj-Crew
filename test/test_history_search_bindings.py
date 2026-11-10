@@ -1,6 +1,6 @@
 """``aj_crew.history_search`` stays the import path and the patch surface of its family.
 
-The module keeps ``SessionCatalogProjection`` and is a ``aj_crew._facade_mirror`` facade
+The module keeps ``SessionCatalogProjection`` and is an ``aj_crew._facade_mirror`` facade
 over three owners, lowest layer first: ``history_search_query`` (what a query means:
 needles, forge references, the provider spelling slot, the one-string match rule),
 ``history_search_memo`` (what every search over one directory shares: the memos, their

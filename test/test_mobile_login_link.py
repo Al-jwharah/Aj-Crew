@@ -125,9 +125,7 @@ def test_mobile_link_refuses_invalid_origin():
 def test_mobile_link_refuses_a_restricted_session():
     """An incognito/temporary/channel-guest slot must not mint a durable link."""
     state = MagicMock()
-    with patch(
-        "aj_crew.dashboard.handlers.auth_mobile._is_restricted_session", return_value=True
-    ):
+    with patch("aj_crew.dashboard.handlers.auth_mobile._is_restricted_session", return_value=True):
         response = _call(_request(dashboard_url="https://dashboard.example", state=state))
 
     assert response.status == 403

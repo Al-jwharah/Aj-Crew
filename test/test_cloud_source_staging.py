@@ -18,10 +18,10 @@ from pathlib import Path
 import pytest
 from group_privacy_helpers import _ACL_USER, _acl_xattr, _serve_acl
 
-from conftest import make_dir_link
 from aj_crew import github_runner, platform_compat, windows_acl
 from aj_crew.cloud import aws, source
 from aj_crew.config import ensure_data_home
+from conftest import make_dir_link
 
 
 @pytest.fixture(autouse=True)

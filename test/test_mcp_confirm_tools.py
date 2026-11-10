@@ -666,9 +666,7 @@ def test_dashboard_enable_withholds_the_grant_for_a_named_server(tmp_path, monke
     _patterns(monkeypatch, ("@atlassian",))
     with (
         patch("aj_crew.dashboard.handlers.mcp._GLOBAL_MCP_JSON", mcp_json),
-        patch(
-            "aj_crew.dashboard.handlers.agents._installed_agent_config", return_value=agent_cfg
-        ),
+        patch("aj_crew.dashboard.handlers.agents._installed_agent_config", return_value=agent_cfg),
     ):
         _sync_mcp_to_agent("atlassian", enabled=True)
         _sync_mcp_to_agent("github", enabled=True)

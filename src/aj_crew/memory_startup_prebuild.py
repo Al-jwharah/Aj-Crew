@@ -55,9 +55,7 @@ def prebuild_startup_reads(
     from aj_crew.vector_memory_runtime import semantic as _semantic
     from aj_crew.vector_memory_runtime.embedding import _RecallQuery
 
-    semantic_read, lessons_read = _groups_read(
-        cfg if cfg is not None else ctx.AjCrewConfig.load()
-    )
+    semantic_read, lessons_read = _groups_read(cfg if cfg is not None else ctx.AjCrewConfig.load())
     spent: dict[str, float] = {}
 
     def step(name: str, fn: Callable[[], Any]) -> Any:

@@ -22,10 +22,10 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from conftest import MockSlackClient
 from aj_crew.config import AjCrewConfig
 from aj_crew.messaging.link import ChannelLink
 from aj_crew.session import SessionManager
+from conftest import MockSlackClient
 
 
 @pytest.fixture

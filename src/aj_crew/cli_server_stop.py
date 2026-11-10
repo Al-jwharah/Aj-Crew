@@ -252,7 +252,7 @@ def _stop_expected_pid(port: int, expect_pid: int) -> None:
     """SIGTERM ``expect_pid`` only while it is provably this home's gateway on ``port``.
 
     Three facts are read here, immediately before the signal: ``expect_pid`` is
-    the sole listener on ``port``, it looks like a Aj Crew gateway, and it is the
+    the sole listener on ``port``, it looks like an Aj Crew gateway, and it is the
     live holder of this home's ``gateway.lock``. A caller that identified a
     gateway earlier names it by pid, so a listener that replaced it in between
     -- another home's gateway, or a fresh one -- is refused instead of stopped.
@@ -303,7 +303,7 @@ def _stop_expected_pid(port: int, expect_pid: int) -> None:
     try:
         check_listener()
         if not _is_ajcrew_process(expect_pid):
-            refuse("not_ajcrew", f"Pid {expect_pid} does not look like a Aj Crew gateway.")
+            refuse("not_ajcrew", f"Pid {expect_pid} does not look like an Aj Crew gateway.")
         try:
             holder = lock_holder(config_dir())
         except LockProbeError as exc:
@@ -675,7 +675,7 @@ def _stop(cli_port: int | None = None, *, expect_pid: int | None = None) -> None
         # (_verified_loopback_gateway_pids); unproven keeps the refusal below.
         return
     if not pids:
-        # Something holds the port, but nothing on it classifies as a Aj Crew
+        # Something holds the port, but nothing on it classifies as an Aj Crew
         # gateway. Reporting "no gateway running" here is misleading — the port
         # is occupied — and it sends ``ajcrew restart`` on to spawn a
         # replacement the AJCREW_HOME lock then refuses. Name the pids and, when
@@ -708,7 +708,7 @@ def _stop(cli_port: int | None = None, *, expect_pid: int | None = None) -> None
             resources=f"port={port} reason=unrecognized_listener pids={unrecognized}",
         )
         print(
-            f"Port {port} is held by pid {pid_list}{detail}, not recognised as a "
+            f"Port {port} is held by pid {pid_list}{detail}, not recognised as an "
             f"Aj Crew gateway. Not stopping it."
         )
         sys.exit(1)
@@ -823,7 +823,7 @@ def _refuse_lock_holder(operation: str, port: int, pid: int) -> NoReturn:
     got no answer, yet the lock says a gateway is up. The lock is the oracle
     for "is something running" -- without it ``ajcrew stop`` and ``ajcrew
     restart`` report "nothing running" the same moment ``ajcrew gateway``
-    refuses to start for a live pid. It is NOT a path to signal through: a
+    refuses to start for a live pid. It is NOT a path to signal through: an
     Aj Crew holder that neither the port nor the API could reach is in a
     state this command cannot verify, and a foreign holder is not this
     command's to stop. Both are refused the same way -- one SEL ``denied``
@@ -845,14 +845,14 @@ def _refuse_lock_holder(operation: str, port: int, pid: int) -> NoReturn:
     tail = "\n   Not starting a replacement." if operation == "gateway_restart" else ""
     if ajcrew:
         print(
-            f"❌ {lock_path} is held by pid {pid}: a Aj Crew gateway is running, but "
+            f"❌ {lock_path} is held by pid {pid}: an Aj Crew gateway is running, but "
             f"the port lookup and the authenticated shutdown could not reach it, so it is "
             f"not signalled from here.\n"
             f"   To stop it manually, run: {manual}{tail}"
         )
     else:
         print(
-            f"❌ {lock_path} is held by pid {pid}, but it does not look like a Aj Crew "
+            f"❌ {lock_path} is held by pid {pid}, but it does not look like an Aj Crew "
             f"gateway process — refusing to stop it. If this is wrong, stop it manually: "
             f"{manual}{tail}"
         )
@@ -864,7 +864,7 @@ def _stop_mcp_gateway_daemon() -> None:
 
     The daemon is a separate session leader, so the gateway's own SIGTERM never
     reaches it; it exits on its own once its owner is gone (``--owner-pid``), but
-    that probe runs on an interval, and a ``ajcrew restart`` spawns the next
+    that probe runs on an interval, and an ``ajcrew restart`` spawns the next
     gateway inside that window -- which then finds a healthy daemon on the socket
     and adopts it. A daemon adopted across a code change is how pooled MCP
     backends kept speaking a wire shape the new gateway did not read. Stopping

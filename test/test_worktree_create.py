@@ -769,9 +769,7 @@ class TestConcurrencySafety:
     async def test_unreadable_worktree_list_is_a_503_not_a_create(self, repo):
         """If git cannot enumerate worktrees, refuse rather than guess."""
         async with TestClient(TestServer(_make_app(str(repo)))) as client:
-            with patch(
-                "aj_crew.dashboard.handlers.worktree._worktree_branches", return_value=None
-            ):
+            with patch("aj_crew.dashboard.handlers.worktree._worktree_branches", return_value=None):
                 resp = await client.post(
                     "/api/worktree/create", json={"repo": str(repo), "branch": "feat/blind"}
                 )

@@ -14,10 +14,10 @@ import pytest
 from slack_handler_helpers import _clean_approval_state  # noqa: F401
 from slack_handler_helpers import FakeProvider, FakeSessionManager
 
-from conftest import MockSlackClient
 from aj_crew.providers.base import LLMEvent
 from aj_crew.slack.format import CONTINUATION, SLACK_MSG_LIMIT, split_message
 from aj_crew.slack.handler import _build_phase_emojis, _condense_thinking, handle_message
+from conftest import MockSlackClient
 
 
 class TestSplitMessage:

@@ -23,7 +23,6 @@ from pathlib import Path
 import pytest
 from source_corpus import parsed_candidates
 
-from conftest import requires_symlinks
 from aj_crew import image_artifacts
 from aj_crew.messaging.outbound_files import (
     REASON_MISSING,
@@ -53,6 +52,7 @@ from aj_crew.messaging.outbound_files import (
 )
 from aj_crew.messaging.raster import SNIFF_BYTES, sniff_raster_mime
 from aj_crew.messaging.split import iter_fence_spans
+from conftest import requires_symlinks
 
 _PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 32
 _JPEG = b"\xff\xd8\xff\xe0" + b"\x00" * 32

@@ -325,7 +325,7 @@ class TestLifecycle:
     ):
         from aj_crew.agent_sdk.agent_specs import sweep_kas_launch_snapshots
 
-        # A `ajcrew chat` CLI (or a second gateway) on this data home records its
+        # An `ajcrew chat` CLI (or a second gateway) on this data home records its
         # KAS runtime under its own pid; the parent process stands in for it here.
         rows = {"other": f"{os.getppid()}:424242:tok\n", "self": f"{os.getpid()}:424242:tok\n"}
         if owner in rows:

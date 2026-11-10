@@ -24,9 +24,7 @@ from aj_crew.agent_discovery import skill_resource_uris
 from aj_crew.agent_files import (
     AGENT_FILENAME,
 )
-from aj_crew.agent_files import (
-    DASHBOARD_AUTHOR_AGENT_FILENAME as _DASHBOARD_AUTHOR_AGENT_FILENAME,
-)
+from aj_crew.agent_files import DASHBOARD_AUTHOR_AGENT_FILENAME as _DASHBOARD_AUTHOR_AGENT_FILENAME
 from aj_crew.agent_files import HEARTBEAT_AGENT_FILENAME as _HEARTBEAT_FILENAME
 from aj_crew.agent_files import WORKER_AGENT_FILENAME as _WORKER_AGENT_FILENAME
 from aj_crew.agent_materialization import auto_approve, managed_mcp, skill_resources
@@ -1614,7 +1612,7 @@ def _foreign_dashboard_author_spec_reason(spec: dict[str, Any] | None) -> str | 
 
     PROVENANCE by an installer-recorded digest in the ``agent_state`` sidecar, NOT by
     content marks. The dashboard-author stem was a user-creatable template name before it
-    became owned, so a user could hand-place a ``ajcrew-dashboard-author.json`` -- and,
+    became owned, so a user could hand-place an ``ajcrew-dashboard-author.json`` -- and,
     as review found, so could a copy of ANOTHER owned agent (``ajcrew``, a conductor)
     renamed onto the stem, which would forge any mark chosen from the managed spec's own
     shape (its name, its ``ajcrew-core`` reference, even a narrowed server map). Content

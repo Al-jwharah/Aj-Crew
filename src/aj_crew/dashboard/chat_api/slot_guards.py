@@ -18,8 +18,8 @@ from aiohttp import web
 
 if TYPE_CHECKING:
     from aj_crew.dashboard.chat_handlers import (
-        DashboardState,
         AjCrewConfig,
+        DashboardState,
         LLMProvider,
         ResolvedBindings,
         SelectionChange,

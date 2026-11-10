@@ -1703,7 +1703,7 @@ That inverts the ownership model: **Aj Crew owns the OAuth chain end-to-end.**
 - The dashboard runs the consent flow (open browser, receive callback, exchange code for token).
 - Aj Crew stores tokens in its own credential store — keychain on macOS, sealed SQLite on Linux, whatever fits the deployment's security posture.
 - Token scoping is up to us: per-user × per-agent × per-server. Two agents in one workspace can hold tokens for two different GitHub accounts.
-- Refresh is a Aj Crew concern: a background task watches expiry, refreshes, hands the new bearer to the next `query()`.
+- Refresh is an Aj Crew concern: a background task watches expiry, refreshes, hands the new bearer to the next `query()`.
 - Sign-out is a single dashboard click — delete the row from our store and revoke upstream.
 - Tokens never sit in `agent.json`. The file holds only the **shape** of the MCP server (URL, server-id, scope hints); the bearer is injected at runtime.
 - The dashboard can show "GitHub: connected as octocat, expires in 47 min" because the data lives in Aj Crew.

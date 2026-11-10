@@ -22,7 +22,7 @@ import '../src/index.css'
 const params = new URLSearchParams(location.search)
 const theme = params.get('theme') || 'dark'
 localStorage.setItem('mc-theme', theme === 'light' ? 'light' : 'dark')
-localStorage.setItem('mc-color-theme', 'kiro')
+localStorage.setItem('mc-color-theme', 'aj')
 document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 localStorage.setItem('mc-sidebar-lane', 'flat')
 localStorage.setItem('mc-session-stale-collapse-ms', '0')

@@ -12,7 +12,7 @@ the object they always did. This file pins that contract:
 * each bound member IS its owner's function, and no owner keeps an unbound ``self``
   function;
 * every ``*_impl`` member reaches the coordinator rebound onto ``aj_crew.subagent``'s
-  globals and every global it reads resolves there, so a patch of a ``aj_crew.subagent``
+  globals and every global it reads resolves there, so a patch of an ``aj_crew.subagent``
   name reaches it; every other member runs on its owner's globals and every global it
   reads resolves there;
 * no bound function uses zero-argument ``super()``, ``__class__`` or a name-mangled

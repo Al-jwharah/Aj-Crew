@@ -15,7 +15,6 @@ from pathlib import Path
 
 import pytest
 
-from conftest import requires_symlinks
 from aj_crew.acp.client import (
     _kiro_cli_bundle_binary,
     apply_pod_bundle_spawn,
@@ -25,6 +24,7 @@ from aj_crew.acp_backends import (
     ACP_BACKENDS_INTERNAL_SANDBOX,
     ACP_BACKENDS_POD_HOME_REMAP,
 )
+from conftest import requires_symlinks
 
 
 def _bundle_layout(tmp_path: Path) -> tuple[str, str]:

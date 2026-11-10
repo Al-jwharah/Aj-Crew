@@ -237,7 +237,7 @@ This is worth stating plainly, because "brand slides plus a punch-in camera over
 screen capture" is a whole genre and a reader could reasonably ask whose look this is.
 
 **The palette is not a choice made here.** `useTheme.tsx` sets
-`DEFAULT_COLOR_THEME = 'kiro'`, so the Kiro theme is what a viewer already sees, and
+`DEFAULT_COLOR_THEME = 'aj'`, so the Aj theme is what a viewer already sees, and
 the brand frames use its tokens verbatim from the `[data-theme="aj-dark"]` block in
 `website/src/styles/theme-palettes.css`: `--bg:#19161d`, `--bg-elevated:#211d25`, `--accent:#8e48ff`,
 `--accent-hover:#9f63ff`, `--text-strong:#f2f1f4`, `--muted:#938f9b`,

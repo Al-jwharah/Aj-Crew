@@ -20,7 +20,7 @@ import pytest
 from config_loader_helpers import _load_from_dict, _load_from_dict_with_logs
 
 import aj_crew.config.loader as loader_module
-from aj_crew.config.loader import DashboardConfig, AjCrewConfig, WatchdogConfig
+from aj_crew.config.loader import AjCrewConfig, DashboardConfig, WatchdogConfig
 
 
 @pytest.mark.parametrize("enabled,keep", [(False, 30), (True, 2)])

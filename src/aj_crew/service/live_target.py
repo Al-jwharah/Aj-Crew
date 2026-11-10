@@ -124,7 +124,7 @@ def validate(raw: str) -> Path:
         return _reject(f"the live target's {kcbin} is not executable")
     if not (checkout / "src" / "aj_crew").is_dir():
         return _reject(
-            f"the live target does not look like a Aj Crew checkout "
+            f"the live target does not look like an Aj Crew checkout "
             f"(no src/aj_crew): {checkout}"
         )
     return checkout
@@ -247,9 +247,7 @@ def selected_version() -> tuple[str | None, float | None]:
     """
     try:
         target = read_target()
-        package = (
-            Path(aj_crew.__file__).parent if target is None else target / "src" / "aj_crew"
-        )
+        package = Path(aj_crew.__file__).parent if target is None else target / "src" / "aj_crew"
         body = ast.parse((package / "__init__.py").read_text(encoding="utf-8")).body
     except (OSError, ValueError, SyntaxError):
         return None, None
@@ -474,7 +472,7 @@ def maybe_reexec(argv: list[str], *, log: object = None) -> None:
         # The executable is not caller-supplied: it is derived from the
         # keystone-fenced pointer, which only a human-driven dashboard action
         # writes, and `validate` has already confirmed it is an executable file
-        # inside a Aj Crew checkout. argv is this process's own argv, and env is
+        # inside an Aj Crew checkout. argv is this process's own argv, and env is
         # the inherited environment plus three keys computed here. The rule fires
         # on passing an environment through at all, which is inherent to handing a
         # gateway its own env across the exec.

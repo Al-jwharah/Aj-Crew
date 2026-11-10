@@ -293,9 +293,7 @@ class TestProcessSlackFiles:
             }
         ]
         # Temp handling now lives in the channel-neutral ingestion layer.
-        with patch(
-            "aj_crew.messaging.attachments.tempfile.mkstemp", side_effect=tracking_mkstemp
-        ):
+        with patch("aj_crew.messaging.attachments.tempfile.mkstemp", side_effect=tracking_mkstemp):
             await process_slack_files(orch, files)
         assert len(created_paths) == 1
         assert not os.path.exists(created_paths[0])

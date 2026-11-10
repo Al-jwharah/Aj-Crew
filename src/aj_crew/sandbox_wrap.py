@@ -445,7 +445,7 @@ def _warn_no_isolation(mode: str, granted_by: str = "") -> None:
         return
     if granted_by == UNSANDBOXED_BY_PLATFORM:
         logger.warning(
-            "SECURITY: this platform offers no OS-level sandbox backend for Kiro "
+            "SECURITY: this platform offers no OS-level sandbox backend for Aj "
             "Crew to apply (mode=%s), so the agent subprocess runs WITHOUT "
             "credential isolation — ~/.aws, ~/.ssh and other secrets are readable "
             "by it and only the bypassable app-level security.py checks remain. "
@@ -690,7 +690,7 @@ def wrap_argv(
         _warn_mode_off_unconfined(argv, kiro_spawn_off)
         return argv, None
 
-    # Already inside a Aj Crew sandbox (script cron, sandboxed agent child, app
+    # Already inside an Aj Crew sandbox (script cron, sandboxed agent child, app
     # backend, pooled MCP server): the outer sandbox confines every descendant,
     # and a nested wrap is impossible by design — Linux seccomp denies the
     # unshare, macOS Seatbelt refuses sandbox_apply with EPERM. Pass through
@@ -708,7 +708,7 @@ def wrap_argv(
         if not getattr(wrap_argv, "_nested_passthrough_logged", False):
             wrap_argv._nested_passthrough_logged = True  # type: ignore[attr-defined]
             logger.info(
-                "wrap_argv: already inside a Aj Crew sandbox — nested OS "
+                "wrap_argv: already inside an Aj Crew sandbox — nested OS "
                 "sandboxing is impossible by design (Linux seccomp denies "
                 "unshare; macOS Seatbelt refuses sandbox_apply with EPERM); "
                 "spawning within the existing isolation boundary rather than "
@@ -1163,7 +1163,7 @@ def wrap_argv(
                         "seccomp=docker/seccomp/ajcrew-seccomp.json ...\n"
                         "        # Without a checkout (image-only):\n"
                         "        curl -fsSL https://raw.githubusercontent.com/"
-                        "kirodotdev/KiroCrew/main/docker/seccomp/ajcrew-seccomp.json"
+                        "Al-jwharah/Aj-Crew/main/docker/seccomp/ajcrew-seccomp.json"
                         " -o ajcrew-seccomp.json\n"
                         "        docker run --security-opt seccomp=ajcrew-seccomp.json ...\n"
                         "  (b) Restart with explicit unsandboxed consent "

@@ -500,7 +500,7 @@ class KasMcpReadiness:
         That is what a governed MCP profile produces: the host filters Crew's
         managed servers out before it starts them and never reports them at all.
         Under declared registry mode a non-empty answer starts the session without
-        them; otherwise the barrier still times out and this only adds a
+        them; otherwise the barrier still times out and this only adds an
         ``ajcrew doctor`` pointer to its message. One pending server the host did
         report (connecting, a foreign same-named entry, a tag) answers ``()``.
         """

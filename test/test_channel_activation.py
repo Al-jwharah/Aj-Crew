@@ -12,8 +12,8 @@ from aj_crew.config.loader import (
     ACTIVATION_ALWAYS,
     ACTIVATION_OFF,
     ACTIVATION_REVIEW,
-    ChannelConfig,
     AjCrewConfig,
+    ChannelConfig,
     MessagingConfig,
 )
 from aj_crew.slack.events import SeenCache, _dispatch_queued, _route_message
@@ -318,8 +318,8 @@ class TestHandlerChannelAgent:
     @pytest.mark.asyncio
     async def test_channel_agent_passed_to_session(self):
         """channel_agent parameter is used for session agent selection."""
-        from conftest import MockSlackClient
         from aj_crew.slack.handler import handle_message
+        from conftest import MockSlackClient
 
         class FakeProvider:
             async def stream(self, message, timeout=120.0):

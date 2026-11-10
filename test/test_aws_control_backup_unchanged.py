@@ -161,9 +161,7 @@ class TestTreeFingerprint:
         # The snapshot bundle's root directory is named `ajcrew-snapshot-<stamp>`,
         # so it changes every run. Left in the digest it would defeat the comparison
         # on its own, which is what `volatile_root=True` exists to prevent.
-        first = _pack(
-            tmp_path / "one.tar.gz", {"ajcrew-snapshot-20260101T000000Z/a.txt": b"hello"}
-        )
+        first = _pack(tmp_path / "one.tar.gz", {"ajcrew-snapshot-20260101T000000Z/a.txt": b"hello"})
         second = _pack(
             tmp_path / "two.tar.gz", {"ajcrew-snapshot-20260102T111111Z/a.txt": b"hello"}
         )

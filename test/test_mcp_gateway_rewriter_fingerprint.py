@@ -32,11 +32,11 @@ from mcp_gateway_rewriter_fingerprint_helpers import (  # noqa: F401 -- fixtures
     rewrite_counter_fixture,
 )
 
-from conftest import make_dir_link
 from aj_crew import agent_discovery
 from aj_crew.mcp_gateway import rewriter
 from aj_crew.mcp_gateway.hashing import expand_stub_flags
 from aj_crew.mcp_gateway.rewriter import _FINGERPRINT_NAME, rewrite_agents
+from conftest import make_dir_link
 
 
 def test_rewrite_agents_signature_is_pinned_to_fingerprint_inputs() -> None:
@@ -1048,9 +1048,7 @@ def test_resolved_binary_removal_invalidates(
     bin_dir = tmp_path / "extra-bin"
     bin_dir.mkdir()
     # .bat on Windows: shutil.which resolves bare names only through PATHEXT.
-    exe_name = (
-        "ajcrew-test-vanishing-cmd.bat" if os.name == "nt" else "ajcrew-test-vanishing-cmd"
-    )
+    exe_name = "ajcrew-test-vanishing-cmd.bat" if os.name == "nt" else "ajcrew-test-vanishing-cmd"
     exe = bin_dir / exe_name
     exe.write_text("#!/bin/sh\nexit 0\n")
     exe.chmod(0o755)

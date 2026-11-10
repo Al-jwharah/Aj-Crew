@@ -13,7 +13,7 @@ instance state every collaborator reads (built in ``__init__``), the lineage bin
 the properties (``algorithm_version``, ``policy_revision``, ``db``,
 ``space_generation``), the locked fetch helpers and read counters, ``get_semantic``,
 ``reconfigure``, ``_cosine_sim`` and the derived-vector transaction ``_vector_commit``.
-Every other member is a collaborator's function: a one-line delegate to a
+Every other member is a collaborator's function: a one-line delegate to an
 ``aj_crew.vector_memory_runtime`` rule, or the owner's function itself, bound as the
 class attribute of the same name. The write paths, the bookkeeping tables and
 derived-state currency are owners in ``vector_memory_runtime``; the code that opens the

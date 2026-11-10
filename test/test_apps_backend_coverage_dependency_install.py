@@ -1548,8 +1548,7 @@ class TestDependencyInstall:
         log_path = log_dir / "backend.log"
         # A prior session that really did hit a port collision.
         log_path.write_text(
-            "[aj-crew] previous session\n"
-            "Error: [Errno 98] address already in use: bind failed\n"
+            "[aj-crew] previous session\n" "Error: [Errno 98] address already in use: bind failed\n"
         )
 
         def _popen(*_a: Any, **_kwargs: Any) -> Any:

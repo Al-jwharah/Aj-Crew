@@ -36,9 +36,7 @@ async def _resolve_persistent(
         raise WorkspaceNotRunning("this session's workspace has not been created yet")
     row, record = found
     if record is None:
-        raise SessionEnvironmentUnavailable(
-            "this session's workspace was deleted outside Aj Crew"
-        )
+        raise SessionEnvironmentUnavailable("this session's workspace was deleted outside Aj Crew")
     profile = environments.bound_profile(row)
     workdir = environments.session_workdir(profile, row)
     if not workdir:

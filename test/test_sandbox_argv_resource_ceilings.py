@@ -855,9 +855,7 @@ class TestAgentsSliceLimits:
             patch("aj_crew.sandbox._probe_cgroup_scope", return_value=(True, "ok")),
             patch("aj_crew.sandbox._slice_limits_from_config", return_value=(10000, 32768)),
             patch("aj_crew.sandbox._agents_slice_cgroup_dir", return_value=None),
-            patch(
-                "aj_crew.platform_compat.trusted_system_bin", return_value="/usr/bin/systemctl"
-            ),
+            patch("aj_crew.platform_compat.trusted_system_bin", return_value="/usr/bin/systemctl"),
             patch("aj_crew.sandbox.subprocess.run", run_mock),
         ):
             assert sb.ensure_agents_slice_limits() is True
@@ -1002,9 +1000,7 @@ class TestAgentsSliceLimits:
             available, _ = sb._probe_cgroup_scope()
             if not available:
                 pytest.skip("no cgroup v2 delegation on this host")
-            with patch(
-                "aj_crew.sandbox._cgroup_limits_from_config", return_value=(50, 512, 50, 0)
-            ):
+            with patch("aj_crew.sandbox._cgroup_limits_from_config", return_value=(50, 512, 50, 0)):
                 argv = sb.cgroup_scope_argv(
                     [
                         sys.executable,

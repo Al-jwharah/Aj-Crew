@@ -17,8 +17,8 @@ import pytest
 import yaml
 from yaml_helpers import load_with
 
-from conftest import _find_posix_test_shell
 from aj_crew.deploy import handlers
+from conftest import _find_posix_test_shell
 
 
 def _bash():

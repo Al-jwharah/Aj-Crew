@@ -14,10 +14,10 @@ from acp_client_helpers import _native_projection_for_fake_processes  # noqa: F4
 from acp_client_helpers import _pin_the_installed_kiro_cli_version  # noqa: F401 - fixture
 
 import aj_crew.acp.client as acp_client
-from conftest import requires_symlinks
 from aj_crew.acp.client import AcpClient
 from aj_crew.acp.types import ACP_BACKEND_CLAUDE
 from aj_crew.testing.clock import ManualClock
+from conftest import requires_symlinks
 
 
 class TestMovedAsideRestore:

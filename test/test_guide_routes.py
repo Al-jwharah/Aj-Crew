@@ -788,9 +788,7 @@ def test_server_route_table_matches_the_guide_module():
     app = web.Application()
     guide_routes.register_guide_routes(app)
     mine = {(r.method, r.resource.canonical) for r in app.router.routes() if r.method != "HEAD"}
-    text = (REPO / "src/aj_crew/dashboard/server_runtime/mcp_routes.py").read_text(
-        encoding="utf-8"
-    )
+    text = (REPO / "src/aj_crew/dashboard/server_runtime/mcp_routes.py").read_text(encoding="utf-8")
     server = set(re.findall(r'\("(GET|POST)", "(/api/guide/[a-z/]+)", "api_guide_[a-z_]+"\)', text))
     assert server == mine
     for method, path in mine:

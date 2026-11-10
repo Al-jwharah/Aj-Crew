@@ -83,7 +83,7 @@ _FAILS_MAX = 1_000_000
 # make the store unreadable and then overwritable, which is data loss.
 _STORE_MAX_BYTES = 8 * 1024 * 1024
 
-# Tests point this at a tmp_path. Resolved per call, never at import, so a
+# Tests point this at a tmp_path. Resolved per call, never at import, so an
 # ``AJCREW_HOME`` change between calls is honoured (the convention every
 # other small state file in this tree follows).
 _STORE_PATH: Path | None = None

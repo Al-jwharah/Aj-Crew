@@ -594,7 +594,7 @@ def _cron(args: argparse.Namespace) -> None:
             # A policy refusal (``raise PermissionError("...")``), not the OS:
             # keep it as it was rather than mislabel it an OS refusal.
             raise
-        where = exc.filename or "a Aj Crew data file"
+        where = exc.filename or "an Aj Crew data file"
         print(
             f"Error: the OS refused this process access to {where} ({exc.strerror or exc}). "
             "Manage the job from the dashboard Schedule page, "

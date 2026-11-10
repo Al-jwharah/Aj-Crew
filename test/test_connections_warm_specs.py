@@ -17,10 +17,10 @@ import connections_warm_helpers
 import pytest
 from connections_warm_helpers import _mimic_spec, _ours_shaped_spec_text, _provider
 
-from conftest import make_dir_link, requires_symlinks
 from aj_crew import security
 from aj_crew.agent_files import AGENT_FILENAME
 from aj_crew.connections import tool_aliases, warm
+from conftest import make_dir_link, requires_symlinks
 
 # The shared fixtures, bound here by name so pytest registers them for this module.
 _agents_dir = connections_warm_helpers._agents_dir
@@ -116,9 +116,7 @@ def test_the_warm_sweep_refuses_a_cold_mint_spec_that_shares_the_prefix():
 def test_the_warm_sweep_drops_a_warm_spec_absent_from_the_plan_and_keeps_the_rest():
     assert warm._is_stale_warm_spec("ajcrew-mint-warm-notion", frozenset()) is True
     assert (
-        warm._is_stale_warm_spec(
-            "ajcrew-mint-warm-notion", frozenset({"ajcrew-mint-warm-notion"})
-        )
+        warm._is_stale_warm_spec("ajcrew-mint-warm-notion", frozenset({"ajcrew-mint-warm-notion"}))
         is False
     )
     assert warm._is_stale_warm_spec("some-user-agent", frozenset()) is False

@@ -257,8 +257,6 @@ class TestGatewayInstallVerification:
         # inside this test's capture window and has nothing to do with install
         # verification.
         assert not [
-            r
-            for r in caplog.records
-            if r.levelno >= logging.ERROR and r.name.startswith("aj_crew")
+            r for r in caplog.records if r.levelno >= logging.ERROR and r.name.startswith("aj_crew")
         ]
         assert "ERROR" not in capsys.readouterr().out

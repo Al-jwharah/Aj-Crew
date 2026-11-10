@@ -12,13 +12,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from conftest import host_abs
 from aj_crew.dashboard.handlers.agents import (
     api_capability_mcp_install,
     api_capability_mcp_uninstall,
 )
 from aj_crew.dashboard.handlers.mcp import _mcp_hot_reload_active as _REAL_GATE
 from aj_crew.mcp_provenance import without_marker
+from conftest import host_abs
 
 
 @pytest.fixture(autouse=True)
@@ -79,9 +79,7 @@ def mcp_env(tmp_path: Path):
 
     with (
         patch("aj_crew.dashboard.handlers.mcp._GLOBAL_MCP_JSON", mcp_json),
-        patch(
-            "aj_crew.dashboard.handlers.agents._installed_agent_config", return_value=agent_cfg
-        ),
+        patch("aj_crew.dashboard.handlers.agents._installed_agent_config", return_value=agent_cfg),
     ):
         yield agent_cfg, mcp_json
 

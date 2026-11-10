@@ -1004,9 +1004,7 @@ async def test_delete_refuses_read_only_specs(agents_dir, filename, reason):
         agents_dir,
         filename,
         name=(
-            filename.split("-", 1)[1].rsplit(".", 1)[0]
-            if reason == "package"
-            else "ajcrew-worker"
+            filename.split("-", 1)[1].rsplit(".", 1)[0] if reason == "package" else "ajcrew-worker"
         ),
     )
     _seed_config()

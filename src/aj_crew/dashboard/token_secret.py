@@ -117,7 +117,7 @@ def signing_key_health(
       Whether a key is there is unknown, so the boot preflight still runs the
       real load and refuses only when that load answers ``"short"``; an
       ephemeral fallback boots on the loader's WARNING and doctor reports it;
-    * ``"masked"``: this process runs inside a Aj Crew agent sandbox, where the
+    * ``"masked"``: this process runs inside an Aj Crew agent sandbox, where the
       launcher masks the key so the size seen here says nothing about the real
       file. Reading the mask as ``"short"`` would hand an operator a remedy that
       deletes a healthy key by hand, so the answer is keyed on confinement, with

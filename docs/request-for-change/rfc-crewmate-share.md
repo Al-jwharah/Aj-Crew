@@ -317,7 +317,7 @@ Exit criteria:
 
 ## 7. Backward compatibility
 
-Compatible. Every part is added: two owner-only routes, a new card kind and two controls. No existing route, card kind or file format changes, and no App Kit contract changes. The 2026-10-31 rename of the export file to `.crewjam` keeps every `.crewmate` file importable (§5.2, "File names"); a Aj Crew from before that date cannot open a `.crewjam` file.
+Compatible. Every part is added: two owner-only routes, a new card kind and two controls. No existing route, card kind or file format changes, and no App Kit contract changes. The 2026-10-31 rename of the export file to `.crewjam` keeps every `.crewmate` file importable (§5.2, "File names"); an Aj Crew from before that date cannot open a `.crewjam` file.
 
 ## 8. Security considerations
 

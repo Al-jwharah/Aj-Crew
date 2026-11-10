@@ -53,7 +53,7 @@ crash-loops.
 **Coverage boundary, stated because it is reachable.** This answers exactly one
 question: may PID 1's domain execute the file systemd itself ``execve``s at unit
 start, and the interpreter its shebang names? It does NOT and cannot cover what
-that file goes on to exec at RUNTIME. A ``AJCREW_SERVICE_BIN`` override naming a
+that file goes on to exec at RUNTIME. An ``AJCREW_SERVICE_BIN`` override naming a
 system-labelled wrapper that later runs a binary under ``$HOME`` therefore passes
 this gate and still fails to serve — with the shell's exit 126, not ``203/EXEC``,
 since the wrapper itself execs fine.

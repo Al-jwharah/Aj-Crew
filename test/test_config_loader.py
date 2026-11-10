@@ -1078,7 +1078,7 @@ class TestMigrationWriteBackOrdering:
     def test_the_seeded_agent_takes_its_kiro_agent_from_the_reread(self, tmp_path: Path) -> None:
         """The seed must not carry a value the document has since moved past.
 
-        The snapshot is read before the lock, so a ``ajcrew config set
+        The snapshot is read before the lock, so an ``ajcrew config set
         agent.default_agent`` in between must still decide the seeded crew's agent.
         """
         cfg_path = self._owned_config(tmp_path)

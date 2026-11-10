@@ -17,9 +17,9 @@ from pathlib import Path
 
 import pytest
 
-from conftest import requires_symlinks
 from aj_crew import hooks, security
 from aj_crew.config import loader, loader_snapshots
+from conftest import requires_symlinks
 
 
 def _spec(directory: Path, filename: str, name: str) -> Path:

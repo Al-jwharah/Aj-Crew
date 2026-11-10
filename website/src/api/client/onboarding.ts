@@ -149,7 +149,7 @@ export interface KiroPrerequisiteStatus {
    */
   cli_update_error?: string
   /**
-   * The owner-only shell prefixes a `ajcrew config set` command row pastes before
+   * The owner-only shell prefixes an `ajcrew config set` command row pastes before
    * `config set`, resolved by the gateway that knows which launcher actually runs.
    * Optional: a gateway older than this field does not send it, and a non-owner
    * never receives it. Treat anything that is not a valid V1 payload as absent.

@@ -457,9 +457,7 @@ async def test_the_sharing_toggle_restarts_the_broker_under_the_refresh_lock(mon
 
     monkeypatch.setattr(orch, "_stop_mcp_broker", _stop)
     monkeypatch.setattr(orch, "_init_mcp_gateway", _init)
-    monkeypatch.setattr(
-        "aj_crew.config.loader.AjCrewConfig.load", staticmethod(lambda: orch._cfg)
-    )
+    monkeypatch.setattr("aj_crew.config.loader.AjCrewConfig.load", staticmethod(lambda: orch._cfg))
 
     await orch._apply_mcp_gateway_enabled(False)
 

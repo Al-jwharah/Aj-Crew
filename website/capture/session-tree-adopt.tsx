@@ -37,7 +37,7 @@ const theme = params.get('theme') || 'dark'
 // so setting the attribute alone is overridden on mount. Both keys are pinned because
 // the colour theme drifts between runs when only the light/dark one is.
 localStorage.setItem('mc-theme', theme === 'light' ? 'light' : 'dark')
-localStorage.setItem('mc-color-theme', 'kiro')
+localStorage.setItem('mc-color-theme', 'aj')
 document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 // The conductor lane, opened directly: the recording is of the lane, not of finding it.

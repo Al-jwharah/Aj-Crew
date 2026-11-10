@@ -1,5 +1,6 @@
 {
  "base_public_names": [
+  "AjCrewConfig",
   "DEFAULT_REMOTE_PORT",
   "DuplicateInstanceError",
   "InstanceDisabledError",
@@ -7,7 +8,6 @@
   "InstancesError",
   "InstancesRegistry",
   "InvalidInstanceError",
-  "AjCrewConfig",
   "LoopBoundLock",
   "MAX_CHAINED_PER_PARENT",
   "MAX_LIVE_SLOTS",
@@ -27,6 +27,7 @@
   "TranscriptWithheld",
   "TunnelState",
   "UnsupportedConnectionMethodError",
+  "aj_crew",
   "ancestor_ids",
   "api_instances_add",
   "api_instances_approval_state",
@@ -52,7 +53,6 @@
   "descendant_ids",
   "is_headless_provisioner",
   "is_owner_dashboard_request",
-  "aj_crew",
   "local_instance_label",
   "logger",
   "read_capped_response",
@@ -71,6 +71,7 @@
  ],
  "note": "Mirror facade over handlers_instances_gate and handlers_instances_peer; it keeps the registry, connection, remote-update, search and send routes.",
  "rebound": {
+  "AjCrewConfig": "aj_crew.config.loader",
   "DEFAULT_REMOTE_PORT": "aj_crew.instances.registry",
   "DuplicateInstanceError": "aj_crew.instances.registry",
   "InstanceDisabledError": "aj_crew.instances.registry",
@@ -78,7 +79,6 @@
   "InstancesError": "aj_crew.instances.registry",
   "InstancesRegistry": "aj_crew.instances.registry",
   "InvalidInstanceError": "aj_crew.instances.registry",
-  "AjCrewConfig": "aj_crew.config.loader",
   "LoopBoundLock": "aj_crew.loop_lock",
   "MAX_CHAINED_PER_PARENT": "aj_crew.instances.registry",
   "MAX_LIVE_SLOTS": "aj_crew.dashboard.state",

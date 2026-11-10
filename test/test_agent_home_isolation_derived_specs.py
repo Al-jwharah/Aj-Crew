@@ -404,7 +404,7 @@ class TestForeignHomeDerivedSpecWrites:
         shared = self._foreign_shared_dir(monkeypatch, agent, tmp_path)
         monkeypatch.setattr(agent, "KIRO_AGENTS_DIR", shared)
         # A mirror that exists, parses, and carries the two marks every
-        # derivation writes (the declared name and a ajcrew-work reference),
+        # derivation writes (the declared name and an ajcrew-work reference),
         # so the gate attributes it as ours and reaches the re-derive instead
         # of refusing earlier as a foreign spec.
         (shared / worker_agent._WORKER_AGENT_FILENAME).write_text(
@@ -790,9 +790,7 @@ def _stub_disconnect_collaborators(monkeypatch, *, url: str, purge) -> None:
     monkeypatch.setattr("aj_crew.mcp_grant.surviving_grant_artifacts", lambda *a, **k: ())
     monkeypatch.setattr("aj_crew.dashboard.handlers.mcp._purge_server_config", purge)
     monkeypatch.setattr("aj_crew.agent.rebuild_agent_config", lambda *a, **k: None)
-    monkeypatch.setattr(
-        "aj_crew.connections.warm.rearm_invalidated_provider", lambda *a, **k: None
-    )
+    monkeypatch.setattr("aj_crew.connections.warm.rearm_invalidated_provider", lambda *a, **k: None)
 
 
 # A refusal reported as success stops the operator from fixing what is still broken.

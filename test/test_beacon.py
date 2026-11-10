@@ -21,9 +21,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from conftest import requires_symlinks
 from aj_crew import beacon, platform_compat
 from aj_crew.apps import install_receipt
+from conftest import requires_symlinks
 
 # Captured before any fixture can monkeypatch the module attribute, so the
 # dedicated tests below can exercise the REAL implementation.
@@ -1221,31 +1221,42 @@ class TestSnapshotAndPortabilityRegistration:
 
 
 class TestConfigDefaults:
-    def test_beacon_on_by_default_with_https_endpoint(self):
+    def test_beacon_off_by_default_with_no_endpoint(self):
+        """This build runs no collector, so nothing is sent unless an operator asks.
+
+        Both halves matter: the switch is off, and there is no endpoint for it to
+        send to even when someone turns it on without naming one.
+        """
         from aj_crew.config.loader import TelemetryConfig
 
         cfg = TelemetryConfig()
-        assert cfg.beacon_enabled is True
-        assert cfg.beacon_endpoint.startswith("https://")
+        assert cfg.beacon_enabled is False
+        assert cfg.beacon_endpoint == ""
 
-    def test_a_default_install_actually_sends(self, _isolated_home):
-        """DEFAULT-ON, end to end — the whole suppression chain, not just the flag.
-
-        The stored flag being True is necessary but not sufficient: this change
-        added a governance suppression ABOVE the flag in ``should_send``, so a
-        wrong ``capability_default`` (or a probe that failed closed) would silence
-        every install in the field while ``beacon_enabled`` still read True. That
-        failure is invisible in a flag assertion and would look like a collapse in
-        Daily Active Instances, so assert the actual verdict.
+    def test_a_default_install_does_not_send(self, _isolated_home):
+        """DEFAULT-OFF, end to end — the verdict, not just the flag.
 
         The fixture already neutralizes the CI and data-home suppressions (both
-        fire in the test environment for reasons unrelated to defaults).
+        fire in the test environment for reasons unrelated to defaults), so the
+        only thing left holding the beacon back here is the default itself.
         """
         from aj_crew.config.loader import TelemetryConfig
 
         cfg = TelemetryConfig()
         ok, reason, _code = beacon.should_send(enabled=cfg.beacon_enabled, acked=True)
-        assert ok is True, f"a default install must send, got: {reason}"
+        assert ok is False, "a default install must not send"
+        assert "beacon_enabled is false" in reason
+
+    def test_an_opted_in_install_can_send(self, _isolated_home):
+        """Turning the switch on is all the consent ladder asks for.
+
+        A governance suppression sits ABOVE the flag in ``should_send``, so a
+        wrong ``capability_default`` (or a probe that failed closed) would silence
+        an install that did opt in while ``beacon_enabled`` still read True. That
+        failure is invisible in a flag assertion, so assert the actual verdict.
+        """
+        ok, reason, _code = beacon.should_send(enabled=True, acked=True)
+        assert ok is True, f"an opted-in install must be allowed to send, got: {reason}"
         assert reason == "ready"
 
     def test_ungoverned_default_is_not_pinned_off(self, _isolated_home):

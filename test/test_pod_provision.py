@@ -22,10 +22,10 @@ from pod_helpers import (  # noqa: F401 -- the autouse fixtures register by impo
     _systemd_backend,
 )
 
-from conftest import host_abs
 from aj_crew import env as env_mod
 from aj_crew import platform_compat
 from aj_crew.pod import provision as prov
+from conftest import host_abs
 
 
 def _npm(*args: str) -> list[str]:

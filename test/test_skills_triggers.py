@@ -156,7 +156,7 @@ class TestRepoScope:
 
     def test_aj_crew_dev_skills_load_globally_and_say_so(self) -> None:
         # Maintainer decision: the Aj Crew developer skills load in
-        # every session like any other skill, so a Aj Crew PR written from any
+        # every session like any other skill, so an Aj Crew PR written from any
         # folder still gets them. The description is what keeps them out of other
         # repositories, so each one must state that it is for this repository.
         from aj_crew import skills as skills_mod

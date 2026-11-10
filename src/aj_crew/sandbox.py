@@ -72,9 +72,7 @@ from aj_crew import (  # noqa: F401
 from aj_crew.apps import credential_masks  # noqa: F401
 from aj_crew.atomic_write import fsync_dir, refuse_linked_parent  # noqa: F401
 from aj_crew.config.paths import config_dir, kiro_agents_dir  # noqa: F401
-from aj_crew.config.write_provenance import (  # noqa: F401
-    launcher_record as _published_file_record,
-)
+from aj_crew.config.write_provenance import launcher_record as _published_file_record  # noqa: F401
 from aj_crew.constants import (  # noqa: F401
     AJCREW_SANDBOX_TOOL_ENV,
     AJCREW_SANDBOX_TOOL_VALUE,

@@ -42,7 +42,7 @@ engine:
 1. The four app agents (`pptx-maker-spec`, `-vibe`, `-style`, `-composer`) are
    replaced by one `pptx-maker` agent with no prompt of its own, the shape SDPM
    prescribes for Kiro CLI. The old names are removed without an alias.
-2. After a Aj Crew update moves the pin, the user installs the new engine
+2. After an Aj Crew update moves the pin, the user installs the new engine
    with the page's existing button. Nothing is fetched automatically. The agent
    is registered again after provisioning and after a deck-root change.
 
@@ -131,7 +131,7 @@ in the deck directory, not the conversation: a new chat resumes any deck through
 
 #### 2. Explicit engine update, re-registered agent
 
-Engine code is fetched on a user click only, as today. Between a Aj Crew
+Engine code is fetched on a user click only, as today. Between an Aj Crew
 update and that click, the installed engine is v0.3.8 and the shipped agent
 expects v0.10.4. The page treats that window like a first install: the source
 marker no longer matches the pin, so `/engine` reports the engine as not ready
@@ -165,7 +165,7 @@ Breaking:
   `tests/` and `ui/tests/`, all changed in the app implementation PR. In core,
   the pin in `src/aj_crew/apps/adoption-pins.json` moves to that release, and
   `docs/system-specs/modules/pptx-maker.md` is updated to match.
-- The Library between a Aj Crew update and the Install click (decision 2).
+- The Library between an Aj Crew update and the Install click (decision 2).
 
 Compatible: SDPM's user config (`config.json`, `state.json`, `styles/`,
 `templates/`) and the deck root are read unchanged. Verified on a v0.3.8 install

@@ -18,6 +18,7 @@
   "SessionMap",
   "SessionPointerCleanup",
   "ZipInventoryRejected",
+  "aj_crew_file",
   "app_conversation_keys",
   "app_cron_manifest_digest",
   "app_data_dir",
@@ -41,7 +42,6 @@
   "is_module_style_entry_point",
   "is_sensitive_path",
   "kiro_agents_dir",
-  "aj_crew_file",
   "list_apps",
   "load_app_cron_defs",
   "loads_mcp_config",
@@ -76,7 +76,7 @@
   "vet_zip_inventory",
   "without_mcp_refs"
  ],
- "note": "Frozen at the split of src/aj_crew/apps/bridges.py (S08): every public name it defined, and every name it bound from the rest of aj_crew. A aj_crew._facade_mirror facade: each name is served from the owner that binds it, so a read through the facade is the owner's own object.",
+ "note": "Frozen at the split of src/aj_crew/apps/bridges.py (S08): every public name it defined, and every name it bound from the rest of aj_crew. An aj_crew._facade_mirror facade: each name is served from the owner that binds it, so a read through the facade is the owner's own object.",
  "rebound": {
   "AppManifest": "aj_crew.apps.manifest",
   "Containment": "aj_crew.apps.manifest",

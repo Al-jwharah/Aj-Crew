@@ -179,8 +179,8 @@ class TestAgentSpecReadsAreHardened:
         # here rather than skipped. The sensitive-path verdict is scoped to
         # the junction's TARGET so the test proves resolution follows the
         # link: a same-named spec OUTSIDE the link must still read fine.
-        from conftest import make_dir_link
         from aj_crew import agent_discovery
+        from conftest import make_dir_link
 
         outside = tmp_path / "sensitive-outside"
         outside.mkdir()

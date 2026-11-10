@@ -76,7 +76,7 @@
   "update_app",
   "update_config_locked"
  ],
- "note": "Frozen at the split of src/aj_crew/apps/manager.py (S08): every public name it defined, and every name it bound from the rest of aj_crew. A aj_crew._facade_mirror facade: each name is served from the owner that binds it, so a read through the facade is the owner's own object.",
+ "note": "Frozen at the split of src/aj_crew/apps/manager.py (S08): every public name it defined, and every name it bound from the rest of aj_crew. An aj_crew._facade_mirror facade: each name is served from the owner that binds it, so a read through the facade is the owner's own object.",
  "rebound": {
   "AppManifest": "aj_crew.apps.manifest",
   "ConfigReadError": "aj_crew.config.loader",

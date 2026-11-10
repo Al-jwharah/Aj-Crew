@@ -17,9 +17,9 @@ import pytest
 from design_tweak_backend_helpers import isolated_queue_fixture  # noqa: F401
 from design_tweak_backend_helpers import _JsonHandler
 
-from conftest import requires_symlinks
 from aj_crew.apps.builtins.design_tweak.backend import server
 from aj_crew.testing.wait import wait_until
+from conftest import requires_symlinks
 
 
 class TestThreadGrowthIsBounded:

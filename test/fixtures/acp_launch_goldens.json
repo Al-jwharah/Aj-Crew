@@ -20,14 +20,14 @@
       "/opt/lib/codex-acp/index.js"
     ],
     "env_added": {
-      "CODEX_SQLITE_HOME": "<scratch>",
-      "DISABLE_MCP_CONFIG_FILTERING": "true",
       "AJCREW_RUNTIME_AGENT": "ajcrew",
       "AJCREW_RUNTIME_PYTHON": "<interpreter>",
       "AJCREW_SCRATCH": "<scratch>",
       "AJCREW_SPAWNED": "1",
       "AJCREW_SPAWN_HOME": "<data-home>",
       "AJCREW_SPAWN_INSTANCE": "<spawn-instance>",
+      "CODEX_SQLITE_HOME": "<scratch>",
+      "DISABLE_MCP_CONFIG_FILTERING": "true",
       "KIRO_CHAT_LOG_FILE": "<scratch-log>",
       "PATH": "<augmented-path>",
       "TEMP": "<scratch>",
@@ -65,13 +65,13 @@
       "/opt/run/aj_crew_dsh_gate.patch.yml"
     ],
     "env_added": {
-      "DSH_PERMISSION_MODE": "workspace-write",
       "AJCREW_DSH_GATE_SESSION": "<nonce>",
       "AJCREW_RUNTIME_PYTHON": "<interpreter>",
       "AJCREW_SCRATCH": "<scratch>",
       "AJCREW_SESSION_KEY": "golden-session",
       "AJCREW_SPAWNED": "1",
       "AJCREW_STUB_SESSION_TOKEN": "<session-token>",
+      "DSH_PERMISSION_MODE": "workspace-write",
       "KIRO_CHAT_LOG_FILE": "<scratch-log>",
       "PATH": "<augmented-path>",
       "TEMP": "<scratch>",
@@ -89,11 +89,11 @@
       "developer"
     ],
     "env_added": {
-      "GOOSE_MODE": "approve",
       "AJCREW_RUNTIME_PYTHON": "<interpreter>",
       "AJCREW_SESSION_KEY": "golden-session",
       "AJCREW_SPAWNED": "1",
       "AJCREW_STUB_SESSION_TOKEN": "<session-token>",
+      "GOOSE_MODE": "approve",
       "PATH": "<augmented-path>"
     },
     "spawn_label": "goose acp",

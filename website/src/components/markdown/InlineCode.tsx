@@ -227,7 +227,7 @@ function revealHintFor(isDir: boolean, platform: GatewayPlatform, canReveal: boo
  * guess at; the tooltip still reaches them as the description.
  *
  * `data-chip-action` is what the stylesheet keys the chip colours on
- * (`index.css`, the inline-code rules): the Kiro themes paint every inline code
+ * (`index.css`, the inline-code rules): the Aj themes paint every inline code
  * span at a specificity the `text-accent` utility cannot beat, so the actionable
  * chips need a rule of their own, and this attribute is how a chip says which
  * kind it is. Two values, because two kinds are told apart: `copy` (this chip)

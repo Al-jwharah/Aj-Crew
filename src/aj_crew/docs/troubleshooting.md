@@ -234,7 +234,7 @@ from a host shell, or have an administrator run
 lookup answers `Failed to look up user <user>: No such process`. A Cloud Dev
 Desktop reaches the stale case by exporting `DBUS_SESSION_BUS_ADDRESS` from a
 login session whose manager has since stopped. To preview a worktree with no
-systemd at all, use `./dev-backend.sh` from the root of a Aj Crew source
+systemd at all, use `./dev-backend.sh` from the root of an Aj Crew source
 checkout; it is a repository script and is not installed with the package.
 
 If doctor reports `session bus: not applicable (no systemd per-user manager on
@@ -388,7 +388,7 @@ setting does not change that. If compaction fires often:
 
 ### Build failures
 
-Building and testing apply to a Aj Crew source checkout, not to an installed
+Building and testing apply to an Aj Crew source checkout, not to an installed
 package. The backend's test tools live in the `dev` extra, so a plain
 `pip install -e .` has no `pytest`. Install with `pip install -e ".[dev]"` and run
 the change-scoped gate with `python3 scripts/local-gate.py`; the

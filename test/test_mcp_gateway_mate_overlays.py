@@ -16,13 +16,13 @@ from types import SimpleNamespace
 
 import pytest
 
-from conftest import requires_symlinks
 from aj_crew import agent_discovery, mate_config, mate_worker
 from aj_crew.agent_sdk import agent_specs
 from aj_crew.mcp_gateway import mate_overlays, rewriter, session_servers
 from aj_crew.mcp_gateway.hashing import expand_stub_flags
 from aj_crew.mcp_gateway.launch_approval import LaunchApprovals
 from aj_crew.mcp_gateway.rewriter import _WRAPPER_MARKER, env_sidecar_dir, env_sidecar_name
+from conftest import requires_symlinks
 
 SERVER = "jira"
 WORKER = mate_overlays.MATE_WORKER_AGENT

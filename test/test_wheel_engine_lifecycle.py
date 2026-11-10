@@ -999,9 +999,7 @@ class TestPersistedLaunchPaths:
         layout = _layout(tmp_path, monkeypatch)
         first = _completed_tree(layout, "1.0", installed_at=time.time())
         layout.stable_link.symlink_to(first)
-        monkeypatch.setattr(
-            agent_mod, "_resolve_ajcrew_bin", lambda: str(first / "bin" / "ajcrew")
-        )
+        monkeypatch.setattr(agent_mod, "_resolve_ajcrew_bin", lambda: str(first / "bin" / "ajcrew"))
         monkeypatch.setattr(agent_mod, "_in_linked_git_worktree", lambda _path: False)
         monkeypatch.setattr(agent_mod, "_in_ephemeral_tree", lambda _path: False)
         monkeypatch.setattr(agent_mod.shutil, "which", lambda _name: None)

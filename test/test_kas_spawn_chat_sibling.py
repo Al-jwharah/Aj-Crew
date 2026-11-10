@@ -27,7 +27,6 @@ from pathlib import Path
 
 import pytest
 
-from conftest import requires_symlinks
 from aj_crew import kiro_cli
 from aj_crew.acp import client as client_mod
 from aj_crew.acp.harness import harness_for
@@ -36,6 +35,7 @@ from aj_crew.acp.harness.base import SpawnContext
 from aj_crew.acp.kas_transport import KAS_RELAY_AUTH_CLIENT, KAS_RELAY_AUTH_FLAG
 from aj_crew.acp.types import ACP_BACKEND_KAS
 from aj_crew.kiro_cli import KAS_AUTH_CLIENT_MIN_KIRO_CLI
+from conftest import requires_symlinks
 
 posix_only = pytest.mark.skipif(
     sys.platform == "win32", reason="POSIX execute bit; Windows reports every file executable"

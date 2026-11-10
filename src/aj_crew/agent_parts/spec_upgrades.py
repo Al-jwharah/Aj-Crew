@@ -161,9 +161,7 @@ def migrate_agent_specs() -> int:
         except OSError as exc:
             logger.warning("Could not rewrite cleaned agent spec %s: %s", spec_path, exc)
     if cleaned:
-        logger.info(
-            "Cleaned %d kiro agent spec(s) of AjCrew bookkeeping keys", cleaned  # brand-ok
-        )
+        logger.info("Cleaned %d kiro agent spec(s) of AjCrew bookkeeping keys", cleaned)  # brand-ok
     return cleaned
 
 

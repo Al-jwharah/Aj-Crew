@@ -1137,9 +1137,7 @@ class TestSchemaStrictness:
         pasted = "https://user:pass@evil.example/p?api_key=SECRET123"
         with caplog.at_level(logging.WARNING, logger="aj_crew.platform.governance"):
             ScopedRuleset.from_dict({"mode": "allow", "allow": ["skills.sh"], "deny": [pasted]})
-        warned = [
-            r.getMessage() for r in caplog.records if r.name == "aj_crew.platform.governance"
-        ]
+        warned = [r.getMessage() for r in caplog.records if r.name == "aj_crew.platform.governance"]
         assert any("Rule 1: allow beats deny" in m for m in warned), warned
         for secret in ("user", "pass", "SECRET123", pasted):
             assert all(secret not in m for m in warned), (secret, warned)

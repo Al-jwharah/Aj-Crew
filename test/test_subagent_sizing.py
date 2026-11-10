@@ -18,7 +18,6 @@ from _clock_isolation import assert_clock_is_private
 from overload_fakes import settle_depth_emits
 
 import aj_crew.subagent as subagent
-from conftest import absent_sysconf
 from aj_crew.constants import DEFAULT_SUBAGENT_QUEUE_MAX_WAIT_SECS
 from aj_crew.subagent import (
     compute_max_subagents,
@@ -27,6 +26,7 @@ from aj_crew.subagent import (
 )
 from aj_crew.testing.clock import ManualClock
 from aj_crew.testing.wait import await_until
+from conftest import absent_sysconf
 
 # ``SubagentManager.spawn`` refuses -- registering no task -- while the host
 # looks short of memory, which is the runner's state, not this test's input.

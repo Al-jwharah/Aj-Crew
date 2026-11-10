@@ -24,7 +24,6 @@ from registry_store_art_prewarm_helpers import (
     _pin_registry,
 )
 
-from conftest import requires_o_nofollow, requires_symlinks
 from aj_crew.apps import registry as reg_mod
 from aj_crew.apps.registry import (
     _TRUST_OWNER,
@@ -38,6 +37,7 @@ from aj_crew.apps.registry import (
     _read_manifest_cache,
     _store_art_cache_path,
 )
+from conftest import requires_o_nofollow, requires_symlinks
 
 # ---------------------------------------------------------------------------
 # The manifest size cap

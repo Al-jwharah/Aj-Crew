@@ -10,9 +10,7 @@ does, so the server's binding is the one its owners read and the one a test rebi
 
 from __future__ import annotations
 
-from aj_crew.apps.builtin_host_grants import (
-    strict_internal_paths as _builtin_strict_internal_paths,
-)
+from aj_crew.apps.builtin_host_grants import strict_internal_paths as _builtin_strict_internal_paths
 
 # Strict internal API paths — exact paths that ONLY internal processes
 # (mcp-core, doctor, cron) call, never the browser. Access requires loopback
@@ -92,7 +90,7 @@ _STRICT_INTERNAL_API_PATHS = frozenset(
         "/api/agent-ask",
         # Session directives: the provider-neutral leg of the directive
         # protocol. STRICT for the same reasons as its sibling above — the
-        # only legitimate caller is a Aj Crew directive tool in an MCP
+        # only legitimate caller is an Aj Crew directive tool in an MCP
         # subprocess, and the route's whole point is that the payload arrives
         # somewhere the model's tool result is not trusted. A cookie
         # fall-through would let a browser bearer park a directive against a

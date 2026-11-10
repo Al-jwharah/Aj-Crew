@@ -1,6 +1,7 @@
 {
  "base_public_names": [
   "ADVERTISE_CALLER_IDENTITY",
+  "AjCrewConfig",
   "BROADCAST_RESPONSE_MARGIN_SECS",
   "BROADCAST_TARGET_ALLOWANCE_SECS",
   "CHANNEL_SESSION_NAMESPACES",
@@ -9,7 +10,6 @@
   "FOLDER_SORT_DEFAULT",
   "FOLDER_SORT_MODES",
   "GENERATE_TITLE_TIMEOUT_SECS",
-  "AjCrewConfig",
   "MAX_BROADCAST_TARGETS",
   "MCP_DASHBOARD_SCHEMAS",
   "SERVER_NAME",
@@ -29,6 +29,7 @@
  ],
  "note": "A _facade_mirror facade over the flat mcp_dashboard_* owners. Every name the owners define stays bound on it as the owner's own object; the imports only the owners read are served from them.",
  "rebound": {
+  "AjCrewConfig": "aj_crew.config.loader",
   "BROADCAST_RESPONSE_MARGIN_SECS": "aj_crew.validation",
   "BROADCAST_TARGET_ALLOWANCE_SECS": "aj_crew.validation",
   "CHANNEL_SESSION_NAMESPACES": "aj_crew.constants",
@@ -36,7 +37,6 @@
   "DashboardError": "aj_crew.mcp_tools.dashboard_client",
   "FOLDER_SORT_DEFAULT": "aj_crew.config.sections",
   "FOLDER_SORT_MODES": "aj_crew.config.sections",
-  "AjCrewConfig": "aj_crew.config.loader",
   "MAX_BROADCAST_TARGETS": "aj_crew.validation",
   "MCP_DASHBOARD_SCHEMAS": "aj_crew.validation",
   "SLACK_THREAD_TS_RE": "aj_crew.validation",

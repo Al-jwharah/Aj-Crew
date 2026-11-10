@@ -79,7 +79,7 @@ _GUARDED_ROOTS: tuple[pathlib.Path, ...] = (
 #:
 #: Whatever the operator's ``TMPDIR`` points at, a path under our basetemp is
 #: test-owned by construction -- the floor's fixtures created it. That matters because
-#: a Aj Crew agent session sets ``TMPDIR`` to its scratch dir under
+#: an Aj Crew agent session sets ``TMPDIR`` to its scratch dir under
 #: ``~/.kiro/crew/scratch/``, so every correctly-pinned home then resolves INSIDE the
 #: guarded ``~/.kiro`` tree while touching nothing of the operator's. The guard asks
 #: whether a pin ESCAPED to the real tree, and a path under our own basetemp did not.
@@ -117,7 +117,7 @@ class TestTheGuardItself:
         assert _inside_a_guarded_root(pathlib.Path.home() / ".kiro" / "crew")
 
     def test_our_own_basetemp_is_test_owned_even_under_a_guarded_root(self, monkeypatch) -> None:
-        """A run whose TMPDIR is a Aj Crew session scratch dir puts basetemp under
+        """A run whose TMPDIR is an Aj Crew session scratch dir puts basetemp under
         ``~/.kiro``; a pin there must read as isolated, not as an escape."""
         scratch = (
             pathlib.Path.home() / ".kiro" / "crew" / "scratch" / "runtime-x" / "pytest-0"
@@ -223,7 +223,7 @@ class TestTheDataHomeIsPinnedForEveryTestpath:
 class TestThePlatformProfileIsPinnedForEveryTestpath:
     """``AJCREW_PROFILE`` is ``standalone`` for every test, whatever the shell exported.
 
-    A Aj Crew agent session exports the enterprise ``AJCREW_PROFILE`` to every child it
+    An Aj Crew agent session exports the enterprise ``AJCREW_PROFILE`` to every child it
     spawns, and a dev box with an SSO marker resolves the same profile on its own. With
     no companion installed that profile FAILS CLOSED: ``current_context()`` raises
     ``PlatformCompositionError``, every governance-gated route answers 500, every gated
@@ -486,9 +486,7 @@ class TestTheWorkspaceRootIsPinnedForEveryTestpath:
         """
         from aj_crew.config.loader import workspace_root
 
-        assert (
-            workspace_root().resolve() == pathlib.Path(os.environ["AJCREW_WORKSPACE"]).resolve()
-        )
+        assert workspace_root().resolve() == pathlib.Path(os.environ["AJCREW_WORKSPACE"]).resolve()
 
     def test_a_test_can_still_override_the_workspace_itself(
         self, tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch

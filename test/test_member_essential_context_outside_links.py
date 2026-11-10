@@ -12,13 +12,13 @@ from pathlib import Path
 import member_essential_context_helpers
 import pytest
 
-from conftest import make_dir_link
 from aj_crew import member_essential_context as _mec
 from aj_crew.member_essential_context import (
     MemberEssentialContextError,
     documents_for_member,
     projected_resource_documents,
 )
+from conftest import make_dir_link
 
 # Fixtures shared with the sibling modules, bound by assignment so pytest registers
 # them for the tests in this module.

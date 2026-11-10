@@ -40,9 +40,9 @@ from unittest import mock
 from aiohttp import web
 from aiohttp.test_utils import AioHTTPTestCase, make_mocked_request
 
-from conftest import make_dir_link
 from aj_crew.apps.builtins.pptx_maker.backend import engine, paths, provision, routes
 from aj_crew.testing.wait import async_wait_until
+from conftest import make_dir_link
 
 # An AKIA-shaped access key ID. The canonical AWS documentation example, so it is
 # a real pattern match without being a live secret.

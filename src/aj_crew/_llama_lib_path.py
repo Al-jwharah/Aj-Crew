@@ -125,7 +125,7 @@ def _is_bundled_libs_dir(value: str) -> bool:
     ``.../aj_crew/_vendor/llama_cpp_libs/<platform>`` for a platform this
     package ships libs for. Aj Crew never documents setting the override to a
     bundled directory, so a process that finds one in ``LLAMA_CPP_LIB_PATH``
-    inherited it from a Aj Crew process: an ancestor whose loader leaves the
+    inherited it from an Aj Crew process: an ancestor whose loader leaves the
     variable in the environment every child and every in-app-restart successor
     receives. It names THAT process's install, which need not be this one and
     may have been removed by an upgrade since.

@@ -19,10 +19,10 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from conftest import make_dir_link
 from aj_crew import mcp_core, members, session_pid, session_pid_sig, session_token_sig
 from aj_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV, mint_stub_session_token
 from aj_crew.providers.mirrors.identity import control_plane_identity_env
+from conftest import make_dir_link
 
 LIVE_KEY = "dashboard:chat-9-current"
 STALE_KEY = "dashboard:chat-7-previous"

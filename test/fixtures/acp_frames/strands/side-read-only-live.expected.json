@@ -154,8 +154,8 @@
         "kind": "tool_result",
         "tool_call_id": "tooluse_k6_shell",
         "tool_output": "DENIED: Aj Crew did not approve 'shell'",
-        "tool_output_bytes": 41,
-        "tool_output_digest": "3d1c8d5d39e74088b49b4170f429dd5691af419e37faf13706359d67970982f6",
+        "tool_output_bytes": 39,
+        "tool_output_digest": "21a8040072534b600194465823ded9c0ed9ba7801d6c3011b528cc55fa8d3e10",
         "tool_status": "failed"
       }
     ],
@@ -235,8 +235,8 @@
         "kind": "tool_result",
         "tool_call_id": "tooluse_k6_write",
         "tool_output": "DENIED: Aj Crew did not approve 'write'",
-        "tool_output_bytes": 41,
-        "tool_output_digest": "83789a60ed93d359cd2e7b5f7f6d49ef38daebf8a08a7d27e42f137c44f2c95e",
+        "tool_output_bytes": 39,
+        "tool_output_digest": "feb154c889f2d20a568674e0885b37f26f782e13da9a014126e96938456bbc40",
         "tool_status": "failed"
       }
     ],

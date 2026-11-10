@@ -516,7 +516,7 @@ class TokenStore:
         right before it persists its credential
         (:meth:`KasLoginService._persist_and_finish`); a different value means a
         sign-out landed in between -- from ANY process on this host, the gateway's
-        own sign-out or a ``ajcrew kas logout`` in a shell -- and the credential
+        own sign-out or an ``ajcrew kas logout`` in a shell -- and the credential
         must not be written into the vault that sign-out just emptied. The gateway's
         in-memory epoch covers only its own pending logins; this is the same guard
         across processes. An unreadable marker reads as ``""``, so a login that began

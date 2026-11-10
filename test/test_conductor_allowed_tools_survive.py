@@ -46,7 +46,6 @@ from typing import Any
 
 import pytest
 
-from conftest import requires_symlinks
 from aj_crew import agent, agent_discovery
 from aj_crew.agent_files import (
     CONDUCTOR_AGENT_FILENAME,
@@ -57,6 +56,7 @@ from aj_crew.agent_files import (
 from aj_crew.agent_materialization import conductor_agents
 from aj_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
 from aj_crew.platform import governance
+from conftest import requires_symlinks
 
 #: (spec name, filename, installer) for the three installers; the ledger alias shares
 #: ``_conductor_spec`` with the goal conductor and gets its own test below.
@@ -172,9 +172,7 @@ def agents_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
             "allowedTools": ["@ajcrew-core"],
         },
     )
-    monkeypatch.setattr(
-        agent, "_ajcrew_mcp_invocation", lambda sub: ("/resolved/ajcrew", [sub])
-    )
+    monkeypatch.setattr(agent, "_ajcrew_mcp_invocation", lambda sub: ("/resolved/ajcrew", [sub]))
     # An ungoverned host as the gate sees it: no ceiling, the floor still on.
     monkeypatch.setattr(agent, "_may_auto_approve", lambda ref: governance.may_skip_gate(ref, None))
     return tmp_path
@@ -1098,9 +1096,7 @@ class TestTheHistoryClaimsOnlyWhatAReleaseShipped:
         ("name", "installer"),
         [
             pytest.param("ajcrew-conductor", "_install_conductor_agent", id="conductor"),
-            pytest.param(
-                "ajcrew-ledger-conductor", "_install_ledger_conductor_agent", id="ledger"
-            ),
+            pytest.param("ajcrew-ledger-conductor", "_install_ledger_conductor_agent", id="ledger"),
             pytest.param(
                 "ajcrew-pipeline-conductor", "_install_pipeline_conductor_agent", id="pipeline"
             ),

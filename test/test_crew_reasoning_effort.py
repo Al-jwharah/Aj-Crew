@@ -199,9 +199,7 @@ class TestBackgroundWorkerAgents:
 class TestConfigLoadCoercesTheCrewPin:
     def test_a_valid_level_round_trips_through_save_and_load(self):
         cfg = AjCrewConfig.load()
-        cfg.agents["reviewer"] = AjCrewAgentConfig(
-            kiro_agent="ajcrew", reasoning_effort="xhigh"
-        )
+        cfg.agents["reviewer"] = AjCrewAgentConfig(kiro_agent="ajcrew", reasoning_effort="xhigh")
         cfg.save()
 
         assert AjCrewConfig.load().agents["reviewer"].reasoning_effort == "xhigh"
@@ -691,9 +689,7 @@ class TestSavingAPinRefreshesSessionDefaults:
         role effort its binding implies."""
         refreshed: list[str] = []
         async with TestClient(TestServer(self._app(refreshed))) as client:
-            resp = await client.post(
-                "/api/agents", json={"name": "worker", "kiro_agent": "ajcrew"}
-            )
+            resp = await client.post("/api/agents", json={"name": "worker", "kiro_agent": "ajcrew"})
             assert resp.status == 200
         assert refreshed == ["yes"]
 

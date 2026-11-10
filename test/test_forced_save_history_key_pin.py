@@ -91,9 +91,7 @@ class TestRealSaveRefusalThroughEndpoints:
             slot.append("user", "hello")
             slot.drain()
             pinned = slot_history_key(slot)
-            with patch(
-                "aj_crew.dashboard.chat_folders.save_slot_off_loop", _rebinding_save(slot)
-            ):
+            with patch("aj_crew.dashboard.chat_folders.save_slot_off_loop", _rebinding_save(slot)):
                 resp = await client.patch(
                     "/api/chat/slots/s1/folder", json={"folder_id": folder["id"]}
                 )

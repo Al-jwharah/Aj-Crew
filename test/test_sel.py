@@ -33,13 +33,13 @@ from sel_helpers import (  # noqa: F401 -- fixtures are requested by name
 )
 
 import aj_crew.sel as sel_mod
-from conftest import requires_symlinks
 from aj_crew import platform_compat
 from aj_crew import sel as aj_crew_sel
 from aj_crew import sel_append as aj_crew_sel_append
 from aj_crew import sel_chain_lock as aj_crew_sel_chain_lock
 from aj_crew.sel import SecurityEvent, SecurityEventLog, _infer_source, sel
 from aj_crew.testing.wait import async_wait_until, wait_until
+from conftest import requires_symlinks
 
 
 class TestHmacKeyManagement:

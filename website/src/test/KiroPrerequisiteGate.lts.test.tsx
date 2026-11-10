@@ -304,7 +304,7 @@ describe('KiroPrerequisiteGate LTS login gate', () => {
 
   it.each([
     ['the bundled desktop CLI', { bundled_cli: true, login_command: "'/Applications/Aj Crew.app/Contents/Resources/kiro-cli/kiro-cli' login" }],
-    ['a AJCREW_KIRO_BIN override off PATH', { bundled_cli: false, login_command: "'/opt/custom/kiro-cli' login" }],
+    ['an AJCREW_KIRO_BIN override off PATH', { bundled_cli: false, login_command: "'/opt/custom/kiro-cli' login" }],
   ])('points %s to the sign-in screen for the exact command, still display only', async (_label, extra) => {
     await relock(<Draft />, status({ ...locked, initial_setup_complete: true, ...extra }))
     const notice = screen.getByTestId('lts-relock-notice')

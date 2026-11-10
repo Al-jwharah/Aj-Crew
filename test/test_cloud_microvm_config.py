@@ -345,9 +345,7 @@ class TestProvisionerRegistration:
             "_microvm_config",
             staticmethod(lambda: config),
         )
-        monkeypatch.setattr(
-            "aj_crew.sandbox.require_unaliased_cloud_config", lambda *a, **k: None
-        )
+        monkeypatch.setattr("aj_crew.sandbox.require_unaliased_cloud_config", lambda *a, **k: None)
         engine = defaults.DefaultRemoteProvisionerProvider().engine_for(
             defaults.MICROVM_PROVISIONER_ID
         )
@@ -383,9 +381,7 @@ class TestProvisionerRegistration:
             "_microvm_config",
             staticmethod(lambda: config),
         )
-        monkeypatch.setattr(
-            "aj_crew.sandbox.require_unaliased_cloud_config", lambda *a, **k: None
-        )
+        monkeypatch.setattr("aj_crew.sandbox.require_unaliased_cloud_config", lambda *a, **k: None)
         engine = defaults.DefaultRemoteProvisionerProvider().engine_for(
             defaults.MICROVM_PROVISIONER_ID
         )

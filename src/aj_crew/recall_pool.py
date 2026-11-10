@@ -195,7 +195,7 @@ class RecallPool:
             raise ChildUnavailable(
                 f"only {free_mb:.0f} MB free, a recall child may need {self.max_rss_mb} MB"
             )
-        # -P: never put the working directory on the child's sys.path, so a
+        # -P: never put the working directory on the child's sys.path, so an
         # aj_crew/ directory in the gateway's cwd cannot shadow the package.
         argv = self._argv or platform_compat.isolated_python_argv("-P", "-m", _CHILD_MODULE)
         env = {

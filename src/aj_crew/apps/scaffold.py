@@ -167,7 +167,7 @@ Describe what this skill teaches the agent.
 Describe common patterns the agent should know about.
 """
 
-_BACKEND_TEMPLATE = '''"""Minimal backend for {name} — a AjCrew app.
+_BACKEND_TEMPLATE = '''"""Minimal backend for {name} — an AjCrew app.
 
 Run with: python backend/server.py
 Or let AjCrew manage it via the app manifest backend section.
@@ -515,7 +515,7 @@ def scaffold_app(
     if not display_name:
         display_name = name.replace("-", " ").title()
     if not description:
-        description = f"A Aj Crew app: {display_name}"
+        description = f"An Aj Crew app: {display_name}"
     if not author:
         author = os.environ.get("USER", "developer")
 

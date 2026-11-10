@@ -380,9 +380,7 @@ class TestLocalToken:
         """
         from aj_crew.mcp_gateway.socketsec import PeerCredResult
 
-        monkeypatch.setattr(
-            "aj_crew.dashboard.token_auth.request_is_unix_socket", lambda _r: True
-        )
+        monkeypatch.setattr("aj_crew.dashboard.token_auth.request_is_unix_socket", lambda _r: True)
         monkeypatch.setattr(
             "aj_crew.dashboard.handlers.core.check_peer_is_self",
             lambda _s: PeerCredResult.MATCH,
@@ -404,9 +402,7 @@ class TestLocalToken:
         """
         from aj_crew.mcp_gateway.socketsec import PeerCredResult
 
-        monkeypatch.setattr(
-            "aj_crew.dashboard.token_auth.request_is_unix_socket", lambda _r: True
-        )
+        monkeypatch.setattr("aj_crew.dashboard.token_auth.request_is_unix_socket", lambda _r: True)
         monkeypatch.setattr(
             "aj_crew.dashboard.handlers.core.check_peer_is_self",
             lambda _s: PeerCredResult.MATCH,
@@ -430,9 +426,7 @@ class TestLocalToken:
         """
         from aj_crew.mcp_gateway.socketsec import PeerCredResult
 
-        monkeypatch.setattr(
-            "aj_crew.dashboard.token_auth.request_is_unix_socket", lambda _r: True
-        )
+        monkeypatch.setattr("aj_crew.dashboard.token_auth.request_is_unix_socket", lambda _r: True)
         monkeypatch.setattr(
             "aj_crew.dashboard.handlers.core.check_peer_is_self",
             lambda _s: PeerCredResult.MISMATCH,
@@ -456,9 +450,7 @@ class TestLocalToken:
         """
         from aj_crew.mcp_gateway.socketsec import PeerCredResult
 
-        monkeypatch.setattr(
-            "aj_crew.dashboard.token_auth.request_is_unix_socket", lambda _r: True
-        )
+        monkeypatch.setattr("aj_crew.dashboard.token_auth.request_is_unix_socket", lambda _r: True)
         monkeypatch.setattr(
             "aj_crew.dashboard.handlers.core.check_peer_is_self",
             lambda _s: PeerCredResult.UNVERIFIABLE,
@@ -652,9 +644,7 @@ class TestLogout:
         from aj_crew.mcp_gateway.socketsec import PeerCredResult
 
         monkeypatch.setattr("aj_crew.dashboard.handlers.is_loopback", lambda _r: False)
-        monkeypatch.setattr(
-            "aj_crew.dashboard.token_auth.request_is_unix_socket", lambda _r: True
-        )
+        monkeypatch.setattr("aj_crew.dashboard.token_auth.request_is_unix_socket", lambda _r: True)
         monkeypatch.setattr(
             "aj_crew.dashboard.handlers.core.check_peer_is_self",
             lambda _s: PeerCredResult.MATCH,
@@ -675,9 +665,7 @@ class TestLogout:
         from aj_crew.mcp_gateway.socketsec import PeerCredResult
 
         monkeypatch.setattr("aj_crew.dashboard.handlers.is_loopback", lambda _r: False)
-        monkeypatch.setattr(
-            "aj_crew.dashboard.token_auth.request_is_unix_socket", lambda _r: True
-        )
+        monkeypatch.setattr("aj_crew.dashboard.token_auth.request_is_unix_socket", lambda _r: True)
         monkeypatch.setattr(
             "aj_crew.dashboard.handlers.core.check_peer_is_self",
             lambda _s: PeerCredResult.MISMATCH,
@@ -734,9 +722,7 @@ class TestShutdownUnixPeer:
         from aj_crew.mcp_gateway.socketsec import PeerCredResult
 
         monkeypatch.setattr("aj_crew.dashboard.handlers.is_loopback", lambda _r: False)
-        monkeypatch.setattr(
-            "aj_crew.dashboard.token_auth.request_is_unix_socket", lambda _r: True
-        )
+        monkeypatch.setattr("aj_crew.dashboard.token_auth.request_is_unix_socket", lambda _r: True)
         monkeypatch.setattr(
             "aj_crew.dashboard.handlers.core.check_peer_is_self",
             lambda _s: PeerCredResult.MATCH,
@@ -754,9 +740,7 @@ class TestShutdownUnixPeer:
         from aj_crew.mcp_gateway.socketsec import PeerCredResult
 
         monkeypatch.setattr("aj_crew.dashboard.handlers.is_loopback", lambda _r: False)
-        monkeypatch.setattr(
-            "aj_crew.dashboard.token_auth.request_is_unix_socket", lambda _r: True
-        )
+        monkeypatch.setattr("aj_crew.dashboard.token_auth.request_is_unix_socket", lambda _r: True)
         monkeypatch.setattr(
             "aj_crew.dashboard.handlers.core.check_peer_is_self",
             lambda _s: PeerCredResult.MISMATCH,

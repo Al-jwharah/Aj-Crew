@@ -533,9 +533,7 @@ class TestThePathComparisonHasNoStringEdges:
         assert mod.under_prefix("test/test_x.py", "test") is True
         assert mod.under_prefix("test", "test") is True
         assert mod.under_prefix("testdata/secret", "test") is False
-        assert (
-            mod.under_prefix("src/aj_crew/sandbox.py.orig", "src/aj_crew/sandbox.py") is False
-        )
+        assert mod.under_prefix("src/aj_crew/sandbox.py.orig", "src/aj_crew/sandbox.py") is False
 
     def test_an_empty_prefix_matches_nothing(self, mod) -> None:
         """An empty allowed entry would otherwise permit the whole tree."""
@@ -571,7 +569,7 @@ class TestAnUnstagedEditIsStillTheFix:
         assert payload(result)["changed"] == ["test/test_x.py"]
 
     def test_only_the_named_test_run_residue_is_exempt(self, repo) -> None:
-        """A Aj Crew test run drops a data home and a breadcrumb into the tree.
+        """An Aj Crew test run drops a data home and a breadcrumb into the tree.
 
         Refusing those would reject every fixer that ran the suite, which is the false
         rejection this gate exists to avoid one level up -- so they are exempt BY NAME,

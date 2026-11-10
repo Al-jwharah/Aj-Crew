@@ -147,7 +147,7 @@ The script's 10-second delay gives the current session time to finish responding
 
 - User explicitly asks ("restart yourself", "reload")
 - Config change made that requires restart (`config.json`, `mcp.json`, agent files)
-- After applying a Aj Crew update (see self-update skill)
+- After applying an Aj Crew update (see self-update skill)
 
 If the user is at the dashboard and no pending work needs resuming, point them at
 **Settings → About → Restart Gateway** (confirm-gated, backed by
@@ -173,7 +173,7 @@ If the user grants blanket permission for a specific scenario (e.g. "yes, always
 
 ```python
 learn_add(
-    rule="Okay to automatically restart the gateway after applying a Aj Crew update.",
+    rule="Okay to automatically restart the gateway after applying an Aj Crew update.",
     category="preference",
 )
 ```

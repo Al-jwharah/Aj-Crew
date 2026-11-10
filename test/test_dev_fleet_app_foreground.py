@@ -102,7 +102,7 @@ async def test_foreground_backend_unavailable_cases(tmp_path):
 @pytest.mark.asyncio
 async def test_foreground_backend_binary_resolution(tmp_path):
     """ONLY the keystone-fenced marker launcher is trusted — no PATH fallback
-    (an agent can plant a `ajcrew` in ~/.local/bin); invalid recorded
+    (an agent can plant an `ajcrew` in ~/.local/bin); invalid recorded
     launchers are refused rather than guessed around."""
     kc = _mk_kcbin(tmp_path)
     # Marker launcher used, verbatim.
@@ -175,7 +175,7 @@ async def test_restart_of_a_desktop_supervised_gateway_names_the_app(monkeypatch
 
 @pytest.mark.asyncio
 async def test_restart_of_a_service_launched_gateway_spawns_nothing(monkeypatch, tmp_path):
-    """A `ajcrew service install` unit's gateway is its manager's to restart: a
+    """An `ajcrew service install` unit's gateway is its manager's to restart: a
     detached restart would run in the unit's cgroup and die with the gateway it
     stops. Restart spawns nothing and names the service, not a foreground one."""
     from aj_crew.config.loader import consume_managed_service_launch_environment

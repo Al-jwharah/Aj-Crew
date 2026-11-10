@@ -27,10 +27,10 @@ from mcp_discovery_helpers import (  # noqa: F401 -- the autouse fixture registe
 )
 from stray_line_helpers import too_deep_line
 
-from conftest import host_abs
 from aj_crew import platform_compat
 from aj_crew.mcp_discovery import McpServerInfo, _read_stdio_jsonrpc_response, probe_server
 from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS, async_wait_until
+from conftest import host_abs
 
 
 class TestProbeServerProcessCleanup:

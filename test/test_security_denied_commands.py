@@ -191,7 +191,7 @@ class TestKiroCliBundledDeniedCommands:
         assert not self._is_denied("cat ~/.ajcrew/config.json")
 
     # --- incidental-mention false positives: must be allowed ---
-    # A bare `kill` takes PIDs, so none of these can aim at a ajcrew process
+    # A bare `kill` takes PIDs, so none of these can aim at an ajcrew process
     # by name; the product name is a FILE, a LOG PATH, or a COMMENT.
 
     def test_kill_bare_pid_allowed(self) -> None:

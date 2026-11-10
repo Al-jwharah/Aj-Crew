@@ -22,12 +22,12 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from conftest import requires_symlinks
 from aj_crew import session_pid, session_work_dir
 from aj_crew.acp.types import ACP_BACKEND_KIRO
 from aj_crew.config.loader import AjCrewConfig
 from aj_crew.testing.wait import async_wait_until
 from aj_crew.workspace_cli_settings import CLI_SETTINGS_LOCK_NAME
+from conftest import requires_symlinks
 
 OTHER_HOME = "f" * 24
 PREDECESSOR_PID = 12345

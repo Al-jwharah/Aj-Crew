@@ -56,9 +56,7 @@ def _no_spec_hooks(_floor_monkeypatch):
     async def _claimed(_sessions, _key, _agent, claimed, _claim):
         return claimed
 
-    _floor_monkeypatch.setattr(
-        "aj_crew.dashboard.chat_runner.reproject_claimed_session", _claimed
-    )
+    _floor_monkeypatch.setattr("aj_crew.dashboard.chat_runner.reproject_claimed_session", _claimed)
 
 
 def _provider(backend: str) -> MagicMock:

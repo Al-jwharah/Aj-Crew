@@ -139,9 +139,7 @@ def test_count_request_records_nothing_to_the_run_store(rec, wired):  # noqa: F8
 
 def test_count_request_never_raises_when_the_recorder_is_broken():
     """A refusal path must answer its caller even if telemetry is wedged."""
-    with patch(
-        "aj_crew.metrics.provider.get_recorder", side_effect=RuntimeError("provider down")
-    ):
+    with patch("aj_crew.metrics.provider.get_recorder", side_effect=RuntimeError("provider down")):
         webhooks.count_request(webhooks.METRIC_OUTCOME_THROTTLED)
 
 

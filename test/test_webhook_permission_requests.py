@@ -409,7 +409,7 @@ def _notice(client: _SteeringClient) -> str:
         (None, "tool policy of the surface", "no hook gate"),
         (
             ToolHookResult(action=TOOL_DENY, reason="Blocked by security policy: secrets dir"),
-            "blocked by a Aj Crew safety policy",
+            "blocked by an Aj Crew safety policy",
             "secrets dir",
         ),
         (ToolHookResult(action=TOOL_ALLOW), "tool policy of the surface", "no person to approve"),

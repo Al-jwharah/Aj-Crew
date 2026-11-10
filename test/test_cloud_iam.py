@@ -154,7 +154,7 @@ class TestPolicyDocument:
         assert "iam:PermissionsBoundary" not in str(st["Condition"])
 
     def test_put_role_policy_not_tag_scoped_regression(self):
-        # Guard: PutRolePolicy on a ajcrew-ec2-* role ARN must carry the
+        # Guard: PutRolePolicy on an ajcrew-ec2-* role ARN must carry the
         # managed-tag condition — a regression that drops it re-opens the
         # pre-existing-unbounded-role escalation. PutRolePolicy lives in the
         # merged IamPutRolePolicyAndTagRoleOnManaged statement.
@@ -556,7 +556,7 @@ class TestPolicyDocument:
     def test_attach_role_policy_pinned_to_ssm_core(self):
         # AttachRolePolicy must be constrained by iam:PolicyARN to exactly the
         # SSM-core managed policy, else a holder could attach AdministratorAccess
-        # to a ajcrew-ec2-* role and pass it to EC2 (full escalation).
+        # to an ajcrew-ec2-* role and pass it to EC2 (full escalation).
         st = self._stmt("IamAttachManagedPolicyForInstance")
         assert set(st["Action"]) == {"iam:AttachRolePolicy", "iam:DetachRolePolicy"}
         pinned = st["Condition"]["ArnEquals"]["iam:PolicyARN"]

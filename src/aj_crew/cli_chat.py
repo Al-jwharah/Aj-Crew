@@ -460,7 +460,7 @@ def _run_chat(message: str | None, model: str | None, agent: str | None = None) 
     is the shape an ordinary snapshot tool produces — and that refusal is deliberately
     NOT in the ``AcpError`` hierarchy, so ``_send_and_print``'s handler never sees it
     and it escaped here as an unhandled exception. The remedy was technically on screen,
-    buried under a stack trace that reads as a Aj Crew crash, which is the wrong thing
+    buried under a stack trace that reads as an Aj Crew crash, which is the wrong thing
     to tell an operator whose actual problem is one extra file link.
 
     Printed verbatim: the exception's own text names the path and the one-step fix, and a

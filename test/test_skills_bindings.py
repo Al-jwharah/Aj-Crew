@@ -1,7 +1,7 @@
 """``SkillsLoader`` keeps every member it had, and each moved body is bound from its owner.
 
 The loader's state stays on the instance; a member whose body moved lives as a module
-function of the same name in a ``aj_crew.skills_<role>`` owner, and the class binds it
+function of the same name in an ``aj_crew.skills_<role>`` owner, and the class binds it
 (``member = _owner.member``, or ``staticmethod(_owner.member)``). This file pins that
 binding contract for the whole facade family:
 

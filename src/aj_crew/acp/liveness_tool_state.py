@@ -105,7 +105,7 @@ class ToolCallState:
     tool_name: str = ""
     # Trusted MCP server from the adapter identity channel, set only when the
     # tool_call frame's identity is provenance-verified
-    # (``AcpEvent.mcp_identity_trusted``) or is KAS's half-identity for a
+    # (``AcpEvent.mcp_identity_trusted``) or is KAS's half-identity for an
     # ``ajcrew-core`` call (:meth:`identity_of`); empty otherwise
     # (fail-closed). Read by
     # :meth:`is_trusted_wait`, and by the ``remote_flat`` scan, which reads only
@@ -215,7 +215,7 @@ class ToolCallState:
         return _MCP_SEPARATOR_RE.split(self.tool_name)[-1] == _WAIT_TOOL_NAME
 
     def is_trusted_keepalive_tool(self) -> bool:
-        """True when the adapter-authored identity names a ajcrew-core tool
+        """True when the adapter-authored identity names an ajcrew-core tool
         that pings ``/api/session-keepalive`` while it runs.
 
         Same identity rule as :meth:`is_trusted_wait`: ``mcp_server_name`` must

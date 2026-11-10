@@ -356,7 +356,7 @@ def mcp_candidates(agent_spec: dict) -> list[Candidate]:
                     kind="mcp",
                     id=name,
                     content_hash=_hashing._sha(canonical.encode("utf-8")),
-                    blocked="a Aj Crew-managed server that resolves to an absolute "
+                    blocked="an Aj Crew-managed server that resolves to an absolute "
                     "path on this machine; the container composes its own",
                 )
             )

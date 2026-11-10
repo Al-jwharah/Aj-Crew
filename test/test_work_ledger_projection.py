@@ -712,9 +712,7 @@ def test_an_out_of_range_entry_time_does_not_escape_the_work_fold():
 
     item_id = "it_0000abcd"
     unit_id = "u-out-of-range-time"
-    unit = CrewLog.create(
-        lg.KIND_SESSION, unit_id, owner="raymond", agent="ajcrew", slot=CONDUCTOR
-    )
+    unit = CrewLog.create(lg.KIND_SESSION, unit_id, owner="raymond", agent="ajcrew", slot=CONDUCTOR)
     unit.append(
         "work/recorded",
         {
@@ -1017,9 +1015,7 @@ def test_a_nested_conductors_own_board_folds_even_when_its_first_entry_reports_u
     from aj_crew.crew_log import CrewLog
 
     parent, nested = "chat-1-parent", "chat-2-nested"
-    unit = CrewLog.create(
-        lg.KIND_SESSION, "u-nested", owner="raymond", agent="ajcrew", slot=nested
-    )
+    unit = CrewLog.create(lg.KIND_SESSION, "u-nested", owner="raymond", agent="ajcrew", slot=nested)
     unit.append(
         "work/recorded",
         {
@@ -1219,9 +1215,7 @@ async def test_an_unconfirmed_write_is_undone_from_the_record_in_the_same_reques
         "unit_for_session_key",
         lambda sessions, key: {CONDUCTOR: "u-conductor", WORKER: "u-worker"}[key],
     )
-    CrewLog.create(
-        lg.KIND_SESSION, "u-conductor", owner="raymond", agent="ajcrew", slot=CONDUCTOR
-    )
+    CrewLog.create(lg.KIND_SESSION, "u-conductor", owner="raymond", agent="ajcrew", slot=CONDUCTOR)
     CrewLog.create(lg.KIND_SESSION, "u-worker", owner="raymond", agent="ajcrew", slot=WORKER)
     # The conductor's writes land in the record; the worker's report will not, in
     # either copy.

@@ -368,7 +368,7 @@ Exit criteria for the `work_report` grant (section 5.5):
 14. `ajcrew-conductor`, its alias and `ajcrew-team-lead` carry
     `@ajcrew-work/work_report` in `allowedTools` and in the KAS rule.
 15. The pipeline and security conductors do not.
-16. No conductor spec grants the whole `@ajcrew-work` server or a
+16. No conductor spec grants the whole `@ajcrew-work` server or an
     `ajcrew-work/*` wildcard.
 
 The same PR updates the withholding comment in `agent_parts/spec_grants.py`,

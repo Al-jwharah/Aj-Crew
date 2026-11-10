@@ -68,7 +68,7 @@ REMOTE_BIN_HINT = (
 # (e.g. "20h", "30m"). Validated to keep it out of the remote command unchecked.
 _TTL_RE = re.compile(TTL_PATTERN)
 
-# Extract the JWT from a `ajcrew token` URL: http://localhost:7777?token=eyJ...
+# Extract the JWT from an `ajcrew token` URL: http://localhost:7777?token=eyJ...
 # (also matches https://.../?token=...&foo=bar).
 _TOKEN_RE = re.compile(r"[?&]token=([^\s&]+)")
 
@@ -188,7 +188,7 @@ def ttl_to_seconds(ttl: str) -> int:
 
 
 def parse_token_from_stdout(stdout: str) -> str:
-    """Extract the JWT from a ``ajcrew token`` URL, or ``""`` if absent."""
+    """Extract the JWT from an ``ajcrew token`` URL, or ``""`` if absent."""
     match = _TOKEN_RE.search(stdout.strip())
     return match.group(1) if match else ""
 

@@ -33,9 +33,7 @@ from aj_crew.instances.constants import DEFAULT_WARM_SET_CAP as _DEFAULT_WARM_SE
 from aj_crew.instances.constants import MAX_RECOVERY_ATTEMPTS_CEILING as _MAX_RECOVERY_CEILING
 from aj_crew.instances.constants import MINT_TIMEOUT_CEILING_SECS as _MINT_TIMEOUT_CEILING
 from aj_crew.instances.constants import MINT_TIMEOUT_FLOOR_SECS as _MINT_TIMEOUT_FLOOR
-from aj_crew.instances.constants import (
-    RECOVER_BACKOFF_MAX_CEILING_SECS as _RECOVER_BACKOFF_CEILING,
-)
+from aj_crew.instances.constants import RECOVER_BACKOFF_MAX_CEILING_SECS as _RECOVER_BACKOFF_CEILING
 from aj_crew.instances.constants import WARM_SET_CAP_AUTO as _WARM_SET_CAP_AUTO
 
 logger = logging.getLogger("aj_crew.config.loader")

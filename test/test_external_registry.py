@@ -264,9 +264,7 @@ class TestFetchExternalRegistryValidation:
             mock_sel_instance,
         )
         # Bypass OS-sandbox wrap — macOS 26 has no sandbox backend.
-        monkeypatch.setattr(
-            "aj_crew.apps.registry.wrap_argv", lambda argv, **k: (list(argv), None)
-        )
+        monkeypatch.setattr("aj_crew.apps.registry.wrap_argv", lambda argv, **k: (list(argv), None))
 
     @pytest.mark.asyncio
     async def test_rejects_repo_with_path_traversal(self):
@@ -360,9 +358,7 @@ class TestFetchExternalRegistryValidation:
             return [sys.executable, str(fake_git), *argv], None
 
         monkeypatch.chdir(tmp_path)
-        monkeypatch.setattr(
-            "aj_crew.apps.registry_pipeline.indexes.wrap_argv_async", _run_fake_git
-        )
+        monkeypatch.setattr("aj_crew.apps.registry_pipeline.indexes.wrap_argv_async", _run_fake_git)
         result = await _fetch_external_registry_index(
             "https://github.com/example/MyRepo.git", "feature/branch-name"
         )
@@ -466,9 +462,7 @@ class TestFetchExternalRegistryParsing:
             mock_sel_instance,
         )
         # Bypass OS-sandbox wrap — macOS 26 has no sandbox backend.
-        monkeypatch.setattr(
-            "aj_crew.apps.registry.wrap_argv", lambda argv, **k: (list(argv), None)
-        )
+        monkeypatch.setattr("aj_crew.apps.registry.wrap_argv", lambda argv, **k: (list(argv), None))
 
     @pytest.mark.asyncio
     async def test_parses_app_registry_json_from_clone(self, tmp_path):

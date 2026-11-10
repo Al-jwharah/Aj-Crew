@@ -71,9 +71,7 @@ def _state() -> SimpleNamespace:
                 "restored", agent="ajcrew-worker", minted=False, saved_created_by="root-1"
             ),
             # A restored birth stamp with no mint witness is the same unvouched claim.
-            "unminted": _slot(
-                "unminted", agent="ajcrew-worker", created_by="root-1", minted=False
-            ),
+            "unminted": _slot("unminted", agent="ajcrew-worker", created_by="root-1", minted=False),
             "trusted": _slot("trusted", agent="ajcrew-worker", created_by="root-1", trust=True),
             "reads": _slot("reads", agent="ajcrew-worker", created_by="root-1", trust_reads=True),
         }

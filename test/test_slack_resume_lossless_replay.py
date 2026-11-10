@@ -13,9 +13,9 @@ from typing import TYPE_CHECKING, cast
 import pytest
 from test_thread_parent_context import FakeSessionManager, _make_builder
 
-from conftest import MockSlackClient
 from aj_crew.history import ConversationLog
 from aj_crew.slack.handler import handle_message, set_allowed_users, set_owner_id
+from conftest import MockSlackClient
 
 if TYPE_CHECKING:
     from aj_crew.session import SessionManager

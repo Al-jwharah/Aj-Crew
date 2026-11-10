@@ -21,11 +21,11 @@ from aiohttp.test_utils import make_mocked_request
 from windows_sim import read_sharing_violation, read_text_sharing_violation
 
 import aj_crew.platform.governance_profiles as gov_mod
-from conftest import requires_symlinks
 from aj_crew import atomic_write as aw
 from aj_crew import platform_compat
 from aj_crew.dashboard.conditional_get import bare_etag_value, weak_content_etag
 from aj_crew.dashboard.handlers import themes as th
+from conftest import requires_symlinks
 
 # _validate_theme_data only *requires* --bg/--text/--accent per mode.
 _VALID_VARS: dict[str, dict[str, str]] = {

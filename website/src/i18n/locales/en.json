@@ -1182,7 +1182,7 @@
         "highlight_7": "Pods run on Linux (systemd --user), macOS (launchd) and Windows (Task Scheduler) — but the macOS pod has no enforced memory/CPU ceiling; Make Live stages its pointer on every platform, and automatic restart needs a systemd --user unit or a macOS LaunchAgent; the fleet view, PR status, sync, rebase and prune work on any platform",
         "page_label": "Dev Fleet",
         "use_case_1": "Operate Aj Crew feature worktrees and isolated preview pods while keeping the live gateway untouched.",
-        "configuration_1": "Point the app at a Aj Crew checkout; PR actions need authenticated gh, while pods need systemd --user on Linux, launchd on macOS or Task Scheduler on Windows and must be provisioned first."
+        "configuration_1": "Point the app at an Aj Crew checkout; PR actions need authenticated gh, while pods need systemd --user on Linux, launchd on macOS or Task Scheduler on Windows and must be provisioned first."
       }
     },
     "fileExplorer": {
@@ -9605,7 +9605,7 @@
         "share_memory_title": "Export this memory?",
         "share_memory_warning": "Memory can hold anything the agent was told, such as names, file paths or a pasted password. Nothing is redacted. Anyone who gets the file can read all of it.",
         "skills": "Skills:",
-        "upload_a_ajcrew_export_zip_to_restore_settings": "Upload a {{productName}} export zip to restore settings on this instance. Chats in the archive are added; existing chats are never replaced.\n          Existing data will be merged by default (duplicates are skipped).",
+        "upload_a_ajcrew_export_zip_to_restore_settings": "Upload an {{productName}} export zip to restore settings on this instance. Chats in the archive are added; existing chats are never replaced.\n          Existing data will be merged by default (duplicates are skipped).",
         "workspace_files": "Workspace files:"
       },
       "promptsTab": {

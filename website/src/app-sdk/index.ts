@@ -310,7 +310,7 @@ export function useAppInfo(): AppInfo {
   return useCtx().info
 }
 
-/** Navigate to a AjCrew route (host-controlled). */
+/** Navigate to an AjCrew route (host-controlled). */
 export function useNavigate(): (path: string) => void {
   return useCtx().navigate
 }

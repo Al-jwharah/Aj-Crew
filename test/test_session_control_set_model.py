@@ -682,9 +682,7 @@ def test_model_rejection_check_receives_resolved_provider(tmp_path, monkeypatch)
         seen.append(provider)
         return None
 
-    monkeypatch.setattr(
-        "aj_crew.dashboard.chat_handlers._model_rejected_reason", _capture_provider
-    )
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers._model_rejected_reason", _capture_provider)
 
     _set_model(state, caller, "chat-2", "sonnet")
 

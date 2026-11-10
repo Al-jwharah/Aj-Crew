@@ -8,9 +8,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from conftest import forget_env_at_teardown
 from aj_crew import _ssl_compat
 from aj_crew.doctor_checks import install as doctor_install
+from conftest import forget_env_at_teardown
 
 _SSL_MARKER = "AJCREW_EXPORTED_SSL_CERT_FILE"
 

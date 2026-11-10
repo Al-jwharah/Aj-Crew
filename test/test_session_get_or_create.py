@@ -17,10 +17,10 @@ from session_helpers import (  # noqa: F401 -- the fixture is requested by name
     cfg_fixture,
 )
 
-from conftest import requires_symlinks
 from aj_crew.acp.types import AcpPromptStats
 from aj_crew.session import SessionEndingError, SessionManager
 from aj_crew.testing.wait import async_wait_until, await_until
+from conftest import requires_symlinks
 
 
 class TestCancelRaceCondition:

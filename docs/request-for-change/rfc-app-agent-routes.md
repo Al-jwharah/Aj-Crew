@@ -244,7 +244,7 @@ header.
   over the app's whole checkout whose secret the agent cannot read (open
   question 5).
 - **Governance ceiling.** `app_request` sits under POLICY ∩ PROFILE through two
-  existing scopes and adds none. As a `ajcrew-core` MCP tool it passes Plane A's
+  existing scopes and adds none. As an `ajcrew-core` MCP tool it passes Plane A's
   `gate_decision` under the `mcp` scope, so a policy or a surface profile can deny
   `@ajcrew-core/app_request` like any other tool. The `apps` scope governs
   activation: an app the ceiling denies never activates, `app_request` refuses

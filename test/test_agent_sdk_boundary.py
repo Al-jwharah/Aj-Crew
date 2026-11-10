@@ -246,12 +246,8 @@ def test_every_dynamic_import_spelling_is_a_violation(gate):
         ),
         "canonical dunder": "__import__('aj_crew.acp.client')\n",
         "module alias": ("import importlib as _il\n_il.import_module('aj_crew.acp.types')\n"),
-        "bare from-import": (
-            "from importlib import import_module\nimport_module('aj_crew.acp')\n"
-        ),
-        "renamed from-import": (
-            "from importlib import import_module as _im\n_im('aj_crew.acp')\n"
-        ),
+        "bare from-import": ("from importlib import import_module\nimport_module('aj_crew.acp')\n"),
+        "renamed from-import": ("from importlib import import_module as _im\n_im('aj_crew.acp')\n"),
         "bound by assignment": (
             "import importlib\n_im = importlib.import_module\n_im('aj_crew.providers')\n"
         ),

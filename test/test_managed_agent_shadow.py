@@ -16,7 +16,6 @@ from pathlib import Path
 
 import pytest
 
-from conftest import requires_symlinks
 from aj_crew import agent as agent_mod
 from aj_crew import sandbox as sandbox_mod
 from aj_crew.acp import client as client_mod
@@ -28,6 +27,7 @@ from aj_crew.acp.managed_agent_shadow import (
 )
 from aj_crew.acp.types import ACP_BACKEND_KIRO
 from aj_crew.agent_files import OWNED_KIRO_AGENT_FILES, WORKER_AGENT_FILENAME
+from conftest import requires_symlinks
 
 
 def _project_spec(project: Path, filename: str, body: dict | str) -> Path:

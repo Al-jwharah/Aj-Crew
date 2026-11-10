@@ -53,9 +53,7 @@ class TestRuntimeWiring:
         mock_bindings.model = ""
 
         monkeypatch.setattr("aj_crew.dashboard.chat.AjCrewConfig.load", lambda: mock_cfg)
-        monkeypatch.setattr(
-            "aj_crew.dashboard.chat_handlers.AjCrewConfig.load", lambda: mock_cfg
-        )
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.AjCrewConfig.load", lambda: mock_cfg)
         monkeypatch.setattr(
             "aj_crew.dashboard.chat.resolve_agent_bindings",
             lambda cfg, name, project_dir=None, **kwargs: mock_bindings,
@@ -161,9 +159,7 @@ class TestRuntimeWiring:
         mock_bindings.memory_store_name = "default"
         mock_bindings.model = ""
         monkeypatch.setattr("aj_crew.dashboard.chat.AjCrewConfig.load", lambda: mock_cfg)
-        monkeypatch.setattr(
-            "aj_crew.dashboard.chat_handlers.AjCrewConfig.load", lambda: mock_cfg
-        )
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.AjCrewConfig.load", lambda: mock_cfg)
         monkeypatch.setattr(
             "aj_crew.dashboard.chat.resolve_agent_bindings",
             lambda cfg, name, project_dir=None, **kwargs: mock_bindings,
@@ -244,9 +240,7 @@ class TestRuntimeWiring:
         mock_bindings.memory_store_name = "default"
         mock_bindings.model = ""
         monkeypatch.setattr("aj_crew.dashboard.chat.AjCrewConfig.load", lambda: mock_cfg)
-        monkeypatch.setattr(
-            "aj_crew.dashboard.chat_handlers.AjCrewConfig.load", lambda: mock_cfg
-        )
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.AjCrewConfig.load", lambda: mock_cfg)
         monkeypatch.setattr(
             "aj_crew.dashboard.chat.resolve_agent_bindings",
             lambda cfg, name, project_dir=None, **kwargs: mock_bindings,
@@ -293,9 +287,7 @@ class TestRuntimeWiring:
         mock_bindings.memory_store_name = "default"
         mock_bindings.model = ""
         monkeypatch.setattr("aj_crew.dashboard.chat.AjCrewConfig.load", lambda: mock_cfg)
-        monkeypatch.setattr(
-            "aj_crew.dashboard.chat_handlers.AjCrewConfig.load", lambda: mock_cfg
-        )
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.AjCrewConfig.load", lambda: mock_cfg)
         monkeypatch.setattr(
             "aj_crew.dashboard.chat.resolve_agent_bindings",
             lambda cfg, name, project_dir=None, **kwargs: mock_bindings,
@@ -435,9 +427,7 @@ class TestRuntimeWiring:
         mock_bindings.memory_store_name = "default"
         mock_bindings.model = ""
         monkeypatch.setattr("aj_crew.dashboard.chat.AjCrewConfig.load", lambda: mock_cfg)
-        monkeypatch.setattr(
-            "aj_crew.dashboard.chat_handlers.AjCrewConfig.load", lambda: mock_cfg
-        )
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.AjCrewConfig.load", lambda: mock_cfg)
         monkeypatch.setattr(
             "aj_crew.dashboard.chat.resolve_agent_bindings",
             lambda cfg, name, project_dir=None, **kwargs: mock_bindings,
@@ -578,9 +568,7 @@ class TestRuntimeWiring:
         mock_bindings.model = ""
 
         monkeypatch.setattr("aj_crew.dashboard.chat.AjCrewConfig.load", lambda: mock_cfg)
-        monkeypatch.setattr(
-            "aj_crew.dashboard.chat_handlers.AjCrewConfig.load", lambda: mock_cfg
-        )
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.AjCrewConfig.load", lambda: mock_cfg)
         monkeypatch.setattr(
             "aj_crew.dashboard.chat.resolve_agent_bindings",
             lambda cfg, name, project_dir=None, **kwargs: mock_bindings,
@@ -635,9 +623,7 @@ class TestRuntimeWiring:
         mock_bindings.workspace_dir = Path("/workspace/default")
         mock_bindings.requested_resolved = True
 
-        monkeypatch.setattr(
-            "aj_crew.dashboard.chat_handlers.AjCrewConfig.load", lambda: mock_cfg
-        )
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.AjCrewConfig.load", lambda: mock_cfg)
         monkeypatch.setattr(
             "aj_crew.dashboard.chat_handlers.resolve_agent_bindings",
             lambda cfg, name, project_dir=None, **kwargs: mock_bindings,
@@ -646,9 +632,7 @@ class TestRuntimeWiring:
             "aj_crew.dashboard.chat_handlers._workspace_name_for_dir",
             lambda cfg, ws_dir: "default",
         )
-        monkeypatch.setattr(
-            "aj_crew.dashboard.chat_handlers.warm_project_agent_names", AsyncMock()
-        )
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.warm_project_agent_names", AsyncMock())
         monkeypatch.setattr(
             "aj_crew.dashboard.chat_handlers.cached_project_agent_names",
             lambda project_dir: frozenset({"repo-bot"}),
@@ -902,9 +886,7 @@ class TestRuntimeWiring:
         mock_bindings.model = ""
 
         monkeypatch.setattr("aj_crew.dashboard.chat.AjCrewConfig.load", lambda: mock_cfg)
-        monkeypatch.setattr(
-            "aj_crew.dashboard.chat_handlers.AjCrewConfig.load", lambda: mock_cfg
-        )
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.AjCrewConfig.load", lambda: mock_cfg)
         monkeypatch.setattr(
             "aj_crew.dashboard.chat.resolve_agent_bindings",
             lambda cfg, name, project_dir=None, **kwargs: mock_bindings,

@@ -371,9 +371,7 @@ class TestPanelReadout:
         def _boom(*a, **k):
             raise OSError("unreadable")
 
-        _floor_monkeypatch.setattr(
-            "aj_crew.config.loader.AjCrewConfig.load", staticmethod(_boom)
-        )
+        _floor_monkeypatch.setattr("aj_crew.config.loader.AjCrewConfig.load", staticmethod(_boom))
         assert acp_backend_status._crewmate_harness() is None
 
 
@@ -788,9 +786,7 @@ class TestChatToolLimits:
         def _boom(_crew):
             raise AssertionError("must not read")
 
-        _floor_monkeypatch.setattr(
-            "aj_crew.agent_capabilities.prepare_member_capabilities", _boom
-        )
+        _floor_monkeypatch.setattr("aj_crew.agent_capabilities.prepare_member_capabilities", _boom)
         assert not crewmate_harness._chat_tool_limits("atlas", "kas")
 
     @pytest.mark.parametrize(
@@ -949,9 +945,7 @@ class TestColdStartRefresh:
         def _boom(*a, **k):
             raise OSError("unreadable")
 
-        _floor_monkeypatch.setattr(
-            "aj_crew.config.loader.AjCrewConfig.load", staticmethod(_boom)
-        )
+        _floor_monkeypatch.setattr("aj_crew.config.loader.AjCrewConfig.load", staticmethod(_boom))
         assert asyncio.run(crewmate_harness.refresh_session_verdict(DM_KEY)) is None
         assert asyncio.run(_pin()).backend == "kas"
         assert state.notes == notes_before

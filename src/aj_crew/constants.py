@@ -23,7 +23,7 @@ AJCREW_SPAWNED_ENV = "AJCREW_SPAWNED"
 AJCREW_SPAWNED_VALUE = "1"
 # Per-spawn incarnation of a tree Aj Crew spawned as its own session leader --
 # an agent runtime, and an app backend -- set on the root's environment and
-# inherited by its whole tree. AJCREW_SPAWNED says "a Aj Crew spawned this";
+# inherited by its whole tree. AJCREW_SPAWNED says "an Aj Crew spawned this";
 # this one says WHICH spawn, so a teardown that has lost its root can still tell
 # the root's own tree from a fresh spawn that took the root's recycled pid.
 AJCREW_SPAWN_INSTANCE_ENV = "AJCREW_SPAWN_INSTANCE"

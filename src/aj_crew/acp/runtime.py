@@ -287,10 +287,10 @@ from aj_crew.agent_spec_format import NATIVE_SKILL_ALIAS_PREFIX
 from aj_crew.config import live
 from aj_crew.config.paths import data_home, kiro_agents_dir
 from aj_crew.constants import (
-    INITIALIZE_TIMEOUT_SECS,
     AJCREW_RUNTIME_AGENT_ENV,
     AJCREW_SPAWN_HOME_ENV,
     AJCREW_SPAWN_INSTANCE_ENV,
+    INITIALIZE_TIMEOUT_SECS,
 )
 from aj_crew.dashboard.side_readonly_spec import unavailable_mode_explanation
 from aj_crew.env import augmented_path, resolve_krb5_ccname

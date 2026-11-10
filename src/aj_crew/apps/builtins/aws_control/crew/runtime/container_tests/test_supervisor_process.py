@@ -1,6 +1,6 @@
 """Tests for ``container.supervisor.process`` -- process-group launch and drain.
 
-These use real OS processes (never a Aj Crew gateway) so that killpg,
+These use real OS processes (never an Aj Crew gateway) so that killpg,
 grandchild reaping and SIGKILL escalation are exercised for real.
 """
 

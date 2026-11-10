@@ -8,9 +8,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from conftest import forget_env_at_teardown
 from aj_crew import _ssl_compat
 from aj_crew._ssl_compat import _CA_CANDIDATES, _ensure_ssl_certs
+from conftest import forget_env_at_teardown
 
 # The provenance markers, one per exported variable. The names are a contract
 # (a successor reads them from an environment a predecessor wrote), so they
@@ -422,7 +422,7 @@ class TestEnsureSslCerts:
 
 
 def _install_bundle(root: Path, install: str) -> Path:
-    """The certifi bundle path of a Aj Crew install rooted at *root*/*install*.
+    """The certifi bundle path of an Aj Crew install rooted at *root*/*install*.
 
     The shape every pip, venv and desktop-bundle install shares:
     ``<prefix>/lib/pythonX.Y/site-packages/certifi/cacert.pem``. Built from the
@@ -457,9 +457,7 @@ def _certifi_at(bundle) -> object:
 
 
 def _inherited_lines(caplog) -> list:
-    return [
-        r for r in caplog.records if "inherited from another Aj Crew process" in r.getMessage()
-    ]
+    return [r for r in caplog.records if "inherited from another Aj Crew process" in r.getMessage()]
 
 
 class TestInheritedInstallPinnedBundle:

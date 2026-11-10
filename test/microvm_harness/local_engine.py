@@ -63,7 +63,7 @@ logger = logging.getLogger(__name__)
 #: The crew image this harness runs. Pinned by DIGEST, not by tag, for the reason
 #: the Fargate lane refuses an undigested reference: a movable tag means the thing
 #: that was tested and the thing that runs are two different images.
-DEFAULT_IMAGE = "ghcr.io/kirodotdev/kirocrew:stable"
+DEFAULT_IMAGE = "ghcr.io/al-jwharah/ajcrew:stable"
 
 #: The port the gateway listens on inside the image.
 GATEWAY_PORT = 5476

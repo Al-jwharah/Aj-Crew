@@ -34,9 +34,9 @@ from handlers_mcp_coverage_helpers import (
     _write_global,
 )
 
-from conftest import host_abs
 from aj_crew.dashboard.handlers import mcp as mcp_mod
 from aj_crew.mcp_discovery import McpServerInfo
+from conftest import host_abs
 
 
 def _known(monkeypatch: pytest.MonkeyPatch, *names: str) -> None:
@@ -1123,7 +1123,7 @@ class TestActive:
     async def test_agent_alias_resolves_to_the_global_scope(
         self, sandbox: SimpleNamespace, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """A Aj Crew agent name bound to ``ajcrew`` reads the global scope."""
+        """An Aj Crew agent name bound to ``ajcrew`` reads the global scope."""
         import aj_crew.config.loader as loader
 
         monkeypatch.setattr(

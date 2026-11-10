@@ -16,7 +16,6 @@ import asyncio
 import importlib
 from unittest.mock import AsyncMock
 
-from conftest import MockSlackClient
 from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_TEXT_CHUNK,
@@ -27,6 +26,7 @@ from aj_crew.providers.base import LLMEvent
 from aj_crew.slack import renderer as _slack_renderer
 from aj_crew.slack import transport_dispatch
 from aj_crew.slack.handler import DELIVERY_DEBT_NOTICE, handle_message
+from conftest import MockSlackClient
 
 _handler_tests = importlib.import_module("test_slack_handler")
 _golden = importlib.import_module("test_slack_golden_transcript")

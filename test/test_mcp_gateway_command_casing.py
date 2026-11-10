@@ -11,9 +11,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from conftest import make_dir_link, requires_symlinks
 from aj_crew.mcp_gateway import rewriter
 from aj_crew.mcp_gateway.hashing import expand_stub_flags, hash_command
+from conftest import make_dir_link, requires_symlinks
 
 
 @pytest.mark.parametrize("is_windows", [False, True])

@@ -58,7 +58,7 @@ try:
 except ImportError:  # pragma: no cover - standalone fallback
     redact_credentials = redact_exfiltration_urls = None  # type: ignore
 
-# The shared read-degrade helper is also a Aj Crew runtime dep. Standalone the
+# The shared read-degrade helper is also an Aj Crew runtime dep. Standalone the
 # fallback keeps today's silent tolerance so `python3 sage_lib/review_driver.py`
 # still runs; under the gateway the real helper adds the one warning.
 try:
@@ -695,7 +695,7 @@ def _candidate_ports() -> list[int]:
 
 
 def _probe(base: str, secret: str) -> bool:
-    """True if a AjCrew gateway is listening at base (any HTTP response, incl.
+    """True if an AjCrew gateway is listening at base (any HTTP response, incl.
     401/404, means it's there; only connection errors mean it isn't).
 
     Proxy-disabled deliberately: ``_gateway_base`` calls this once per candidate

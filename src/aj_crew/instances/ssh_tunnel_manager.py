@@ -109,9 +109,7 @@ from aj_crew.instances.constants import DEFAULT_PROBE_FAILURE_THRESHOLD as _PROB
 from aj_crew.instances.constants import (  # noqa: F401
     DEFAULT_PROBE_HEALTH_TIMEOUT_SECS as _PROBE_HEALTH_TIMEOUT,
 )
-from aj_crew.instances.constants import (  # noqa: F401
-    DEFAULT_PROBE_INTERVAL_SECS as _PROBE_INTERVAL,
-)
+from aj_crew.instances.constants import DEFAULT_PROBE_INTERVAL_SECS as _PROBE_INTERVAL  # noqa: F401
 from aj_crew.instances.constants import (  # noqa: F401
     DEFAULT_PROXY_CONNECT_TIMEOUT_SECS as _PROXY_CONNECT_TIMEOUT,
 )

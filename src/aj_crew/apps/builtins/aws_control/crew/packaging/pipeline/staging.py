@@ -71,7 +71,7 @@ _STAGING_MARKER_TOKEN = "aj-crew-bundle-staging-marker/1"
 
 #: Identifies THIS run, not just this builder.
 #:
-#: The token alone said "a aj-crew build made this", which two concurrent builds against the
+#: The token alone said "an aj-crew build made this", which two concurrent builds against the
 #: same --out both satisfy -- so each read the other's marker as its own and deleted the other's
 #: staging tree with the recursive delete the marker authorises. The loser then promoted a
 #: half-built bundle or crashed on a missing file.

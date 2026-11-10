@@ -474,7 +474,7 @@ class TestLinuxServiceScopesOwnership:
         "unprivileged symlink creation and no systemd. Runs on the Linux and macOS jobs.",
     )
     def test_a_higher_priority_link_to_a_lower_priority_unit_file_keeps_that_file(self, tmp_path):
-        """A `ajcrew.service` symlink at the installer's own path pointing at a
+        """An `ajcrew.service` symlink at the installer's own path pointing at a
         direct file in a lower-priority unit directory (a packaged unit), the
         manager reporting the RESOLVED file as `FragmentPath` (what a live
         systemd 252 does — PR body, transcript 4, C5). The file's own shape read

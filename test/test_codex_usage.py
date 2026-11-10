@@ -11,8 +11,8 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
 import aj_crew.dashboard.handlers.usage as usage_mod
-from conftest import requires_symlinks
 from aj_crew.dashboard.handlers.codex_usage import read_codex_rate_limits
+from conftest import requires_symlinks
 
 #: 2100-01-01, a reset time that has not passed.
 _FUTURE = 4102444800

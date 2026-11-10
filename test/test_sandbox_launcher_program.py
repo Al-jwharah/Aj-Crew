@@ -357,7 +357,7 @@ def program_on_disk(package: Path | None = None) -> str:
     """The launcher program as the package's files spell it, spliced here, not by the renderer.
 
     The facade above its end-of-program marker, with each part marker replaced by the text
-    below that part's own marker: the program a spawn runs, before its plan. *package* is a
+    below that part's own marker: the program a spawn runs, before its plan. *package* is an
     ``aj_crew`` directory, the installed one by default.
     """
     root = Path(program.__file__).parent if package is None else package
@@ -411,7 +411,7 @@ def _renderer_loaded_over(package: Path, monkeypatch: pytest.MonkeyPatch) -> Any
 
 
 def _package_copy(tmp_path: Path) -> Path:
-    """A ``aj_crew`` directory holding a copy of the program: its facade and every part."""
+    """An ``aj_crew`` directory holding a copy of the program: its facade and every part."""
     package = tmp_path / "aj_crew"
     (package / "sandbox_launcher_parts").mkdir(parents=True)
     installed = Path(program.__file__).parent

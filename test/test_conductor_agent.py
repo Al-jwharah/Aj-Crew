@@ -293,7 +293,7 @@ class TestConductorInstaller(conductor_agent_checks.PromptDoesNotCarryTheRetired
         ):
             assert f"@ajcrew-core/{denied}" not in granted, denied
         # And the projected KAS policy must deny them too, not just the kiro-cli
-        # allowlist: a ``ajcrew-core/*`` pattern here would re-grant every one
+        # allowlist: an ``ajcrew-core/*`` pattern here would re-grant every one
         # of them on the KAS backend while the list above still looked narrow.
         match = self._install(tmp_path, monkeypatch)["permissions"]["rules"][0]["match"]
         assert "ajcrew-core/*" not in match
@@ -761,7 +761,7 @@ class TestConductorInstaller(conductor_agent_checks.PromptDoesNotCarryTheRetired
         }
         assert "ajcrew-core/*" not in data["permissions"]["rules"][0]["match"]
         assert "ajcrew-dashboard/*" not in data["permissions"]["rules"][0]["match"]
-        # The work server is narrowed the same way: a ``ajcrew-work/*`` wildcard
+        # The work server is narrowed the same way: an ``ajcrew-work/*`` wildcard
         # would grant verbs the tuple does not name, on the backend where nobody
         # reads ``allowedTools``.
         assert "ajcrew-work/*" not in data["permissions"]["rules"][0]["match"]

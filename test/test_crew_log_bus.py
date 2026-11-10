@@ -269,9 +269,7 @@ def test_a_live_publish_during_the_baseline_release_waits_and_stays_ordered(monk
 
 def test_a_real_slot_baseline_is_the_current_board_with_its_revision():
     """End to end through the projection read path: a late joiner sees the board as is."""
-    handle = CrewLog.create(
-        lg.KIND_SESSION, "s-bus-1", owner="raymond", agent="ajcrew", slot=SLOT
-    )
+    handle = CrewLog.create(lg.KIND_SESSION, "s-bus-1", owner="raymond", agent="ajcrew", slot=SLOT)
     entry = handle.append(
         "work/recorded",
         {

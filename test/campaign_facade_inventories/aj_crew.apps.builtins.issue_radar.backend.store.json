@@ -109,7 +109,7 @@
   "write_repo_settings",
   "write_watch_state"
  ],
- "note": "A aj_crew._facade_mirror facade over the store_* owners beside it.",
+ "note": "An aj_crew._facade_mirror facade over the store_* owners beside it.",
  "rebound": {
   "app_data_dir": "aj_crew.apps.manager",
   "atomic_write": "aj_crew.atomic_write",

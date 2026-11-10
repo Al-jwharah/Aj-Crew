@@ -18,7 +18,7 @@ Status: draft. Acceptance requested from a maintainer of the MCP broker and the 
 
 ## Summary
 
-A blocking `spawn_sub_agents` call returns its children's results inline. [#17684](https://github.com/kirodotdev/KiroCrew/pull/17684) stops those results from also arriving as `[Subagent completion event]` turns, and it decides when a returned result counts as delivered. On the unbrokered path it records a mark when `respond()` wrote the whole frame into kiro-cli's pipe, holds that mark under the parent attempt that spawned the child, and confirms it only when that attempt lands. On the brokered path (a `ajcrew-core` stubbed through `mcp_gateway.stub_servers`) a reply marks nothing today, so every child's completion is also delivered: a duplicate turn, never a loss.
+A blocking `spawn_sub_agents` call returns its children's results inline. [#17684](https://github.com/kirodotdev/KiroCrew/pull/17684) stops those results from also arriving as `[Subagent completion event]` turns, and it decides when a returned result counts as delivered. On the unbrokered path it records a mark when `respond()` wrote the whole frame into kiro-cli's pipe, holds that mark under the parent attempt that spawned the child, and confirms it only when that attempt lands. On the brokered path (an `ajcrew-core` stubbed through `mcp_gateway.stub_servers`) a reply marks nothing today, so every child's completion is also delivered: a duplicate turn, never a loss.
 
 Issue #18743 asks how a brokered reply should earn the same suppression. Two answers were considered. One is a brokered acknowledgement: the stub confirms each relayed frame back through the broker to the backend, and the commit waits for it. The other is to commit on the parent turn's own outcome, which #17684 already does for the unbrokered path.
 
@@ -132,7 +132,7 @@ This is #17684's position and costs one redundant turn per child on a stubbed `a
 | Point from #18743 | Answer |
 |---|---|
 | Confirmation is asked only for calls that need it (a call with an outcome hook) | Only a call whose `DeferredTool` carries `on_answered` sends a mark. Today that is the inline-collecting `spawn_sub_agents` call alone. Every other call is relayed exactly as now. |
-| A third-party MCP server never sees a `ajcrew.*` key | Nothing is added to any MCP frame. `relayed` travels only on the `mark-collected` HTTP body from `ajcrew-core` to its own gateway. |
+| A third-party MCP server never sees an `ajcrew.*` key | Nothing is added to any MCP frame. `relayed` travels only on the `mark-collected` HTTP body from `ajcrew-core` to its own gateway. |
 | Every new table and waiter is bounded in bytes and count | One field per held mark and one per-attempt set, both capped and dropped at settle (section 3). No waiter is added. |
 | No blocking probe runs on an event loop | There is no probe. `on_answered` reads the return of a write it already made, and the `completed` check reads ACP events the gateway already parses. |
 | Mixed old and new installs read silence as a drop | Each version mix ends in "deliver the completion" (section 5). |

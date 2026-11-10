@@ -35,7 +35,7 @@ ajcrew pod up   <wt> --wait-secs N    # override the 90s readiness budget
 ajcrew pod up   <wt> --seed minimal  # pre-populate its HOME from a named scenario
 ajcrew pod scenarios [--json]        # list named scenarios and their descriptions
 ajcrew pod api  <wt> GET sessions    # authenticated request → fixed-key JSON
-ajcrew pod exec <wt> -- status        # run a ajcrew command in the pod environment
+ajcrew pod exec <wt> -- status        # run an ajcrew command in the pod environment
 ajcrew pod ls [--json]          # what's running (≈ kubectl get pods) + orphaned HOMEs (with age)
 ajcrew pod prune [--older-than 3d] [--all] [--dry-run] [--json]  # bulk-reclaim orphaned HOMEs
 ajcrew pod status <wt> [--json] # up/down + health
@@ -155,7 +155,7 @@ env file — the same hand-editable file that pins `CHECKOUT=` and `PORT=` — s
 pod you keep around for other work can be flipped persistently by editing that
 line and bringing the pod up again.
 
-The boot journal names the mode from the env the pod actually runs with, so a
+The boot journal names the mode from the env the pod actually runs with, so an
 `AJCREW_SKIP_MODEL_DOWNLOAD=1` the pod merely inherits is announced too (as
 "inherited from the boot environment"), and the `pod.up` audit row keys
 `embeddings=off` on the merged env file plus that inherited switch rather than on

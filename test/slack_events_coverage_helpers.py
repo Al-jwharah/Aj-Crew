@@ -17,8 +17,8 @@ import pytest
 
 from aj_crew.config.loader import (
     ACTIVATION_ALWAYS,
-    ChannelConfig,
     AjCrewConfig,
+    ChannelConfig,
     MessagingConfig,
 )
 from aj_crew.slack import events as ev

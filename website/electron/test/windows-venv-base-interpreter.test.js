@@ -111,7 +111,7 @@ test("the shared base interpreter running anything else stays foreign", () => {
     `"${BASE}" "${BASE}" -m http.server 5599`,
     `"${BASE}" "${BASE}" -c "import socket" "${LAUNCHER}" gateway`,
     `"${BASE}" "${BASE}" -m aj_crew gateway --port 5599`,
-    // A ajcrew-named script that is not this venv's launcher.
+    // An ajcrew-named script that is not this venv's launcher.
     listener(BASE, "C:\\Users\\x\\Downloads\\ajcrew.exe"),
     listener(BASE, otherVenvLauncher),
     listener(BASE, "D:\\src\\kc\\.venv\\Scripts\\ajcrew.py"),

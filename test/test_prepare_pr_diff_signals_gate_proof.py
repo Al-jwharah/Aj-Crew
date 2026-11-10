@@ -21,13 +21,7 @@ from aj_crew.platform.update_governance import _GIT_LOCATION_VARS
 
 ROOT = Path(__file__).resolve().parent.parent
 SCRIPTS = (
-    ROOT
-    / "src"
-    / "aj_crew"
-    / "builtin_skills"
-    / "ajcrew-dev"
-    / "ajcrew-prepare-pr"
-    / "scripts"
+    ROOT / "src" / "aj_crew" / "builtin_skills" / "ajcrew-dev" / "ajcrew-prepare-pr" / "scripts"
 )
 SCRIPT = SCRIPTS / "diff_signals.py"
 ds = load_skill_script("prepare_pr_diff_signals_gate_proof_under_test", SCRIPT)

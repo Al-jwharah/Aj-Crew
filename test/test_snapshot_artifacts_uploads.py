@@ -29,8 +29,8 @@ from pathlib import Path
 import pytest
 from test_snapshot import _setup_fake_ajcrew, unpinnable_argv
 
-from conftest import requires_symlinks
 from aj_crew import snapshot as snap
+from conftest import requires_symlinks
 
 FOLDERS = '[{"id": "abc123abc123", "name": "Reports", "order": 0, "parent_id": ""}]'
 

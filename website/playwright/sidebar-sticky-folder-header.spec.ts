@@ -134,7 +134,7 @@ test.describe('Sidebar folder headers pin while scrolling', () => {
     await page.addInitScript((mode) => {
       localStorage.setItem('mc-onboarded', '1')
       localStorage.setItem('mc-theme', mode)
-      localStorage.setItem('mc-color-theme', 'kiro')
+      localStorage.setItem('mc-color-theme', 'aj')
     }, surface.mode)
     // The server's theme config is the source of truth and overrides
     // localStorage on boot, so the theme is set there too (restored in afterEach).
@@ -142,7 +142,7 @@ test.describe('Sidebar folder headers pin while scrolling', () => {
     expect(current.ok(), 'GET /api/config/theme should succeed').toBe(true)
     const { mode, color } = await current.json() as { mode: string; color: string }
     savedTheme = { mode, color }
-    const themed = await request.put('/api/config/theme', { data: { mode: surface.mode, color: 'kiro' } })
+    const themed = await request.put('/api/config/theme', { data: { mode: surface.mode, color: 'aj' } })
     expect(themed.ok(), 'PUT /api/config/theme should succeed').toBe(true)
     await page.setViewportSize({ width: 1400, height: 700 })
     const uniq = Date.now().toString(36)

@@ -600,8 +600,7 @@ def test_ci_resolvers_share_actor_policy_and_emit_large_labels() -> None:
         assert step["env"]["ELIGIBLE"] == expected_eligibility
         assert changes["outputs"][output] == f"${{{{ steps.{step_id}.outputs.{output} }}}}"
         assert step["env"]["LABEL"] == (
-            f"codebuild-ajcrew-gha-{os_name}-${{{{ github.run_id }}}}-"
-            "${{ github.run_attempt }}"
+            f"codebuild-ajcrew-gha-{os_name}-${{{{ github.run_id }}}}-" "${{ github.run_attempt }}"
         )
         script = step["run"]
         assert 'if [ "$ELIGIBLE" = "true" ]; then' in script

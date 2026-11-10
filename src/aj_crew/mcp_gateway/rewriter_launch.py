@@ -342,7 +342,7 @@ def _repair_control_plane_entry(
         logger.warning(
             "rewriter: agent %r declares reserved server %r as command %s with %d "
             "argument(s); launching the managed invocation %s instead so the daemon "
-            "can attest it (a hand-authored command for a ajcrew-* server cannot "
+            "can attest it (a hand-authored command for an ajcrew-* server cannot "
             "match the installed binary across users or upgrades)",
             agent_name,
             name,
@@ -352,7 +352,7 @@ def _repair_control_plane_entry(
         )
     # Composed from the managed source OUTWARD, never by copying the spec and
     # swapping two keys. A copy lets spec-controlled fields ride into our binary
-    # (a launcher-choosing ``env``, a ``AJCREW_*`` override, an ``autoApprove``
+    # (a launcher-choosing ``env``, an ``AJCREW_*`` override, an ``autoApprove``
     # that kiro-cli honours before Aj Crew's PreToolUse gate ever runs), and
     # patching one field at a time never ends. The class is the copy, so this is
     # the disk writer's shape instead (``agent._enforce_managed_mcp_ownership``): the launch

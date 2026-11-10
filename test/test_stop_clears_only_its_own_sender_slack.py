@@ -63,8 +63,8 @@ def _slack_orch() -> Any:
 
     from aj_crew.config.loader import (
         ACTIVATION_ALWAYS,
-        ChannelConfig,
         AjCrewConfig,
+        ChannelConfig,
         MessagingConfig,
     )
 

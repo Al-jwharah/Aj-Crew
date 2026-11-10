@@ -23,7 +23,7 @@
  * sealed with a key only this process's environment carries, and names it there
  * too. This extension reads and opens it once at load,
  * registers each server with pi's built-in MCP support, and refuses any call to
- * a Aj Crew server name that pi resolved to a different server: a same-named
+ * an Aj Crew server name that pi resolved to a different server: a same-named
  * entry in pi's own `mcp.json` outranks an extension's registration. The file
  * also carries those servers' MCP instructions, which pi does not put in the
  * prompt for a directly declared server, so this extension appends them to the

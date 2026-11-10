@@ -887,8 +887,8 @@ def test_the_slack_messages_sink_redacts_what_its_render_let_through(
 
     from slack_handler_helpers import FakeProvider, FakeSessionManager
 
-    from conftest import MockSlackClient
     from aj_crew.providers.base import LLMEvent
+    from conftest import MockSlackClient
 
     key = "AKIAIOSFODNN7EXAMPLE"
     monkeypatch.setattr(

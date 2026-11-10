@@ -18,8 +18,8 @@ from pathlib import Path
 
 import pytest
 
-from conftest import requires_symlinks
 from aj_crew import session_staging_sweep as sweep
+from conftest import requires_symlinks
 
 _NOW = 2_000_000_000.0
 _OLD = _NOW - sweep.STAGING_TEMP_MIN_AGE_SECS - 1

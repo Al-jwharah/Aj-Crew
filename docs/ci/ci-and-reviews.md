@@ -592,7 +592,7 @@ A listed triple passes; an unlisted one fails.
 |---|---|
 | `path-exists` | A backticked repo-anchored source path (`src/**.py`, `scripts/*.py\|.sh`, `website/src/**.ts\|.tsx`, `.github/workflows/*.yml`, `docs/**/*.md`) that names no file. Written from the repo root, so it resolves or the doc is wrong — the suffix index is still a fallback, because a skill's own `scripts/` is one root down. A `path::Symbol` coordinate stays checked, since this repo addresses its own code that way too; only the docs describing a run against another repository are exempt |
 | `line-ref` | A `file.py:NNN` citation anywhere in prose. The beyond-EOF check catches the citation that already rotted; this catches the one that rots on the next refactor with nothing going red. Cite a symbol name instead |
-| `fenced-path` | A `docs/task-specs/**/*.md` path or a `ajcrew run` argument inside a fenced block that names no file. A fence is a sample everywhere else, but a reader PASTES these two |
+| `fenced-path` | A `docs/task-specs/**/*.md` path or an `ajcrew run` argument inside a fenced block that names no file. A fence is a sample everywhere else, but a reader PASTES these two |
 | `table-row-merge` | Two index rows glued onto one physical line. Both links resolve, so every link-graph check stays green while the table renders one row short and a file loses its entry |
 | `code-coupled-completeness` | A packaged doc named in a string literal under `website/src` and absent from `CODE_COUPLED_DOCS`. An unrecorded coupling can be renamed apart silently |
 | `dead-identifier` | A backticked identifier absent from every first-party code tree. **Report-only** unless `--strict-identifiers`, because the class mixes real rot with names the repo cannot adjudicate |

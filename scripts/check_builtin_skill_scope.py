@@ -64,7 +64,7 @@ that were actually leaking. Read it as "these four shapes are extinct", not as
 
 ``builtin_skills/ajcrew-dev/`` is the family FOR developing this repository --
 ``ajcrew-prepare-pr``, ``babysit``, ``writing-tests``, ``ajcrew-worktree-dev`` and
-``dashboard-template``. A Aj Crew path there is the subject matter, not a leak.
+``dashboard-template``. An Aj Crew path there is the subject matter, not a leak.
 That exemption is a directory rule rather than a list of recorded lines on
 purpose: it is a property of what the family IS, so it stays true as
 those skills are edited, where a per-line list would just record today's bytes
@@ -112,7 +112,7 @@ MARKER_CLASSES: tuple[tuple[str, str, str], ...] = (
         # follow at all -- on every skill that cites the project's own public docs.
         # The lookbehind is deliberately narrow rather than a whole-line
         # exemption: one line can carry both a citation and a real instruction.
-        r"(?<!github\.com/)kirodotdev/KiroCrew",
+        r"(?<!github\.com/)(?:kirodotdev/KiroCrew|Al-jwharah/Aj-Crew)",
         "names this repository as a place to act; a reader elsewhere has no such repo",
     ),
     (
@@ -160,7 +160,7 @@ def is_exempt(rel_path: Path) -> bool:
 
     The family must sit DIRECTLY beneath ``builtin_skills/``. Matching any path
     segment would exempt a nested ``widgets/ajcrew-dev/SKILL.md``, and matching
-    a prefix would exempt a ``ajcrew-devtools/`` sibling -- both would ship a
+    a prefix would exempt an ``ajcrew-devtools/`` sibling -- both would ship a
     leak under a name that merely resembles the exempt one.
     """
     prefix = SKILL_ROOT.parts

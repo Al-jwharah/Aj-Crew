@@ -451,7 +451,7 @@ describe('SkillsTab', () => {
     expect(screen.queryByText('Delete')).not.toBeInTheDocument()
   })
 
-  it('does NOT show Edit/Delete for a Aj Crew row outside the skills folder (owned: false)', async () => {
+  it('does NOT show Edit/Delete for an Aj Crew row outside the skills folder (owned: false)', async () => {
     // A skill reached through skills.extra_paths lists as source 'ajcrew',
     // but Edit/Delete write into the skills folder, so the row is read-only.
     mockApi.skills.mockResolvedValue([

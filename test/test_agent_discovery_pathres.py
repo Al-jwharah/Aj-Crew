@@ -18,7 +18,6 @@ from pathlib import Path
 import pytest
 from named_cases_helpers import named_cases
 
-from conftest import make_dir_link, requires_symlinks
 from aj_crew import agent_discovery as ad_mod
 from aj_crew import hooks, security
 from aj_crew.agent_discovery import (
@@ -26,6 +25,7 @@ from aj_crew.agent_discovery import (
     _read_agent_spec,
     read_agent_spec_strict,
 )
+from conftest import make_dir_link, requires_symlinks
 
 
 def _spec(directory: Path, name: str = "a") -> Path:

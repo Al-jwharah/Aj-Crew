@@ -33,9 +33,7 @@ def _by_name_project_imports(source: str) -> list[str]:
     hits = []
     for node in ast.parse(source).body:
         if isinstance(node, ast.Import):
-            hits += [
-                f"{node.lineno}: {a.name}" for a in node.names if a.name.startswith("aj_crew")
-            ]
+            hits += [f"{node.lineno}: {a.name}" for a in node.names if a.name.startswith("aj_crew")]
         elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
             if node.module == "aj_crew":
                 names = [a.name for a in node.names if a.name != "cli_doctor"]

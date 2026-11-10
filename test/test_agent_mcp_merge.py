@@ -596,7 +596,7 @@ class TestMcpMergePriority:
         assert "srv" not in config["mcpServers"]
 
     def test_ajcrew_override_does_not_corrupt_global_fallback(self, tmp_path: Path):
-        """Regression (review-bot): a ajcrew mcp.json override carrying an
+        """Regression (review-bot): an ajcrew mcp.json override carrying an
         unresolvable command must not mutate the shared kiro-global source dict
         that is reused as a fallback candidate. The resolvable kiro-global
         command must still be recovered via the fallback (server not dropped)."""

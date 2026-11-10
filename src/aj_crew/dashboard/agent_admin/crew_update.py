@@ -10,10 +10,10 @@ from aiohttp import web
 if TYPE_CHECKING:
     from aj_crew.dashboard.handlers.agents import (
         TEMPLATE_NAME_RE,
-        Any,
-        CapabilityError,
         AjCrewAgentConfig,
         AjCrewConfig,
+        Any,
+        CapabilityError,
         _avatar_stem,
         _carries_mask,
         _carry_motions_through_motionless_save,
@@ -116,7 +116,7 @@ async def _apply_member_approval_to_live_thread(request: web.Request, name: str,
 
 
 async def api_ajcrew_agent_update(request: web.Request) -> web.Response:
-    """PUT /api/agents/{name} or PUT /api/agents — update a Aj Crew agent.
+    """PUT /api/agents/{name} or PUT /api/agents — update an Aj Crew agent.
 
     In the first form the crew name comes from the URL path segment.  In the
     second form (the proxy-safe alternative) it comes from a ``name`` field in

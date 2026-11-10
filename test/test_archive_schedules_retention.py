@@ -170,9 +170,7 @@ async def test_a_close_whose_key_a_replacement_took_schedules_nothing(
     # A recreate that lands mid-close owns the key now: its workspace must not be
     # stopped or stamped for deletion because the ORIGINAL tab was dismissed.
     state, slot, _key = _state(tmp_path)
-    monkeypatch.setattr(
-        "aj_crew.dashboard.chat_handlers._slot_still_ours", lambda *_a, **_k: False
-    )
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers._slot_still_ours", lambda *_a, **_k: False)
     await close_slot(state, slot, slot.key)
     assert scheduled == []
 

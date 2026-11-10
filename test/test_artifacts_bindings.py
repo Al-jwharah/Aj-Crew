@@ -200,9 +200,7 @@ def test_each_member_keeps_its_kind_signature_and_owner(name: str) -> None:
 
 def test_every_owner_holding_a_member_is_listed_in_the_facade() -> None:
     homes = {
-        f"aj_crew.{home}"
-        for _kind, _d, home in _MEMBERS.values()
-        if home.startswith("artifacts_")
+        f"aj_crew.{home}" for _kind, _d, home in _MEMBERS.values() if home.startswith("artifacts_")
     }
     assert homes == set(art_mod._OWNERS)
 

@@ -506,7 +506,7 @@ test("describeGatewayFailure: a foreign holder asks only for the thing that free
   assert.match(s, /Port 5476/);
   assert.match(s, /served by a program this app did not start/);
   assert.match(s, /no remote crew saved for that port/);
-  // It may BE a Aj Crew gateway, reached over a tunnel, so saving its address
+  // It may BE an Aj Crew gateway, reached over a tunnel, so saving its address
   // is the first remedy and must be named -- in words that say what the click
   // commits to, because a reader who cannot tell will not press it.
   assert.match(s, /choose Add Remote Crew and fill in its address/);

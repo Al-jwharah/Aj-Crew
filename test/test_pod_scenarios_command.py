@@ -79,7 +79,7 @@ def test_human_output_lists_sorted_names_and_first_sentences(tmp_path: Path) -> 
     # The column carries the last complete sentence that fits, not the whole
     # scalar — which for every shipped fixture is its first sentence.
     assert rows["empty"].split(maxsplit=1)[1].strip() == (
-        "A AJCREW_HOME with nothing in it but this manifest."
+        "An AJCREW_HOME with nothing in it but this manifest."
     )
     # The hint names whichever fixture sorts first, so it moves with the registry.
     assert hint == ("seed one with: ajcrew pod up <worktree> --seed " + next(iter(rows)))
@@ -100,7 +100,7 @@ def test_json_output_contains_complete_literal_descriptions(tmp_path: Path) -> N
     described = {row["name"]: row["description"] for row in rows}
     # JSON keeps the full literal scalar, including paragraph and list structure.
     assert described["empty"].startswith(
-        "A AJCREW_HOME with nothing in it but this manifest. The gateway writes its"
+        "An AJCREW_HOME with nothing in it but this manifest. The gateway writes its"
     )
     assert "\n" in described["empty"]
     assert "\n\nUse ``rich``" in described["minimal"]

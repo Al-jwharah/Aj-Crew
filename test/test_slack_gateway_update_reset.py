@@ -259,9 +259,7 @@ class TestAutoApplyUpdateResetPath:
         with patch.dict("os.environ", {"AJCREW_PROJECT_DIR": "/tmp/proj"}):
             with patch("asyncio.create_subprocess_exec", side_effect=_fake_exec):
                 with patch("aj_crew.dep_sync.sync_or_reinstall", side_effect=sync):
-                    with patch(
-                        "aj_crew.slack.gateway.build_frontend_async", build or AsyncMock()
-                    ):
+                    with patch("aj_crew.slack.gateway.build_frontend_async", build or AsyncMock()):
                         with patch("os.execv"):
                             with patch("shutil.which", return_value=None):
                                 await orch._auto_apply_update()
@@ -304,9 +302,7 @@ class TestAutoApplyUpdateResetPath:
         with (
             patch.dict("os.environ", {"AJCREW_PROJECT_DIR": str(project_dir)}),
             patch("asyncio.create_subprocess_exec", side_effect=_exec),
-            patch(
-                "aj_crew.platform.wheel_apply.snapshot_memory_before_update", side_effect=_copy
-            ),
+            patch("aj_crew.platform.wheel_apply.snapshot_memory_before_update", side_effect=_copy),
             patch("aj_crew.dep_sync.sync_or_reinstall", return_value=0),
             patch("aj_crew.slack.gateway.build_frontend_async", AsyncMock()),
             patch("os.execv"),

@@ -165,9 +165,7 @@ class TestTheGatewayRefreshesTheLink:
         assert agent_mod.refresh_own_ajcrew_link() is None
 
 
-@pytest.mark.parametrize(
-    "path", ["~/.kiro/crew/ajcrew-bin/ajcrew", "~/.ajcrew/ajcrew-bin/ajcrew"]
-)
+@pytest.mark.parametrize("path", ["~/.kiro/crew/ajcrew-bin/ajcrew", "~/.ajcrew/ajcrew-bin/ajcrew"])
 def test_the_file_tool_gate_refuses_a_write_to_the_link(path: str) -> None:
     assert security.is_sensitive_write_path(path) is True
     assert security.is_sensitive_path(path) is False

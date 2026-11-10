@@ -674,9 +674,7 @@ class TestToolIdentityTitleLeavesThePathTier:
 
     @pytest.mark.asyncio
     async def test_a_stalled_path_tier_cannot_refuse_a_tool_identity_title(self) -> None:
-        stall = (
-            f"{security.UNVERIFIABLE_PATH_PREFIX}, so it is refused. Path: '@ajcrew-core/wait'"
-        )
+        stall = f"{security.UNVERIFIABLE_PATH_PREFIX}, so it is refused. Path: '@ajcrew-core/wait'"
         with patch.object(llm_helpers, "sensitive_path_refusal", lambda *_a, **_k: stall):
             approved, provider = await self._resolve_event(self._mcp_event("@ajcrew-core/wait"))
         assert approved is True

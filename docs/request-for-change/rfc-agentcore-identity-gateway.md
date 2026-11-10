@@ -325,7 +325,7 @@ in the same CloudFormation stack that creates the instance.
 
 #### Posture `workload` — deployed Crew can start
 
-Use this on a `ajcrew cloud launch` box (or any companion-managed
+Use this on an `ajcrew cloud launch` box (or any companion-managed
 host) that should reach Gateway **without** an interactive login.
 
 - Register a standalone workload identity `ajcrew-<StackTag>`
@@ -935,7 +935,7 @@ Closed on the production-ready pass:
   SigV4 proxy greens any Gateway this crew can actually call, so a
   pasted existing Gateway is not falsely red. Prefix is the
   fallback when tools were not proved. A data-plane 401/403 is
-  `invoke_denied` even on a `ajcrew-*` id.
+  `invoke_denied` even on an `ajcrew-*` id.
 - Instance-role-only IAM (`ajcrew-e2e-instance` assumed from a
   named IAM user, policy from `agentcore_instance_policy_document(
   "workload")`): WAT `ok`, all nine catalog checks green, tools/list
@@ -1090,7 +1090,7 @@ should present identity, not become a token broker.
 Adopted in the design; the `workload` posture's runtime path is not on main.
 
 This is no longer a fallback: it **is** the deployed-box posture.
-IAM inbound lets a `ajcrew cloud launch` instance invoke Gateway
+IAM inbound lets an `ajcrew cloud launch` instance invoke Gateway
 at boot with no login. The public-core `probe_instance_invoke_gateway()`
 is a no-op that returns False; a companion must override it.
 Fail-closed there means no mismatch was detected, not that IAM inbound

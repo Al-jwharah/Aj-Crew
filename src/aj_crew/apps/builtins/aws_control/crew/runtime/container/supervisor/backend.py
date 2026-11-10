@@ -124,7 +124,7 @@ ENV_PORT: str = "AJCREW_PORT"  # dashboard/urls.py:116 overrides the port
 # Pin the bind ADDRESS. dashboard/urls.py:208 reads AJCREW_BIND; the OFFICIAL
 # image sets it to 0.0.0.0 (urls.py:218), which would put the backend on the
 # network. Overriding it to loopback keeps the backend unreachable regardless of
-# the base image, and a AJCREW_BIND typo can only narrow back to loopback.
+# the base image, and an AJCREW_BIND typo can only narrow back to loopback.
 ENV_BIND: str = "AJCREW_BIND"
 # Disable the anonymous beacon. beacon.py:137 reads AJCREW_TELEMETRY_DISABLED
 # (truthy disables); this is the opt-out Aj Crew actually honours. The config

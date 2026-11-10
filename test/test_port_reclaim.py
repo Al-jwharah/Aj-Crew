@@ -62,7 +62,7 @@ async def test_foreign_holder_is_never_touched() -> None:
     outcome = await pr.reclaim_stale_gateway_port(
         5476,
         list_listeners=lambda _p: [4321],
-        is_ajcrew=lambda _pid: False,  # not a AjCrew process
+        is_ajcrew=lambda _pid: False,  # not an AjCrew process
         probe_healthy=_unhealthy,
         terminate=_terminate,
     )

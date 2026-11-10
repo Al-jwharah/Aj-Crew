@@ -20,7 +20,6 @@ from app_manifest_helpers import (
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from conftest import make_escaping_link
 from aj_crew.apps.manifest import (
     _MAX_CONFIG_KEY_CHARS,
     _MAX_CONFIG_KEYS,
@@ -30,6 +29,7 @@ from aj_crew.apps.manifest import (
     SetupConfig,
 )
 from aj_crew.constants import WINDOWS_DEVICE_STEMS
+from conftest import make_escaping_link
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -1421,9 +1421,7 @@ def test_command_bar_builtin_is_overlay_only_and_default_on():
     declared in ``manager._DEFAULT_ON_BUILTINS``.
     """
     raw = json.loads(
-        (_REPO_ROOT / "src/aj_crew/apps/builtins/command_bar/app.json").read_text(
-            encoding="utf-8"
-        )
+        (_REPO_ROOT / "src/aj_crew/apps/builtins/command_bar/app.json").read_text(encoding="utf-8")
     )
     m = AppManifest.from_dict(raw)
     assert m.validate() == []

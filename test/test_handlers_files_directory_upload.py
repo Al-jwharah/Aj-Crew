@@ -664,7 +664,7 @@ async def test_path_traversal_in_filename_lands_inside_target_dir(tmp_path: Path
 
 @pytest.fixture()
 def crew_home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    """A ``AJCREW_HOME`` override, exercising the REAL ``is_sensitive_path``
+    """An ``AJCREW_HOME`` override, exercising the REAL ``is_sensitive_path``
     gate rather than a monkeypatched stand-in: the keystone leaves
     (``security_policy.json``, ``profiles``, ``admission_policy.json``,
     ``computer_use.json``) live directly under this directory once the

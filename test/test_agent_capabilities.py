@@ -19,7 +19,6 @@ from agent_capabilities_helpers import _accepting_kiro_cli  # noqa: F401
 from agent_capabilities_helpers import capability_app_fixture  # noqa: F401
 from agent_capabilities_helpers import editor_fixture, save, spec_for
 
-from conftest import requires_symlinks
 from aj_crew import agent, agent_state
 from aj_crew.agent_capabilities import (
     CapabilityError,
@@ -28,6 +27,7 @@ from aj_crew.agent_capabilities import (
     validate_request,
 )
 from aj_crew.config import loader
+from conftest import requires_symlinks
 
 #: ``test_materialization_restamp_probe.py`` imports the ``editor`` fixture by this name.
 editor = editor_fixture

@@ -195,7 +195,7 @@ function createHolderDecision({
       const { response } = await dialog.showMessageBox({
         type: "warning",
         message: "The gateway is not responding.",
-        detail: `A Aj Crew gateway for this data folder is running on port ${PORT} but has not answered for at least ${Math.round(STUCK_GATEWAY_GRACE_MS / 1000)} seconds.\n\nStop and restart stops that gateway and starts a fresh one. Anything the stuck gateway was still doing is stopped with it.${serviceNote ? "\nIf a background service restarts it automatically, Aj Crew connects to it once it answers." : ""}`,
+        detail: `An Aj Crew gateway for this data folder is running on port ${PORT} but has not answered for at least ${Math.round(STUCK_GATEWAY_GRACE_MS / 1000)} seconds.\n\nStop and restart stops that gateway and starts a fresh one. Anything the stuck gateway was still doing is stopped with it.${serviceNote ? "\nIf a background service restarts it automatically, Aj Crew connects to it once it answers." : ""}`,
         buttons: ["Stop and restart", "Quit"],
         defaultId: 0,
         cancelId: 1,
@@ -208,7 +208,7 @@ function createHolderDecision({
       await dialog.showMessageBox({
         type: "warning",
         message: "The gateway is not responding.",
-        detail: `A Aj Crew gateway for this data folder is running on port ${PORT} but has not answered for at least ${Math.round(STUCK_GATEWAY_GRACE_MS / 1000)} seconds.\n\nTo fix it, quit Aj Crew.\nRun this command in Terminal:\n${stopCommand}${serviceNote}\nThen reopen Aj Crew.`,
+        detail: `An Aj Crew gateway for this data folder is running on port ${PORT} but has not answered for at least ${Math.round(STUCK_GATEWAY_GRACE_MS / 1000)} seconds.\n\nTo fix it, quit Aj Crew.\nRun this command in Terminal:\n${stopCommand}${serviceNote}\nThen reopen Aj Crew.`,
         buttons: ["Quit"],
         defaultId: 0,
         cancelId: 0,
@@ -353,7 +353,7 @@ function createHolderDecision({
       localOwner, bundledGateway, bundleVersion, ownEdition: readBakedEdition(),
     });
     // The rule this enforces, as one sentence: adopt a responder on this port
-    // only when the port can be attributed either to us (a Aj Crew LISTEN
+    // only when the port can be attributed either to us (an Aj Crew LISTEN
     // owner, or a service-managed one) or to a crew the user configured here.
     //
     // It is deliberately NOT gated on which reuse reason decideGatewayAction
@@ -372,7 +372,7 @@ function createHolderDecision({
     // positively find someone else holding the port.
     //
     // `warn-stale` cannot reach here with a `foreign` owner: the bundled-path
-    // probe above only runs for a `ajcrew` or `service` owner, so that action
+    // probe above only runs for an `ajcrew` or `service` owner, so that action
     // is unreachable without positive local attribution.
     if (decision.action === "reuse" && localOwner === "foreign" && !remoteHost) {
       glog(`:${PORT} is served by a process this app did not start and no remote crew is configured there — refusing to adopt it`);

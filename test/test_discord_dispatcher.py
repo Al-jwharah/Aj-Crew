@@ -307,9 +307,7 @@ class TestDispatcher:
         async def _denied(_channel_type: str) -> bool:
             return False
 
-        monkeypatch.setattr(
-            "aj_crew.discord.transport_dispatch.channel_inbound_permitted", _denied
-        )
+        monkeypatch.setattr("aj_crew.discord.transport_dispatch.channel_inbound_permitted", _denied)
         result = await d.handle_message(
             self._msg("[Monitor wake]"),
             interpret_commands=False,

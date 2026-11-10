@@ -1038,9 +1038,7 @@ class TestForcedGeneration:
         called = []
         _stub_llm(monkeypatch, _GOOD_REPLY, called)
         assert (
-            await chat_summary.generate_session_summary(
-                state, slot, cfg=AjCrewConfig(), force=True
-            )
+            await chat_summary.generate_session_summary(state, slot, cfg=AjCrewConfig(), force=True)
             is False
         )
         assert called == []

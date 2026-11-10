@@ -13,8 +13,8 @@ of the marker grammar, probing occurrences rightmost-first so label bytes
 that merely contain a sentinel cannot shadow the genuine fragment start.
 """
 
-from conftest import assert_rejected_without_backtracking
 from aj_crew.constants import split_trailing_protocol_suffix
+from conftest import assert_rejected_without_backtracking
 
 
 class TestProseMentionIsNotAMarker:

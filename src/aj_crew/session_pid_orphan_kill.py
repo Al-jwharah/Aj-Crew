@@ -276,7 +276,7 @@ def _kill_orphan_mcp_descendants(
             # list it assembled some other way.
             continue
         if not _env_has_ajcrew_marker(target):
-            continue  # not provably part of a Aj Crew tree
+            continue  # not provably part of an Aj Crew tree
         live_token = _pid_start_token(target)
         if walk_token is None or live_token is None:
             logger.debug(

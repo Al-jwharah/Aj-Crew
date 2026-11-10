@@ -139,9 +139,7 @@ class TestTheMarkerSet:
 class TestTheExemptionIsNotInheritable:
     def test_the_family_is_exempt(self, gate, tmp_path: Path) -> None:
         """This repository is that family's subject matter, not a leak in it."""
-        _write(
-            tmp_path, "ajcrew-dev/ajcrew-prepare-pr/SKILL.md", "Edit `src/aj_crew/x.py`.\n"
-        )
+        _write(tmp_path, "ajcrew-dev/ajcrew-prepare-pr/SKILL.md", "Edit `src/aj_crew/x.py`.\n")
         found, unscannable = gate.scan_tree(tmp_path)
         assert found == {} and unscannable == []
 

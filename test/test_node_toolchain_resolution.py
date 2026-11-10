@@ -15,9 +15,9 @@ from pathlib import Path
 
 import pytest
 
-from conftest import host_abs
 from aj_crew import env as env_mod
 from aj_crew import platform_compat
+from conftest import host_abs
 
 
 def _fake_node_bin(d: Path) -> Path:

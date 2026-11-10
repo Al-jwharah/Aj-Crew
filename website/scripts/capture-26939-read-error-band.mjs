@@ -46,7 +46,7 @@ for (const theme of ['light', 'dark']) {
   check(`${theme}: no error card`, (await page.locator('[data-testid="crew-dashboard-error"]').count()) === 0)
   check(`${theme}: retry on the band`, (await page.locator('[data-testid="crew-dashboard-read-error-retry"]').count()) === 1)
   const painted = await page.evaluate(() => document.documentElement.dataset.theme)
-  check(`${theme}: palette kiro-${theme}`, painted === `kiro-${theme}`)
+  check(`${theme}: palette aj-${theme}`, painted === `aj-${theme}`)
   await page.waitForTimeout(300)
   await page.screenshot({ path: `${OUT}/read-error-band-${theme}.png` })
   await page.close()

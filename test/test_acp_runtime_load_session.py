@@ -281,9 +281,7 @@ class TestRuntimeMemberDispatchDisabled:
         scope = object()
         monkeypatch.setattr(runtime_mod, "_disable_check_scope", lambda _backend, _wd: scope)
         if path == "create":
-            await rt.create_session(
-                cwd="/work", agent="ajcrew", member_session_key=self.MEMBER_KEY
-            )
+            await rt.create_session(cwd="/work", agent="ajcrew", member_session_key=self.MEMBER_KEY)
         else:
             await rt.load_session(
                 "/home/u/.kiro/sessions/cli/sid-123.json",

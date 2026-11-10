@@ -776,7 +776,7 @@ async def _make_live_inner(
     still stands and the response carries ``staged_only`` plus the one command
     that finishes it: the gateway reads the pointer on ITS next start, whoever
     performs it. Staging deliberately does NOT require a drivable service, which
-    is what keeps a ``ajcrew service install`` host (a SYSTEM unit, needing
+    is what keeps an ``ajcrew service install`` host (a SYSTEM unit, needing
     root to bounce) able to cut over at all.
     """
     global _MAKE_LIVE_COMMITTED, _LIVE_WORKTREE, _LIVE_CHECK_AT
@@ -873,7 +873,7 @@ async def _make_live_inner(
 
     # The live target is a POINTER the gateway resolves at startup, not an edit
     # to this host's service definition — so staging never needs the service
-    # manager. Restarting still does, and that is the one thing a `ajcrew
+    # manager. Restarting still does, and that is the one thing an `ajcrew
     # service install` SYSTEM unit cannot give us without root: the cutover is
     # staged either way, and when we cannot bounce the gateway ourselves we hand
     # the operator the one command that finishes it. Refusing here instead would

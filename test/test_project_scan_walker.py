@@ -31,7 +31,6 @@ from typing import Any
 
 import pytest
 
-from conftest import make_dir_link
 from aj_crew.project_scan import (
     Candidate,
     CandidateTree,
@@ -41,6 +40,7 @@ from aj_crew.project_scan import (
     root_identity,
     scan,
 )
+from conftest import make_dir_link
 
 _IS_WINDOWS = sys.platform == "win32"
 # A root user reads a mode-000 directory regardless, so the unreadable-subtree

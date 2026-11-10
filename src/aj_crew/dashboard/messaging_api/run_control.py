@@ -456,7 +456,7 @@ async def api_spawn_mark_collected(request: web.Request) -> web.Response:
     if refusal is not None:
         return refusal
     # Only a mark sent after its reply frame was written changes anything: a
-    # caller that does not say so (a ajcrew-core from before this mark moved
+    # caller that does not say so (an ajcrew-core from before this mark moved
     # behind the write) may have marked a reply the parent never received.
     written = body.get("written") is True
     if written:

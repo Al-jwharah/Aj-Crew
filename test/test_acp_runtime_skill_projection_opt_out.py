@@ -31,9 +31,7 @@ async def _spawn_until_handshake(
         prepared.append(Path(work_dir))
         return None
 
-    rt = AcpRuntime(
-        work_dir=tmp_path / "wd", agent="ajcrew", sandbox_mode="off", **runtime_kwargs
-    )
+    rt = AcpRuntime(work_dir=tmp_path / "wd", agent="ajcrew", sandbox_mode="off", **runtime_kwargs)
     rt._KILL_TERM_TIMEOUT = 1.0
     rt._KILL_REAP_TIMEOUT = 1.0
 

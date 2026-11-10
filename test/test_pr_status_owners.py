@@ -56,7 +56,7 @@ OWNER_PATHS = {stem: SCRIPTS / f"{stem}.py" for stem in OWNERS}
 LOADER_TWIN = ("_NoBytecodeSourceLoader", "_load_sibling")
 #: The modules ``_review_contract.py`` loads, so the sweep needs them too.
 CONTRACT_OWNERS = ("_review_fences.py", "_review_pushes.py", "_review_rounds.py")
-#: A dotted load name OUTSIDE ``aj_crew``: a ``aj_crew.`` prefix would make a
+#: A dotted load name OUTSIDE ``aj_crew``: an ``aj_crew.`` prefix would make a
 #: coverage run start measuring these files from this module's partial use of them.
 DOTTED = "s56_probe.pr_status"
 

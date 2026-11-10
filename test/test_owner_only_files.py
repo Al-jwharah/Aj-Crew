@@ -756,9 +756,7 @@ def test_gateway_log_created_by_a_non_gateway_process_is_owner_only(home: Path) 
 
     handler = _AppendOnlyLogFileHandler(home / "gateway.log", encoding="utf-8")
     try:
-        handler.handle(
-            logging.LogRecord("aj_crew.t", logging.WARNING, __file__, 1, "x", (), None)
-        )
+        handler.handle(logging.LogRecord("aj_crew.t", logging.WARNING, __file__, 1, "x", (), None))
     finally:
         handler.close()
     assert (home / "gateway.log").is_file()

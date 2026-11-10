@@ -1,4 +1,4 @@
-"""Every facade that serves a ``aj_crew._facade_mirror`` mirror holds to one contract.
+"""Every facade that serves an ``aj_crew._facade_mirror`` mirror holds to one contract.
 
 The facades are found by importing the ``src/aj_crew`` modules that mention the mirror
 and keeping those that carry an index, so a facade that adopts it is covered on the

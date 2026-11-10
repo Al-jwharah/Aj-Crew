@@ -13,7 +13,6 @@ from acp_client_helpers import _pin_the_installed_kiro_cli_version  # noqa: F401
 from acp_client_helpers import _POSIX_EXEC_PATHS_ONLY, _stop_stderr_drain
 from spawn_test_helpers import strip_spawn_shim
 
-from conftest import cap_node_module_walk
 from aj_crew.acp.client import (
     _CLAUDE_ACP_PKG_ENTRY,
     AcpClient,
@@ -21,6 +20,7 @@ from aj_crew.acp.client import (
     _vendored_acp_roots,
 )
 from aj_crew.testing.ids import UNALLOCATABLE_PID
+from conftest import cap_node_module_walk
 
 
 class TestVendoredClaudeAcp:

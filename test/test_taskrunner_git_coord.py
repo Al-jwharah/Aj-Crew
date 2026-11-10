@@ -16,8 +16,8 @@ from unittest.mock import AsyncMock
 import pytest
 from local_asyncio_helpers import asyncio_with_sleep
 
-from conftest import requires_git
 from aj_crew.taskrunner import Step, TaskRun
+from conftest import requires_git
 
 
 def _non_git_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, name: str) -> Path:

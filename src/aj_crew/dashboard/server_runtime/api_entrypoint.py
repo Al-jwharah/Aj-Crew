@@ -20,10 +20,10 @@ from aj_crew.dashboard.state import _DEFAULT_PORT
 if TYPE_CHECKING:
     from aj_crew.dashboard.server import (
         _MAX_HEADER_FIELD_SIZE,
+        AjCrewConfig,
         ContextBuilder,
         CronService,
         DashboardState,
-        AjCrewConfig,
         LessonStore,
         ScriptHookStore,
         SessionManager,

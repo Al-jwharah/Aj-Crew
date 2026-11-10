@@ -222,7 +222,7 @@ _BASE_OWNERS: dict[str, tuple[str, ...]] = {
 #: SHA-256 of the sorted ``"<name> <kind> <signature>"`` lines of every name in
 #: ``_BASE_OWNERS``, captured from the one-module file before the split: each moved
 #: name keeps the kind and signature it had there.
-_BASE_SHAPE_DIGEST = "1d2f5b6b10210205011f445d98f0eee05d1d88a2a0cf74a0afbc53e5cb3555b8"
+_BASE_SHAPE_DIGEST = "b2913aecc5a8f457c23495f2ea9fb5e72cea225e5d6f50929a13ee794cf8aeb4"
 
 #: Definitions that stay in the facade file. The seams every owner reads; the
 #: config schema route; the model and picker reads with the crew model-pin checks,

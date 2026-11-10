@@ -32,7 +32,6 @@ from job_sdk_helpers import (  # noqa: F401 -- the fixture is requested by name
     sdk_fixture,
 )
 
-from conftest import make_dir_link, requires_symlinks
 from aj_crew.apps import job_sdk
 from aj_crew.apps.job_sdk import (
     CANCELLED,
@@ -57,6 +56,7 @@ from aj_crew.apps.job_sdk import (
 from aj_crew.apps.manager import app_data_dir
 from aj_crew.config import paths
 from aj_crew.hooks import safe_read_file_bytes_nolink
+from conftest import make_dir_link, requires_symlinks
 
 # 1. register / kinds / is_cancellable
 

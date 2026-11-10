@@ -399,7 +399,7 @@ gauge families are these two:
 One threshold is worth knowing when you set alerts on the counts, because it is
 the product's own limit rather than a round number: `200` is the point the lesson
 store starts pruning. The gauges publish the raw number and leave the banding to
-your queries, so you can move that line without a Aj Crew change.
+your queries, so you can move that line without an Aj Crew change.
 
 Resource attributes identify the sending process and are attached to every
 series, so they are what you group by. `service.name` is always `ajcrew`.

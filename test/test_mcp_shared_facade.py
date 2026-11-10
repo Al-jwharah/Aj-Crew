@@ -260,8 +260,7 @@ def test_the_mirror_indexes_exactly_the_owners_with_no_exclusion_and_no_forward(
 def test_the_owners_are_every_mcp_shared_sibling() -> None:
     assert mcp_shared.__file__ is not None
     siblings = sorted(
-        f"aj_crew.{path.stem}"
-        for path in Path(mcp_shared.__file__).parent.glob("mcp_shared_*.py")
+        f"aj_crew.{path.stem}" for path in Path(mcp_shared.__file__).parent.glob("mcp_shared_*.py")
     )
     assert siblings == sorted(OWNERS)
 

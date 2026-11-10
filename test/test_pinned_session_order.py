@@ -13,8 +13,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from conftest import make_dir_link
 from aj_crew.dashboard import pinned_session_order as pso
+from conftest import make_dir_link
 
 # ── Pure store rules ──
 
@@ -509,8 +509,7 @@ async def test_pinned_order_writer_channel_containment(tmp_path, monkeypatch) ->
     agent = make_mocked_request(
         "POST",
         "/api/chat/pinned-order",
-        headers=headers
-        | {"X-Internal-Secret": "s3cret", "X-Internal-Caller": "ajcrew-dashboard"},
+        headers=headers | {"X-Internal-Secret": "s3cret", "X-Internal-Caller": "ajcrew-dashboard"},
         app=app,
     )
     assert await _write_pinned_order(state, ["c", "a", "b"], request=agent) is None

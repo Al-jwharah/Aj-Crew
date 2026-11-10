@@ -229,7 +229,7 @@ def register_external_app(
             ok=False,
             name=name,
             error=(
-                f"{name!r} is a AjCrew-shipped builtin and cannot be replaced "  # brand-ok: BASE error text
+                f"{name!r} is an AjCrew-shipped builtin and cannot be replaced "  # brand-ok: BASE error text
                 "by self-registration"
             ),
         )

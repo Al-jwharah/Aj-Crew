@@ -46,9 +46,7 @@ class TestInstallAgentRemote:
         (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
 
         monkeypatch.setattr("aj_crew.agent.KIRO_AGENTS_DIR", kiro_dir)
-        monkeypatch.setattr(
-            "aj_crew.agent._KIRO_MCP_JSON", tmp_path / "nonexistent_kiro_mcp.json"
-        )
+        monkeypatch.setattr("aj_crew.agent._KIRO_MCP_JSON", tmp_path / "nonexistent_kiro_mcp.json")
         monkeypatch.setattr("aj_crew.agent._CC_MCP_JSON", tmp_path / "nonexistent_cc.json")
         monkeypatch.setattr("aj_crew.agent._AJCREW_BIN", "/usr/bin/ajcrew")
         monkeypatch.setattr("shutil.which", lambda cmd, path=None: None)
@@ -95,7 +93,7 @@ class TestInstallAgentRemote:
 class TestFixStaleManagedCommand:
     """Tests for _fix_stale_managed_command.
 
-    ``_ajcrew_mcp_invocation`` returns ``(command, args)``: a ``ajcrew`` binary or
+    ``_ajcrew_mcp_invocation`` returns ``(command, args)``: an ``ajcrew`` binary or
     the ``<interpreter> -m aj_crew <sub>`` fallback. Both must be rewritten; the
     command alone drops the fallback's args and spawns a bare ``ajcrew`` not on PATH."""
 

@@ -334,8 +334,7 @@ def _runtime_facade_imports(tree: ast.Module) -> list[int]:
             continue
         if isinstance(node, ast.ImportFrom):
             if node.module == "aj_crew.session_lifecycle" or (
-                node.module == "aj_crew"
-                and any(a.name == "session_lifecycle" for a in node.names)
+                node.module == "aj_crew" and any(a.name == "session_lifecycle" for a in node.names)
             ):
                 lines.append(node.lineno)
         elif isinstance(node, ast.Import):

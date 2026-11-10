@@ -1,6 +1,6 @@
 """A Slack channel's Crew agent binding, resolved for the session it starts.
 
-``slack.channels.<id>.agent`` may name a Aj Crew agent record (a
+``slack.channels.<id>.agent`` may name an Aj Crew agent record (a
 ``config.agents`` key) rather than a kiro-cli agent mode. kiro-cli only starts
 a mode, so a chat turn that hands the record's NAME to ``get_or_create`` asks
 for a mode that does not exist and runs in a per-session scratch directory

@@ -278,23 +278,23 @@ def external_client_identity_note(server: str = "ajcrew-core") -> str:
     if server == "ajcrew-core":
         read_only = (
             " Remove it and the read-only tools (learn_list, local_knowledge_search) "
-            "work without a session; use a Aj Crew session (dashboard or a "
+            "work without a session; use an Aj Crew session (dashboard or a "
             "messaging channel) for the rest."
         )
     else:
         read_only = (
-            " Remove it; use a Aj Crew session (dashboard or a messaging channel) "
+            " Remove it; use an Aj Crew session (dashboard or a messaging channel) "
             "for the tools that need one."
         )
     if server in STALE_MANAGED_MCP_SERVERS:
         entry = (
-            f", and a {server} entry in ~/.kiro/settings/mcp.json is leftover from an "
+            f", and an {server} entry in ~/.kiro/settings/mcp.json is leftover from an "
             f"older install (docs/architecture/mcp.md)."
         )
     else:
         entry = " (docs/architecture/mcp.md)."
     return (
-        f" If this {server} was not started by a Aj Crew session -- for example "
+        f" If this {server} was not started by an Aj Crew session -- for example "
         f"it is listed in an editor's own MCP config such as ~/.kiro/settings/mcp.json "
         f"-- the tools that need a session identity (memory writes, memory recall, "
         f"session control) are not supported from it: only a server the gateway "
@@ -303,7 +303,7 @@ def external_client_identity_note(server: str = "ajcrew-core") -> str:
         f"AJCREW_SESSION_KEY is a fallback the gateway injects into its own "
         f"processes, not a credential: setting it by hand identifies nothing and makes "
         f"the gateway refuse every tool call from this server (identity_unattested)."
-        f"{read_only} The supported direction for an editor is to connect INTO a "
+        f"{read_only} The supported direction for an editor is to connect INTO an "
         f"Aj Crew session, not to spawn {server} itself{entry}"
     )
 
@@ -351,7 +351,7 @@ def registry_identity_note(server_name: str) -> str:
         f"admin's MCP registry is blocking Aj Crew's own tools: under the registry "
         f"these servers start without a session identity. An administrator enables "
         f'them by setting "{REGISTRY_LOCAL_CONTROL_PLANE_FIELD}": true at the top '
-        f"level of security_policy.json in the Aj Crew data home and restarting Kiro "
+        f"level of security_policy.json in the Aj Crew data home and restarting Aj "
         f"Crew; ajcrew-core and ajcrew-cron then run from the local install "
         f"instead of the registry catalog's entry "
         f"(docs/guides/enterprise-mcp-governance.md)."

@@ -53,7 +53,7 @@ function deepLinkFromArgv(argv) {
 }
 
 /**
- * Resolve a ajcrew:// URL to the dashboard route it may open.
+ * Resolve an ajcrew:// URL to the dashboard route it may open.
  *
  * Exactly five forms are accepted:
  *

@@ -238,9 +238,7 @@ def _serve_feed(monkeypatch: pytest.MonkeyPatch, version: str) -> None:
         "aj_crew.platform.update_layout.wheel_update_command",
         lambda channel=None: "curl -fsSL https://cdn.example.com/cli.sh | sh",
     )
-    monkeypatch.setattr(
-        "aj_crew.platform.update_governance.update_blocked_reason", lambda url: ""
-    )
+    monkeypatch.setattr("aj_crew.platform.update_governance.update_blocked_reason", lambda url: "")
     feed = json.dumps(
         {
             "schema": "ajcrew-cli-artifact-manifest-v1",

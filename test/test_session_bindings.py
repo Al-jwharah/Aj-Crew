@@ -49,13 +49,13 @@ SHARED_BINDINGS_CHECKS = (
 
 #: Member -> (kind, coroutine, signature digest, owning module). Frozen at the split: the
 #: kind, coroutine flag and signature are BASE's; the owner is where the member lives now
-#: (``session`` is the facade, any other name a ``aj_crew.session_parts`` module).
+#: (``session`` is the facade, any other name an ``aj_crew.session_parts`` module).
 _MEMBERS: dict[str, tuple[str, object, str, str]] = {
     "_CONFIG_SECTIONS": ("data", False, "", "config_apply"),
     "_FACTORY_CONFIG_PATHS": ("data", False, "", "config_apply"),
     "_POOL_DISCARD_TIMEOUT": ("data", False, "", "runtimes"),
     "_POOL_HEALTH_INTERVAL": ("data", False, "", "runtimes"),
-    "__init__": ("function", False, "6e578750eb89", "session"),
+    "__init__": ("function", False, "d0a5d87d30f0", "session"),
     "_acquire_after_identity_check": ("function", False, "32919eb17bc7", "claims"),
     "_active_dashboard_slots": ("property", False, "9b594013b706", "state_views"),
     "_advance_session_generation": ("function", False, "028659ce42ac", "claims"),
@@ -142,7 +142,7 @@ _MEMBERS: dict[str, tuple[str, object, str, str]] = {
     "_reap_agent_scopes_hook": ("function", True, "b60c5fea256e", "sweeps"),
     "_reap_drained_bg_runtimes_locked": ("function", True, "b60c5fea256e", "runtimes"),
     "_reap_idle_stale_bg_runtime": ("function", True, "a6632a57e602", "runtimes"),
-    "_rebind_live_watchdogs": ("function", True, "ade7df8164da", "session"),
+    "_rebind_live_watchdogs": ("function", True, "ac69aa25ffe5", "session"),
     "_record_pool_decision": ("function", False, "3f2c2ecce79a", "runtimes"),
     "_recycle_held": ("function", True, "77006629a104", "turn_context"),
     "_recycle_unmanaged": ("function", True, "1c68c9ed8dbb", "turn_context"),
@@ -300,10 +300,10 @@ _MEMBERS: dict[str, tuple[str, object, str, str]] = {
     "record_success": ("function", False, "958babeb61c8", "claims"),
     "recycle_background": ("function", True, "56a38eea24ac", "runtimes"),
     "recycle_heartbeat": ("function", True, "b60c5fea256e", "runtimes"),
-    "refresh_defaults": ("function", True, "9ce79a530960", "config_apply"),
+    "refresh_defaults": ("function", True, "3d91e538f5df", "config_apply"),
     "release": ("function", False, "b3a2d80a5701", "claims"),
     "release_subagent_runtime": ("function", True, "0f7ee42764e5", "runtimes"),
-    "reload_provider_factory": ("function", True, "9ce79a530960", "config_apply"),
+    "reload_provider_factory": ("function", True, "3d91e538f5df", "config_apply"),
     "remove": ("function", True, "958babeb61c8", "teardown"),
     "remove_if_unclaimed": ("function", True, "1eda252b53bd", "teardown"),
     "replace_mirror_link_if": ("function", False, "7cf643151494", "links"),

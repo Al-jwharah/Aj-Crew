@@ -36,7 +36,7 @@ const theme = params.get('theme') || 'dark'
 const scene = params.get('scene') || 'no-filter'
 
 localStorage.setItem('mc-theme', theme === 'light' ? 'light' : 'dark')
-localStorage.setItem('mc-color-theme', 'kiro')
+localStorage.setItem('mc-color-theme', 'aj')
 document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 // Use flat view so there is no folder complexity, matching the test PINNED_SLOTS fixture.
 localStorage.setItem('mc-sidebar-lane', 'flat')

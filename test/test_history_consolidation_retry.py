@@ -522,9 +522,7 @@ async def test_persistence_rechecked_inside_member_publication_hold(tmp_path, mo
         "ajcrew",
         "persistent",
     )
-    monkeypatch.setattr(
-        "aj_crew.execution_context.read_session_execution", lambda _key: execution
-    )
+    monkeypatch.setattr("aj_crew.execution_context.read_session_execution", lambda _key: execution)
     monkeypatch.setattr("aj_crew.memory_stores.memory_store_version", lambda _store: 2)
     monkeypatch.setattr(ContextBuilder, "ensure_store", AsyncMock(return_value=vectors))
     c = _make_consolidator(log)

@@ -160,9 +160,7 @@ class TestUpdateMessageGates:
     def test_the_channels_vet_names_slack(self, caller) -> None:
         with (
             patch("aj_crew.mcp_core._post") as post,
-            patch(
-                "aj_crew.mcp_core._vet_channel_governance", side_effect=_slack_edits_only
-            ) as vet,
+            patch("aj_crew.mcp_core._vet_channel_governance", side_effect=_slack_edits_only) as vet,
         ):
             post.return_value = {"ok": True}
             result = _call_tool("update_message", {"channel": _CHANNEL, "ts": _TS, "text": "done"})

@@ -151,6 +151,15 @@ import pytest
 # through monkeypatch.
 os.environ.pop("AJCREW_ACP_RECORD_FRAMES", None)
 
+# ── App store fetch switch (rootdir floor) ───────────────────────────────────
+# The shipped default keeps the app store off the network
+# (``official_catalog.store_fetch_skipped``): the published catalog belongs to
+# the upstream project, so reading it is an operator's opt-in. The suite covers
+# the fetching path, against the sealed ``_open_catalog`` seam that refuses a
+# real request, so it opts in for the whole process. A test of the shipped
+# default deletes the variable itself.
+os.environ["AJCREW_SKIP_APP_STORE_FETCH"] = "0"
+
 
 @pytest.fixture
 def _floor_monkeypatch():
@@ -318,8 +327,8 @@ from conftest_floor_home import (  # noqa: E402,F401 -- bound for pytest and for
     _agent_spec_seam_modules,
     _breadcrumb_guard,
     _isolate_agent_spec_home,
-    _isolate_kiro_sessions_dir,
     _isolate_ajcrew_home,
+    _isolate_kiro_sessions_dir,
     _isolate_sel_default_dir,
     _isolate_shared_kiro_paths,
     _isolate_subagents_dir,

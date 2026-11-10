@@ -372,9 +372,7 @@ class TestProviderSelection:
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """``commit.py`` calls this with no provider knowledge of its own."""
-        from aj_crew.apps.builtins.auto_improvement.profiles.github_repo import (
-            pr_recipe as gh_mod,
-        )
+        from aj_crew.apps.builtins.auto_improvement.profiles.github_repo import pr_recipe as gh_mod
 
         monkeypatch.setattr(gh_mod, "_gh_prefers_ssh", lambda: True)
         monkeypatch.setattr(mr, "_glab_prefers_ssh", lambda _h: True)

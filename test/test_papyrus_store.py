@@ -36,10 +36,10 @@ from unittest import mock
 
 import pytest
 
-from conftest import make_dir_link, requires_symlinks
 from aj_crew.apps.builtins.papyrus.backend import store
 from aj_crew.slugs import SLUG_CHARS
 from aj_crew.testing.wait import wait_until
+from conftest import make_dir_link, requires_symlinks
 
 
 @pytest.fixture()

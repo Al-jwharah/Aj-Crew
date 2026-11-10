@@ -279,7 +279,7 @@ class TestAWriteRefusesAPartiallyUnreadableLedger:
 class TestTwoWritersCannotLoseACrew:
     """The lane has two writers by design and they are in different processes.
 
-    The gateway and a ``ajcrew cloud`` command both write it. ``publish`` replaces the
+    The gateway and an ``ajcrew cloud`` command both write it. ``publish`` replaces the
     WHOLE document, so the second rename would discard the first writer's row, leaving a
     billing VM nothing can address. The READ and the publish share one hold of the lock.
     """

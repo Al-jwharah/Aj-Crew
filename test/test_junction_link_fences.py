@@ -31,8 +31,8 @@ from unittest import mock
 
 import pytest
 
-from conftest import make_dir_link
 from aj_crew import artifacts, node_modules_txn, platform_compat, portability, skills
+from conftest import make_dir_link
 
 
 def _seed_victim(root: Path) -> Path:

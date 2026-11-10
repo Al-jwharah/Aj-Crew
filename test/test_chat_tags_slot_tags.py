@@ -519,9 +519,7 @@ class TestSlotTags:
         app.middlewares.append(_as_app)
         async with TestClient(TestServer(app)) as client:
             with (
-                patch(
-                    "aj_crew.dashboard.chat_tags.read_bounded_json", side_effect=_bind_then_read
-                ),
+                patch("aj_crew.dashboard.chat_tags.read_bounded_json", side_effect=_bind_then_read),
                 patch("aj_crew.dashboard.chat_tags.save_slot_off_loop") as save,
             ):
                 resp = await client.put("/api/chat/slots/s1/tags", json={"tags": ["t1"]})

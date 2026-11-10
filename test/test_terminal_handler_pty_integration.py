@@ -1286,7 +1286,7 @@ class TestTerminalWsIntegration:
     @pytest.mark.asyncio
     async def test_ws_bash_runs_a_login_guarded_profile(self, monkeypatch, tmp_path):
         """A profile stanza behind a login-shell guard must
-        run in a Aj Crew terminal.
+        run in an Aj Crew terminal.
 
         The shell is spawned with ``-l``, so ``shopt -q login_shell`` is true and
         the guard passes. Emulating the profile chain from an rc file (what an ``--init-file`` rc file did) cannot substitute: the option is read-only,

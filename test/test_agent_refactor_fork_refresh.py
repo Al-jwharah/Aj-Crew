@@ -21,10 +21,10 @@ from typing import Any, Callable, Iterator
 
 import pytest
 
-from conftest import requires_symlinks
 from aj_crew import agent, agent_state
 from aj_crew.agent_materialization import fork_refresh
 from aj_crew.config.loader import AjCrewConfig
+from conftest import requires_symlinks
 
 # Captured before any fixture stubs it, so a test can show what the real resolver picks.
 _REAL_AGENT_SPEC_PATH = agent.agent_spec_path

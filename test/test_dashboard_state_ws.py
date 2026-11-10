@@ -1148,12 +1148,8 @@ class TestOwnerSourceStatusTransport:
             lambda url: {"ci": "passed", "state": "OPEN"} if url == source_url else None,
         )
         monkeypatch.setattr("aj_crew.dashboard.state._repo_is_public", lambda url: True)
-        monkeypatch.setattr(
-            "aj_crew.dashboard.state._audit_public_status_grant", lambda url: None
-        )
-        monkeypatch.setattr(
-            "aj_crew.dashboard.state._audit_public_status_denied", lambda url: None
-        )
+        monkeypatch.setattr("aj_crew.dashboard.state._audit_public_status_grant", lambda url: None)
+        monkeypatch.setattr("aj_crew.dashboard.state._audit_public_status_denied", lambda url: None)
         monkeypatch.setattr(state, "is_yolo_active", lambda: False)
         sent: list[tuple[object, dict]] = []
         monkeypatch.setattr(
@@ -1244,12 +1240,8 @@ class TestOwnerSourceStatusTransport:
         monkeypatch.setattr(
             "aj_crew.dashboard.state._repo_is_public", lambda url: url == public_url
         )
-        monkeypatch.setattr(
-            "aj_crew.dashboard.state._audit_public_status_grant", lambda url: None
-        )
-        monkeypatch.setattr(
-            "aj_crew.dashboard.state._audit_public_status_denied", lambda url: None
-        )
+        monkeypatch.setattr("aj_crew.dashboard.state._audit_public_status_grant", lambda url: None)
+        monkeypatch.setattr("aj_crew.dashboard.state._audit_public_status_denied", lambda url: None)
         monkeypatch.setattr(state, "is_yolo_active", lambda: False)
         monkeypatch.setattr(state, "_spawn_ws_send", lambda client, message: None)
 

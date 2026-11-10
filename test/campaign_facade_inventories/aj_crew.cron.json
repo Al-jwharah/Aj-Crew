@@ -1,5 +1,6 @@
 {
  "base_public_names": [
+  "AjCrewConfig",
   "CHANNEL_MAX_LEN",
   "CRON_FIRES",
   "CronFolderLookup",
@@ -12,7 +13,6 @@
   "CronService",
   "CronStoreBusy",
   "CronStoreUnreadable",
-  "AjCrewConfig",
   "MAX_CRON_MESSAGE",
   "MAX_SHORT_STRING",
   "ProcessHandle",

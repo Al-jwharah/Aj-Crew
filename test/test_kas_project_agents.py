@@ -169,9 +169,7 @@ async def test_with_no_project_spec_the_user_level_agent_is_projected(layout):
 
     assert entry["prompt"] == "user prompt"
     # A user-level custom agent also gets Crew's default servers.
-    assert entry["tools"] == expand_kiro_cli_tool_names(
-        ["fs_read", "@ajcrew-core", "@ajcrew-cron"]
-    )
+    assert entry["tools"] == expand_kiro_cli_tool_names(["fs_read", "@ajcrew-core", "@ajcrew-cron"])
 
 
 @pytest.mark.asyncio

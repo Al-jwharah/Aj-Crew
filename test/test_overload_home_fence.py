@@ -214,7 +214,7 @@ class TestPrivateWindowDoesNotCostDelegation:
 
 
 def _outside_any_sandbox(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Run the routing as a gateway does: not already inside a Aj Crew sandbox.
+    """Run the routing as a gateway does: not already inside an Aj Crew sandbox.
 
     ``wrap_argv`` passes argv through untouched -- no launcher, no profile, no
     backend probe -- when the process carries the launcher-only

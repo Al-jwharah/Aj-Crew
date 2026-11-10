@@ -809,8 +809,7 @@ class TestNoGateEnumeratesTheCheckoutByWalking:
             "test-dir": "HERE = Path(__file__).resolve().parent\nHERE.rglob('*.py')\n",
             # Anchored below the root: no ignored tree and no nested checkout there.
             "anchored-glob": (
-                "REPO = Path(__file__).resolve().parents[1]\n"
-                "REPO.glob('src/aj_crew/**/*.py')\n"
+                "REPO = Path(__file__).resolve().parents[1]\n" "REPO.glob('src/aj_crew/**/*.py')\n"
             ),
             "subtree-rglob": "REPO = Path(__file__).resolve().parents[1]\n(REPO / 'docs').rglob('*.md')\n",
             # The overwhelmingly common `walk` in this suite, and not a filesystem one.

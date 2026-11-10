@@ -813,10 +813,20 @@ class TestSkipFetchSwitch:
         with pytest.raises(oc.CatalogUnavailable):
             oc.fetch_inventory_entries()
 
-    @pytest.mark.parametrize("value", ["", "0", "true", "yes"])
-    def test_only_the_exact_value_arms_it(self, monkeypatch, value):
-        monkeypatch.setenv(oc.SKIP_FETCH_ENV, value)
+    def test_only_the_exact_value_opts_in(self, monkeypatch):
+        monkeypatch.setenv(oc.SKIP_FETCH_ENV, "0")
         assert oc.store_fetch_skipped() is False
+
+    @pytest.mark.parametrize("value", ["", "1", "false", "no", "00"])
+    def test_any_other_value_keeps_the_store_off_the_network(self, monkeypatch, value):
+        monkeypatch.setenv(oc.SKIP_FETCH_ENV, value)
+        assert oc.store_fetch_skipped() is True
+
+    def test_the_shipped_default_is_off_the_network(self, monkeypatch):
+        # The published catalog belongs to the upstream project, so a build that
+        # was told nothing must not read it.
+        monkeypatch.delenv(oc.SKIP_FETCH_ENV, raising=False)
+        assert oc.store_fetch_skipped() is True
 
 
 class TestFailedFetchIsRemembered:

@@ -45,9 +45,7 @@ class TestDoctorAgentAuth:
             monkeypatch.setitem(sys.modules, "aj_crew.auth.bridge", None)
         else:
             monkeypatch.setattr("aj_crew.auth.bridge.vault_holds_identity", lambda: vault_holds)
-            monkeypatch.setattr(
-                "aj_crew.auth.bridge.describe_vault_identity", lambda: vault_detail
-            )
+            monkeypatch.setattr("aj_crew.auth.bridge.describe_vault_identity", lambda: vault_detail)
         cli_doctor._doctor_agent_auth()
         return capsys.readouterr().out, len(probes)
 

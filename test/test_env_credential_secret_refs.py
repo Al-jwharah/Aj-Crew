@@ -166,9 +166,7 @@ def test_load_credentials_resolves_a_reference_from_the_environment(
 ) -> None:
     _store(home, "WECOM_SECRET", _PLACEHOLDER)
     monkeypatch.setenv("WECOM_SECRET", "secret://WECOM_SECRET")
-    assert loader.AjCrewConfig().load_credentials(propagate=False)["WECOM_SECRET"] == (
-        _PLACEHOLDER
-    )
+    assert loader.AjCrewConfig().load_credentials(propagate=False)["WECOM_SECRET"] == (_PLACEHOLDER)
 
 
 def test_load_credentials_leaves_an_unresolvable_reference_unset(

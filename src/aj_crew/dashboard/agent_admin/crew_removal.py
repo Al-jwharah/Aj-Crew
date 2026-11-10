@@ -452,7 +452,7 @@ async def _remove_member_leftovers(
 
 
 async def api_ajcrew_agent_delete(request: web.Request) -> web.Response:
-    """DELETE /api/agents/{name} — delete a Aj Crew agent."""
+    """DELETE /api/agents/{name} — delete an Aj Crew agent."""
 
     denied = await _require_owner(request, "agent.delete")
     if denied is not None:

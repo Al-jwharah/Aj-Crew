@@ -176,9 +176,7 @@ class TestMutatingToolReading:
             "learn_add",
         ],
     )
-    @pytest.mark.parametrize(
-        "server", ["ajcrew-core", "ajcrew-work", "some-vendor-mcp", "memory"]
-    )
+    @pytest.mark.parametrize("server", ["ajcrew-core", "ajcrew-work", "some-vendor-mcp", "memory"])
     def test_every_mcp_call_counts_as_mutating(self, name, server):
         """There is no read-only MCP tier, and this is the pin that keeps it that way.
 

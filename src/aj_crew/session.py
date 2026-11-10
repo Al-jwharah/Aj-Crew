@@ -233,9 +233,7 @@ from aj_crew.session_pid import _untrack_session_pid as _untrack_session_pid  # 
 from aj_crew.session_pid import (  # noqa: F401
     cleanup_orphaned_session_roots,
 )
-from aj_crew.session_pid import (  # noqa: F401
-    cleanup_orphaned_sessions as cleanup_orphaned_sessions,
-)
+from aj_crew.session_pid import cleanup_orphaned_sessions as cleanup_orphaned_sessions  # noqa: F401
 from aj_crew.session_pid import (  # noqa: F401
     find_orphan_mcp_candidates,
     get_session_rss_mb,

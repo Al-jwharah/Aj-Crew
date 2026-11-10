@@ -1,6 +1,6 @@
 """Every dashboard ``config.json`` saver merges under the sidecar lock.
 
-Keys are merged into the file as re-read inside ``update_config_locked``, so a
+Keys are merged into the file as re-read inside ``update_config_locked``, so an
 ``ajcrew config set`` between validation and save survives. A foreign write is
 injected before a save's first ``update_config_locked`` call: skipping the lock fails
 ``injected``, writing the snapshot loses the key. The static half is

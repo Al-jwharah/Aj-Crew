@@ -993,8 +993,8 @@ if TYPE_CHECKING:  # names it serves from outside the family, from their homes
         teardown_app_runtime,
     )
     from aj_crew.config.loader import (  # noqa: F401
-        ConfigReadError,
         AjCrewConfig,
+        ConfigReadError,
         _invalidate_config_cache,
         config_local_path,
         config_path,

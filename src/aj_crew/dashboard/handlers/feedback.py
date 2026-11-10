@@ -62,8 +62,13 @@ from aj_crew.security import redact_credentials, redact_exfiltration_urls
 
 logger = logging.getLogger(__name__)
 
-_INGESTION_URL = "https://ingestion.aperture-public-api.feedback.console.aws.dev/form"
-_PROMPT_URL = "https://prompt.aperture-public-api.feedback.console.aws.dev/form/prompt"
+# EMPTY on purpose. The upstream project's survey form is registered to another
+# product on a service this build has no account with, so answers typed here
+# must never be sent there. With no endpoint the consent gate below stays
+# closed whatever the telemetry settings say: eligibility reads "not offered"
+# and submit is refused, which is the state the frontend already handles.
+_INGESTION_URL = ""
+_PROMPT_URL = ""
 
 _FORM_CATEGORY = "AjCrew"  # brand-ok: literal Aperture portal identifier
 _FORM_NAME = "SessionFeedback"
@@ -154,7 +159,12 @@ def _telemetry_permitted(audit_tool: str = "") -> bool:
     Passing a non-empty ``audit_tool`` records the allow/deny verdict in the
     SEL trail. Callers run this off the event loop (``asyncio.to_thread``) since
     it does config-file I/O and writes the audit record.
+
+    A build with no survey endpoint answers no before reading anything: there is
+    nowhere to send an answer, so no consent can make the survey reachable.
     """
+    if not (_INGESTION_URL and _PROMPT_URL):
+        return False
     cfg = AjCrewConfig.load()
     return beacon.telemetry_permitted(
         enabled=cfg.telemetry.beacon_enabled,

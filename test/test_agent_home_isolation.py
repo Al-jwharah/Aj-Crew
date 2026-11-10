@@ -21,8 +21,8 @@ from agent_home_isolation_helpers import _isolate_default_home_fixture  # noqa: 
 from agent_home_isolation_helpers import _pin_default_home_and_breadcrumb  # noqa: F401
 from agent_home_isolation_helpers import _capture_sel, _pretend_target_is_shared
 
-from conftest import make_dir_link
 from aj_crew.config.paths import kiro_agents_dir, kiro_home
+from conftest import make_dir_link
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SRC = REPO_ROOT / "src" / "aj_crew"
@@ -32,7 +32,7 @@ SRC = REPO_ROOT / "src" / "aj_crew"
 def _no_overrides(monkeypatch) -> None:
     """No KIRO_HOME and no AJCREW_HOME — the plain-install baseline.
 
-    Both must be cleared: with a AJCREW_HOME override active AND the code
+    Both must be cleared: with an AJCREW_HOME override active AND the code
     running from a worktree (which is how this repo is developed), the derived
     isolated home legitimately kicks in.
     """
@@ -392,9 +392,7 @@ def test_does_not_decline_from_an_appimage_runtime_mount(monkeypatch, tmp_path):
         (Path(scratch_name) / ".git").mkdir()
         mount = Path(scratch_name) / ".mount_KiroXk3Qm9"
         (mount / "usr" / "lib" / "aj_crew").mkdir(parents=True)
-        monkeypatch.setattr(
-            agent, "__file__", str(mount / "usr" / "lib" / "aj_crew" / "agent.py")
-        )
+        monkeypatch.setattr(agent, "__file__", str(mount / "usr" / "lib" / "aj_crew" / "agent.py"))
         _pretend_target_is_shared(monkeypatch, agent, tmp_path / "agents")
 
         assert agent._decline_shared_agent_home(audit=False) is None, (

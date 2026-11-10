@@ -209,7 +209,7 @@ def _doctor_credentials(issues: list[str]) -> None:
     on either side of that told the operator which one they had.
 
     Advisory only, like the pod-session-bus and memory-pressure probes: ``issues``
-    is doctor's exit-code channel, and an unconfigured AWS profile is not a Aj
+    is doctor's exit-code channel, and an unconfigured AWS profile is not an Aj
     Crew fault. Reporting it is right; failing on it would make ``doctor`` red on
     every host that simply does not use AWS.
 

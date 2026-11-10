@@ -311,7 +311,7 @@ WORKSPACE_DENY_ALIASES: dict[str, tuple[str, ...]] = {
 
 #: Why a remote-bound session cannot start on a backend other than KAS.
 REMOTE_NEEDS_KAS = (
-    "remote session environments need the KAS agent backend, which lets Kiro "
+    "remote session environments need the KAS agent backend, which lets Aj "
     "Crew remove the local file and shell tools; switch the backend in Settings"
 )
 REMOTE_AGENT_RESTRICTED = (

@@ -200,7 +200,7 @@ def _overlaps_a_real_data_home(path: pathlib.Path) -> "pathlib.Path | None":
 
 
 def _an_agent_inherited_the_live_home(value: str) -> bool:
-    """Whether a Aj Crew agent's shell handed this run the live ``AJCREW_HOME``.
+    """Whether an Aj Crew agent's shell handed this run the live ``AJCREW_HOME``.
 
     Every agent the gateway spawns inherits ``AJCREW_HOME`` pointing at the live
     home and gets ``AJCREW_SCRATCH`` naming its own scratch tree. An agent did not
@@ -1069,7 +1069,7 @@ def _test_owned_roots(tmp_path_factory) -> tuple[pathlib.Path, ...]:
 
     A path under either was created by a fixture or by the test itself, so it is never
     the operator's -- even when the tree sits INSIDE a guarded root. That happens
-    routinely: a Aj Crew agent session sets ``TMPDIR`` to its scratch dir under
+    routinely: an Aj Crew agent session sets ``TMPDIR`` to its scratch dir under
     ``~/.kiro/crew/scratch/``, which puts both trees under the real ``~/.kiro``. A fence
     keyed on the real home alone would then redirect a test that relocated kiro-cli's
     home to its OWN ``tmp_path`` away from the tree it just built.

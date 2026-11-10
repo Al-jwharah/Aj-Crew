@@ -197,9 +197,7 @@ class TestThePass:
         from aj_crew.agent_files import ASSISTANT_MEMBER_NAME
 
         cfg = AjCrewConfig.load()
-        cfg.agents[ASSISTANT_MEMBER_NAME] = AjCrewAgentConfig(
-            kiro_agent="ajcrew", source="builtin"
-        )
+        cfg.agents[ASSISTANT_MEMBER_NAME] = AjCrewAgentConfig(kiro_agent="ajcrew", source="builtin")
         cfg.save()
 
         report = _run(old_style_config, log)
@@ -381,7 +379,7 @@ class TestThePass:
         assert {"empty", "described"} <= AjCrewConfig.load().agents.keys()
 
     def test_rows_bound_to_skill_view_aliases_are_removed(self, bindings_dir, log):
-        # Discovery never lists a ``ajcrew-skill-view-*`` alias, so no spec is
+        # Discovery never lists an ``ajcrew-skill-view-*`` alias, so no spec is
         # reported for these rows; the older sync still wrote one per alias file.
         a = "ajcrew-skill-view-000d98d7ce0f52f0500da355"
         b = "ajcrew-skill-view-0245aff77b1473735250d2a0"

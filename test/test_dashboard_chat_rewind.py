@@ -135,9 +135,7 @@ class TestRewindSlot:
             fail_save.wait()
             raise OSError("disk full")
 
-        monkeypatch.setattr(
-            "aj_crew.dashboard.chat_rewind._save_slot_to_history", _wait_then_fail
-        )
+        monkeypatch.setattr("aj_crew.dashboard.chat_rewind._save_slot_to_history", _wait_then_fail)
         app = _make_app(state)
         async with TestClient(TestServer(app)) as client:
             request_task = asyncio.create_task(
@@ -374,9 +372,7 @@ class TestRewindSlot:
             seen["slot_name"] = expected_slot_name
             return True
 
-        monkeypatch.setattr(
-            "aj_crew.dashboard.chat_rewind._save_slot_to_history", _record_pairing
-        )
+        monkeypatch.setattr("aj_crew.dashboard.chat_rewind._save_slot_to_history", _record_pairing)
 
         app = _make_app(state)
         async with TestClient(TestServer(app)) as client:

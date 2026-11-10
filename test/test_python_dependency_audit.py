@@ -177,9 +177,7 @@ class TestParsingFailsLoudRatherThanEmpty:
     def test_the_local_project_may_be_skipped(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        (tmp_path / "pyproject.toml").write_text(
-            '[project]\nname = "Aj_Crew"\n', encoding="utf-8"
-        )
+        (tmp_path / "pyproject.toml").write_text('[project]\nname = "Aj_Crew"\n', encoding="utf-8")
         monkeypatch.setattr(gate, "_REPO_ROOT", tmp_path)
         skipped = {
             "name": "aj-crew",

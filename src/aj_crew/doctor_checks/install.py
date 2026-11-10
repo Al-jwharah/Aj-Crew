@@ -97,7 +97,7 @@ def _doctor_data_home() -> None:
         # hold it. Never advise deleting it — removing it takes the running
         # interpreter with it (`which ajcrew` may resolve through it).
         print(
-            f"  legacy:      ✅ {legacy} retained to hold a Aj Crew "
+            f"  legacy:      ✅ {legacy} retained to hold an Aj Crew "
             f"virtual environment ({', '.join(venvs)})"
         )
         print(
@@ -209,7 +209,7 @@ def _doctor_skill_currency(issues: list[str]) -> None:
     print(
         f"  {len(states) - len(behind) - len(edited) - len(unverifiable)} in step with this build"
     )
-    # Skill names and source paths come off disk, out of a packaged tree or a
+    # Skill names and source paths come off disk, out of a packaged tree or an
     # AJCREW_PROJECT_DIR tree, so a name is untrusted text: printed raw, an
     # OSC/ANSI sequence or an embedded newline in a directory name would drive
     # the terminal or forge a verdict line. The source path is displayed for the
@@ -644,7 +644,7 @@ def _doctor_project(issues: list[str]) -> str:
                 issues.append("stale project_dir")
                 stale_project = True
     if proj and Path(proj).is_dir():
-        # Only a directory carrying cli.py's ``_PROJECT_MARKERS`` is a Aj
+        # Only a directory carrying cli.py's ``_PROJECT_MARKERS`` is an Aj
         # Crew source checkout — claim it only when measured, so an explicit
         # ``AJCREW_PROJECT_DIR`` naming an unrelated repository is not
         # mislabelled as the checkout.
@@ -666,7 +666,7 @@ def _doctor_project(issues: list[str]) -> str:
             print("  git repo:    ⚠️  not a git repo")
     elif not stale_project:
         print(
-            "  source dir:  ⚠️  not set (set from a Aj Crew checkout by"
+            "  source dir:  ⚠️  not set (set from an Aj Crew checkout by"
             " ajcrew setup; not needed for wheel installs)"
         )
     return proj

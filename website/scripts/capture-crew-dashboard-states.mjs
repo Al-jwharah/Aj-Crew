@@ -55,7 +55,7 @@ async function shoot({ state, theme, name, present, absent }) {
   // mount, so a shot can silently come out in the other palette and the only
   // evidence of it is two files with identical bytes.
   const painted = await page.evaluate(() => document.documentElement.dataset.theme)
-  check(`${name}: palette is kiro-${theme}, got ${painted}`, painted === `kiro-${theme}`)
+  check(`${name}: palette is aj-${theme}, got ${painted}`, painted === `aj-${theme}`)
   // The branch is pinned by what is NOT there as well: the empty state exists to
   // stop a retry being offered for an answer a retry cannot change.
   for (const id of absent) {

@@ -800,7 +800,7 @@ def _download_blocking(
     #   whatever it pointed at.
     # * The name is unpredictable and unique, which also settles the collision the
     #   fixed name caused: nothing serialises across processes -- a gateway, an MCP
-    #   server and a `ajcrew` CLI each run their own store over the same data home --
+    #   server and an `ajcrew` CLI each run their own store over the same data home --
     #   so two transfers interleaved their writes into one file and the sha256 pin then
     #   failed BOTH of them.
     #

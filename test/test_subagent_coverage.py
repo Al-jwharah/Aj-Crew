@@ -21,12 +21,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from subagent_coverage_helpers import _info, _manager
 
-from conftest import absent_sysconf
 from aj_crew import subagent as sa
 from aj_crew.subagent import SubagentInfo, SubagentManager
 from aj_crew.subagent_cost import _cost_log_path
 from aj_crew.subagent_persistence_layout import _subagents_dir
 from aj_crew.subagent_persistence_state import read_tombstone
+from conftest import absent_sysconf
 
 # ── _safe_fire ────────────────────────────────────────────────────────────
 
@@ -125,9 +125,7 @@ class TestVetSpawnGovernance:
             calls.append(item)
             return _verdict(not item.startswith("agents:"))
 
-        with patch(
-            "aj_crew.platform.governance_profiles.governance_permits", side_effect=_permits
-        ):
+        with patch("aj_crew.platform.governance_profiles.governance_permits", side_effect=_permits):
             reason = sa._vet_spawn_governance("dash:1", "scout")
         assert reason == "agent 'scout' not permitted by spawn policy"
         assert "agents:scout" in calls

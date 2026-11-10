@@ -34,10 +34,10 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from conftest import make_dir_link
 from aj_crew.dashboard.handlers import discover as h
 from aj_crew.skill_providers.base import ProviderRegistry, SkillSearchResult
 from aj_crew.skills import SkillsLoader
+from conftest import make_dir_link
 
 _SKILL_MD = "---\nname: cov-skill\ndescription: zzq nonsense payload\n---\n# body\n"
 

@@ -366,9 +366,7 @@ class TestSessionApprovalPermission:
             description="T",
             permissions=Permissions(sessionApproval=True),
         )
-        monkeypatch.setattr(
-            "aj_crew.apps.permissions.is_app_enabled", lambda name: name == "test"
-        )
+        monkeypatch.setattr("aj_crew.apps.permissions.is_app_enabled", lambda name: name == "test")
         monkeypatch.setattr("aj_crew.apps.permissions.get_app_manifest", lambda _name: manifest)
         monkeypatch.setattr(
             "aj_crew.apps.permissions._read_installed",

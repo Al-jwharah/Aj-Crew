@@ -3,7 +3,7 @@
 An error path that only printed and returned None let the dispatcher fall
 through to exit 0, so `ajcrew knowledge stats` on a library that is not
 configured (or whose schema is behind this build) exited 0 while printing an
-error -- a `ajcrew knowledge stats && deploy` chain could not tell a failed
+error -- an `ajcrew knowledge stats && deploy` chain could not tell a failed
 read from an empty one. The command now returns 0 on success, 1 on a printed
 error, and 2 for an unknown sub-action, and the dispatcher `sys.exit`s it.
 """

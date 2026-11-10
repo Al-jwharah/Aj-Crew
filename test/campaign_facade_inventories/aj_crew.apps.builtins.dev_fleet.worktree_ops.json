@@ -15,7 +15,7 @@
   "shielded_prepare_off_loop",
   "subprocess_executor"
  ],
- "note": "A aj_crew._facade_mirror facade over the worktree_ops_sync, worktree_ops_pods and worktree_ops_removal owners beside it; it keeps rebase, prune and the background tasks, and its BASE __all__ (server.py's re-export table).",
+ "note": "An aj_crew._facade_mirror facade over the worktree_ops_sync, worktree_ops_pods and worktree_ops_removal owners beside it; it keeps rebase, prune and the background tasks, and its BASE __all__ (server.py's re-export table).",
  "rebound": {
   "ConfigHookScanError": "aj_crew.git_config_hooks",
   "LoopBoundLock": "aj_crew.loop_lock",

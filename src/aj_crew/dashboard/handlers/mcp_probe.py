@@ -29,8 +29,8 @@ from aj_crew.dashboard.handlers._shared import read_bounded_json
 from aj_crew.dashboard.handlers.mcp_config_files import (
     _GLOBAL_MCP_JSON,
     _KIRO_GLOBAL_SURFACE,
-    _config_entry_for,
     _ajcrew_mcp_json,
+    _config_entry_for,
     _load_json_or_empty,
     _string_identifier,
 )

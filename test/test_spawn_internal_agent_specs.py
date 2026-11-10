@@ -74,9 +74,7 @@ class TestThePredicate:
         assert sa._validate_agent("mine--readonly") == ("mine--readonly", "", "")
 
     def test_a_skill_view_alias_row_is_internal(self) -> None:
-        alias = SimpleNamespace(
-            name="ajcrew-skill-view-abc", filename="ajcrew-skill-view-abc.json"
-        )
+        alias = SimpleNamespace(name="ajcrew-skill-view-abc", filename="ajcrew-skill-view-abc.json")
         assert agent_discovery.is_internal_agent_spec(alias)
 
     def test_a_partial_row_is_answered_not_raised(self) -> None:

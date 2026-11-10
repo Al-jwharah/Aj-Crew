@@ -18,7 +18,6 @@ from pathlib import Path
 import pytest
 from named_cases_helpers import named_cases
 
-from conftest import cap_project_root_walk, requires_symlinks
 from aj_crew import artifact_source
 from aj_crew.artifact_source import (
     COPY,
@@ -28,6 +27,7 @@ from aj_crew.artifact_source import (
     is_verifiable_root,
     project_root_marker,
 )
+from conftest import cap_project_root_walk, requires_symlinks
 
 
 @pytest.fixture

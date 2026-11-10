@@ -485,9 +485,7 @@ async def test_unrouted_channel_namespace_degrades_instead_of_raising(svc, monke
 
     svc._on_fire = on_fire_unsupported
     await svc.start()
-    loop = await svc.add(
-        slot_key="whatsapp:ajcrew:direct:15550100", message="watch", idle_secs=60
-    )
+    loop = await svc.add(slot_key="whatsapp:ajcrew:direct:15550100", message="watch", idle_secs=60)
     for _ in range(500):
         if removed.is_set() and loop.id not in svc._timers:
             break

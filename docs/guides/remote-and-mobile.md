@@ -103,7 +103,7 @@ bundle). See the [install guide](install.md) for the full walkthrough:
 
 ```bash
 git clone https://github.com/Al-jwharah/Aj-Crew.git
-cd AjCrew
+cd Aj-Crew
 
 # Build the frontend bundle and stage it into the package
 cd website && npm install && npm run build && cd ..
@@ -246,7 +246,7 @@ the token-auth middleware unconditionally, so a wider bind never exposes an
 unauthenticated surface beyond the three token-free liveness probes
 (`/api/health`, `/api/live`, `/api/ready`).
 
-A governance policy can narrow both: the `bind_address` list refuses a
+A governance policy can narrow both: the `bind_address` list refuses an
 `AJCREW_BIND` address it does not name (the gateway then binds `127.0.0.1`),
 and the `dashboard_origins` list drops an extra origin it does not name. An
 LTS build allows neither until a policy names it. Tailnet access there

@@ -17,7 +17,7 @@ import '../src/index.css'
 // The fixed left column makes pane width differ from viewport width.
 const params = new URLSearchParams(location.search)
 const theme = params.get('theme') || 'light'
-document.documentElement.dataset.theme = `kiro-${theme}`
+document.documentElement.dataset.theme = `aj-${theme}`
 document.documentElement.dataset.mode = theme
 const content = [
   '## Usage signals',

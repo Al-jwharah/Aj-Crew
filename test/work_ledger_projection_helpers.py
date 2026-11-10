@@ -193,9 +193,7 @@ def _real_units(monkeypatch, *, worker_lands: bool = True) -> None:
     monkeypatch.setattr(routes.crew_log_emit, "enabled", lambda: True)
     units = {CONDUCTOR: "u-conductor", WORKER: "u-worker"}
     monkeypatch.setattr(routes, "unit_for_session_key", lambda sessions, key: units[key])
-    CrewLog.create(
-        lg.KIND_SESSION, "u-conductor", owner="raymond", agent="ajcrew", slot=CONDUCTOR
-    )
+    CrewLog.create(lg.KIND_SESSION, "u-conductor", owner="raymond", agent="ajcrew", slot=CONDUCTOR)
     CrewLog.create(lg.KIND_SESSION, "u-worker", owner="raymond", agent="ajcrew", slot=WORKER)
 
     def _append(unit: str, data: dict[str, Any]) -> bool:

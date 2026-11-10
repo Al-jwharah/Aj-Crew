@@ -218,8 +218,8 @@ class TestBoundedSkillReads:
             loader.load_skill("alpha")
 
     def test_global_link_to_sensitive_directory_is_refused(self, tmp_path, monkeypatch):
-        from conftest import make_dir_link
         from aj_crew.hooks import validate_file_path
+        from conftest import make_dir_link
 
         crew_home = tmp_path / "crew"
         monkeypatch.setenv("AJCREW_HOME", str(crew_home))
@@ -236,8 +236,8 @@ class TestBoundedSkillReads:
         assert loader.load_skill("alpha", max_bytes=100) is None
 
     def test_extra_directory_swap_after_validation_is_refused(self, tmp_path, monkeypatch):
-        from conftest import make_dir_link
         from aj_crew import skills
+        from conftest import make_dir_link
 
         crew_home = tmp_path / "crew"
         monkeypatch.setenv("AJCREW_HOME", str(crew_home))

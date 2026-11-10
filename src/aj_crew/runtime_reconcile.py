@@ -1444,7 +1444,7 @@ def build_reconciler(
 
         Membership must be asked at the kernel side's scope, the DATA HOME (the
         agent slice is named from a hash of the config dir). Other processes on
-        the same home put runtimes in this slice: a ``ajcrew chat`` or ``run``
+        the same home put runtimes in this slice: an ``ajcrew chat`` or ``run``
         doing agent work in-process (the gateway lock bars a second gateway, not
         a second CLI), and this gateway's namespace-sandbox children, which appear
         only in the descendant pid file because the launcher parent is the pid

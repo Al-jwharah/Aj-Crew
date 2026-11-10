@@ -783,8 +783,8 @@ def test_external_provider_target_keeps_global_budget_and_admitted_root(
 ):
     import os
 
-    from conftest import make_dir_link
     from aj_crew import skills as skills_module
+    from conftest import make_dir_link
 
     provider = tmp_path / "provider"
     path = Path(_skill(provider, "large"))

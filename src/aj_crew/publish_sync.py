@@ -6,7 +6,7 @@ Combines the pure data layer (``artifacts.ArtifactStore`` — reads/writes the
 that touches both the store and a provider.
 
 Responsibilities that live here (provider-agnostic):
-- Rendering a AjCrew artifact to ``(bytes-on-disk, content_type)`` — including
+- Rendering an AjCrew artifact to ``(bytes-on-disk, content_type)`` — including
   wrapping ``widget`` artifacts in a standalone HTML document.
 - The version-bump → push chokepoint and the 1:1 AjCrew↔destination version
   invariant. Reverts mirror as a new version (never a pointer-rollback).
@@ -296,7 +296,7 @@ def unwrap_widget_html(html: str) -> str | None:
     """Recover a widget's inner fragment from a document produced by
     ``wrap_widget_html``, or ``None`` when the sentinels are absent.
 
-    Used on pull: a sentinel-bearing document was a AjCrew widget, so we strip
+    Used on pull: a sentinel-bearing document was an AjCrew widget, so we strip
     the wrapper and keep ``kind="widget"`` (preserving inline-chat embedding).
     A document without the sentinels (a foreign / pre-sentinel artifact) returns
     ``None`` and the caller keeps it as ``html``. Sentinel-delimited extraction
@@ -1278,7 +1278,7 @@ async def delete_for_artifact(art: Artifact) -> DeleteWithdrawal:
 
 
 def _kind_for_content_type(content_type: str) -> str:
-    """Map an upstream content-type back to a AjCrew artifact kind.
+    """Map an upstream content-type back to an AjCrew artifact kind.
 
     Pulled/cloned artifacts arrive as *rendered* bytes — a widget's inner HTML
     is already wrapped in a standalone document, so HTML maps to ``html``, not

@@ -34,7 +34,6 @@ from acp_pi_backend_helpers import (
     _response,
 )
 
-from conftest import make_dir_link, requires_symlinks
 from aj_crew import acp_tool_gate, sandbox, security
 from aj_crew.acp import client as acp_client
 from aj_crew.acp import launch as launch_mod
@@ -61,6 +60,7 @@ from aj_crew.acp_tool_gate import gate_extension_issue
 from aj_crew.config.paths import config_dir
 from aj_crew.instances import run_marker
 from aj_crew.subprocess_utf8 import UTF8_TEXT
+from conftest import make_dir_link, requires_symlinks
 
 # The shared autouse fixture, bound here by name so pytest registers it for this module.
 _no_ambient_pi_env = acp_pi_backend_helpers._no_ambient_pi_env

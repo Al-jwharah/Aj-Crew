@@ -716,7 +716,7 @@ class TestIsLaunchedInstance:
 
     def test_unrelated_target_is_not_launched(self, monkeypatch, tmp_path):
         # A hand-added SSM record whose ssm_target happens to look like an EC2 id
-        # but was never provisioned by a Aj Crew launch job.
+        # but was never provisioned by an Aj Crew launch job.
         store = self._store(monkeypatch, tmp_path)
         job = store.create(profile="dev", region="us-west-2", size_key="light")
         job.instance_id = "i-0abc1234"

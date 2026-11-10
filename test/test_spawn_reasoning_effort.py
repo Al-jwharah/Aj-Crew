@@ -929,9 +929,7 @@ class TestEffortAppliedNote:
     def test_unavailable_model_resolution_omits_both_claims(self):
         from aj_crew.subagent import effort_applied_note, effort_drop_reason
 
-        with patch(
-            "aj_crew.config.loader.AjCrewConfig.load", side_effect=OSError("unreadable")
-        ):
+        with patch("aj_crew.config.loader.AjCrewConfig.load", side_effect=OSError("unreadable")):
             assert effort_drop_reason("", "high", "worker", crew_agent="") == ""
             assert effort_applied_note("", "high", "worker", crew_agent="") == ""
 
@@ -1533,9 +1531,7 @@ class TestAllocatedEffortReceipt:
             cfg = AjCrewConfig.load()
             cfg.agent.model = global_model
             cfg.agent.role_models = {"subagent": role_model} if role_model else {}
-            cfg.agents["worker"] = AjCrewAgentConfig(
-                kiro_agent="member-parent", model=member_model
-            )
+            cfg.agents["worker"] = AjCrewAgentConfig(kiro_agent="member-parent", model=member_model)
             member_store = provision_member_memory(cfg, "worker")
             cfg.save()
             # Only the bound template owns this pin. A same-named template
@@ -1561,9 +1557,7 @@ class TestAllocatedEffortReceipt:
         with (
             patch("aj_crew.subagent.Stats"),
             patch("aj_crew.subagent.sel"),
-            patch(
-                "aj_crew.session_capabilities.prepare_runtime", wraps=prepare_runtime
-            ) as prepare,
+            patch("aj_crew.session_capabilities.prepare_runtime", wraps=prepare_runtime) as prepare,
         ):
             try:
                 if selection != "explicit":

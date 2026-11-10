@@ -1,4 +1,4 @@
-// The "Investigate" control in the issue-detail header. Opens (or resumes) a
+// The "Investigate" control in the issue-detail header. Opens (or resumes) an
 // AjCrew chat session that investigates this issue — see lib/investigate.ts —
 // and reflects the issue's saved investigation state (never investigated →
 // "Investigate"; has a session → "Resume" + a status pill). The record is read

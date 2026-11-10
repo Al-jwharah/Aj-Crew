@@ -246,9 +246,7 @@ def kas_readiness_wire(monkeypatch, tmp_path):
                 assert element["command"] == managed["command"]
                 assert element["args"] == [str(a) for a in managed.get("args", [])]
                 assert [p for p in element["env"] if p not in tokens] == [
-                    p
-                    for p in declared_env
-                    if p["name"] in ("AJCREW_PORT", "AJCREW_SESSION_KEY")
+                    p for p in declared_env if p["name"] in ("AJCREW_PORT", "AJCREW_SESSION_KEY")
                 ] + [{"name": k, "value": v} for k, v in _managed_mcp_env().items()]
         if pre_ready:
             status("connected")

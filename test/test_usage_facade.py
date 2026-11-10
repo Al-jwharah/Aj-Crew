@@ -151,6 +151,4 @@ def test_the_token_record_writer_stays_the_one_acp_importer() -> None:
             if isinstance(node, ast.Import)
             for alias in node.names
         }
-        assert not {
-            m for m in modules if m.startswith(("aj_crew.acp", "aj_crew.providers"))
-        }, owner
+        assert not {m for m in modules if m.startswith(("aj_crew.acp", "aj_crew.providers"))}, owner

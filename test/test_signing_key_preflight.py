@@ -18,11 +18,11 @@ from pathlib import Path
 
 import pytest
 
-from conftest import requires_symlinks
 from aj_crew import sandbox as kc_sandbox
 from aj_crew.dashboard import token_secret as ts
 from aj_crew.doctor_checks import access as doctor_access
 from aj_crew.slack import gateway
+from conftest import requires_symlinks
 
 # The real confinement probe, captured before the autouse fixture below
 # neutralises it. One probe now backs the masked state (it reads the Linux
@@ -41,7 +41,7 @@ _FULL_KEY = bytes(range(1, ts._MIN_KEY_BYTES + 1))
 @pytest.fixture(autouse=True)
 def _outside_the_agent_sandbox(_floor_monkeypatch):
     """These tests model the HOST (gateway boot, an operator's shell). The suite
-    itself may run inside a Aj Crew agent sandbox, where the launcher exports the
+    itself may run inside an Aj Crew agent sandbox, where the launcher exports the
     marker and places the process under ``ajcrew-agents.slice``; neutralise the
     single confinement probe at its source so a real file is judged by its size.
     The tests about the masked state set the signals back on purpose."""

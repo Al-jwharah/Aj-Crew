@@ -742,9 +742,7 @@ class TestWarmPool:
             assert CONSOLIDATE_KEY not in mgr._sessions
             first.shutdown.assert_awaited_once()
 
-            second, is_new, resumed = await mgr.get_or_create(
-                CONSOLIDATE_KEY, agent="ajcrew-lite"
-            )
+            second, is_new, resumed = await mgr.get_or_create(CONSOLIDATE_KEY, agent="ajcrew-lite")
             mgr.release(CONSOLIDATE_KEY)
             assert second is not first
             assert is_new and not resumed

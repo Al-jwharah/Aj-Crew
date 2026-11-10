@@ -112,9 +112,7 @@ def _avatar_bytes(member: str, avatar: dict[str, Any]) -> bytes | None:
     return _read_avatar_file(path) if path is not None else None
 
 
-def _gather(
-    cfg: AjCrewConfig, slug: str, member: str, jobs: list[Any]
-) -> export_mod.ExportSources:
+def _gather(cfg: AjCrewConfig, slug: str, member: str, jobs: list[Any]) -> export_mod.ExportSources:
     """Read every record the plan needs (blocking file IO)."""
     from aj_crew.dashboard.goal_reminder import is_reminder_job
 

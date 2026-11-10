@@ -19,8 +19,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from conftest import requires_symlinks
 from aj_crew import agent_scratch
+from conftest import requires_symlinks
 
 #: A real 2x2 PNG: WhatsApp decodes what it accepts, so a magic-bytes-only stub
 #: would be refused there for a reason unrelated to the root.

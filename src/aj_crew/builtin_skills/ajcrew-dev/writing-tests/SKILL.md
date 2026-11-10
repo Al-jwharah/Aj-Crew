@@ -4,7 +4,7 @@ description: "Aj Crew repo only: how to write a backend pytest test with NO side
 triggers: write a test, add a test, fix a flaky test, test is flaky, test side effect, temp dir residue, tmp residue, ajcrew test, pytest ajcrew, test isolation, conftest, xdist, test leaked
 ---
 
-# Writing a Aj Crew test that does not leak and does not flake
+# Writing an Aj Crew test that does not leak and does not flake
 
 > **Scope guard: this skill applies ONLY to the Aj Crew source repository** (or a
 > worktree of it). Its rules are conventions of this repo's suite. In any other
@@ -85,7 +85,7 @@ only warns unless you set it. Need a data home? Use the conftest's per-test `AJC
 pin, not a private temp home: a background worker can re-create a home you removed.
 (Details: testing-conventions.md § Rules.)
 
-Running the suite from a Aj Crew agent needs no setup. The agent's shell inherits the
+Running the suite from an Aj Crew agent needs no setup. The agent's shell inherits the
 live `AJCREW_HOME`, and the rootdir conftest sees `AJCREW_SCRATCH` beside it and gives
 the run its own home under `$TMPDIR` (the agent's scratch, reclaimed by the gateway)
 instead of refusing. Do not make a home under `/tmp/<name>`, and do not fake `HOME`: a

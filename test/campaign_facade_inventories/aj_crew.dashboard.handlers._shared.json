@@ -1,9 +1,9 @@
 {
  "base_public_names": [
   "AGENT_SPEC_NOT_REWRITTEN",
+  "AjCrewConfig",
   "DashboardState",
   "FileTooLargeError",
-  "AjCrewConfig",
   "LEAF_SYMLINK_PREFIX",
   "LoopBoundLock",
   "MAX_AGENT_SKILLS",
@@ -96,9 +96,9 @@
  ],
  "note": "Frozen at the split of src/aj_crew/dashboard/handlers/_shared.py (S12): every public name it defined, and every name it bound from the rest of aj_crew.",
  "rebound": {
+  "AjCrewConfig": "aj_crew.config.loader",
   "DashboardState": "aj_crew.dashboard.state",
   "FileTooLargeError": "aj_crew.hooks",
-  "AjCrewConfig": "aj_crew.config.loader",
   "LoopBoundLock": "aj_crew.loop_lock",
   "MAX_SESSION_TTL_SECS": "aj_crew.dashboard.token_auth",
   "MEMBER_CHAT_PRINCIPAL_KEY": "aj_crew.dashboard.token_auth",

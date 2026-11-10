@@ -21,8 +21,8 @@ from pathlib import Path
 
 import pytest
 
-from conftest import requires_symlinks
 from aj_crew import safety_override as so
+from conftest import requires_symlinks
 
 
 @pytest.fixture(autouse=True)

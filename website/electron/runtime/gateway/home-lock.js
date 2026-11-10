@@ -102,7 +102,7 @@ function createHomeLock({
   // Run the very command the stale and orphan dialogs name for PORT, for a
   // gateway nothing restarts. No --expect-pid: it pins its signal with a pidfd,
   // which only Linux has, and these holders are macOS orphans. The CLI still
-  // signals only a Aj Crew listener on PORT and refuses one the desktop app
+  // signals only an Aj Crew listener on PORT and refuses one the desktop app
   // runs. The caller re-proves the holder right before it calls this.
   function runPortStop() {
     return runCliStop([], "orphaned gateway");

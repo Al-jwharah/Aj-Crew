@@ -1,5 +1,7 @@
 {
  "base_public_names": [
+  "AjCrewAgentConfig",
+  "AjCrewConfig",
   "AssertionType",
   "BUILTIN_DENIED_RULES",
   "BUILTIN_DENY_PATTERNS",
@@ -15,8 +17,6 @@
   "DEFAULT_MEMORY_STORE",
   "EnvStagingRefused",
   "EvalRunner",
-  "AjCrewAgentConfig",
-  "AjCrewConfig",
   "LLMJudge",
   "LessonStore",
   "LessonWriteOutcome",
@@ -132,6 +132,8 @@
  ],
  "note": "cli_commands.py keeps the tailnet, telemetry, secrets and pod handlers and its whole import header; every other command handler lives in a cli_commands_<command>.py owner served through aj_crew._facade_mirror.",
  "rebound": {
+  "AjCrewAgentConfig": "aj_crew.config.loader",
+  "AjCrewConfig": "aj_crew.config.loader",
   "AssertionType": "aj_crew.eval.scenario",
   "BUILTIN_DENIED_RULES": "aj_crew.security",
   "BUILTIN_DENY_PATTERNS": "aj_crew.security",
@@ -147,8 +149,6 @@
   "DEFAULT_MEMORY_STORE": "aj_crew.memory_stores",
   "EnvStagingRefused": "aj_crew.hidden_leaf_staging",
   "EvalRunner": "aj_crew.eval.runner",
-  "AjCrewAgentConfig": "aj_crew.config.loader",
-  "AjCrewConfig": "aj_crew.config.loader",
   "LLMJudge": "aj_crew.eval.judge",
   "LessonStore": "aj_crew.learn",
   "LessonWriteOutcome": "aj_crew.vector_memory",

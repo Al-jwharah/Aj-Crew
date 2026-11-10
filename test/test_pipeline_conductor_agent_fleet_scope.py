@@ -15,8 +15,8 @@ from pathlib import Path
 
 from pipeline_conductor_agent_helpers import FleetProbeHarness
 
-from conftest import make_dir_link
 from aj_crew import platform_compat
+from conftest import make_dir_link
 
 
 class TestFleetProbeCwdScope(FleetProbeHarness):

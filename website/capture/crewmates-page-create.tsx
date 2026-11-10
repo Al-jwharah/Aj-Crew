@@ -33,7 +33,7 @@ document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-ligh
 // ThemeProvider (the page needs it) reads its cache from
 // storage; first-run flags keep onboarding dialogs off the frame.
 localStorage.setItem('mc-theme', theme)
-localStorage.setItem('mc-color-theme', 'kiro')
+localStorage.setItem('mc-color-theme', 'aj')
 localStorage.setItem('mc-onboarded', '1')
 localStorage.setItem('mc-import-onboarded', '1')
 localStorage.setItem('mc-privacy-acked', '1')

@@ -559,8 +559,7 @@ _CASES: list[tuple[str, list[str]]] = [
     ),
     # a rebound string constant: the binding that spells a facade path wins
     (
-        _FROM_MOCK
-        + f'T = "aj_crew.other.x"\nT = "{_CLIENT}.{_MOVED}"\nmock.patch(T, create=True)',
+        _FROM_MOCK + f'T = "aj_crew.other.x"\nT = "{_CLIENT}.{_MOVED}"\nmock.patch(T, create=True)',
         [_MOVED],
     ),
     (

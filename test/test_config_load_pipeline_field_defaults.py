@@ -217,13 +217,6 @@ _BUILD_DEPARTURES = [
         "mention",
     ),
     _row(
-        "telemetry.beacon_endpoint",
-        {"telemetry": {"beacon_endpoint": "http://beacon.example"}},
-        lambda c: c.telemetry.beacon_endpoint,
-        "",
-        "",
-    ),
-    _row(
         "skills.project_skills_enabled",
         {"skills": {"project_skills_enabled": "maybe"}},
         lambda c: c.skills.project_skills_enabled,

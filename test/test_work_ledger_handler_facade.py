@@ -367,9 +367,7 @@ def test_the_owner_import_scan_finds_an_outside_importer(tmp_path: Path) -> None
     sources = {
         root
         / "pkg"
-        / "caller.py": (
-            "from aj_crew.dashboard.handlers.work_ledger_caller import _caller_key\n"
-        ),
+        / "caller.py": ("from aj_crew.dashboard.handlers.work_ledger_caller import _caller_key\n"),
         root / "other.py": "from aj_crew.dashboard.handlers import work_ledger_read as r\n",
         root / "dashboard" / "handlers" / "relative.py": "from .work_ledger_read import x\n",
         root / "board_user.py": "from aj_crew.dashboard.handlers import work_ledger_board\n",

@@ -35,8 +35,8 @@ from aj_crew.apps.registry import (
 from aj_crew.apps.routes import app_lifecycle_lock
 from aj_crew.apps.teardown import teardown_app_runtime
 from aj_crew.config.loader import (  # noqa: F401 - read_config_text: served by the security facade
-    ConfigReadError,
     AjCrewConfig,
+    ConfigReadError,
     _invalidate_config_cache,
     config_local_path,
     config_path,

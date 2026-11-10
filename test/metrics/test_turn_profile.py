@@ -281,9 +281,7 @@ class TestStopReasonVocabularyIsPinnedToTheBackend:
             elif isinstance(node, ast.Import):
                 imported.extend(a.name for a in node.names)
         offenders = [
-            m
-            for m in imported
-            if m.startswith("aj_crew.acp") or m.startswith("aj_crew.providers")
+            m for m in imported if m.startswith("aj_crew.acp") or m.startswith("aj_crew.providers")
         ]
         assert not offenders, (
             f"metrics/turns.py imports the ACP layer again: {offenders}. "

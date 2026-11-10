@@ -741,9 +741,7 @@ class TestPolicyLockdownOrdering(_HomeIsolated):
         # Scope the failure to atomic_write's own tempfile binding — patching
         # the shared stdlib module attribute would hand a spurious ENOSPC to
         # every other mkstemp caller alive in this worker.
-        with mock.patch(
-            "aj_crew.atomic_write.tempfile", types.SimpleNamespace(mkstemp=_no_space)
-        ):
+        with mock.patch("aj_crew.atomic_write.tempfile", types.SimpleNamespace(mkstemp=_no_space)):
             with self.assertRaises(OSError):
                 policy_store.set_mode(models.MODE_ACT)
 

@@ -16,9 +16,7 @@ import pytest
 import aj_crew
 from aj_crew.apps.builtins.ops_mission_control.backend.http_routes.agent_tool import ALLOWED_CALLS
 
-_SOPS = (
-    Path(aj_crew.__file__).resolve().parent / "builtin_skills" / "ops-mission-control" / "sops"
-)
+_SOPS = Path(aj_crew.__file__).resolve().parent / "builtin_skills" / "ops-mission-control" / "sops"
 _APP_JSON = Path(__file__).resolve().parents[1] / "app.json"
 
 # A backticked `GET /x` or `POST /x` in SOP prose. Gateway routes outside the app

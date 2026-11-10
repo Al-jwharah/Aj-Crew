@@ -7,8 +7,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from conftest import requires_symlinks
 from aj_crew.slack.handler import _list_all_agent_names, _resolve_cc_agent_name
+from conftest import requires_symlinks
 
 # ── Helpers ────────────────────────────────────────────────────────────────
 

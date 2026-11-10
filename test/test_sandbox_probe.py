@@ -14,8 +14,8 @@ from unittest.mock import mock_open, patch
 import pytest
 
 import aj_crew.sandbox as sb
-from conftest import absent_sysconf
 from aj_crew.sandbox import _probe_sandbox_exec
+from conftest import absent_sysconf
 
 # The namespace probe internals are Linux-only by construction: they call
 # unshare(2), write /proc/<pid> identity maps, and use select.poll / os.WNOHANG,
@@ -1201,7 +1201,7 @@ print(before, after, spawned)
         assert sb._probe_unshare_once() == (True, False, "fork path ran", "")
 
     def test_the_shim_imports_nothing_first_party(self):
-        """It runs under ``-I -S``: no site directory, so a aj_crew import would fail."""
+        """It runs under ``-I -S``: no site directory, so an aj_crew import would fail."""
         assert "aj_crew" not in sb._PROBE_SHIM_CODE
         for line in sb._PROBE_SHIM_CODE.splitlines():
             if line.startswith(("import ", "from ")):

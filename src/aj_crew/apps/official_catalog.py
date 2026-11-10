@@ -104,8 +104,15 @@ MAX_BYTES = 4 * 1024 * 1024
 
 
 def store_fetch_skipped() -> bool:
-    """Whether :data:`SKIP_FETCH_ENV` holds the store off the network."""
-    return os.environ.get(SKIP_FETCH_ENV) == "1"
+    """Whether :data:`SKIP_FETCH_ENV` holds the store off the network.
+
+    Held off unless the variable is exactly ``"0"``. The published documents
+    belong to the upstream project's app store, not to this build, so reading
+    them is an opt-in an operator makes rather than a request every install
+    sends on its own; unset, the store shows the bundled seed, exactly as it
+    does offline.
+    """
+    return os.environ.get(SKIP_FETCH_ENV, "1") != "0"
 
 
 def _cache_path() -> Path:
@@ -326,7 +333,9 @@ def fetch_document(url: str) -> dict[str, Any] | None:
     fetch that did.
     """
     if store_fetch_skipped():
-        logger.info("%s=1 — not fetching %s", SKIP_FETCH_ENV, url)
+        logger.info(
+            "app store is off the network (%s=0 opts in) — not fetching %s", SKIP_FETCH_ENV, url
+        )
         return None
     raw: bytes | None = None
     for attempt in range(1, FETCH_ATTEMPTS + 1):

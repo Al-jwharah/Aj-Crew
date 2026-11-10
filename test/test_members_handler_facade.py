@@ -319,9 +319,7 @@ def test_the_owner_import_scan_finds_an_outside_importer(tmp_path: Path) -> None
     sources = {
         root
         / "pkg"
-        / "caller.py": (
-            "from aj_crew.dashboard.handlers.members_access import _deny_app_caller\n"
-        ),
+        / "caller.py": ("from aj_crew.dashboard.handlers.members_access import _deny_app_caller\n"),
         root / "other.py": "from aj_crew.dashboard.handlers import members_roster as low\n",
         root / "dashboard" / "handlers" / "relative.py": "from .members_thread import x\n",
         root / "dashboard" / "deep" / "up.py": "from ..handlers import members_rules\n",

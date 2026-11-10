@@ -15,8 +15,8 @@ from pathlib import Path
 
 import pytest
 
-from conftest import make_dir_link
 from aj_crew import cli_doctor, extras
+from conftest import make_dir_link
 
 
 class TestPathLauncherOwnership:

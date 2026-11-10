@@ -28,9 +28,7 @@ from aj_crew.probes.targets import infer
 
 ROOT = Path(__file__).resolve().parents[1]
 PROMPT = ROOT / "src" / "aj_crew" / "config" / "prompt.md"
-BABYSIT_SKILL = (
-    ROOT / "src" / "aj_crew" / "builtin_skills" / "ajcrew-dev" / "babysit" / "SKILL.md"
-)
+BABYSIT_SKILL = ROOT / "src" / "aj_crew" / "builtin_skills" / "ajcrew-dev" / "babysit" / "SKILL.md"
 SPEC = ROOT / "docs" / "system-specs" / "modules" / "babysit-pr-watch.md"
 MONITOR_SPEC = ROOT / "docs" / "system-specs" / "modules" / "monitor-architecture.md"
 PR_STATUS_SCRIPT = (

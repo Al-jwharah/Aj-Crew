@@ -192,9 +192,7 @@ class TestRunCommandSandboxedSecretEnv:
     @pytest.fixture(autouse=True)
     def _passthrough_sandbox(self, monkeypatch, posix_test_shell):
         monkeypatch.setattr("aj_crew.cron_script.wrap_argv", lambda argv, **k: (list(argv), None))
-        monkeypatch.setattr(
-            "aj_crew.cron_script._resolve_command_shell", lambda: posix_test_shell
-        )
+        monkeypatch.setattr("aj_crew.cron_script._resolve_command_shell", lambda: posix_test_shell)
 
     def test_command_grant_fails_closed(self, tmp_path):
         """Grants apply to script jobs only; a command job carrying one means

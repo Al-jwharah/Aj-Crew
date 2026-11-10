@@ -64,7 +64,7 @@ export function InAction() {
 
 export function HowItWorks() {
   const steps = [
-    { n: '1', title: 'Clone & Install', code: 'git clone https://github.com/Al-jwharah/Aj-Crew.git\ncd ajcrew && pip install .' },
+    { n: '1', title: 'Clone & Install', code: 'git clone https://github.com/Al-jwharah/Aj-Crew.git\ncd Aj-Crew && pip install .' },
     { n: '2', title: 'Start', code: 'ajcrew gateway', note: 'Dashboard opens at localhost:7777. Run ajcrew doctor to verify.' },
     { n: '3', title: 'Connect', note: 'DM Aj Crew in Slack, or open the dashboard. Type !dashboard in Slack for a 1-click link.' },
   ];

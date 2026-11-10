@@ -673,7 +673,7 @@ class TestConfigRestoreFields:
 
     def test_to_dict_includes_restore_fields(self):
         """to_dict() serializes restore fields under dashboard key."""
-        from aj_crew.config.loader import DashboardConfig, AjCrewConfig
+        from aj_crew.config.loader import AjCrewConfig, DashboardConfig
 
         cfg = AjCrewConfig(
             dashboard=DashboardConfig(restore_sessions=True, restore_window_minutes=60)
@@ -684,7 +684,7 @@ class TestConfigRestoreFields:
 
     def test_save_and_reload_roundtrip(self, tmp_path, monkeypatch):
         """save() then load() preserves restore fields."""
-        from aj_crew.config.loader import DashboardConfig, AjCrewConfig
+        from aj_crew.config.loader import AjCrewConfig, DashboardConfig
 
         cfg_file = tmp_path / ".ajcrew" / "config.json"
         monkeypatch.setattr("aj_crew.config.loader.config_path", lambda: cfg_file)

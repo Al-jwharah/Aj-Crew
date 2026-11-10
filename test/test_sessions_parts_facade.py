@@ -240,7 +240,7 @@ def _typing_imports(source: str) -> dict[str, str]:
 
 def _project_imports(source: str, family: set[str]) -> dict[str, tuple[str, str | None]]:
     """Name -> (home module, imported attribute or None for a module) of each run-time
-    import of a ``aj_crew`` module outside the family in *source*."""
+    import of an ``aj_crew`` module outside the family in *source*."""
     found: dict[str, tuple[str, str | None]] = {}
     for node in ast.parse(source).body:
         if isinstance(node, ast.ImportFrom) and node.module:

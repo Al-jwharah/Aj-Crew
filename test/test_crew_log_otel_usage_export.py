@@ -474,9 +474,7 @@ class TestTheSubscriberInstallAndIsolation:
     ) -> None:
         from aj_crew.metrics.recorder import MetricsRecorder
 
-        monkeypatch.setattr(
-            "aj_crew.metrics.provider.get_recorder", lambda: MetricsRecorder(None)
-        )
+        monkeypatch.setattr("aj_crew.metrics.provider.get_recorder", lambda: MetricsRecorder(None))
         installed = export.install_otel_crew_log_subscriber()
         assert installed is False
         assert crew_log_bus.subscriber_count(crew_log_bus.FOLD_ADVANCED) == 0

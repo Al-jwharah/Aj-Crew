@@ -178,11 +178,7 @@ class TestValidatorsRejectEmbeddedNewlines:
         offenders = []
         for mod in ("registry", "validation", "constants"):
             path = (
-                Path(__file__).resolve().parents[1]
-                / "src"
-                / "aj_crew"
-                / "instances"
-                / f"{mod}.py"
+                Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "instances" / f"{mod}.py"
             )
             for line in path.read_text(encoding="utf-8").splitlines():
                 stripped = line.strip()

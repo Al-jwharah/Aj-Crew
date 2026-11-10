@@ -58,9 +58,9 @@ release. Two concrete gaps:
 
 ### Goals
 
-- A AjCrew-owned **official registry** the client pulls at runtime, trusted
+- An AjCrew-owned **official registry** the client pulls at runtime, trusted
   enough to drive featuring, updatable without an app release.
-- A AjCrew-owned **editorial feed** describing the Discover page
+- An AjCrew-owned **editorial feed** describing the Discover page
   declaratively, that is **fail-safe** (degrades gracefully when unreachable or
   malformed) and **schema-versioned** (new layouts reach new clients while old
   clients keep working).
@@ -924,7 +924,7 @@ leaves a stale pointer elsewhere in the document.
    curates, and how often?
 2. **Snapshot-sync mechanism** — build-time generation vs scheduled bot PR into
    `AjCrew`. Trade-off: build-time is always fresh but couples the AjCrew
-   build to a `AjCrewApps` fetch; a bot PR keeps the build hermetic but can
+   build to an `AjCrewApps` fetch; a bot PR keeps the build hermetic but can
    lag. *(This is why §2's table marks that row open rather than settled.)*
 3. **Schema version scheme** — integer majors (proposed, matches the installed-
    app `schemaVersion: int`) vs semver on the schema. Integer is simpler for the
@@ -989,7 +989,7 @@ rotation are not shipped. Re-featuring ships; removal waits on tombstones. The
 mutable-ref criterion is partial: a catalog row's commit pin is honoured or the
 install is refused, while bundled seed rows install from a branch.
 
-- **[partial]** Adding/removing/re-featuring an app is a `AjCrewApps` PR that reaches
+- **[partial]** Adding/removing/re-featuring an app is an `AjCrewApps` PR that reaches
   clients within one cache TTL — **no app release**.
 - **[shipped]** A new editorial section `type` renders on new clients and is invisible (not
   broken) on old ones.

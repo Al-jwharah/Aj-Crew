@@ -491,7 +491,7 @@ cannot answer uses exit 4.
 
 **Which `ajcrew` runs.** The argv starts with the bare name, which the operating
 system resolves from `PATH` in the process that runs the evaluator. The evaluator
-does not look for the gateway's own install, so a `ajcrew` earlier on `PATH` (a
+does not look for the gateway's own install, so an `ajcrew` earlier on `PATH` (a
 shim beside a virtual environment, say) answers instead. An `error` the evaluator
 writes itself names what `ajcrew` on `PATH` is, so that case is visible.
 
@@ -738,7 +738,7 @@ Wired sites:
 - `cli.py:main` / `slack/gateway_runtime/process_entry.py:run_gateway` — `boot_platform(cfg)` once at
   startup (gateway raises fail-closed; cli is defensive — standalone never raises). A
   `PlatformCompositionError` in `cli.main` still stops every command except `doctor` and the
-  sign-in verbs, but as one `❌ <error>` line plus a `ajcrew doctor` hint and exit 1, not a
+  sign-in verbs, but as one `❌ <error>` line plus an `ajcrew doctor` hint and exit 1, not a
   traceback (an LTS build's policy refusal exits through `refuse_policy_boot` first).
 - `slack/gateway_runtime/service_boot.py` gateway boot — `AgentRuntime.run_first_run_setup()` through
   `safe_context_call`. Previously this imported `agent.run_first_run_setup`

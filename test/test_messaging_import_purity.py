@@ -189,7 +189,9 @@ class TestMessagingImportPurity:
         guard would still couple the two at type-check time and would still be a
         lie about the layering, so the scan does not special-case it.
         """
-        src = "from typing import TYPE_CHECKING\nif TYPE_CHECKING:\n    from aj_crew.slack import x\n"
+        src = (
+            "from typing import TYPE_CHECKING\nif TYPE_CHECKING:\n    from aj_crew.slack import x\n"
+        )
         assert _offenders_in(
             src, "probe.py"
         ), "a TYPE_CHECKING-guarded forbidden import went undetected"

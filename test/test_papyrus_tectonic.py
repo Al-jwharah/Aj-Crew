@@ -42,9 +42,9 @@ from unittest import mock
 
 import pytest
 
-from conftest import make_dir_link, requires_symlinks
 from aj_crew import asset_downloader, platform_compat
 from aj_crew.apps.builtins.papyrus.backend import latex, store, tectonic
+from conftest import make_dir_link, requires_symlinks
 
 
 @pytest.fixture(autouse=True)

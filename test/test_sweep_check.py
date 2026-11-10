@@ -891,9 +891,7 @@ class TestSearchSemantics:
         _commit_tree(clone, {A: "x = 1\nlegacy_token = 1\nhooks_path = 1\n"}, "fix: a2")
         _git(clone, "push", "-q", "origin", "feature/x")
         _commit_tree(clone, {A: "x = 1\nhooks_path = 1\n"}, "fix: a3")
-        text = _entry(
-            search="git grep -nE legacy_token -- src/aj_crew", sites=(f"- {A}:2  fixed",)
-        )
+        text = _entry(search="git grep -nE legacy_token -- src/aj_crew", sites=(f"- {A}:2  fixed",))
         assert _check(_mod(), clone, text, monkeypatch, counts={}) == 0
 
     def test_an_unpushed_token_is_vacuous(self, clone, monkeypatch, capsys):

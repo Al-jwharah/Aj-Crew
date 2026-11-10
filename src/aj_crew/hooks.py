@@ -507,7 +507,7 @@ def unattended_turn(active: bool = True):
 #: "User denied tool execution" and the model concludes the user cancelled.
 GATE_CRASH_REASON = (
     "Blocked: the safety check crashed while judging this call ({error}), so the "
-    "call was refused and nothing ran. This is a Aj Crew bug, not a policy rule "
+    "call was refused and nothing ran. This is an Aj Crew bug, not a policy rule "
     "and not a user action."
 )
 
@@ -517,7 +517,7 @@ GATE_CRASH_REASON = (
 #: a gate defect rather than a rule the call broke or a user action.
 GATE_TABLE_UNSOUND_REASON = (
     "Blocked: the safety check's tier table failed its own consistency check, so every "
-    "call is refused and nothing ran. This is a Aj Crew bug, not a policy rule and not "
+    "call is refused and nothing ran. This is an Aj Crew bug, not a policy rule and not "
     "a user action."
 )
 
@@ -1349,7 +1349,7 @@ def _unc_agents_root() -> Path | None:
 # Best-effort: a failure here memoizes root-absent exactly as a lazy miss would.
 _unc_agents_root()
 # Same priming for the data home, for the same reason: the first gate check
-# after start (or after a ``AJCREW_HOME`` change) would otherwise pay the
+# after start (or after an ``AJCREW_HOME`` change) would otherwise pay the
 # override resolve on whatever thread asked, which on the inline classifier
 # path is the event loop.
 _unc_data_home_root()

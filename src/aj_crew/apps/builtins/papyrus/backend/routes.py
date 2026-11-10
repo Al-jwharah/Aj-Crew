@@ -58,7 +58,7 @@ git subprocesses — runs off the event loop. See the module docstrings in
 **Path validation is itself blocking, and is offloaded too.** ``_project`` /
 ``_project_for_create`` / ``_safe_relative`` are the containment gate above, and
 each one calls ``Path.resolve()`` plus a ``stat``-family probe — real syscalls,
-which on a stalled network filesystem (a ``AJCREW_HOME`` on NFS/SMB) block for
+which on a stalled network filesystem (an ``AJCREW_HOME`` on NFS/SMB) block for
 as long as the mount takes to answer. The gateway runs every session, cron job and
 the liveness heartbeat on ONE asyncio loop, so a validation call left inline would
 freeze all of them until the watchdog killed the process. Each handler therefore

@@ -58,8 +58,8 @@ from aj_crew.apps.routes_lifecycle import (
 )
 from aj_crew.apps.update_notify import deliver_app_update_notes, prepare_app_update_notes
 from aj_crew.config.loader import (
-    ConfigReadError,
     AjCrewConfig,
+    ConfigReadError,
     config_path,
     update_config_locked,
 )

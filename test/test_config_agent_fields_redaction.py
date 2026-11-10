@@ -50,9 +50,7 @@ _BENIGN_TRIGGERS = "use for code review, PR summaries, 代码审查"
 
 def _cfg_with_agents() -> AjCrewConfig:
     cfg = AjCrewConfig()
-    cfg.agents["shady"] = AjCrewAgentConfig(
-        description=_CRED_DESCRIPTION, triggers=_EXFIL_TRIGGERS
-    )
+    cfg.agents["shady"] = AjCrewAgentConfig(description=_CRED_DESCRIPTION, triggers=_EXFIL_TRIGGERS)
     cfg.agents["plain"] = AjCrewAgentConfig(
         description=_BENIGN_DESCRIPTION, triggers=_BENIGN_TRIGGERS
     )

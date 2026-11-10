@@ -4,7 +4,7 @@ The old agent and the worker base are not fixtures here: they are what this
 build's own generator writes (``agent.rebuild_agent_config``, the code that writes
 ``~/.kiro/agents/ajcrew.json`` and ``ajcrew-mate-worker.json``), with their
 real servers, ``allowedTools`` and ``autoApprove``. A change to either that would
-make the dry run keep a ``ajcrew`` crewmate where it is turns this red.
+make the dry run keep an ``ajcrew`` crewmate where it is turns this red.
 """
 
 from __future__ import annotations

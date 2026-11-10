@@ -53,9 +53,7 @@ class TestSandboxFloor:
         def _boom(scope, **kw):
             raise PlatformCompositionError("companion failed to compose")
 
-        monkeypatch.setattr(
-            "aj_crew.platform.governance_profiles.governance_floor_ordinal", _boom
-        )
+        monkeypatch.setattr("aj_crew.platform.governance_profiles.governance_floor_ordinal", _boom)
         with pytest.raises(PlatformCompositionError):
             sandbox._clamp_sandbox_mode("off")
 

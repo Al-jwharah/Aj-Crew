@@ -62,9 +62,7 @@ async def test_patch_explicit_model_freezes(tmp_path):
 @pytest.mark.asyncio
 async def test_patch_clear_model_resumes_tracking(tmp_path):
     cfg = tmp_path / "ajcrew.json"
-    cfg.write_text(
-        json.dumps({"name": "ajcrew", "model": "claude-pinned", "model_managed": False})
-    )
+    cfg.write_text(json.dumps({"name": "ajcrew", "model": "claude-pinned", "model_managed": False}))
     request = _patch_request("ajcrew", {"model": ""})
 
     with patch("aj_crew.agent.KIRO_AGENTS_DIR", tmp_path):

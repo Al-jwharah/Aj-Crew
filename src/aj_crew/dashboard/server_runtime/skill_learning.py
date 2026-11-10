@@ -14,11 +14,11 @@ from urllib.parse import quote
 if TYPE_CHECKING:
     from aj_crew.dashboard.server import (
         _SKILL_APPROVAL_SETTING_URL,
+        AjCrewConfig,
         ContextBuilder,
         ConversationLog,
         DashboardState,
         HistoryConsolidator,
-        AjCrewConfig,
         LessonStore,
         SessionManager,
         SkillsLoader,

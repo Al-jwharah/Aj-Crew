@@ -13,8 +13,8 @@ from aj_crew.agent_sdk.capabilities import SessionCapabilities
 
 if TYPE_CHECKING:
     from aj_crew.dashboard.chat_runner import (
-        DashboardState,
         AjCrewConfig,
+        DashboardState,
         ResolvedBindings,
         Routing,
         _ChatSlot,

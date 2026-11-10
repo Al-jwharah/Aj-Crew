@@ -13,10 +13,10 @@ from pathlib import Path
 
 import pytest
 
-from conftest import requires_symlinks
 from aj_crew import agent as agent_mod
 from aj_crew.dashboard import side_readonly_spec as srs
 from aj_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
+from conftest import requires_symlinks
 
 #: A release that accepts a spec ``permissions`` block, and one that refuses it,
 #: expressed against the floor so raising it cannot strand these tests.

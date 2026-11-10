@@ -83,7 +83,7 @@ const canControlInjection = (s: Skill) =>
   s.source === 'ajcrew' && !s.always && s.owned !== false
 
 /** Edit and Delete write into the Aj Crew skills folder, so only a row
- *  from that folder gets them. A `ajcrew` row reached through
+ *  from that folder gets them. An `ajcrew` row reached through
  *  `skills.extra_paths` reports `owned: false` and stays read-only, like
  *  every other source. */
 const canEditSkill = (s: Skill) => s.source === 'ajcrew' && s.owned !== false

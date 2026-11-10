@@ -25,9 +25,9 @@ from pathlib import Path
 
 import pytest
 
-from conftest import requires_symlinks
 from aj_crew import diagnostics
 from aj_crew.mcp_tools import logs as logs_tool
+from conftest import requires_symlinks
 
 # All four secret shapes the issue names, in one log body.
 _LOG = (

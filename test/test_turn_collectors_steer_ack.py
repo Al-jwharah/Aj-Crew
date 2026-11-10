@@ -20,7 +20,6 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from conftest import MockSlackClient
 from aj_crew import channel as channel_mod
 from aj_crew import task_planner
 from aj_crew.dashboard.handlers import optimizer as optimizer_mod
@@ -32,6 +31,7 @@ from aj_crew.llm_helpers import run_bg_oneliner, stream_and_collect
 from aj_crew.messaging import auto_title
 from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 from aj_crew.slack.handler import handle_message
+from conftest import MockSlackClient
 
 # Braces inside: a sink that slices JSON out of the raw text breaks on it.
 _ACK = "[STEERING steer-83cc0a1b: The notice named {the rule}, so I stopped.]"

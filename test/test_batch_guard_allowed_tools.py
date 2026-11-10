@@ -275,9 +275,7 @@ def test_with_the_guard_off_the_projection_is_unchanged(guard_off, monkeypatch):
     monkeypatch.setattr(guard, "guard_settings", lambda: (True, ()))
     assert _project(spec) == off
     assert _effect(off, *_SEND) == "allow"
-    assert "@ajcrew-dashboard/session_send" not in kas_agents.projected_crew_answered(
-        [off], "lead"
-    )
+    assert "@ajcrew-dashboard/session_send" not in kas_agents.projected_crew_answered([off], "lead")
 
 
 # ── (d) read-class tools stay auto-approved ───────────────────────────────────

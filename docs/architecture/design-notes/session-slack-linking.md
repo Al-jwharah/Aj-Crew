@@ -1,6 +1,6 @@
 # Session and Slack Thread Linking
 
-How a Slack thread maps onto a Aj Crew session, and how messages mirror in both
+How a Slack thread maps onto an Aj Crew session, and how messages mirror in both
 directions across the two surfaces.
 
 The invariant the whole design serves: **one conversation, one kiro-cli session,

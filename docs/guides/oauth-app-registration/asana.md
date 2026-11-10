@@ -1,6 +1,6 @@
 # Register an Asana OAuth app for Aj Crew Connections
 
-*Who this is for: the person who operates a Aj Crew install and wants agents to read and update Asana work through Asana's hosted MCP server. Expected time: 10 minutes; longer if your Asana domain is in app "approval mode" and a super admin must approve the app.*
+*Who this is for: the person who operates an Aj Crew install and wants agents to read and update Asana work through Asana's hosted MCP server. Expected time: 10 minutes; longer if your Asana domain is in app "approval mode" and a super admin must approve the app.*
 
 Aj Crew connects to the Asana V2 MCP server at `https://mcp.asana.com/v2/mcp`. Asana requires every MCP client to be pre-registered: "The V2 MCP server (`https://mcp.asana.com/v2/mcp`) requires OAuth 2.0 authentication with a registered client ID and client secret", and "Dynamic client registration is not supported with Asana's V2 MCP Server." You create that registration in Asana's developer console as an app of type **MCP app**. The older V1 beta server at `https://mcp.asana.com/sse` was retired on 5 August 2026; do not use it.
 

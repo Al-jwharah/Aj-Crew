@@ -307,8 +307,6 @@ async def test_a_failed_create_leaves_no_workspace_entry(owner_gateway, monkeypa
 
 @pytest.mark.asyncio
 async def test_dashboard_create_refuses_a_non_string_workspace(owner_gateway, monkeypatch):
-    response = await _create(
-        monkeypatch, {"name": "atlas", "kiro_agent": "ajcrew", "workspace": 7}
-    )
+    response = await _create(monkeypatch, {"name": "atlas", "kiro_agent": "ajcrew", "workspace": 7})
     assert response.status == 400
     assert json.loads(response.text)["code"] == "invalid_workspace"

@@ -54,7 +54,7 @@ from aj_crew.validation import strip_hidden_unicode
 logger = logging.getLogger(__name__)
 
 # ── GitHub issue target ──────────────────────────────────────────────────────
-_ISSUE_REPO = "kirodotdev/KiroCrew"
+_ISSUE_REPO = "Al-jwharah/Aj-Crew"
 _ISSUE_NEW_URL = f"https://github.com/{_ISSUE_REPO}/issues/new"
 
 # Cap how many rolling files we pull so a huge crash-dump backlog can't bloat

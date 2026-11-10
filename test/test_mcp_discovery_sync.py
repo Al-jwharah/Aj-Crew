@@ -20,7 +20,6 @@ from mcp_discovery_helpers import (  # noqa: F401 -- the autouse fixture registe
     _stub_remote_probe_ssrf_vet,
 )
 
-from conftest import host_abs
 from aj_crew import platform_compat
 from aj_crew.mcp_discovery import (
     SCOPE_KIRO_GLOBAL,
@@ -30,6 +29,7 @@ from aj_crew.mcp_discovery import (
     probe_server,
     sync_to_agent_config,
 )
+from conftest import host_abs
 
 
 def _make_executable(path: Path) -> Path:
@@ -1113,9 +1113,7 @@ class TestDisabledIsCrossScope:
         kiro_mcp.write_text(json.dumps({"mcpServers": {"srv": global_spec}}), encoding="utf-8")
         monkeypatch.setattr("aj_crew.mcp_discovery.Path.home", lambda: tmp_path)
         monkeypatch.setattr("aj_crew.mcp_discovery._MCP_JSON_PATHS", (kiro_mcp,))
-        monkeypatch.setattr(
-            "aj_crew.mcp_discovery._MCP_SOURCES", ((kiro_mcp, SCOPE_KIRO_GLOBAL),)
-        )
+        monkeypatch.setattr("aj_crew.mcp_discovery._MCP_SOURCES", ((kiro_mcp, SCOPE_KIRO_GLOBAL),))
 
     def test_kiro_global_disable_marks_an_agent_introduced_row(self, tmp_path, monkeypatch) -> None:
         self._env(
@@ -1189,9 +1187,7 @@ class TestDisabledIsCrossScope:
         )
         monkeypatch.setattr("aj_crew.mcp_discovery.Path.home", lambda: tmp_path)
         monkeypatch.setattr("aj_crew.mcp_discovery._MCP_JSON_PATHS", (kiro_mcp,))
-        monkeypatch.setattr(
-            "aj_crew.mcp_discovery._MCP_SOURCES", ((kiro_mcp, SCOPE_KIRO_GLOBAL),)
-        )
+        monkeypatch.setattr("aj_crew.mcp_discovery._MCP_SOURCES", ((kiro_mcp, SCOPE_KIRO_GLOBAL),))
         rows = {s.name: s for s in list_servers()}
         assert "playwright-mcp" in rows
         assert rows["playwright-mcp"].disabled is True

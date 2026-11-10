@@ -198,8 +198,7 @@ class TestTheCycleBreakingImports:
         local = [
             node
             for node in ast.walk(tree)
-            if isinstance(node, ast.ImportFrom)
-            and (node.module or "").startswith("aj_crew.config")
+            if isinstance(node, ast.ImportFrom) and (node.module or "").startswith("aj_crew.config")
         ]
         assert [(n.module, {a.name for a in n.names}) for n in local] == [
             (higher.__name__, imported)

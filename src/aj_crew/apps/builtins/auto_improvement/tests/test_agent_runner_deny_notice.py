@@ -254,9 +254,7 @@ def test_the_gate_names_the_policy_cause_when_a_hook_denies(monkeypatch):
         def on_tool_call(self, name, **kw):
             return SimpleNamespace(action=R.TOOL_DENY, reason="reads ~/.aws")
 
-    monkeypatch.setattr(
-        R, "AjCrewConfig", SimpleNamespace(load=lambda: SimpleNamespace(hooks={}))
-    )
+    monkeypatch.setattr(R, "AjCrewConfig", SimpleNamespace(load=lambda: SimpleNamespace(hooks={})))
     monkeypatch.setattr(R, "hooks_config_from_config_dict", lambda d: d)
     monkeypatch.setattr(R, "HookManager", _Manager)
     reason = R._governance_denial(_ev(title="Read"), session_key="s", agent="a")

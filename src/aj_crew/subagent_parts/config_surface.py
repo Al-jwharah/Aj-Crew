@@ -21,8 +21,8 @@ if TYPE_CHECKING:
     from aj_crew.subagent import (
         _STALL_IDLE_SECS,
         _TIMEOUT_SECS,
-        Callable,
         AjCrewConfig,
+        Callable,
         SubagentInfo,
         SubagentManager,
         asyncio,

@@ -45,7 +45,7 @@ import { errMessage } from '../utils/thunkError'
  * a log reader learns five names once: `select` (tab click / ⌘-digit chord),
  * `auto-connect` (the web-app-load fan-out), `auto-warm` (the viewport
  * pre-mounting already-connected panes after a poll), `retry` (the in-pane
- * error panel's Retry button), `link` (a `ajcrew://chat?crew=` link asking,
+ * error panel's Retry button), `link` (an `ajcrew://chat?crew=` link asking,
  * with auto-connect off, whether the crew's tunnel is up).
  */
 export type ConnectVia = 'select' | 'auto-connect' | 'auto-warm' | 'retry' | 'link'

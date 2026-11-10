@@ -108,9 +108,7 @@ class TestRunCommandSandboxed:
         monkeypatch.setattr("aj_crew.cron_script.wrap_argv", lambda argv, **k: (list(argv), None))
         # Bypass the runtime shell probe (which itself spawns a child): these
         # tests exercise the run_command_sandboxed plumbing, not shell fingerprinting.
-        monkeypatch.setattr(
-            "aj_crew.cron_script._resolve_command_shell", lambda: posix_test_shell
-        )
+        monkeypatch.setattr("aj_crew.cron_script._resolve_command_shell", lambda: posix_test_shell)
 
     def test_basic_echo(self):
         result = run_command_sandboxed("echo hello")
@@ -508,9 +506,7 @@ class TestRunScriptSandboxed:
         monkeypatch.setattr("aj_crew.cron_script.wrap_argv", lambda argv, **k: (list(argv), None))
         # Bypass the runtime shell probe (which itself spawns a child): these
         # tests exercise the run_command_sandboxed plumbing, not shell fingerprinting.
-        monkeypatch.setattr(
-            "aj_crew.cron_script._resolve_command_shell", lambda: posix_test_shell
-        )
+        monkeypatch.setattr("aj_crew.cron_script._resolve_command_shell", lambda: posix_test_shell)
 
     def _write_script(self, tmp_path, code):
         crons_dir = tmp_path / ".ajcrew" / "crons"

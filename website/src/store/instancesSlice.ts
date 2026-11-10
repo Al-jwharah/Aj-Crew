@@ -217,7 +217,7 @@ interface InstancesState {
    *  warm entry is dropped.
    *  Optional because tests preload partial slices. */
   connectError?: Record<string, string>
-  /** A `ajcrew://chat?crew=` link waiting for that crew's pane to be ready
+  /** An `ajcrew://chat?crew=` link waiting for that crew's pane to be ready
    *  (see lib/crewDeepLink.ts). One in total: a newer link replaces
    *  it, and any switch to another pane drops it. */
   pendingPaneSlot: PendingPaneSlot | null
@@ -336,7 +336,7 @@ const instancesSlice = createSlice({
       if (action.payload === null && state.crewForms.addLink) state.crewForms.addLink = null
     },
     /**
-     * A `ajcrew://remote-crew/add` link: the add form starts from these values
+     * An `ajcrew://remote-crew/add` link: the add form starts from these values
      * the next time it mounts, in place of whatever it held, so the newest link
      * wins. Form state only: nothing is saved and nothing connects.
      */

@@ -122,12 +122,12 @@ from aj_crew.config.section_builders import (
 from aj_crew.config.sections import (
     STAR_ORDER_MAX,
     AgentConfig,
+    AjCrewAgentConfig,
     BrowserConfig,
     ChannelConfig,
     DecisionsConfig,
     HeartbeatConfig,
     InstancesConfig,
-    AjCrewAgentConfig,
     MemoryStoreConfig,
     MonitoringConfig,
     PublishConfig,
@@ -1458,7 +1458,7 @@ def persist_write_back(cfg: AjCrewConfig, doc: ConfigDocument) -> None:
             if _migration.LAZY_LOAD_KEY in confirmed_adoptions:
                 overlay_sets_it = _overlay_supplies(local_data, _migration.LAZY_LOAD_KEY)
                 logger.warning(
-                    "config: removed skills.lazy_load=false from config.json: Kiro "
+                    "config: removed skills.lazy_load=false from config.json: Aj "
                     "Crew %s stored it when false was the default full skills "
                     "listing, and false now selects the short skill entry. %s To "
                     "choose the short entry: ajcrew config set skills.lazy_load false",

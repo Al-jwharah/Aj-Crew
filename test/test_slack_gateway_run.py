@@ -1039,9 +1039,7 @@ class TestBgSessionDashboardBranch:
                                 with patch("aj_crew.slack.events.init_socket_mode"):
                                     with patch("aj_crew.slack.interactions.init"):
                                         with patch("aj_crew.slack.events.SeenCache"):
-                                            with patch(
-                                                "aj_crew.session.cleanup_orphaned_sessions"
-                                            ):
+                                            with patch("aj_crew.session.cleanup_orphaned_sessions"):
                                                 with patch(
                                                     "aj_crew.dashboard.handlers._bg_mcp_probe",
                                                     new_callable=AsyncMock,

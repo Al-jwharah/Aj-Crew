@@ -507,7 +507,7 @@ def node_bin_dirs() -> tuple[str, ...]:
 
     ordered.extend(d.format(home=home, mise_data=mise_data) for d in _NODE_MANAGER_DIRS)
     ordered.extend(env_node_windows.manager_dirs(home))
-    # Under a AJCREW_HOME override data_home() mkdirs, so it can raise on an
+    # Under an AJCREW_HOME override data_home() mkdirs, so it can raise on an
     # unwritable path. Only the data-home candidates depend on it; swallowing here
     # keeps a failure from taking out the manager and $HOME tiers with them.
     try:

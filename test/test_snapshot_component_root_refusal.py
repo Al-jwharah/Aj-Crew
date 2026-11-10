@@ -13,8 +13,8 @@ import tarfile
 import pytest
 from test_snapshot import _setup_fake_ajcrew, unpinnable_argv
 
-from conftest import requires_symlinks
 from aj_crew import snapshot as snap
+from conftest import requires_symlinks
 
 
 @pytest.fixture

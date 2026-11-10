@@ -463,9 +463,7 @@ class TestMounting:
         # The control plane is re-derived AFTER the registry filter, so the stub
         # drop has to run after that re-add or a pooled ajcrew-core comes back.
         names = _by_name(
-            session_mcp.session_mcp_servers(
-                "ajcrew", stub_server_names=frozenset({"ajcrew-core"})
-            )
+            session_mcp.session_mcp_servers("ajcrew", stub_server_names=frozenset({"ajcrew-core"}))
         )
         assert "ajcrew-core" not in names
         assert "ajcrew-cron" in names
@@ -615,9 +613,7 @@ class TestWithholdWarningNamesTheCause:
             # A mode the pin neither sets nor moves away (``auto`` is pinned to
             # ``default`` and keeps the array).
             kw["permission_mode"] = "plan"
-        client = AcpClient(
-            work_dir=tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE, **kw
-        )
+        client = AcpClient(work_dir=tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE, **kw)
         if cause == "old-adapter":
             client._claude_adapter_disk_version = "0.83.0"
         with caplog.at_level("WARNING"):

@@ -615,9 +615,7 @@ class TestUpstreamInitializeResolution:
         inbox1 = await backend.attach_stub("s1")
         inbox2 = await backend.attach_stub("s2")
         backend._init_pending = [("s1", 1), ("s2", 2)]
-        result: dict[str, Any] = {
-            "capabilities": {"experimental": {"ajcrew.caller-identity": {}}}
-        }
+        result: dict[str, Any] = {"capabilities": {"experimental": {"ajcrew.caller-identity": {}}}}
         await backend._on_upstream_initialize({"jsonrpc": "2.0", "id": "gw-1", "result": result})
         assert backend._init_state == "ready"
         assert backend._init_result == result

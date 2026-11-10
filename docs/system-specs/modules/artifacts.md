@@ -724,7 +724,7 @@ code for a responsibility goes to its module:
 | `artifact_comments.py` | Comments on a local artifact |
 | `remote_artifacts.py` | Browsing, cloning, forking and reading an artifact a publish provider hosts, and its comments |
 
-The facade is a `aj_crew._facade_mirror` mirror: a patch of
+The facade is an `aj_crew._facade_mirror` mirror: a patch of
 `handlers.artifacts.<name>` reaches every owner that binds the name, so tests patch
 the facade, never an owner. The owners import each other lowest layer first, in the
 order of the table, never the facade, and log on the
@@ -1735,7 +1735,7 @@ to this kind would store content no reader can parse.
   embedding frame grants: `allow-scripts` only (`AGENT_PAGE_SANDBOX`), the same
   as a Bot's Dashboard frame. A link in the page opens through the host:
   `buildSrcdoc({ linkBridge: true })` turns a `_blank` or bare web link click,
-  and `window.open`, into a `ajcrew-dashboard:open` message, and
+  and `window.open`, into an `ajcrew-dashboard:open` message, and
   `useFrameLinkBridge` opens an `http(s)` URL, or a dashboard path resolved
   against its origin, only on a real click in
   that frame, once per click, with no dialog. The shim decides a click after
@@ -2553,7 +2553,7 @@ code for a responsibility goes to its module:
 | `deploy/handlers_content.py` | What a deploy may publish: the `local_dir` and `artifact_slug` input specs, the allowed-roots confinement, the private staging snapshot, the content digest and size, the pre-publish scan, an artifact's standalone-HTML render and `resolve_webapp_public_dir` |
 | `deploy/handlers_sites.py` | The AWS identity and the site operations: the profile and region specs, `_resolve_profile`, the legacy single-profile config view, and `_do_deploy`, `_do_recall`, `_do_destroy` and `_do_list` |
 
-The facade is a `aj_crew._facade_mirror` mirror: a patch of `deploy.handlers.<name>`
+The facade is an `aj_crew._facade_mirror` mirror: a patch of `deploy.handlers.<name>`
 reaches every owner that binds the name, so tests patch the facade, never an owner. The
 owners import each other lowest layer first, in the order of the table, never the facade.
 `handlers_sites.py` logs on the `aj_crew.deploy.handlers` logger, and the two moved

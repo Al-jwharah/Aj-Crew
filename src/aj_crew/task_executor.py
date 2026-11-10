@@ -1350,9 +1350,7 @@ async def execute_task(
             if taskq is None:
                 signal = None
             else:
-                from aj_crew.taskq.dependency import (
-                    DEFAULT_MAX_ATTEMPTS as DEPENDENCY_MAX_ATTEMPTS,
-                )
+                from aj_crew.taskq.dependency import DEFAULT_MAX_ATTEMPTS as DEPENDENCY_MAX_ATTEMPTS
                 from aj_crew.taskq.dependency import (
                     classify_exception,
                 )

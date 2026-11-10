@@ -4,7 +4,7 @@
 // using React's own <Profiler>, without a devtools session attached.
 //
 // OFF by default and off in every normal load. It arms only when explicitly
-// asked for, via `?profile=commits` in the URL or a `ajcrew.profileCommits`
+// asked for, via `?profile=commits` in the URL or an `ajcrew.profileCommits`
 // localStorage key. When disarmed, `withCommitProfiler` returns its children
 // untouched, so React sees no extra element and there is no wrapper in the tree.
 //

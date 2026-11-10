@@ -246,14 +246,10 @@ class TestEveryGatewayHardExitFlushesTheAuditQueue:
     _MODULES = (
         Path(__file__).resolve().parents[1] / "src/aj_crew/slack/gateway.py",
         *sorted(
-            (Path(__file__).resolve().parents[1] / "src/aj_crew/slack/gateway_runtime").glob(
-                "*.py"
-            )
+            (Path(__file__).resolve().parents[1] / "src/aj_crew/slack/gateway_runtime").glob("*.py")
         ),
         *sorted((Path(__file__).resolve().parents[1] / "src/aj_crew/slack").glob("events*.py")),
-        *sorted(
-            (Path(__file__).resolve().parents[1] / "src/aj_crew").glob("platform_compat*.py")
-        ),
+        *sorted((Path(__file__).resolve().parents[1] / "src/aj_crew").glob("platform_compat*.py")),
     )
     _HELPERS = {"flush_audit_queue", "flush_audit_queue_before_hard_exit"}
 

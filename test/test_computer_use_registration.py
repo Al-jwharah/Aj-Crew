@@ -172,9 +172,7 @@ def test_managed_spec_is_built_with_a_resolvable_command(tmp_path: Path):
         stack.enter_context(
             patch("aj_crew.agent._shipped_defaults", return_value=cfg_dir / "defaults.json")
         )
-        stack.enter_context(
-            patch("aj_crew.agent._prompt_path", return_value=cfg_dir / "prompt.md")
-        )
+        stack.enter_context(patch("aj_crew.agent._prompt_path", return_value=cfg_dir / "prompt.md"))
         stack.enter_context(patch("aj_crew.agent._project_dir", return_value=None))
         stack.enter_context(
             patch("aj_crew.agent._mc_config_path", return_value=tmp_path / "none.json")
@@ -579,9 +577,7 @@ class TestGatedEntryIsNotPreserved:
             stack.enter_context(
                 patch.multiple("aj_crew.agent", _MANAGED_MCP_SERVERS=_GATED_MANAGED)
             )
-            stack.enter_context(
-                patch("aj_crew.agent._prompt_path", return_value=Path("/tmp/p.md"))
-            )
+            stack.enter_context(patch("aj_crew.agent._prompt_path", return_value=Path("/tmp/p.md")))
             stack.enter_context(patch("aj_crew.platform_compat.IS_MACOS", macos))
             stack.enter_context(
                 patch(
@@ -686,9 +682,7 @@ class TestGatedRefsAreLeftALONE:
             stack.enter_context(
                 patch.multiple("aj_crew.agent", _MANAGED_MCP_SERVERS=_GATED_MANAGED)
             )
-            stack.enter_context(
-                patch("aj_crew.agent._prompt_path", return_value=Path("/tmp/p.md"))
-            )
+            stack.enter_context(patch("aj_crew.agent._prompt_path", return_value=Path("/tmp/p.md")))
             stack.enter_context(patch("aj_crew.platform_compat.IS_MACOS", macos))
             stack.enter_context(
                 patch(
@@ -762,9 +756,7 @@ class TestGatedRefsAreLeftALONE:
             stack.enter_context(
                 patch.multiple("aj_crew.agent", _MANAGED_MCP_SERVERS=_GATED_MANAGED)
             )
-            stack.enter_context(
-                patch("aj_crew.agent._prompt_path", return_value=Path("/tmp/p.md"))
-            )
+            stack.enter_context(patch("aj_crew.agent._prompt_path", return_value=Path("/tmp/p.md")))
             stack.enter_context(patch("aj_crew.platform_compat.IS_MACOS", False))
             stack.enter_context(
                 patch(
@@ -1035,9 +1027,7 @@ class TestSpecEmissionGate:
             stack.enter_context(
                 patch("aj_crew.agent._shipped_defaults", return_value=cfg_dir / "defaults.json")
             )
-            stack.enter_context(
-                patch("aj_crew.agent._user_overrides_path", return_value=override)
-            )
+            stack.enter_context(patch("aj_crew.agent._user_overrides_path", return_value=override))
             stack.enter_context(
                 patch("aj_crew.agent._prompt_path", return_value=cfg_dir / "prompt.md")
             )
@@ -1123,9 +1113,7 @@ class TestSpecEmissionGate:
         }
         with ExitStack() as stack:
             stack.enter_context(patch.multiple("aj_crew.agent", _MANAGED_MCP_SERVERS=self._GATED))
-            stack.enter_context(
-                patch("aj_crew.agent._prompt_path", return_value=Path("/tmp/p.md"))
-            )
+            stack.enter_context(patch("aj_crew.agent._prompt_path", return_value=Path("/tmp/p.md")))
             stack.enter_context(patch("aj_crew.platform_compat.IS_MACOS", False))
             agent._refresh_dynamic_fields(cfg)
         assert CU_SERVER not in cfg["mcpServers"]
@@ -1216,9 +1204,7 @@ class TestSpecEmissionGate:
         }
         with ExitStack() as stack:
             stack.enter_context(patch.multiple("aj_crew.agent", _MANAGED_MCP_SERVERS=self._GATED))
-            stack.enter_context(
-                patch("aj_crew.agent._prompt_path", return_value=Path("/tmp/p.md"))
-            )
+            stack.enter_context(patch("aj_crew.agent._prompt_path", return_value=Path("/tmp/p.md")))
             stack.enter_context(patch("aj_crew.platform_compat.IS_MACOS", False))
             agent._refresh_dynamic_fields(cfg)
         assert CU_SERVER not in cfg["mcpServers"], "the withhold must still happen"

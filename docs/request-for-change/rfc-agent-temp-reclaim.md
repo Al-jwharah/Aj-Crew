@@ -17,7 +17,7 @@ superseded-by: []
 Agents leave directories in `/tmp` and cannot remove them. The deny row
 `local-destructive-rm-rf-root` refuses `rm -rf` on any absolute path, and the
 other ways to delete a tree are respellings the `blocked-by-policy` skill tells
-agents not to try. This RFC proposes a `tmp_reclaim` tool and a
+agents not to try. This RFC proposes a `tmp_reclaim` tool and an
 `ajcrew tmp reclaim` command. Both remove a named temp tree only after the
 gateway has checked that the tree is the caller's to remove and that nothing is
 using it. The deny rules stay as they are.
@@ -329,7 +329,7 @@ binding. The Phase 2 pod checks above are the end-to-end proof.
    source, such as the launcher reporting each sandbox's open working
    directories.
 2. **Is 30 minutes the right idle bar?** A worker that sleeps between fleet
-   wakes can leave a shared home idle for hours. Requiring a Aj Crew marker
+   wakes can leave a shared home idle for hours. Requiring an Aj Crew marker
    in S2, such as `.cache/ajcrew`, would narrow the scope to test homes at
    the cost of other leftovers like `e5scratch`.
 3. **Should the refusal for `local-destructive-rm-rf-*` name `tmp_reclaim`

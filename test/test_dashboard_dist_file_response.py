@@ -18,11 +18,11 @@ import pytest
 from aiohttp import ClientError, web
 from aiohttp.test_utils import TestClient, TestServer
 
-from conftest import requires_symlinks
 from aj_crew.dashboard import dist_file_response
 from aj_crew.dashboard.dist_file_response import _CHUNK_SIZE
 from aj_crew.dashboard.server import _register_dist_static_routes
 from aj_crew.testing.wait import default_timeout
+from conftest import requires_symlinks
 
 
 def _dist_with(tmp_path: Path, name: str, body: bytes) -> Path:

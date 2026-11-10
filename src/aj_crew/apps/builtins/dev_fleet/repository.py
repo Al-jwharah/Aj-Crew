@@ -140,7 +140,7 @@ def _own_source_checkout() -> str | None:
 
 
 def _is_ajcrew_checkout(path: str) -> bool:
-    """Whether *path* is a Aj Crew source checkout. Blocking — stats only.
+    """Whether *path* is an Aj Crew source checkout. Blocking — stats only.
 
     Fail-closed: every marker must be present. ``.git`` alone is not enough
     because adopting an unrelated repository would list ITS worktrees and run
@@ -542,7 +542,7 @@ async def ensure_main_repo_discovered() -> None:
                 None
                 if valid
                 else (
-                    f"not a Aj Crew checkout: {discovered} exists but does not carry the "
+                    f"not an Aj Crew checkout: {discovered} exists but does not carry the "
                     f"markers (.git, src/aj_crew/, pyproject.toml). {hint}"
                 )
             )

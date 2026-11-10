@@ -16,7 +16,6 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from git_maintenance_helpers import git_maintenance_off_entries
 
-from conftest import make_dir_link
 from aj_crew.dashboard.handlers import (
     api_project_git_log,
     api_project_git_status,
@@ -24,6 +23,7 @@ from aj_crew.dashboard.handlers import (
 )
 from aj_crew.security import redact
 from aj_crew.security.redaction import _PATH_SEGMENT_DISCRIMINATOR_SEP, _path_segment_label
+from conftest import make_dir_link
 
 
 def _clear_readonly_and_retry(func, path, _exc) -> None:

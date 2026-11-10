@@ -145,7 +145,7 @@ DO_NOT_TRACK_ENV = "DO_NOT_TRACK"
 
 # Version of the privacy notice text the first-run Privacy chapter shows. Stored
 # in ``dashboard.privacy_ack_version`` when a user is told local recording is on
-# (Keep on over that text, or a ``ajcrew telemetry enable`` that turns recording
+# (Keep on over that text, or an ``ajcrew telemetry enable`` that turns recording
 # on), so a later bump re-shows the chapter
 # once to everyone who saw an older text. The dashboard keeps the same number as
 # ``PRIVACY_NOTICE_VERSION`` in ``website/src/components/privacyNotice.ts``; a

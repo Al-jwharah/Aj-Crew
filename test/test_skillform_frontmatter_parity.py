@@ -57,8 +57,8 @@ from pathlib import Path
 
 import pytest
 
-from conftest import make_dir_link
 from aj_crew.frontmatter import SKILL_LOADER, parse_frontmatter
+from conftest import make_dir_link
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 _WEBSITE = _REPO_ROOT / "website"

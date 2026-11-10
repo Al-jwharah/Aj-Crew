@@ -986,9 +986,7 @@ class TestSpawnsOwnControlPlane:
         return entry
 
     def test_the_managed_invocation_is_ours(self, managed: dict[str, Any]) -> None:
-        assert gw._spawns_own_control_plane(
-            "ajcrew-core", managed["command"], ["mcp-core"], env={}
-        )
+        assert gw._spawns_own_control_plane("ajcrew-core", managed["command"], ["mcp-core"], env={})
 
     def test_a_symlink_to_the_launcher_is_the_same_program(
         self, managed: dict[str, Any], tmp_path: Path
@@ -1050,9 +1048,7 @@ class TestSpawnsOwnControlPlane:
             import aj_crew.agent as agent_mod
 
             monkeypatch.setattr(agent_mod, "managed_mcp_spec_entry", lambda name, **_kw: None)
-            assert not gw._spawns_own_control_plane(
-                "ajcrew-core", managed["command"], ["mcp-core"]
-            )
+            assert not gw._spawns_own_control_plane("ajcrew-core", managed["command"], ["mcp-core"])
             assert any("no managed spec entry" in r.message for r in caplog.records)
             # A name outside the set is not a denial of anything reserved: silent.
             caplog.clear()
@@ -1074,9 +1070,7 @@ class TestSpawnsOwnControlPlane:
 
         entry = managed_mcp_spec_entry("ajcrew-cron")
         assert entry is not None
-        assert gw._spawns_own_control_plane(
-            "ajcrew-cron", entry["command"], entry["args"], env={}
-        )
+        assert gw._spawns_own_control_plane("ajcrew-cron", entry["command"], entry["args"], env={})
 
     def test_a_aj_crew_package_beside_the_launcher_is_not_ours(
         self, managed: dict[str, Any]
@@ -1207,9 +1201,7 @@ class TestSpawnsOwnControlPlane:
         would deny, which is why it is added only after the verdict."""
         from aj_crew.platform_compat import _UTF8_PROCESS_ENV
 
-        assert gw._spawns_own_control_plane(
-            "ajcrew-core", managed["command"], ["mcp-core"], env={}
-        )
+        assert gw._spawns_own_control_plane("ajcrew-core", managed["command"], ["mcp-core"], env={})
         assert not gw._spawns_own_control_plane(
             "ajcrew-core", managed["command"], ["mcp-core"], env=dict(_UTF8_PROCESS_ENV)
         )

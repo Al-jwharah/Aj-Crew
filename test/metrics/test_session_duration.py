@@ -760,7 +760,7 @@ class TestWriterSelfCorrection:
         """The premise the round-4 through round-9 findings all rested on.
 
         A session key is not unique across processes -- ``BACKGROUND_KEY`` is a
-        fixed constant, so a ``ajcrew run`` and the gateway hold the same key at
+        fixed constant, so an ``ajcrew run`` and the gateway hold the same key at
         once, each with a live session behind it. While the filename was the key's
         digest alone they shared one file, and whichever ended first unlinked the
         other's record.

@@ -94,9 +94,7 @@ def test_a_switched_off_platform_entry_survives_the_partial_entry_repair(monkeyp
     monkeypatch.setattr(
         mate_worker, "conductor_mcp_servers", lambda: frozenset({"ajcrew-cron", "ajcrew-mate"})
     )
-    spec = {
-        "mcpServers": {"ajcrew-cron": {"disabled": True}, "ajcrew-mate": {"disabled": False}}
-    }
+    spec = {"mcpServers": {"ajcrew-cron": {"disabled": True}, "ajcrew-mate": {"disabled": False}}}
     assert mate_worker.drop_partial_platform_servers(spec) == ["ajcrew-mate"]
     assert spec["mcpServers"] == {"ajcrew-cron": {"disabled": True}}
 

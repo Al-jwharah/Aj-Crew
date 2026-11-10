@@ -56,7 +56,7 @@ class TestGatewayHomeIsIndependentOfAChildsRemappedHome:
     def test_sensitive_paths_stay_denied_against_the_gateways_own_home(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
-        """Simulates the pod boot ordering: a AJCREW_POD/AJCREW_OS_HOME
+        """Simulates the pod boot ordering: an AJCREW_POD/AJCREW_OS_HOME
         pair is present in the GATEWAY's own os.environ too (build_pod_env
         sets both on the whole pod gateway process), yet a tool call naming
         the real ~/.aws/credentials must still be denied by is_sensitive_path

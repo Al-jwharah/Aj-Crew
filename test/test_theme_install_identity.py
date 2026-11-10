@@ -20,7 +20,6 @@ from theme_install_helpers import _VALID_VARS, _make_theme, _write
 
 import aj_crew.dashboard.handlers.themes as th_mod
 import aj_crew.dashboard.theme_validate as tv_mod
-from conftest import requires_symlinks
 from aj_crew.dashboard.theme_validate import (
     _THEME_FILE_CAPS,
     _safe_theme_slug,
@@ -28,6 +27,7 @@ from aj_crew.dashboard.theme_validate import (
     _validate_theme_dir,
 )
 from aj_crew.slugs import slug_hash_fallback
+from conftest import requires_symlinks
 
 # ── _slugify_theme_name hash fallback ──────────────────────────────
 

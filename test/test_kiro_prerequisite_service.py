@@ -444,8 +444,7 @@ def test_the_owner_import_scan_finds_an_outside_importer(tmp_path: Path) -> None
         root / "other.py": "from aj_crew import kiro_prerequisite_status as status\n",
         root / "relative.py": "from .kiro_prerequisite_identity import identity_fingerprint\n",
         root / "pkg" / "up.py": "from .. import kiro_prerequisite_process\n",
-        root
-        / "facade_user.py": "from aj_crew.kiro_prerequisite import KiroPrerequisiteService\n",
+        root / "facade_user.py": "from aj_crew.kiro_prerequisite import KiroPrerequisiteService\n",
     }
     assert _owner_importers(sources.items(), root) == {
         "pkg/caller.py",

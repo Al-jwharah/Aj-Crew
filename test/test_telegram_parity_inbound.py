@@ -1022,9 +1022,7 @@ class TestForumActivationCharacterization:
         d, _client, _sess = _dispatcher({1}, forum_activation="mention")
         d.bot_username = "  @AjCrewBot "
         assert d._activation_outcome(_forum_msg("@ajcrewbot hi")) is None
-        assert (
-            d._activation_outcome(_forum_msg("@@ajcrewbot")) == "denied_activation_mention_only"
-        )
+        assert d._activation_outcome(_forum_msg("@@ajcrewbot")) == "denied_activation_mention_only"
         d.bot_id = 555
         assert (
             d._activation_outcome(_forum_msg("x", reply_to=555, has_entities=True, mentions=()))
@@ -1032,8 +1030,7 @@ class TestForumActivationCharacterization:
         )
         d.bot_username = "AjCrewBot"
         assert (
-            d._activation_outcome(_forum_msg("/help@AjCrewBot"))
-            == "denied_activation_mention_only"
+            d._activation_outcome(_forum_msg("/help@AjCrewBot")) == "denied_activation_mention_only"
         )
         assert td._mention_re("x") is td._mention_re("x")
 

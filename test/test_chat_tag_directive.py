@@ -591,9 +591,7 @@ class TestChatTagApplier:
             calls.append(slot.key)
             return True
 
-        monkeypatch.setattr(
-            "aj_crew.dashboard.chat_persistence.save_slot_off_loop", _counting_save
-        )
+        monkeypatch.setattr("aj_crew.dashboard.chat_persistence.save_slot_off_loop", _counting_save)
         slot = _FakeSlot(key="dashboard:shared2", tags=["todo"])
         alias = _FakeSlot(key="dashboard:shared2", tags=["todo"])
         state = _FakeState(_VOCAB, slots={"a": slot, "b": alias})

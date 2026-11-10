@@ -256,9 +256,7 @@ def test_an_empty_warm_read_costs_at_most_two_calls_per_older_unit():
     for size in sizes:
         units = tuple(f"acp-flat-{size}-{n:03d}" for n in range(size))
         for unit_id in units:
-            CrewLog.create(
-                lg.KIND_SESSION, unit_id, owner="owner", agent="ajcrew", slot=f"s{size}"
-            )
+            CrewLog.create(lg.KIND_SESSION, unit_id, owner="owner", agent="ajcrew", slot=f"s{size}")
             crew_log_emit.on_ledger_recorded(unit_id, {"slot": f"s{size}", "event": unit_id})
         assert_drained()
         slots[size] = units

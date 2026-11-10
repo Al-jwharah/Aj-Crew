@@ -1069,9 +1069,7 @@ class TestAnUnexpectedCheckFailureKeepsTheInstallsShape:
         monkeypatch.setattr(
             "aj_crew.platform.update_governance.update_blocked_reason", lambda _u: ""
         )
-        monkeypatch.setattr(
-            "aj_crew.platform.update_governance.update_required", lambda _v: False
-        )
+        monkeypatch.setattr("aj_crew.platform.update_governance.update_required", lambda _v: False)
 
         def _boom():
             raise RuntimeError("openssl verify blew up")

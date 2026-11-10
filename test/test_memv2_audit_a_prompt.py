@@ -593,8 +593,8 @@ def test_absolute_prompt_file_keeps_existing_reader_rules(env, tmp_path):
 
 @pytest.mark.parametrize("reader", ["context", "essentials"])
 def test_relative_prompt_read_rejects_ancestor_swap(env, tmp_path, monkeypatch, reader):
-    from conftest import make_dir_link
     from aj_crew import member_essential_context as essentials
+    from conftest import make_dir_link
 
     directory = env.project / ".kiro" / "agents" / "persona"
     directory.mkdir(parents=True)

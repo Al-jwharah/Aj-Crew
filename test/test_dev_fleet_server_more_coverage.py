@@ -365,7 +365,7 @@ async def test_repo_owner_name_none_when_url_unparseable(monkeypatch):
 async def test_repo_owner_name_parses_ssh_url(monkeypatch):
     monkeypatch.setattr(repository, "_upstream_remote", AsyncMock(return_value="origin"))
     _run_cmd_queue(monkeypatch, [(0, "git@github.com:Al-jwharah/Aj-Crew.git\n", "")])
-    assert await fleet_state._repo_owner_name() == "kirodotdev/KiroCrew"
+    assert await fleet_state._repo_owner_name() == "Al-jwharah/Aj-Crew"
 
 
 @pytest.mark.asyncio

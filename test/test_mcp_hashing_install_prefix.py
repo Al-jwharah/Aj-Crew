@@ -455,7 +455,7 @@ def test_binary_version_carries_the_code_fingerprint_for_the_interpreter_alias(
     assert "+" not in stub.pool_binary_version(str(outside), ["--stdio"])
     assert "code:" not in evaluate._launch_fingerprint(str(outside), ["--stdio"])
     # A third-party app server that merely runs ON the install's interpreter
-    # (``python3 server.py`` rewritten) is not re-keyed by a Aj Crew release:
+    # (``python3 server.py`` rewritten) is not re-keyed by an Aj Crew release:
     # its code is the file in argv, which the identity fingerprints itself.
     server = tmp_path / "apps" / "demo" / "server.py"
     server.parent.mkdir(parents=True)

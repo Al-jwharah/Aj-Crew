@@ -257,7 +257,7 @@ HONOUR_TOOL_REFS_KEY = "honourToolRefs"
 #: spec's ``tools`` and never copied from the spec itself.
 POLICY_INCLUDE_KEY = "include"
 
-#: The managed servers an opted-in spec's per-tool refs narrow: every server Kiro
+#: The managed servers an opted-in spec's per-tool refs narrow: every server Aj
 #: Crew ships, since each serves through the shared dispatcher that enforces an
 #: include list by its own server name.
 INCLUDE_LIST_SERVERS: tuple[str, ...] = AJCREW_BIN_MCP_SERVERS

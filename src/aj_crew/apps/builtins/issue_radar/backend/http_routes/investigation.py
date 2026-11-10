@@ -16,7 +16,7 @@ from aj_crew.apps.builtins.issue_radar.backend import provider, store
 
 # ── investigation records (the "Investigate" button) ────────────────────────
 #
-# "Investigate" opens a Aj Crew chat session (seeded with an investigation
+# "Investigate" opens an Aj Crew chat session (seeded with an investigation
 # prompt, filed into the per-repo "Issue Radar - <repo>" chat folder) entirely
 # from the frontend — those are core chat routes, not this app's. These two
 # routes only persist the LOCAL per-issue record that links the session so a

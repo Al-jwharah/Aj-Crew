@@ -270,8 +270,7 @@ def _runtime_facade_imports(tree: ast.Module) -> list[int]:
             continue
         if isinstance(node, ast.ImportFrom):
             if node.module == facade.__name__ or (
-                node.module == "aj_crew"
-                and any(a.name == "session_allocation" for a in node.names)
+                node.module == "aj_crew" and any(a.name == "session_allocation" for a in node.names)
             ):
                 lines.append(node.lineno)
         elif isinstance(node, ast.Import):
@@ -291,9 +290,7 @@ def test_the_facade_import_scan_can_fail() -> None:
     assert sorted(_runtime_facade_imports(tree)) == [5, 6, 7]
 
 
-@pytest.mark.parametrize(
-    "owner", ("aj_crew.session_allocation_parts", *facade._ALLOCATION_OWNERS)
-)
+@pytest.mark.parametrize("owner", ("aj_crew.session_allocation_parts", *facade._ALLOCATION_OWNERS))
 def test_no_owner_imports_the_facade_at_run_time(owner: str) -> None:
     assert _runtime_facade_imports(_tree(importlib.import_module(owner))) == []
 

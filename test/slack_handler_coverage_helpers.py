@@ -13,8 +13,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from conftest import MockSlackClient
 from aj_crew.slack import handler as h
+from conftest import MockSlackClient
 
 
 # ──────────────────────────────────────────────────────────────────────

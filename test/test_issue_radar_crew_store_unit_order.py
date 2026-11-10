@@ -24,10 +24,10 @@ from issue_radar_crew_store_helpers import (  # noqa: F401 -- the autouse fixtur
     _unit,
 )
 
-from conftest import make_dir_link
 from aj_crew.apps.builtins.issue_radar.backend import crew_store as cs
 from aj_crew.crew_log import emit as crew_log_emit
 from aj_crew.crew_log import projection as crew_log_projection
+from conftest import make_dir_link
 
 
 def test_reads_apply_units_in_the_order_they_recorded_not_header_order(tmp_path, monkeypatch):

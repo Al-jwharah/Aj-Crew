@@ -5,7 +5,7 @@ The dispatch reads (``fetch_dispatchable``, ``fetch_dispatchable_fair``,
 says when time alone releases the next one. The listings and counts answer the queue's
 callers: the pending rows of a kind, session or batch, the active rows, the per-state
 counts and the oldest wait, and the rows no owner holds long after they fell due
-(``overdue_unleased_rows``, a ``ajcrew doctor`` read). Each read reports a database
+(``overdue_unleased_rows``, an ``ajcrew doctor`` read). Each read reports a database
 failure as ``TaskStoreUnavailable`` (``_typed_read``).
 
 A function here whose first parameter is ``self`` is a ``TaskStore`` method: the class

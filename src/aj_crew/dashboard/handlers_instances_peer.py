@@ -248,7 +248,7 @@ def _remote_is_behind(local: str, remote: str) -> bool:
 
 
 def _can_run_remote_commands(inst: object) -> bool:
-    """Whether this dashboard can run a ``ajcrew`` verb on *inst*'s host.
+    """Whether this dashboard can run an ``ajcrew`` verb on *inst*'s host.
 
     The display side of ``SshTunnelManager._remote_command_target``'s refusals,
     so the dashboard offers Update only where the gateway would accept it: a
@@ -846,7 +846,7 @@ async def read_peer_slots(
     # above carries both.
     #
     # ``MAX_LIVE_SLOTS`` rather than ``_CAP_MAX_ROWS`` even though both are 500
-    # today, because only one of them is DERIVED: it is the ceiling a Aj Crew
+    # today, because only one of them is DERIVED: it is the ceiling an Aj Crew
     # gateway enforces on its own live slots at every path that allocates one,
     # so a peer running this software cannot honestly answer with more rows than
     # that, and a raised ceiling should widen this read along with it. The

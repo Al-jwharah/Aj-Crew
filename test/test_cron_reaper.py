@@ -1027,9 +1027,7 @@ class TestTheHandleOfAnOwnedPopen:
         monkeypatch.setattr(platform_compat, "IS_WINDOWS", False)
         pid = _UNALLOCATABLE_PID
         with (
-            patch(
-                "aj_crew.platform_compat.get_process_start_id", return_value="7770001"
-            ) as reads,
+            patch("aj_crew.platform_compat.get_process_start_id", return_value="7770001") as reads,
             patch(
                 "os.getpgid",
                 side_effect=ProcessLookupError("[Errno 3] No such process"),

@@ -18,12 +18,12 @@ from unittest.mock import patch
 
 import pytest
 
-from conftest import make_dir_link
 from aj_crew import platform_compat as pc
 from aj_crew.mcp_gateway.spill import (
     cleanup_old_spill_files,
     maybe_spill_response,
 )
+from conftest import make_dir_link
 
 # --- (a) Response under limit passes untouched ---
 

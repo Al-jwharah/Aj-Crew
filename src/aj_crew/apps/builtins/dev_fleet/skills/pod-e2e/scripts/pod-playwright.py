@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""pod-playwright.py — headless-chromium frontend check for a AjCrew pod.
+"""pod-playwright.py — headless-chromium frontend check for an AjCrew pod.
 
 Run by pod-e2e.sh with a Playwright venv python (Playwright + bundled
 chromium at ~/.cache/ms-playwright/chromium-*). The AjCrew gateway serves its

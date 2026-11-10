@@ -21,9 +21,7 @@ from cli_helpers import (  # noqa: F401 -- the autouse fixture registers by impo
 )
 
 from aj_crew import platform_compat
-from aj_crew.cli_server import (
-    _owner_verified_secret_urlopen as _REAL_OWNER_VERIFIED_SECRET_URLOPEN,
-)
+from aj_crew.cli_server import _owner_verified_secret_urlopen as _REAL_OWNER_VERIFIED_SECRET_URLOPEN
 
 
 def _route_tcp_send_through_verdict(monkeypatch, verdict):

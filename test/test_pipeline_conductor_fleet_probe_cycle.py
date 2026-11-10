@@ -26,8 +26,8 @@ from pipeline_conductor_fleet_probe_helpers import (
     transcript,
 )
 
-from conftest import make_dir_link
 from aj_crew.testing.clock import ManualClock
+from conftest import make_dir_link
 
 
 @pytest.fixture

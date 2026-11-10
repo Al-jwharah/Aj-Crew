@@ -24,8 +24,8 @@ if TYPE_CHECKING:
         SessionMcpReport,
         _ChatSlot,
         _is_safe_oauth_url,
-        get_visible_providers,
         ajcrew_managed_names,
+        get_visible_providers,
         logger,
         oauth_url_contains_credential,
     )
@@ -452,7 +452,7 @@ def _emit_mcp_oauth_request(
             f"🚫 {label} sent an authentication URL containing a credential "
             f"pattern (rejected).{endpoint_detail} If this is a self-hosted "
             "or otherwise unlisted identity provider, its authorization "
-            "endpoint may need adding to oauth_endpoints.json in the Kiro "
+            "endpoint may need adding to oauth_endpoints.json in the Aj "
             'Crew data home, shaped {"additional_authorization_endpoints": '
             '[{"host": ..., "path": ...}]}; otherwise ask the server owner '
             "to fix the URL.",

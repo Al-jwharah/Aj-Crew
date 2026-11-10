@@ -47,10 +47,10 @@ if TYPE_CHECKING:
         CRED_WECOM_BOT_ID,
         CRED_WECOM_SECRET,
         CRED_WEIXIN_TOKEN,
+        AjCrewConfig,
         ChannelDescriptor,
         ConfigChange,
         GatewayOrchestrator,
-        AjCrewConfig,
         Mapping,
         _channel_transport_permitted,
         _start_coder_retention,
@@ -74,9 +74,7 @@ def _hoist_wecom(self: GatewayOrchestrator, cfg: AjCrewConfig, creds: Mapping[st
     self._wecom_enabled = bool(cfg.wecom.enabled and self._wecom_bot_id and self._wecom_secret)
 
 
-def _hoist_telegram(
-    self: GatewayOrchestrator, cfg: AjCrewConfig, creds: Mapping[str, str]
-) -> None:
+def _hoist_telegram(self: GatewayOrchestrator, cfg: AjCrewConfig, creds: Mapping[str, str]) -> None:
     # Telegram — the TELEGRAM_BOT_TOKEN credential (env/.env) overrides
     # cfg.telegram.bot_token; all other settings come from the typed
     # cfg.telegram dataclass (no ad-hoc config.json re-parse).
@@ -126,9 +124,7 @@ def _hoist_weixin(self: GatewayOrchestrator, cfg: AjCrewConfig, creds: Mapping[s
     self._weixin_client = None
 
 
-def _hoist_whatsapp(
-    self: GatewayOrchestrator, cfg: AjCrewConfig, creds: Mapping[str, str]
-) -> None:
+def _hoist_whatsapp(self: GatewayOrchestrator, cfg: AjCrewConfig, creds: Mapping[str, str]) -> None:
     # WhatsApp (QR-linked personal account) — no credential: pairing state
     # lives in the channel's session DB, created by the Settings QR flow.
     # Enablement is config-only; maybe_start_whatsapp reports the missing
@@ -157,9 +153,7 @@ def _hoist_feishu(self: GatewayOrchestrator, cfg: AjCrewConfig, creds: Mapping[s
     self._feishu_allowed_group_ids = list(cfg.feishu.allowed_group_ids)
 
 
-def _hoist_discord(
-    self: GatewayOrchestrator, cfg: AjCrewConfig, creds: Mapping[str, str]
-) -> None:
+def _hoist_discord(self: GatewayOrchestrator, cfg: AjCrewConfig, creds: Mapping[str, str]) -> None:
     # Discord — the DISCORD_BOT_TOKEN credential (env/.env) overrides
     # cfg.discord.bot_token; all other settings come from the typed
     # cfg.discord dataclass (mirrors the Telegram block above).
@@ -182,9 +176,7 @@ def _hoist_webex(self: GatewayOrchestrator, cfg: AjCrewConfig, creds: Mapping[st
     self._webex_client = None
 
 
-def _hoist_imessage(
-    self: GatewayOrchestrator, cfg: AjCrewConfig, creds: Mapping[str, str]
-) -> None:
+def _hoist_imessage(self: GatewayOrchestrator, cfg: AjCrewConfig, creds: Mapping[str, str]) -> None:
     # iMessage — no credential exists to hoist: the transport is the user's
     # own signed-in Messages.app, so enablement is the config flag alone.
     # Everything else is read from the typed cfg.imessage dataclass at start.

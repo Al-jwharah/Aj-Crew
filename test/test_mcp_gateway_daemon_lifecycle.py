@@ -721,8 +721,7 @@ class TestStubBinaryVersion:
 
         monkeypatch.setattr(stub, "_binary_version", lambda cmd: "shimhash")
         assert (
-            stub.pool_binary_version("ajcrew", ["mcp-core"])
-            == f"shimhash+{cf.code_fingerprint()}"
+            stub.pool_binary_version("ajcrew", ["mcp-core"]) == f"shimhash+{cf.code_fingerprint()}"
         )
 
     def test_third_party_servers_are_untouched(self, monkeypatch: pytest.MonkeyPatch) -> None:

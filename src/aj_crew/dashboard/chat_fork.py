@@ -135,9 +135,7 @@ def _fork_execution_context(
             if getattr(resolved, "memory_version", 1) == 2:
                 raise UnknownMemoryStore("The fork source's execution identity is unavailable")
         else:
-            execution = ExecutionContext(
-                None, MemoryStoreRef(store), "template", agent or "ajcrew"
-            )
+            execution = ExecutionContext(None, MemoryStoreRef(store), "template", agent or "ajcrew")
     if recorded_store and (recorded_store or "default") != execution.store.store_id:
         raise UnknownMemoryStore("The fork source's recorded memory binding has changed")
     return execution.with_mode(memory_mode)

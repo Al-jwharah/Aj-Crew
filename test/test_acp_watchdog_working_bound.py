@@ -5,7 +5,7 @@ a warm sibling MCP server produces too, and a Windows shell tool reads WORKING
 on movement in any process started since its dispatch, which another
 session's process can produce. So those readings are bounded by
 ``watchdog.tool_stall_hard_cap_secs``; a matched shell child, the declared
-``wait`` verdict and a ajcrew-core tool that pings the session keepalive
+``wait`` verdict and an ajcrew-core tool that pings the session keepalive
 keep deferring. Recovery is the session-scoped ``session/cancel``. A model
 wait's WORKING reading is movement under the runtime, so it is bounded by the
 same cap and then gets the stale probe.

@@ -21,9 +21,9 @@ from pathlib import Path
 
 import pytest
 
-from conftest import requires_symlinks
 from aj_crew.config import loosening_provenance as lp
 from aj_crew.config.paths import config_dir
+from conftest import requires_symlinks
 
 
 def _config(**agent: object) -> bytes:

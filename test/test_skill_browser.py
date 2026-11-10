@@ -30,7 +30,6 @@ from skill_browser_helpers import (  # noqa: F401 -- the fixture is requested by
     fake_home_fixture,
 )
 
-from conftest import make_dir_link
 from aj_crew.dashboard.handlers._shared import (
     SKILL_FILE_MAX_BYTES,
     SKILL_TREE_MAX_ENTRIES,
@@ -52,6 +51,7 @@ from aj_crew.dashboard.handlers._shared import (
     read_skill_file,
     skill_rows_for_globs,
 )
+from conftest import make_dir_link
 
 # ── _parse_skill_description ──
 
@@ -520,7 +520,7 @@ class TestOneRowPerSkillFile:
 
     def test_extra_paths_over_kiro_user_lists_once(self, fake_home, close_skills_loaders):
         """Real loader: ``skills.extra_paths`` naming ``~/.kiro/skills`` reaches
-        the file as a Aj Crew row AND as a ``kiro-user`` row; one is listed."""
+        the file as an Aj Crew row AND as a ``kiro-user`` row; one is listed."""
         from aj_crew.config import AjCrewConfig
         from aj_crew.skills import SkillsLoader
 

@@ -1071,9 +1071,7 @@ class TestCronDefaultAgent:
         """
         from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
 
-        captured = ExecutionContext(
-            None, MemoryStoreRef("legacy-global-store"), "member", "ajcrew"
-        )
+        captured = ExecutionContext(None, MemoryStoreRef("legacy-global-store"), "member", "ajcrew")
         assert captured.member_id is None, "the legacy shape under test"
         gw = _make_gw_for_llm()
         gw._cfg.agent.default_agent = "configured-default"

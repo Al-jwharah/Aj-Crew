@@ -45,7 +45,7 @@ def _remap_calls(module, backend: str, tmp_path: Path, *extra_patches) -> list[b
 
 
 def _base_pod_env(tmp_path: Path) -> dict[str, str]:
-    """A AJCREW_POD=1 env with AJCREW_OS_HOME set, as build_pod_env emits."""
+    """An AJCREW_POD=1 env with AJCREW_OS_HOME set, as build_pod_env emits."""
     return {
         "HOME": str(tmp_path / "real-home"),
         "PATH": "/usr/bin",

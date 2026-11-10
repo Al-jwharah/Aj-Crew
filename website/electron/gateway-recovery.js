@@ -593,7 +593,7 @@ function isStaleBundleSignal({ exitCode = null, spawnErrorCode = "" }) {
   return exitCode === STALE_ASSET_EXIT_CODE || spawnErrorCode === "ENOENT";
 }
 
-// Resolve how to invoke a `ajcrew` SUBCOMMAND through execFile/spawn. Both
+// Resolve how to invoke an `ajcrew` SUBCOMMAND through execFile/spawn. Both
 // the gateway spawn and the lock-holder probe go through here, so the Windows
 // unwrap has one spelling: Node's shell-free execFile/spawn refuses a
 // `.cmd`/`.bat` (spawn EINVAL), so a bundled `bin\ajcrew.cmd` is replaced by

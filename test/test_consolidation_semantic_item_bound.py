@@ -130,9 +130,7 @@ def _member_consolidator(monkeypatch: pytest.MonkeyPatch, vector_store) -> Histo
         "ajcrew",
         "persistent",
     )
-    monkeypatch.setattr(
-        "aj_crew.execution_context.read_session_execution", lambda _key: execution
-    )
+    monkeypatch.setattr("aj_crew.execution_context.read_session_execution", lambda _key: execution)
     monkeypatch.setattr("aj_crew.memory_stores.memory_store_version", lambda _store: 2)
     monkeypatch.setattr(ContextBuilder, "ensure_store", AsyncMock(return_value=vector_store))
     c = _consolidator(vector_store)

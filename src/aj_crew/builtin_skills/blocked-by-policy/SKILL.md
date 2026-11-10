@@ -1,6 +1,6 @@
 ---
 name: blocked-by-policy
-description: What to do when a Aj Crew safety policy blocks a tool call — tell a policy block from a user refusal, then take the sanctioned path for its class (AWS creds, SSO, key files, trust root, exfiltration, self-protection, SQL text in a heredoc). Load on a 'command denied' result or refused AWS access.
+description: What to do when an Aj Crew safety policy blocks a tool call — tell a policy block from a user refusal, then take the sanctioned path for its class (AWS creds, SSO, key files, trust root, exfiltration, self-protection, SQL text in a heredoc). Load on a 'command denied' result or refused AWS access.
 triggers: blocked by security policy, user denied tool execution, access to sensitive path, sensitive credential path, data-exfiltration pattern, governance trust-root, permission denied by policy, cannot access aws, no aws credentials, aws access denied, sso login, credential path, credential tool not available
 ---
 

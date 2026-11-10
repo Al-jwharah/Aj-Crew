@@ -22,13 +22,13 @@ from slack_transport_dispatch_helpers import (
     make_event,
 )
 
-from conftest import MockSlackClient
 from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, STOP_REASON_END_TURN
 from aj_crew.hooks import HOOK_EVENT_STOP, HOOK_EVENT_USER_PROMPT_SUBMIT
 from aj_crew.messaging import script_hooks as messaging_hooks
 from aj_crew.providers.base import LLMEvent
 from aj_crew.slack import handler as slack_handler
 from aj_crew.slack import script_hooks, transport_dispatch
+from conftest import MockSlackClient
 
 OWNER = "U_OWNER"
 

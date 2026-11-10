@@ -245,9 +245,7 @@ def test_a_card_turning_on_another_crewmate_wakes_nobody_in_this_thread(monkeypa
         raise AssertionError("raised a held request")
 
     monkeypatch.setattr(member_self, "continue_after_opt_in", never)
-    monkeypatch.setattr(
-        "aj_crew.dashboard.mate_thread_wakes.is_crewmate_thread", lambda slot: True
-    )
+    monkeypatch.setattr("aj_crew.dashboard.mate_thread_wakes.is_crewmate_thread", lambda slot: True)
 
     async def go():
         goal_setup.schedule_tool_access_nudge(
@@ -286,9 +284,7 @@ def test_turn_on_raises_the_held_request_then_reloads_and_wakes(monkeypatch, hel
 
     monkeypatch.setattr(reload_mod, "reload_if_idle", fake_reload)
     monkeypatch.setattr(goal_setup, "_schedule", fake_schedule)
-    monkeypatch.setattr(
-        "aj_crew.dashboard.mate_thread_wakes.is_crewmate_thread", lambda slot: True
-    )
+    monkeypatch.setattr("aj_crew.dashboard.mate_thread_wakes.is_crewmate_thread", lambda slot: True)
     monkeypatch.setattr("aj_crew.members.member_slug", lambda m: m)
 
     async def go():

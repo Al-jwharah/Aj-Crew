@@ -92,7 +92,7 @@ async def api_ajcrew_agent_resolved_model(request: web.Request) -> web.Response:
     """GET /api/agents/resolved-model?agent=NAME[&app=APP] — the model a new session uses.
 
     Serves the one backend resolver so the dashboard's model chip does not have
-    to re-derive the precedence client-side (and drift from it). ``agent`` is a
+    to re-derive the precedence client-side (and drift from it). ``agent`` is an
     Aj Crew agent name; omitted falls back to the configured default agent.
     ``app`` names the app that owns the session, so the answer includes that
     app's own model setting the way the session start does; a value that is not
@@ -380,9 +380,7 @@ async def api_ajcrew_agents_create(request: web.Request) -> web.Response:
     from aj_crew.dashboard.handlers.guide import run_guided_crewmate_create
 
     # The hook returns the inner handler's own response object unchanged.
-    return cast(
-        web.Response, await run_guided_crewmate_create(request, _api_ajcrew_agents_create)
-    )
+    return cast(web.Response, await run_guided_crewmate_create(request, _api_ajcrew_agents_create))
 
 
 async def _api_ajcrew_agents_create(request: web.Request) -> web.Response:

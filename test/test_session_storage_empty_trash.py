@@ -21,9 +21,9 @@ from session_storage_helpers import (  # noqa: F401 -- fixtures are requested by
     stores_fixture,
 )
 
-from conftest import requires_symlinks
 from aj_crew import session_storage
 from aj_crew.session_storage import SessionStorageError
+from conftest import requires_symlinks
 
 
 class TestEmptyTrashApproval:

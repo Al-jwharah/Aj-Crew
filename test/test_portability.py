@@ -19,7 +19,6 @@ from unittest.mock import patch
 import portability_helpers
 import pytest
 
-from conftest import make_dir_link, requires_o_nofollow
 from aj_crew import platform_compat, portability
 from aj_crew.jsonl_util import UnreadableRecord
 from aj_crew.portability import (
@@ -29,6 +28,7 @@ from aj_crew.portability import (
     validate_import_zip,
 )
 from aj_crew.security import is_sensitive_path
+from conftest import make_dir_link, requires_o_nofollow
 
 
 def _detach_dir_link(link: Path) -> None:

@@ -158,7 +158,7 @@ def _ask_gate(port: int, *, service_only: bool = False) -> _Verdict:
 
 
 def _service_active() -> bool:
-    """Whether ``restart_service`` would restart a ajcrew service here.
+    """Whether ``restart_service`` would restart an ajcrew service here.
 
     The same predicate it gates on, per platform: ``linux.is_active()``, and on
     macOS ``macos.is_loaded()``, which searches both launchd domains. The
@@ -178,7 +178,7 @@ def _service_active() -> bool:
 
 
 def _service_scopes_running() -> int:
-    """How many systemd scopes run a ajcrew unit; 0 off Linux or with none.
+    """How many systemd scopes run an ajcrew unit; 0 off Linux or with none.
 
     A service restart restarts every one of them, and the idle check asked one
     gateway only.
@@ -279,7 +279,7 @@ def _restart_when_idle(cli_port: int | None, *, max_wait_secs: float | None = No
             # that refused may not be the one that service serves (a changed
             # dashboard.url, say), so nothing proves that gateway is idle.
             _refuse(
-                f"nothing answered the idle check on port {port}, but a ajcrew service "
+                f"nothing answered the idle check on port {port}, but an ajcrew service "
                 "is running. Pass --port for the gateway you mean, or run "
                 "`ajcrew restart` to restart the service now."
             )

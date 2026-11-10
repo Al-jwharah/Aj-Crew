@@ -171,9 +171,9 @@ from aj_crew.mcp_gateway.daemon.control import (  # noqa: F401
 )
 from aj_crew.mcp_gateway.daemon.control_plane import (  # noqa: F401
     CONTROL_PLANE_BACKENDS,
+    _aj_crew_import_is_shadowed,
     _caller_for_backend,
     _deny_control_plane,
-    _aj_crew_import_is_shadowed,
     _spawns_own_control_plane,
     _user_site_holds_our_package,
     _user_site_roots,

@@ -164,7 +164,7 @@ function buildGatewayEnvironment(
  * memory and leaves no file behind. This variable reaches only the gateway's
  * own process tree; the bundled interpreter also refuses the write by itself
  * (a `.pth` the build drops into its site-packages), which covers the MCP
- * stubs the agent runtime starts with the Python variables stripped and a
+ * stubs the agent runtime starts with the Python variables stripped and an
  * `ajcrew` typed into a terminal.
  *
  * Windows is not locked down, deliberately: Authenticode does not seal resource

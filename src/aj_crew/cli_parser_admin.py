@@ -597,7 +597,7 @@ def register_pod_parser(sub: _Commands) -> None:
     )
     pod_exec = pod_sub.add_parser(
         "exec",
-        help="Run a ajcrew command against a pod, using the pod's own binary and data",
+        help="Run an ajcrew command against a pod, using the pod's own binary and data",
     )
     pod_exec.add_argument("name", help="Worktree name")
     # REMAINDER so the pod's own flags (--json, -n, --ttl …) reach the child

@@ -1087,11 +1087,7 @@ class TestTheDashboardInheritedTrustHandlers:
         import pathlib as _pl
 
         src = (
-            _pl.Path(__file__).resolve().parents[1]
-            / "src"
-            / "aj_crew"
-            / "dashboard"
-            / "server.py"
+            _pl.Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "dashboard" / "server.py"
         ).read_text(encoding="utf-8")
         assert (
             "safety_override().on_policy_revoked = functools.partial("

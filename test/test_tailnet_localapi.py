@@ -23,9 +23,9 @@ from typing import Any
 import pytest
 from tmpdir_helpers import SHORT_TMP_PREFIX, short_tmp_base
 
-from conftest import requires_symlinks
 from aj_crew.dashboard import tailnet
 from aj_crew.dashboard import tailnet_localapi as la
+from conftest import requires_symlinks
 
 # -- _root_owned_and_sealed ------------------------------------------------ #
 

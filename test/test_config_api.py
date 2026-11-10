@@ -1256,9 +1256,7 @@ async def test_binding_only_unchanged_value_refuses_a_concurrent_rebind(tmp_path
 
     with (
         unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp),
-        unittest.mock.patch.object(
-            AjCrewConfig, "load", side_effect=load_before_concurrent_rebind
-        ),
+        unittest.mock.patch.object(AjCrewConfig, "load", side_effect=load_before_concurrent_rebind),
     ):
         async with TestClient(TestServer(_make_crud_app())) as client:
             response = await client.put("/api/agents/test-agent", json={"kiro_agent": "ajcrew"})

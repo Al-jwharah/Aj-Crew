@@ -23,8 +23,8 @@ if sys.platform == "win32":  # pragma: no cover - platform-gated
 
 from design_tweak_backend_helpers import isolated_queue_fixture  # noqa: F401
 
-from conftest import requires_symlinks
 from aj_crew.apps.builtins.design_tweak.backend import server
+from conftest import requires_symlinks
 
 
 class TestContained:

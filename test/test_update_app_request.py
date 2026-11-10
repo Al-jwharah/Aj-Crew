@@ -21,8 +21,8 @@ import pytest
 from aj_crew.dashboard.handlers import updates
 from aj_crew.platform import app_update_request, update_stepup
 from aj_crew.platform.update_capability import (
-    MANAGED_BY_ELECTRON,
     MANAGED_BY_AJCREW,
+    MANAGED_BY_ELECTRON,
     MODE_CONSENT,
     UNAVAILABLE_MANAGED_BY_APP,
     UpdateCapability,

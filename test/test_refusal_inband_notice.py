@@ -460,7 +460,7 @@ class TestCauseSpecificWording:
         assert build_refusal_steer_notice("bash", "denied") == build_refusal_steer_notice(
             "bash", "denied", cause=DENY_CAUSE_POLICY
         )
-        assert "was blocked by a Aj Crew safety policy" in build_refusal_steer_notice(
+        assert "was blocked by an Aj Crew safety policy" in build_refusal_steer_notice(
             "bash", "denied"
         )
 

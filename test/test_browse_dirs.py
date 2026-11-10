@@ -11,7 +11,6 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-from conftest import requires_symlinks
 from aj_crew import platform_compat
 from aj_crew.dashboard.handlers import api_browse_dirs
 from aj_crew.dashboard.handlers.files import (
@@ -19,6 +18,7 @@ from aj_crew.dashboard.handlers.files import (
     _browse_drives_sync,
     _browse_parent,
 )
+from conftest import requires_symlinks
 
 
 def _make_app() -> web.Application:

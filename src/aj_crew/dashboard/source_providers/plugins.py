@@ -25,9 +25,7 @@ from aj_crew.dashboard.source_providers.contract import (
     SourceRef,
 )
 from aj_crew.history_search import register_search_ref_resolver as _register_search_ref_resolver
-from aj_crew.history_search import (
-    reset_search_ref_resolver_for_tests as _reset_search_ref_resolver,
-)
+from aj_crew.history_search import reset_search_ref_resolver_for_tests as _reset_search_ref_resolver
 
 logger = logging.getLogger(LOGGER_NAME)
 

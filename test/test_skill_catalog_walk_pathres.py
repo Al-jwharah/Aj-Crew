@@ -18,11 +18,11 @@ from pathlib import Path
 
 import pytest
 
-from conftest import requires_symlinks
 from aj_crew import security
 from aj_crew.config.loader import AjCrewConfig
 from aj_crew.skill_runtime import catalog
 from aj_crew.skills import SkillsLoader
+from conftest import requires_symlinks
 
 _SKILLS = 6
 

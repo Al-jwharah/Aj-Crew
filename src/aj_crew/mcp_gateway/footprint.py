@@ -20,7 +20,7 @@ walking its process tree once:
   session's own tree is what makes the basename safe: nothing outside the tree
   is ever counted. ``npx`` re-titles itself ``npm exec``; that spelling is
   matched too, ignoring the ``-y``/``--yes`` flag on either side.
-* A **stub** is a ``aj_crew.mcp_gateway.stub`` process. A stub with no child
+* A **stub** is an ``aj_crew.mcp_gateway.stub`` process. A stub with no child
   attaches to a shared backend, so it costs only itself. A stub WITH children
   runs its server below it inside the session (a stubbed server while sharing
   is off), so it is a copy of that server, stub included.

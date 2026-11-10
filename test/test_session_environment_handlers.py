@@ -336,9 +336,7 @@ async def test_browse_endpoint_maps_failures(tmp_path, monkeypatch):
 async def test_a_save_made_under_an_old_working_folder_is_refused(tmp_path, monkeypatch):
     """The route hands the folder to the writer and maps its refusal; the check
     itself runs against the writer's own resolved target (test_coder_session_browse)."""
-    monkeypatch.setattr(
-        "aj_crew.sel.sel", lambda: SimpleNamespace(log_api_access=lambda **k: None)
-    )
+    monkeypatch.setattr("aj_crew.sel.sel", lambda: SimpleNamespace(log_api_access=lambda **k: None))
     async with _client(tmp_path, monkeypatch) as client:
         seen: list[object] = []
 
@@ -361,9 +359,7 @@ async def test_a_save_made_under_an_old_working_folder_is_refused(tmp_path, monk
 
 @sync
 async def test_write_endpoint_maps_conflict_and_success(tmp_path, monkeypatch):
-    monkeypatch.setattr(
-        "aj_crew.sel.sel", lambda: SimpleNamespace(log_api_access=lambda **k: None)
-    )
+    monkeypatch.setattr("aj_crew.sel.sel", lambda: SimpleNamespace(log_api_access=lambda **k: None))
     async with _client(tmp_path, monkeypatch) as client:
         fake_write = _scripted(
             {"error": "the file changed since it was opened", "conflict": True},

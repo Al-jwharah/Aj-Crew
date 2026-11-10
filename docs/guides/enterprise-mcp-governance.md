@@ -313,7 +313,7 @@ a `.dev` version:
 
 ```toml
 [[index]]
-url = "https://updates.crew.kiro.dev/feed/stable/simple/"
+url = "https://<your-release-host>/feed/stable/simple/"
 # The CDN answers 403, not 404, for a package it does not host. Without this
 # line uv stops at that answer instead of moving on to PyPI.
 ignore-error-codes = [403]

@@ -834,9 +834,7 @@ class TestCronSpawnTiersAreAligned:
         self, tmp_path, monkeypatch, posix_test_shell
     ):
         """The alignment itself: neither path may be wider than the other."""
-        monkeypatch.setattr(
-            "aj_crew.cron_script._resolve_command_shell", lambda: posix_test_shell
-        )
+        monkeypatch.setattr("aj_crew.cron_script._resolve_command_shell", lambda: posix_test_shell)
         monkeypatch.setattr("aj_crew.cron_script.Path.home", lambda: tmp_path)
         crons_dir = tmp_path / ".ajcrew" / "crons"
         crons_dir.mkdir(parents=True)

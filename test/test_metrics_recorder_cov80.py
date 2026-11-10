@@ -118,7 +118,7 @@ class TestFailuresAreSwallowed:
         assert any("histogram" in m for m in messages)
 
     def test_app_metric_cannot_spoof_the_core_namespace(self, caplog: Any) -> None:
-        """``app_id`` set + a ``ajcrew.`` name is a namespace violation, and the
+        """``app_id`` set + an ``ajcrew.`` name is a namespace violation, and the
         facade must drop it rather than emit it."""
         rec, reader = _recorder_with_reader()
         with caplog.at_level(logging.WARNING, logger="aj_crew.metrics.recorder"):

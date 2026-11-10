@@ -652,9 +652,7 @@ class TestContinuationTemplateNamespace:
         with (
             patch("aj_crew.subagent.Stats"),
             patch("aj_crew.subagent.sel"),
-            patch(
-                "aj_crew.subagent._validate_agent", side_effect=lambda name, cwd: (name, "", "")
-            ),
+            patch("aj_crew.subagent._validate_agent", side_effect=lambda name, cwd: (name, "", "")),
         ):
             target = "legacy"
             for override in ("", "other-worker", ""):

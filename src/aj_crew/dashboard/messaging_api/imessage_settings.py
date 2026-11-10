@@ -20,8 +20,8 @@ if TYPE_CHECKING:
     from aj_crew.dashboard.handlers.messaging import (
         IMESSAGE_SERVICES,
         IS_MACOS,
-        DashboardState,
         AjCrewConfig,
+        DashboardState,
         _clean_id_list,
         _hot_apply_after_write,
         _is_valid_webex_email,

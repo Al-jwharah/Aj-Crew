@@ -594,12 +594,8 @@ def test_a_removed_unit_takes_its_decision_out_of_the_replay():
 def test_the_emitter_writes_the_entry_and_advances_the_fold():
     """Durability first, then memory: the fold is advanced from inside the job, after
     the append returned -- so the disk can never hold a decision the memory lacks."""
-    emit.on_session_opened(
-        "s-a", agent="ajcrew", slot="A", model="opus", cwd="/w", owner="raymond"
-    )
-    emit.on_session_opened(
-        "s-d", agent="ajcrew", slot="D", model="opus", cwd="/w", owner="raymond"
-    )
+    emit.on_session_opened("s-a", agent="ajcrew", slot="A", model="opus", cwd="/w", owner="raymond")
+    emit.on_session_opened("s-d", agent="ajcrew", slot="D", model="opus", cwd="/w", owner="raymond")
     emit.on_session_adopted("s-a", slot="A", parent_slot="D", parent_sid="s-d")
     assert_drained()
 
@@ -617,12 +613,8 @@ def test_the_emitter_reports_the_durable_outcome_to_a_waiting_caller():
     called once, with ``True`` only after the entry is on disk.
     """
     settled: list[bool] = []
-    emit.on_session_opened(
-        "s-a", agent="ajcrew", slot="A", model="opus", cwd="/w", owner="raymond"
-    )
-    emit.on_session_opened(
-        "s-d", agent="ajcrew", slot="D", model="opus", cwd="/w", owner="raymond"
-    )
+    emit.on_session_opened("s-a", agent="ajcrew", slot="A", model="opus", cwd="/w", owner="raymond")
+    emit.on_session_opened("s-d", agent="ajcrew", slot="D", model="opus", cwd="/w", owner="raymond")
     emit.on_session_adopted(
         "s-a", slot="A", parent_slot="D", parent_sid="s-d", on_settled=settled.append
     )
@@ -685,9 +677,7 @@ def test_the_settle_signal_reports_the_append_not_the_absence_of_a_drop():
 def test_the_emitter_records_the_parent_a_takeover_replaced():
     """``previous_parent`` is audit and the fold ignores it, so the fold is asserted to
     show only the NEW parent while the entry keeps both."""
-    emit.on_session_opened(
-        "s-a", agent="ajcrew", slot="A", model="opus", cwd="/w", owner="raymond"
-    )
+    emit.on_session_opened("s-a", agent="ajcrew", slot="A", model="opus", cwd="/w", owner="raymond")
     emit.on_session_adopted(
         "s-a",
         slot="A",
@@ -703,9 +693,7 @@ def test_the_emitter_records_the_parent_a_takeover_replaced():
 
 
 def test_a_release_written_by_the_emitter_returns_the_session_to_a_root():
-    emit.on_session_opened(
-        "s-d", agent="ajcrew", slot="D", model="opus", cwd="/w", owner="raymond"
-    )
+    emit.on_session_opened("s-d", agent="ajcrew", slot="D", model="opus", cwd="/w", owner="raymond")
     emit.on_session_opened(
         "s-a",
         agent="ajcrew",
@@ -729,9 +717,7 @@ def test_a_release_written_by_the_emitter_returns_the_session_to_a_root():
 def test_the_emitter_writes_nothing_without_both_sides_of_the_edge():
     """A decision with no slot names nothing a reader could fold, so it is not
     written -- rather than written and silently ignored."""
-    emit.on_session_opened(
-        "s-a", agent="ajcrew", slot="A", model="opus", cwd="/w", owner="raymond"
-    )
+    emit.on_session_opened("s-a", agent="ajcrew", slot="A", model="opus", cwd="/w", owner="raymond")
     emit.on_session_adopted("s-a", slot="", parent_slot="D")
     emit.on_session_adopted("s-a", slot="A", parent_slot="")
     emit.on_session_released("s-a", slot="")

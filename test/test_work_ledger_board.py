@@ -440,9 +440,7 @@ def _stop_calls(monkeypatch):
         calls.append({"slot": slot, "source": source, "escalate": escalate})
         return {"ok": True}
 
-    monkeypatch.setattr(
-        "aj_crew.dashboard.chat_handlers.stop_slot_turn", _fake_stop, raising=True
-    )
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.stop_slot_turn", _fake_stop, raising=True)
     return calls
 
 

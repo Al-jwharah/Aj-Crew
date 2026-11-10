@@ -1036,9 +1036,7 @@ class TestStatsAndReplyTargetCharacterization:
             asked.append(channel)
             raise RuntimeError("profile store down")
 
-        monkeypatch.setattr(
-            "aj_crew.telegram.transport_dispatch.channel_inbound_permitted", _raise
-        )
+        monkeypatch.setattr("aj_crew.telegram.transport_dispatch.channel_inbound_permitted", _raise)
         d, _client, _sess = _dispatcher({7})
         with pytest.raises(RuntimeError):
             asyncio.run(d.handle_message(_dm("hi")))

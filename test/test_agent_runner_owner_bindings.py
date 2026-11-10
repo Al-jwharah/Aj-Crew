@@ -3,7 +3,7 @@
 The agent runner's tool-request gate, activity-feed shaping and fix authoring live in the
 ``spine/agent_runner_*`` owner modules beside it. ``AgentRunner``, ``SessionAgentRunner``
 and the helpers only they call stay in ``agent_runner.py``, which is the import path
-callers use and serves a ``aj_crew._facade_mirror`` mirror over the owners. This file
+callers use and serves an ``aj_crew._facade_mirror`` mirror over the owners. This file
 pins that contract:
 
 * the owner set is exactly the ``agent_runner_*`` modules beside the facade, and each owner

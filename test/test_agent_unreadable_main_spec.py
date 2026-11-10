@@ -193,7 +193,7 @@ class TestUnreadableMainSpec:
         assert sibling.read_bytes() == before
 
     def _skipped(self, tmp_path: Path, held_flag):
-        """Run one rebuild over a ``ajcrew.json`` whose read is denied: the gate is armed."""
+        """Run one rebuild over an ``ajcrew.json`` whose read is denied: the gate is armed."""
         cfg_dir = _bundled_defaults(tmp_path)
         spec = self._custom_spec(tmp_path)
 

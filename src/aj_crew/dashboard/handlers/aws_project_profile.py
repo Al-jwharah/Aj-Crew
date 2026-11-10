@@ -35,9 +35,9 @@ from aj_crew.aws_project_profiles import (
     resolve_project_binding,
 )
 from aj_crew.config.loader import (
+    AjCrewConfig,
     ConfigReadError,
     ConfigWriteRefused,
-    AjCrewConfig,
     config_path,
     update_config_locked,
 )

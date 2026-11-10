@@ -320,7 +320,7 @@ def _refresh_forked_templates_locked(*, gated_off: "frozenset[str] | None" = Non
     So forks get the same merge-preserving refresh ``ajcrew.json`` gets, in
     ``fork`` mode (human-edited fields untouched; see _refresh_dynamic_fields).
 
-    Only forks whose origin CHAIN reaches a Aj Crew-owned template get the
+    Only forks whose origin CHAIN reaches an Aj Crew-owned template get the
     PLUMBING refresh: a fork of a user's custom template inherits no machine
     plumbing (setup never composes non-owned specs), and refreshing it would
     stamp ajcrew's prompt and hooks onto an unrelated spec. The GOVERNANCE
@@ -546,7 +546,7 @@ def require_launch_resolves_one_file(
     """Refuse handing kiro-cli the authored *agent* name when its file is contested.
 
     kiro-cli resolves a name it is handed itself, so for a name two or more
-    user-level specs declare it must be handed a Aj Crew skill view built from the
+    user-level specs declare it must be handed an Aj Crew skill view built from the
     file the declared-name resolver chose (``agent.spec_pins`` applied, see
     ``acp.skill_projection``). Any other launch name is a single Crew-owned file and
     passes. Raises :class:`AgentSpecLaunchUnresolved` when the launch name is the
@@ -576,7 +576,7 @@ def require_launch_resolves_one_file(
     raise AgentSpecLaunchUnresolved(
         f"agent {agent!r}: agent.spec_pins chooses {claim.path.name!r} among "
         f"{len(claim.claimants)} specs that declare the name, but kiro-cli could not be "
-        "handed a Aj Crew copy of that file (the skill view is off or could not be "
+        "handed an Aj Crew copy of that file (the skill view is off or could not be "
         "prepared), and given the name it would choose a file itself. The session was "
         "not started. Try again in a moment; if it keeps failing, restart the gateway."
     )

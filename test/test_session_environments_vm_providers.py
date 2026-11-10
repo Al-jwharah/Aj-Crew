@@ -118,9 +118,7 @@ def test_hand_edited_collision_stays_unavailable_to_picker_and_launch(
     raw["coder_url"] = coder_url
     raw[right][0]["id"] = raw[left][0]["id"]
     section = SessionEnvironmentsConfig.from_raw(raw)
-    monkeypatch.setattr(
-        AjCrewConfig, "load", lambda: SimpleNamespace(session_environments=section)
-    )
+    monkeypatch.setattr(AjCrewConfig, "load", lambda: SimpleNamespace(session_environments=section))
     duplicate = raw[left][0]["id"]
     with pytest.raises(SessionEnvironmentUnavailable, match="more than one provider"):
         profile_provider(section, duplicate)

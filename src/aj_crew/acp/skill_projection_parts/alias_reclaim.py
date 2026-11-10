@@ -1027,7 +1027,7 @@ def census_projected_aliases(directory: Path) -> dict[str, int]:
         record counts here until the next spawn's probe reclaims it;
     ``foreign_home`` / ``foreign_leased``
         of the unreferenced and of the lease-named aliases respectively, how
-        many an ownership sidecar attributes to a Aj Crew data home other
+        many an ownership sidecar attributes to an Aj Crew data home other
         than this process's own -- spelled exactly as the publisher records it,
         so a caller cannot pass a differently normalised id. Two homes share
         one agents directory whenever they share ``~/.kiro``, and this

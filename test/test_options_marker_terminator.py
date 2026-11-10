@@ -40,7 +40,6 @@ from __future__ import annotations
 import pytest
 from named_cases_helpers import named_cases
 
-from conftest import assert_rejected_without_backtracking
 from aj_crew.constants import (
     _RAW_OPTIONS_RE_LINE,
     MARKER_CLOSERS,
@@ -49,6 +48,7 @@ from aj_crew.constants import (
     _marker_labels_have_unmatched_opener,
 )
 from aj_crew.messaging.renderer import split_options_trailer
+from conftest import assert_rejected_without_backtracking
 
 
 def skeleton(text: str) -> str:

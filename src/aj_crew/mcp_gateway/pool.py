@@ -103,7 +103,7 @@ There is deliberately NO per-principal dimension either. Aj Crew is
 single-operator: a Slack bot and a cron job are the same operator's
 automations, not separate principals, so a multi-principal shared gateway
 is not a supported deployment model. A ``user_identity`` key field would be
-a misleading affordance: nothing populates a ``AJCREW_PRINCIPAL`` source,
+a misleading affordance: nothing populates an ``AJCREW_PRINCIPAL`` source,
 so such a field collapses to the OS user and isolates nothing. The
 cross-OS-user boundary that IS real is carried by ``os_uid``. If
 multi-principal isolation is ever wanted, it needs a real design (what

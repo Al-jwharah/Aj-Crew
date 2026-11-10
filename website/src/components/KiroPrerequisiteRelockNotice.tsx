@@ -26,7 +26,7 @@ import { i18nT } from '../i18n/t'
  * Props: `owner` is false for a viewer who cannot sign the gateway in, who is
  * told to ask the owner instead. `exactCommandElsewhere` is set when the
  * gateway's own login command is not the bare `kiro-cli login` (the desktop
- * app's bundled copy, or a `AJCREW_KIRO_BIN` override off PATH). That
+ * app's bundled copy, or an `AJCREW_KIRO_BIN` override off PATH). That
  * command can be a long quoted path this card cannot let anyone copy, so the
  * card shows no command at all and instead points to the sign-in screen a new
  * window opens on, which shows the exact one with a copy button. Naming the

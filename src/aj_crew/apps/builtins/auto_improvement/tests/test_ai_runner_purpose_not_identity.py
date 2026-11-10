@@ -139,9 +139,7 @@ def test_governance_gate_never_takes_the_purpose_as_the_tool_kind(monkeypatch):
             seen.update(kw)
             return SimpleNamespace(action="allow", reason="")
 
-    monkeypatch.setattr(
-        R, "AjCrewConfig", SimpleNamespace(load=lambda: SimpleNamespace(hooks={}))
-    )
+    monkeypatch.setattr(R, "AjCrewConfig", SimpleNamespace(load=lambda: SimpleNamespace(hooks={})))
     monkeypatch.setattr(R, "hooks_config_from_config_dict", lambda d: d)
     monkeypatch.setattr(R, "HookManager", _Manager)
 

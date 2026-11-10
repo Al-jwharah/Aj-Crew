@@ -1125,14 +1125,10 @@ class TestResourceStatusTool:
                     # A tool server owns no controller, so the live cap is an
                     # API read; every case here pins what it returns rather
                     # than reaching a gateway.
-                    with patch(
-                        "aj_crew.mcp_tools.spawn._live_adaptive_state", return_value=state
-                    ):
+                    with patch("aj_crew.mcp_tools.spawn._live_adaptive_state", return_value=state):
                         # The caller-scoped block is its own read, pinned in
                         # test_session_memory_scope.py; held quiet here.
-                        with patch(
-                            "aj_crew.mcp_tools.spawn.session_memory_lines", return_value=[]
-                        ):
+                        with patch("aj_crew.mcp_tools.spawn.session_memory_lines", return_value=[]):
                             return _call_tool_inner("resource_status", {})
 
     def test_the_live_cap_is_reported_when_the_gateway_answers(self) -> None:

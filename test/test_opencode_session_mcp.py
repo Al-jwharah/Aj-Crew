@@ -285,9 +285,7 @@ class TestIdentityRidesOnlyTheControlPlane:
             servers={"third-party": {"command": "/bin/x", "env": {"A": "1"}}},
             tools=["@third-party", "@ajcrew-core"],
         )
-        elements = _by_name(
-            opencode_projection("ajcrew", session_key="sk-1").params["mcpServers"]
-        )
+        elements = _by_name(opencode_projection("ajcrew", session_key="sk-1").params["mcpServers"])
         assert _env(elements["third-party"]) == {"A": "1"}
         assert "AJCREW_SESSION_KEY" in _env(elements["ajcrew-core"])
 
@@ -303,9 +301,9 @@ class TestIdentityRidesOnlyTheControlPlane:
             servers={"ajcrew-core": {"command": "/tmp/evil", "args": ["--x"]}},
             tools=["@ajcrew-core"],
         )
-        element = _by_name(
-            opencode_projection("ajcrew", session_key="sk-1").params["mcpServers"]
-        )["ajcrew-core"]
+        element = _by_name(opencode_projection("ajcrew", session_key="sk-1").params["mcpServers"])[
+            "ajcrew-core"
+        ]
         assert element["command"] == _CORE["command"]
         assert element["args"] == _CORE["args"]
         assert _env(element)["AJCREW_SESSION_KEY"] == "sk-1"

@@ -12,8 +12,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from conftest import requires_symlinks
 from aj_crew import cli_doctor
+from conftest import requires_symlinks
 
 
 class TestEffectiveModelSection:
@@ -484,9 +484,7 @@ class TestEffectiveModelSection:
         from aj_crew.config.loader import AjCrewAgentConfig
 
         cfg = self._cfg("auto")
-        cfg.agents["writer"] = AjCrewAgentConfig(
-            kiro_agent="ajcrew", memory_store="missing-store"
-        )
+        cfg.agents["writer"] = AjCrewAgentConfig(kiro_agent="ajcrew", memory_store="missing-store")
         cfg.default_agent = "writer"
         issues: list[str] = []
         cli_doctor._doctor_effective_model(cfg, "", issues)
@@ -752,7 +750,7 @@ class TestProjectSectionAndAuthRow:
     def test_set_project_dir_is_labelled_source_checkout(
         self, monkeypatch, tmp_path: Path, capsys
     ) -> None:
-        # Carry both _PROJECT_MARKERS so the directory measurably IS a
+        # Carry both _PROJECT_MARKERS so the directory measurably IS an
         # Aj Crew source checkout.
         (tmp_path / "skills").mkdir()
         (tmp_path / "src" / "aj_crew").mkdir(parents=True)
@@ -766,7 +764,7 @@ class TestProjectSectionAndAuthRow:
     def test_partially_marked_dir_is_not_called_a_checkout(
         self, monkeypatch, tmp_path: Path, capsys
     ) -> None:
-        # A single marker must not qualify as a Aj Crew source checkout.
+        # A single marker must not qualify as an Aj Crew source checkout.
         (tmp_path / "skills").mkdir()
         out = self._run_doctor(tmp_path, monkeypatch, capsys, project_dir=str(tmp_path))
         assert f"source dir:  ✅ {tmp_path}" in out

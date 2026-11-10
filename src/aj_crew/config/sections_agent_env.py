@@ -78,7 +78,7 @@ def coerce_deepseek_env(raw: object) -> dict[str, str]:
 #: a dashboard write may map under ``agent.strands_env``. The file-path variables
 #: the CLI also reads (``AWS_CONFIG_FILE``, ``AWS_SHARED_CREDENTIALS_FILE``) are
 #: left out because they would point the harness at a file of the writer's
-#: choosing; the raw key pair (``AWS_ACCESS_KEY_ID`` and friends) because Kiro
+#: choosing; the raw key pair (``AWS_ACCESS_KEY_ID`` and friends) because Aj
 #: Crew's agent environment scrub removes it from every agent child (Bedrock
 #: travels as ``AWS_BEARER_TOKEN_BEDROCK``); and ``AWS_PROFILE`` because it names
 #: a profile in ``~/.aws``, which the sandbox masks from the child. The one list:

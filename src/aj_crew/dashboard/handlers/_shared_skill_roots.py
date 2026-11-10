@@ -363,7 +363,7 @@ def _resolve_skill_root(name: str, state: DashboardState, session_key: str = "")
     else:
         # ``ajcrew`` skills live under the active config home, which honors
         # AJCREW_HOME (e.g. isolated dev gateways).  Hardcoding
-        # ``~/.ajcrew`` here would 404 every skill in a AJCREW_HOME-isolated
+        # ``~/.ajcrew`` here would 404 every skill in an AJCREW_HOME-isolated
         # deployment even though SkillsLoader (the GET /api/skills source)
         # resolves them correctly.
         rel = name

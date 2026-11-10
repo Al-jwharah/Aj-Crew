@@ -24,17 +24,17 @@ if TYPE_CHECKING:
     import threading
 
     from aj_crew.slack.gateway import (
+        AjCrewConfig,
         Any,
         GatewayOrchestrator,
-        AjCrewConfig,
         agent_scratch,
+        aj_crew,
         apply_kas_cli_floor,
         beacon,
         boot_platform,
         configure_default_executor,
         ensure_agents_slice_limits,
         kiro_agents_dir,
-        aj_crew,
         logger,
         read_effective_agent,
         session_work_dir,

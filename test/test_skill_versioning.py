@@ -17,8 +17,8 @@ from datetime import datetime, timezone
 import pytest
 
 import aj_crew.skills as skills_mod
-from conftest import requires_symlinks
 from aj_crew.skills import MAX_SKILL_VERSIONS, AutoSkillProvenance, SkillsLoader
+from conftest import requires_symlinks
 
 
 @pytest.fixture()

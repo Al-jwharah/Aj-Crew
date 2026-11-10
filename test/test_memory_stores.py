@@ -17,7 +17,6 @@ from pathlib import Path
 
 import pytest
 
-from conftest import make_dir_link
 from aj_crew import sandbox, security
 from aj_crew.config.loader import AjCrewConfig, config_dir, workspace_dir_for
 from aj_crew.config.paths import ensure_data_home
@@ -39,6 +38,7 @@ from aj_crew.memory_stores import (
     usable_store_names,
     validate_memory_store_name,
 )
+from conftest import make_dir_link
 
 _IS_POSIX = os.name == "posix"
 

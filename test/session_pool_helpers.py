@@ -63,8 +63,6 @@ def _make_manager(pool_size: int = 2, pool_agent: str = "ajcrew", pool_ttl_secs:
 
     cfg = _make_cfg(pool_size, pool_agent, pool_ttl_secs)
     factory = MagicMock(side_effect=lambda *a, **kw: _make_provider())
-    with patch(
-        "aj_crew.session.default_project_dir", return_value="/home/user/.ajcrew/workspace"
-    ):
+    with patch("aj_crew.session.default_project_dir", return_value="/home/user/.ajcrew/workspace"):
         mgr = SessionManager(cfg, provider_factory=factory)
     return mgr, factory

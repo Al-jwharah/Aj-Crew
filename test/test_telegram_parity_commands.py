@@ -526,8 +526,8 @@ class TestAgentPicker:
             names = td.TelegramDispatcher._installed_agent_names()
 
         assert names == [
-            "customer360",
             "ajcrew-custom",
+            "customer360",
             "vitrina-designer",
             "vitrina-writer",
         ]

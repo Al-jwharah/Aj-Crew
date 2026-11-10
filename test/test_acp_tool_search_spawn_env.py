@@ -77,12 +77,10 @@ def test_older_or_unknown_engine_keeps_crew_servers(harness, overlay, monkeypatc
     monkeypatch.setattr(
         agent_mod, "_MANAGED_MCP_SERVERS", {"ajcrew-z": {}, "ajcrew-work": {"opt_in": True}}
     )
-    monkeypatch.setattr(
-        agent_mod, "_extra_mcp_servers", lambda: {"edition-a": {}, "ajcrew-z": {}}
-    )
+    monkeypatch.setattr(agent_mod, "_extra_mcp_servers", lambda: {"edition-a": {}, "ajcrew-z": {}})
     env = {} if overlay is None else {_ENV: overlay}
     harness().apply_spawn_env(env)
-    assert env[_ENV] == "edition-a,ajcrew-work,ajcrew-z"
+    assert env[_ENV] == "ajcrew-work,ajcrew-z,edition-a"
 
 
 @pytest.mark.parametrize("root", ["kas", "app/kas"], ids=["data-home", "desktop"])
@@ -285,7 +283,7 @@ class TestTheServerSet:
     def test_it_carries_the_edition_seam_and_claims_no_prefix(self) -> None:
         """The set is the managed map plus the edition adapter's extras.
 
-        A ``ajcrew-`` prefix check would be vacuous: the public adapter returns nothing,
+        An ``ajcrew-`` prefix check would be vacuous: the public adapter returns nothing,
         and the seam does not constrain its keys.
         """
         from aj_crew.agent import _MANAGED_MCP_SERVERS, _extra_mcp_servers

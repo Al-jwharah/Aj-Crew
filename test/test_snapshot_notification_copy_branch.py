@@ -17,10 +17,10 @@ import pytest
 import snapshot_helpers
 from snapshot_helpers import unpinnable_argv
 
-from conftest import requires_o_nofollow, requires_symlinks
 from aj_crew import snapshot as snapshot_mod
 from aj_crew.jsonl_util import OversizedRecord, UndecodableRecord
 from aj_crew.testing.wait import wait_until
+from conftest import requires_o_nofollow, requires_symlinks
 
 # Fixtures shared with the sibling modules, bound by assignment so pytest registers
 # them for the tests in this module.

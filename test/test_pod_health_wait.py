@@ -1471,9 +1471,7 @@ class TestWaitHealthyRequiresTheCredential:
         The supersede check needs a starting gateway to mint a new credential, not reuse
         the one on disk. The mint lives in the dashboard, so this pins it at the source.
         """
-        server = (
-            Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "dashboard" / "server.py"
-        )
+        server = Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "dashboard" / "server.py"
         # The credential helpers live in the server_runtime owners it composes.
         owners = sorted((server.parent / "server_runtime").glob("[!_]*.py"))
         assert owners, "expected the server_runtime owners beside server.py"

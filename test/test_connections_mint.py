@@ -38,11 +38,11 @@ from connections_mint_helpers import (
 )
 from dashboard_owner_helpers import as_owner
 
-from conftest import make_dir_link, requires_symlinks
 from aj_crew import hooks, mcp_grant
 from aj_crew.connections import mint, registry, tool_test
 from aj_crew.dashboard.handlers import connections
 from aj_crew.testing.wait import async_wait_until, await_until
+from conftest import make_dir_link, requires_symlinks
 
 # The shared fixtures, bound here by name so pytest registers them for this module.
 _isolated_mint = connections_mint_helpers._isolated_mint
@@ -435,7 +435,7 @@ async def test_the_agents_dir_read_runs_off_the_loop(
 
 @pytest.mark.asyncio
 async def test_the_data_home_resolution_runs_off_the_loop(monkeypatch: pytest.MonkeyPatch):
-    # Resolving the data home CREATES it under a AJCREW_HOME override, so it is a
+    # Resolving the data home CREATES it under an AJCREW_HOME override, so it is a
     # write and not a path join.
     seen: list[int] = []
     monkeypatch.setattr(mint, "data_home", _calls_recorded(mint.data_home, seen))

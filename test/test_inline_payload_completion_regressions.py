@@ -150,9 +150,7 @@ class TestRawPayloadOwnership:
     def test_another_commands_decoder_cannot_contaminate_hello(self):
         hello = "python -c " + shlex.quote('print(base64.b64decode(s="aGVsbG8="))')
         # The second command prints Python syntax; it never executes that syntax.
-        other = "printf %s " + shlex.quote(
-            f'base64.b64decode(s="{_encode("import aj_crew.cli")}")'
-        )
+        other = "printf %s " + shlex.quote(f'base64.b64decode(s="{_encode("import aj_crew.cli")}")')
         command = hello + "; " + other
         assert not argv_floor._is_credential_mint(command.lower(), raw_text=command)
 
@@ -208,8 +206,7 @@ class TestExplicitDecoderAliases:
 
     def test_an_imported_alias_does_not_name_an_objects_method(self):
         payload = (
-            "from base64 import b64decode as decode; "
-            f'obj.decode(s=b"{_encode("ajcrew token")}")'
+            "from base64 import b64decode as decode; " f'obj.decode(s=b"{_encode("ajcrew token")}")'
         )
         assert inline_payload._decode_call_literals(payload) == ()
 

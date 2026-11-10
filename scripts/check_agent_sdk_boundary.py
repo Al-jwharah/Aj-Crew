@@ -235,7 +235,7 @@ def _dynamic_importer_names(tree: ast.AST) -> set[str]:
     Collected in one pre-pass so the order of definition and use does not matter.
 
     The canonical names stay in the set unconditionally, so a module that defines
-    its own `def import_module(...)` and passes it a `aj_crew.acp.*` string is
+    its own `def import_module(...)` and passes it an `aj_crew.acp.*` string is
     flagged. That is deliberate: no such definition exists in this tree, and the
     gate must prefer a visible false red -- which a reader corrects -- over a
     silent false green, the same reason a file that fails to parse is a hard error

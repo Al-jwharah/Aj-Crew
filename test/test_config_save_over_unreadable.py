@@ -22,7 +22,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from aiohttp import web
 
-from aj_crew.config.loader import ConfigReadError, AjCrewConfig, config_path
+from aj_crew.config.loader import AjCrewConfig, ConfigReadError, config_path
 from aj_crew.dashboard.handlers import core as core_mod
 
 # Cut off mid-document, as a torn hand edit leaves it.

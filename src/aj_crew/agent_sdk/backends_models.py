@@ -561,7 +561,7 @@ def resolve_cc_pin_inherited_mode() -> bool:
 # ``acp`` (kiro) namespace, where
 # every non-claude id the registry carries lives today. The literals are the
 # model_registry's own provider keys, spelled here rather than imported to keep
-# this load-path leaf free of a ``aj_crew.model_registry`` dependency.
+# this load-path leaf free of an ``aj_crew.model_registry`` dependency.
 #
 # ``ACP_BACKEND_CODEX`` gets its OWN key. The same key also selects the bucket of
 # the cross-session advertised-model cache (``model_registry.advertised_models``),

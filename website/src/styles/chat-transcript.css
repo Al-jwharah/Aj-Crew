@@ -195,7 +195,7 @@ html[data-font-family="custom"][data-custom-ligatures="off"] body{font-variant-l
 .msg-content code{font-family:var(--mono);font-size:.9em}
 .msg-content :not(pre)>code{background:rgba(0,0,0,.15);padding:.15em .4em;border-radius:4px;overflow-wrap:break-word;word-break:break-all}
 [data-mode="light"] .msg-content :not(pre)>code{background:rgba(0,0,0,.06)}
-/* Kiro theme: inline code = neutral elevated surface (Prey/750) + light-purple text (Figma 3906:185658) */
+/* Aj theme: inline code = neutral elevated surface (Prey/750) + light-purple text (Figma 3906:185658) */
 [data-theme="aj-dark"] .msg-content :not(pre)>code{background:#28242e;color:#c19aff}
 [data-theme="aj-light"] .msg-content :not(pre)>code{background:var(--bg-hover);color:#723acc}
 /* Inline-code CHIPS (MarkdownRenderer): a chip's colour says what its click does. A chip whose
@@ -224,7 +224,7 @@ html[data-font-family="custom"][data-custom-ligatures="off"] body{font-variant-l
    #8e48ff, so brighten the text-accent utility to Purple/300. Fills (bg-accent, e.g. buttons) are a
    separate utility and stay #8e48ff. More-specific rules (e.g. .nav-active .text-accent) still win. */
 [data-theme="aj-dark"] .text-accent{color:#b07fff}
-/* Kiro theme: selected nav item + session row = neutral surface (Prey/700) with purple text/icon,
+/* Aj theme: selected nav item + session row = neutral surface (Prey/700) with purple text/icon,
    not a purple-tinted fill (Figma SessionTitle 2010:46988). Hover stays --bg-hover (Prey/750). */
 [data-theme="aj-dark"] .nav-active,[data-theme="aj-dark"] .session-row.session-active,[data-theme="aj-dark"] .list-selected{background:#352f3d;color:#c19aff;border-color:#4a464f}
 [data-theme="aj-dark"] .nav-active .text-accent{color:#c19aff}
@@ -321,11 +321,11 @@ html[data-font-family="custom"][data-custom-ligatures="off"] body{font-variant-l
 :where(:root:not([data-ui="cli"])) .msg-content.user-bubble.user-bubble-accent span.group:has(>a){background:var(--bg-hover);border-color:var(--border)}
 :where(:root:not([data-ui="cli"])) .msg-content.user-bubble.user-bubble-accent span.group>a.no-underline{text-decoration:underline}
 :where(:root:not([data-ui="cli"])) .msg-content.user-bubble.user-bubble-accent .text-accent{color:var(--accent-fg)}
-/* Kiro theme: lift unselected nav labels + section headers to Prey/300 (#c1bec6, ~9.8:1) per the
+/* Aj theme: lift unselected nav labels + section headers to Prey/300 (#c1bec6, ~9.8:1) per the
    Figma settings-panel guideline (was Prey/400 #938f9b ~5.7:1). Inactive icons inherit this color
    (they only carry opacity-70), lifting them from ~3.4:1 to ~5.6:1. Active items keep .nav-active. */
 [data-theme="aj-dark"] .nav-item:not(.nav-active),[data-theme="aj-dark"] .nav-section{color:#c1bec6}
-/* Kiro theme: lift the chat-header session title and the "Sessions" panel title from muted grey to
+/* Aj theme: lift the chat-header session title and the "Sessions" panel title from muted grey to
    primary text (var(--text) = Prey/200 #dcdadf in dark) — titles were dim at ~5.7:1; now ~9-10:1. */
 [data-theme="aj-dark"] .session-header-title,[data-theme="aj-light"] .session-header-title,
 [data-theme="aj-dark"] .sessions-panel-title,[data-theme="aj-light"] .sessions-panel-title{color:var(--text)}
@@ -336,7 +336,7 @@ html[data-font-family="custom"][data-custom-ligatures="off"] body{font-variant-l
    snackbar's olive here. It is a Glass pane on the warn tint step now
    (components/QueueStack.tsx, `glass-warn`), and a background on the host
    would paint UNDER the glass layers and solidify them, so no theme override. */
-/* Kiro theme: the session agent-label is intentionally NOT tinted — it is metadata, not a link, and
+/* Aj theme: the session agent-label is intentionally NOT tinted — it is metadata, not a link, and
    the purple tint made every row's agent name compete with the session title for attention. It keeps
    the row's neutral grey (`text-muted`), leaving purple to carry meaning: the running-state accent on
    the last-message subtitle, and `--aim` on package-sourced agents. */

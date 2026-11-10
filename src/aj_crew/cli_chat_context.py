@@ -1,4 +1,4 @@
-"""The session context a ``ajcrew chat`` session opens with.
+"""The session context an ``ajcrew chat`` session opens with.
 
 Every other surface (the dashboard, a channel, cron, ``ajcrew run``) opens a
 session with the message ``ContextBuilder.build_message`` assembles: the agent's

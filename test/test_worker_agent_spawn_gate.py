@@ -683,9 +683,7 @@ def test_the_kas_projection_reads_nothing_after_the_gate(tmp_path, monkeypatch):
     monkeypatch.setattr(kas_agents_mod, "build_kas_custom_agents", _capture)
 
     extras = asyncio.run(
-        harness_for(ACP_BACKEND_KAS).session_extras(
-            "ajcrew-worker", work_dir=str(tmp_path / "wd")
-        )
+        harness_for(ACP_BACKEND_KAS).session_extras("ajcrew-worker", work_dir=str(tmp_path / "wd"))
     )
 
     assert extras.custom_agents

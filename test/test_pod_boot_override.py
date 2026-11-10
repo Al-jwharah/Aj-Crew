@@ -7,12 +7,12 @@ from pathlib import Path
 
 import pytest
 
-from conftest import make_dir_link, requires_symlinks
 from aj_crew.platform_compat import IS_POSIX
 from aj_crew.pod import cli as pod_cli
 from aj_crew.pod import runtime as rt
 from aj_crew.pod import unit as unit_mod
 from aj_crew.pod.config import PodConfig
+from conftest import make_dir_link, requires_symlinks
 
 pytestmark = pytest.mark.skipif(
     not IS_POSIX,

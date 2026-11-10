@@ -1,7 +1,7 @@
 """The tokens the batch write guard compares: values a write quotes that only a
 call's result or an earlier message could supply.
 
-A token is a sha or another hex id, a Aj Crew item, session or artifact id, a
+A token is a sha or another hex id, an Aj Crew item, session or artifact id, a
 long run, review or job id, or a PR number written as one (a hash and digits,
 or a ``pull/`` path). A clock time is not a token, since a model stamps its own
 reports with one; a time to the second counts only as proof (:func:`times_of`).

@@ -27,13 +27,13 @@ from job_sdk_helpers import (  # noqa: F401 -- the fixture is requested by name
     sdk_fixture,
 )
 
-from conftest import requires_symlinks
 from aj_crew.apps import job_routes, job_sdk
 from aj_crew.apps.builtins.aws_control import hooks
 from aj_crew.apps.builtins.aws_control.backend import backup as backup_mod
 from aj_crew.apps.builtins.aws_control.backend import routes as routes_mod
 from aj_crew.apps.job_sdk import DONE, RUNNING, JobRun, JobSDK, forget_sdk
 from aj_crew.apps.manager import app_data_dir
+from conftest import requires_symlinks
 
 ACCOUNT = "111122223333"
 

@@ -293,6 +293,6 @@ the next `pod up` costs.
 ## Open questions
 
 - Whether the repo wants a Python lockfile at all is a separate RFC.
-- Whether the link-mode log line (Phase 2 entry condition 3) should also be a
+- Whether the link-mode log line (Phase 2 entry condition 3) should also be an
   `ajcrew doctor` check, so a host that lost the disk saving to a non-reflink
   filesystem is told outside provisioning output.

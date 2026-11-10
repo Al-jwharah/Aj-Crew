@@ -222,8 +222,8 @@ from aj_crew.kiro_cli import (
     resolve_kiro_cli,
     spec_permissions_supported,
 )
-from aj_crew.mcp_cleanup import ALWAYS_ON_BIN_MCP_SERVERS as _ALWAYS_ON_MCPS
 from aj_crew.mcp_cleanup import AJCREW_BIN_MCP_SERVERS as _MANAGED_MCPS
+from aj_crew.mcp_cleanup import ALWAYS_ON_BIN_MCP_SERVERS as _ALWAYS_ON_MCPS
 from aj_crew.mcp_cleanup import OPT_IN_BIN_MCP_SERVERS as _OPT_IN_MCPS
 from aj_crew.mcp_discovery import McpServerInfo, probe_server
 from aj_crew.mcp_utils import mcp_ref_owned_by, without_mcp_refs
@@ -690,9 +690,7 @@ def _doctor(platform_boot_error: "Exception | None" = None, bundle: bool = False
         # Not a gap: the selected backend runs Crew's own installed engine (the
         # KAS backend section reports it), so an install hint here would send the
         # operator to fetch a binary nothing on this host would spawn.
-        print(
-            "  kiro-cli:    ⏭  not installed; not needed (KAS runs Aj Crew's own engine bundle)"
-        )
+        print("  kiro-cli:    ⏭  not installed; not needed (KAS runs Aj Crew's own engine bundle)")
     else:
         print("  kiro-cli:    ⏭  not found (the default agent backend)")
         print("               Install kiro-cli per its docs, then: kiro-cli login")
@@ -1037,7 +1035,7 @@ def _doctor(platform_boot_error: "Exception | None" = None, bundle: bool = False
 
 # ── The facade ────────────────────────────────────────────────────────────────
 # Every section that neither stays here nor runs here from a cli_doctor_parts owner
-# lives in a ``aj_crew.doctor_checks`` family. The names this module held before the
+# lives in an ``aj_crew.doctor_checks`` family. The names this module held before the
 # sections moved stay reachable here; a section extracted from ``_doctor`` by that
 # move never lived here and is patched on its family. Two properties keep the
 # moved names true:

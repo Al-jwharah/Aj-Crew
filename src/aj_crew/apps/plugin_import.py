@@ -2,7 +2,7 @@
 
 The input is a directory whose manifest declares its resources as root-relative
 paths: skills, MCP server configuration, connector directories and hook files.
-The mapping from each declared kind to a Aj Crew extension point -- and the
+The mapping from each declared kind to an Aj Crew extension point -- and the
 reason for every kind that has no mapping -- is
 ``docs/system-specs/modules/harness-plugin-mapping.md``. The converter's own
 contract is ``docs/system-specs/modules/plugin-import.md``.
@@ -232,7 +232,7 @@ class PluginImportError(Exception):
 
 @dataclass
 class MappedKind:
-    """One source kind that reached a Aj Crew extension point."""
+    """One source kind that reached an Aj Crew extension point."""
 
     kind: str
     target: str
@@ -1342,7 +1342,7 @@ def convert_plugin_package(
     *,
     name_override: str | None = None,
 ) -> ImportReport:
-    """Convert the package at ``source`` into a Aj Crew app at ``out_dir``.
+    """Convert the package at ``source`` into an Aj Crew app at ``out_dir``.
 
     ``out_dir`` must not already contain a manifest: overwriting one would make a
     second run silently merge two packages into one app.

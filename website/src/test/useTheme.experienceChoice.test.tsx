@@ -58,7 +58,7 @@ describe('useTheme: the stored experience choice', () => {
   })
 
   it('survives the user picking the theme', async () => {
-    themeBootFn.mockResolvedValue({ mode: 'dark', color: 'kiro' })
+    themeBootFn.mockResolvedValue({ mode: 'dark', color: 'aj' })
     localStorage.setItem(RECORD_KEY, RECORD)
     const { result } = renderHook(() => useTheme(), { wrapper })
     await waitFor(() => expect(result.current.customThemes).toHaveLength(1))
@@ -81,7 +81,7 @@ describe('useTheme: the stored experience choice', () => {
     localStorage.setItem(RECORD_KEY, RECORD)
     const { result } = renderHook(() => useTheme(), { wrapper })
     await waitFor(() => expect(result.current.colorTheme).toBe(`custom-${SLUG}`))
-    act(() => result.current.setColorTheme('kiro'))
+    act(() => result.current.setColorTheme('aj'))
     expect(localStorage.getItem(RECORD_KEY)).toBe(RECORD)
   })
 })

@@ -4,7 +4,7 @@ The probe (`sandbox.detect_backend`) answers for the PROBING process, not for
 the gateway service. On a host that restricts unprivileged user namespaces the
 ajcrew-userns AppArmor profile is ATTACHED to the resolved ajcrew launcher
 script, not via a systemd `AppArmorProfile=` unit directive, which does not
-confine the gateway's sandbox probe. A `ajcrew doctor` invocation that did
+confine the gateway's sandbox probe. An `ajcrew doctor` invocation that did
 not go through that exact attached path is unconfined regardless of how
 healthy the service's own sandbox is.
 

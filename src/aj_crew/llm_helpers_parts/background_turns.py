@@ -488,7 +488,7 @@ async def _start_fresh_conversation(sessions: Any, key: str, client: Any) -> Non
 async def _lite_spec_unconfirmed(
     sessions: Any, key: str, client: Any, *, agent: str, authored_before_spawn: bool
 ) -> bool:
-    """True when a ``ajcrew-lite`` session's spec cannot be confirmed tool-less.
+    """True when an ``ajcrew-lite`` session's spec cannot be confirmed tool-less.
 
     The background agent reads text Crew does not author (issue bodies, meeting
     transcripts, chat history), so a tool another program wrote into its spec

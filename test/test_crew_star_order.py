@@ -40,9 +40,7 @@ class TestConfigField:
 
     def test_round_trips_through_save_and_load(self):
         cfg = AjCrewConfig.load()
-        cfg.agents["placed"] = AjCrewAgentConfig(
-            kiro_agent="ajcrew", starred=True, star_order=3
-        )
+        cfg.agents["placed"] = AjCrewAgentConfig(kiro_agent="ajcrew", starred=True, star_order=3)
         cfg.save()
         assert AjCrewConfig.load().agents["placed"].star_order == 3
 

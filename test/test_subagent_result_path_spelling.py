@@ -100,7 +100,7 @@ class TestDisplayPathsUseTheDeclaredHome:
 
 
 class TestSymlinkedAjcrewHomeOverride:
-    """``data_home()`` resolves a ``AJCREW_HOME`` override; the shown path must not."""
+    """``data_home()`` resolves an ``AJCREW_HOME`` override; the shown path must not."""
 
     @pytest.fixture
     def override(self, tmp_path, monkeypatch):

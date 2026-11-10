@@ -389,9 +389,7 @@ def test_every_real_entry_reruns_on_the_changes_its_generator_reads(tmp_path: Pa
         listed = sorted(rs.baseline_paths(str(root), entry["files"][0]))
         assert listed, name
         assert rs.stale_entries([entry], [listed[0]], [], str(root)) == [entry]
-        assert (
-            rs.stale_entries([entry], ["src/aj_crew/not_in_a_baseline.py"], [], str(root)) == []
-        )
+        assert rs.stale_entries([entry], ["src/aj_crew/not_in_a_baseline.py"], [], str(root)) == []
 
 
 def test_a_baseline_entry_is_stale_when_a_changed_path_is_one_of_its_rows(repo: Path) -> None:

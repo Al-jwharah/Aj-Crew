@@ -218,9 +218,7 @@ class TestRouteMessageAttachments:
             return ["spoken"]
 
         with patch("aj_crew.slack.events.is_allowed_user", return_value=True):
-            with patch(
-                "aj_crew.slack.events.stt_available", side_effect=_probe_watching_the_loop
-            ):
+            with patch("aj_crew.slack.events.stt_available", side_effect=_probe_watching_the_loop):
                 with patch(
                     "aj_crew.slack.events._transcribe_with_reaction",
                     side_effect=_let_the_loop_breathe,
@@ -269,12 +267,8 @@ class TestRouteMessageAttachments:
                         new_callable=AsyncMock,
                         return_value=([], []),
                     ):
-                        with patch(
-                            f"aj_crew.slack.events.{target}", new_callable=AsyncMock
-                        ) as hm:
-                            with patch.object(
-                                AjCrewConfig, "load", return_value=AjCrewConfig()
-                            ):
+                        with patch(f"aj_crew.slack.events.{target}", new_callable=AsyncMock) as hm:
+                            with patch.object(AjCrewConfig, "load", return_value=AjCrewConfig()):
                                 await ev._route_message(
                                     orch, _event(text="", files=files), ev.SeenCache()
                                 )
@@ -331,9 +325,7 @@ class TestRouteMessageAttachments:
                     new_callable=AsyncMock,
                     return_value=([str(img)], ["file body"]),
                 ):
-                    with patch(
-                        "aj_crew.slack.events.handle_message", new_callable=AsyncMock
-                    ) as hm:
+                    with patch("aj_crew.slack.events.handle_message", new_callable=AsyncMock) as hm:
                         await ev._route_message(
                             orch, _event(text="look", files=files), ev.SeenCache()
                         )
@@ -360,9 +352,7 @@ class TestRouteMessageAttachments:
                     new_callable=AsyncMock,
                     return_value=([str(img)], ["[File: n.md]\n```\nx\n```\n[End of file]"]),
                 ):
-                    with patch(
-                        "aj_crew.slack.events.handle_message", new_callable=AsyncMock
-                    ) as hm:
+                    with patch("aj_crew.slack.events.handle_message", new_callable=AsyncMock) as hm:
                         await ev._route_message(
                             orch, _event(text=text, files=files), ev.SeenCache(), is_mention=True
                         )
@@ -439,9 +429,7 @@ class TestRouteMessageAttachments:
                     new_callable=AsyncMock,
                     return_value=([], []),
                 ) as process:
-                    with patch(
-                        "aj_crew.slack.events.handle_message", new_callable=AsyncMock
-                    ) as hm:
+                    with patch("aj_crew.slack.events.handle_message", new_callable=AsyncMock) as hm:
                         # A missing temp path must not raise from the cleanup loop.
                         img.unlink()
                         await ev._route_message(orch, _event(text="", files=files), ev.SeenCache())
@@ -652,9 +640,7 @@ class TestRouteMessageTempCleanup:
                     new_callable=AsyncMock,
                     return_value=([str(ghost)], []),
                 ):
-                    with patch(
-                        "aj_crew.slack.events.handle_message", new_callable=AsyncMock
-                    ) as hm:
+                    with patch("aj_crew.slack.events.handle_message", new_callable=AsyncMock) as hm:
                         await ev._route_message(
                             orch, _event(text="see", files=files), ev.SeenCache()
                         )

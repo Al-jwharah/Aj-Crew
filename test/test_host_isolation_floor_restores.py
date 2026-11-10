@@ -311,7 +311,7 @@ class TestLoggerLevelsAreRestored:
 
         The level assertion above pins the mechanism; this pins the OUTCOME, in the exact
         shape the victim test uses -- ``at_level`` on the root logger, a ``debug`` call on
-        a ``aj_crew.*`` child -- so a future floor that restores something subtly
+        an ``aj_crew.*`` child -- so a future floor that restores something subtly
         different still has to keep this working.
         """
         with caplog.at_level("DEBUG"):

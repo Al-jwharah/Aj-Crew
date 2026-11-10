@@ -35,7 +35,6 @@ from acp_pi_backend_helpers import (
     _response,
 )
 
-from conftest import make_dir_link
 from aj_crew.acp import client as acp_client
 from aj_crew.acp import launch as launch_mod
 from aj_crew.acp._dispatch import GATE_ENVELOPE_MARKER
@@ -70,6 +69,7 @@ from aj_crew.acp_backends import (
 )
 from aj_crew.acp_tool_gate import gate_extension_issue
 from aj_crew.agent_sdk.drivers.acp import forget_cached_resolution
+from conftest import make_dir_link
 
 # The shared autouse fixture, bound here by name so pytest registers it for this module.
 _no_ambient_pi_env = acp_pi_backend_helpers._no_ambient_pi_env

@@ -302,7 +302,7 @@ def test_i05_nested_question_surfaces_once_and_binds_to_task_attempt():
     """Owners: test_taskq_runner_adapter.py::test_waiting_input_resumes_with_the_answer,
     test_acp_structured_status.py (the per-handle question binding of the
     controlled terminal ships in a follow-up PR). Smoke: the question shape is
-    a ``ajcrew/status`` v1 ``waiting_input`` frame."""
+    an ``ajcrew/status`` v1 ``waiting_input`` frame."""
     from aj_crew.acp.types import STATUS_EXTENSION_VERSION, WAIT_REASON_INPUT
 
     assert STATUS_EXTENSION_VERSION == 1

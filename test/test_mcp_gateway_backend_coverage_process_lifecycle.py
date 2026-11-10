@@ -523,9 +523,7 @@ class TestSendInitialize:
     @pytest.mark.asyncio
     async def test_success_seeds_cache_and_detects_capability(self) -> None:
         backend = _make_backend()
-        result: dict[str, Any] = {
-            "capabilities": {"experimental": {"ajcrew.caller-identity": {}}}
-        }
+        result: dict[str, Any] = {"capabilities": {"experimental": {"ajcrew.caller-identity": {}}}}
         backend.stdout = cast(
             Any,
             _reader(

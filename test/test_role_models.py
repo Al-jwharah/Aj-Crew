@@ -189,9 +189,7 @@ def test_subagent_effort_helper(monkeypatch) -> None:
 
     monkeypatch.setattr(
         "aj_crew.config.loader.AjCrewConfig.load",
-        classmethod(
-            lambda cls: AjCrewConfig(agent=AgentConfig(role_efforts={"subagent": "low"}))
-        ),
+        classmethod(lambda cls: AjCrewConfig(agent=AgentConfig(role_efforts={"subagent": "low"}))),
     )
     assert subagent._subagent_default_effort() == "low"
 
@@ -215,9 +213,7 @@ class TestBackgroundWiring:
         monkeypatch.setattr(
             "aj_crew.config.loader.AjCrewConfig.load",
             classmethod(
-                lambda cls: AjCrewConfig(
-                    agent=AgentConfig(role_models={"background": "haiku-4.5"})
-                )
+                lambda cls: AjCrewConfig(agent=AgentConfig(role_models={"background": "haiku-4.5"}))
             ),
         )
         assert agent._background_agent_model() == "haiku-4.5"

@@ -13,13 +13,13 @@ from pathlib import Path
 import pytest
 import yaml  # type: ignore[import-untyped]
 
-from conftest import requires_symlinks
 from aj_crew import seed as seed_mod
 from aj_crew.platform_compat import IS_POSIX
 from aj_crew.pod import cli as pod_cli
 from aj_crew.pod import runtime as rt
 from aj_crew.pod.config import PodConfig
 from aj_crew.testing.fixtures import seeded_home
+from conftest import requires_symlinks
 
 # Credential shapes that must never ship inside a fixture. The fixtures land in
 # the wheel and the sdist, so a placeholder that merely LOOKS like a secret is

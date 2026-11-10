@@ -15,9 +15,9 @@ import pytest
 import snapshot_helpers
 from snapshot_helpers import unpinnable_argv
 
-from conftest import requires_o_nofollow, requires_symlinks
 from aj_crew import snapshot as snapshot_mod
 from aj_crew.snapshot import restore_main, snapshot_main
+from conftest import requires_o_nofollow, requires_symlinks
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 

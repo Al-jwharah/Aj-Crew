@@ -489,9 +489,7 @@ class TestApplySecurityHeaders:
         token_auth_middleware stashes the validated parent port on the request
         BEFORE revoking; this reader must prefer it. Simulate: request carries the
         stashed claim but NO usable query token/cookie (reader returns None)."""
-        monkeypatch.setattr(
-            "aj_crew.dashboard.server.token_embed_parent_port", lambda token: None
-        )
+        monkeypatch.setattr("aj_crew.dashboard.server.token_embed_parent_port", lambda token: None)
         request = make_mocked_request("GET", "/?token=revoked-link-token")
         request["embed_parent_port"] = "5476"  # what the middleware stashed
         resp = _make_response()

@@ -350,9 +350,7 @@ def _memory_backup_cmd(action: str, args: argparse.Namespace) -> None:
         print("Activation preserves the prior database and WAL as memory.db.superseded.*")
 
 
-def _admitted_store_path(
-    store_name: str, cfg: "AjCrewConfig", *, may_create: bool
-) -> Path | None:
+def _admitted_store_path(store_name: str, cfg: "AjCrewConfig", *, may_create: bool) -> Path | None:
     """*store_name*'s own vector file, or ``None`` after printing the refusal to stderr.
 
     One guard for every ``ajcrew memory`` verb that opens a NAMED store, because

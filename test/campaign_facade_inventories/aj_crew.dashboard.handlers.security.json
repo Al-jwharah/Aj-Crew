@@ -1,6 +1,7 @@
 {
  "base_public_names": [
   "APP_NAME_RE",
+  "AjCrewConfig",
   "CAPABILITY",
   "CapabilityGate",
   "CatalogUnavailable",
@@ -9,7 +10,6 @@
   "DENY_REASON_MATCH_PREFIX",
   "GovernanceCeiling",
   "HOST_SESSION_KEY",
-  "AjCrewConfig",
   "ORDINAL",
   "OrdinalControl",
   "RULESET",
@@ -66,6 +66,7 @@
  "note": "Frozen at the split of src/aj_crew/dashboard/handlers/security.py (S14): every public name it defined, and every name it bound from the rest of aj_crew.",
  "rebound": {
   "APP_NAME_RE": "aj_crew.apps.execution",
+  "AjCrewConfig": "aj_crew.config.loader",
   "CAPABILITY": "aj_crew.platform.governance",
   "CapabilityGate": "aj_crew.platform.governance",
   "CatalogUnavailable": "aj_crew.apps.official_catalog",
@@ -73,7 +74,6 @@
   "DENY_REASON_MATCH_PREFIX": "aj_crew.security",
   "GovernanceCeiling": "aj_crew.platform.governance",
   "HOST_SESSION_KEY": "aj_crew.platform.governance_profiles",
-  "AjCrewConfig": "aj_crew.config.loader",
   "ORDINAL": "aj_crew.platform.governance",
   "OrdinalControl": "aj_crew.platform.governance",
   "RULESET": "aj_crew.platform.governance",

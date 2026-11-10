@@ -23,7 +23,7 @@ superseded-by: []
 
 ## 1. Summary
 
-Today a Aj Crew change is judged mostly by what the code does: unit tests,
+Today an Aj Crew change is judged mostly by what the code does: unit tests,
 lint, and AI review lanes that read the diff. Nothing on the path to a release
 asks the question a user asks: "does the thing I used yesterday still work, and
 does the new thing work the way the release says it does?"

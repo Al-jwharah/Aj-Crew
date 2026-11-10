@@ -770,9 +770,7 @@ class TestSemaphoreParallelScheduling:
         assertion would then hold even if the knob were ignored entirely, so
         without this the test proves nothing.
         """
-        monkeypatch.setattr(
-            "aj_crew.taskrunner.compute_memory_sized_parallel_cap", lambda _cfg: 64
-        )
+        monkeypatch.setattr("aj_crew.taskrunner.compute_memory_sized_parallel_cap", lambda _cfg: 64)
         sessions = _make_mock_sessions()
         runner = TaskRunner(
             sessions=sessions, auto_test=False, work_dir=tmp_path, max_parallel_steps=3
@@ -796,9 +794,7 @@ class TestSemaphoreParallelScheduling:
         to isolate the knob. This one pins it BELOW the knob to prove the OOM
         guard still wins — the property those tests deliberately stop covering.
         """
-        monkeypatch.setattr(
-            "aj_crew.taskrunner.compute_memory_sized_parallel_cap", lambda _cfg: 2
-        )
+        monkeypatch.setattr("aj_crew.taskrunner.compute_memory_sized_parallel_cap", lambda _cfg: 2)
         runner = TaskRunner(
             sessions=_make_mock_sessions(),
             auto_test=False,
@@ -820,9 +816,7 @@ class TestSemaphoreParallelScheduling:
         ceiling's own authority is covered by
         ``test_host_ceiling_still_caps_the_knob``.
         """
-        monkeypatch.setattr(
-            "aj_crew.taskrunner.compute_memory_sized_parallel_cap", lambda _cfg: 64
-        )
+        monkeypatch.setattr("aj_crew.taskrunner.compute_memory_sized_parallel_cap", lambda _cfg: 64)
         sessions = _make_mock_sessions()
         runner = TaskRunner(
             sessions=sessions, auto_test=False, work_dir=tmp_path, max_parallel_steps=6

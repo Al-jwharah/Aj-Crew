@@ -395,9 +395,7 @@ def test_a_rebind_is_admitted_after_other_agents_fill_the_launch_cap(tmp_path, m
     cap = getattr(mod, "_MAX_SERVER_LAUNCHES")
     monkeypatch.setenv("KC_TEST_TOKEN", "v0")
     static_entry = {"command": _APPROVED_CMD, "args": ["-V"], "env": {"LEVEL": "debug"}}
-    _crew_agents(
-        tmp_path, {"aj-crew": {"srv": _PLACEHOLDER_ENTRY}, "other": {"srv": static_entry}}
-    )
+    _crew_agents(tmp_path, {"aj-crew": {"srv": _PLACEHOLDER_ENTRY}, "other": {"srv": static_entry}})
     _approve_as_the_toggle_does(tmp_path, mod, store)
     _crowd_before(tmp_path, "srv", cap + 1)
     command_hash = rewriter.hash_command(_APPROVED_CMD, ["-V"])

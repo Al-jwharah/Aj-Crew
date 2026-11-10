@@ -1005,8 +1005,7 @@ def _choose_existing_launch(
         if saved:
             chosen = launches[0]
             ui.info(
-                f"Existing AjCrew cloud stack found: {chosen.stack_name}. "
-                "Keeping it by default."
+                f"Existing AjCrew cloud stack found: {chosen.stack_name}. " "Keeping it by default."
             )
             ui.detail("Use `ajcrew cloud launch --new` to create a separate instance.")
             return chosen

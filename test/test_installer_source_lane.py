@@ -1,9 +1,10 @@
 """``install.sh`` must say which release lane a from-source install follows.
 
 ``install.sh`` builds the git clone it sits in, so the install tracks that
-clone's checked-out branch -- and ``main`` is the Nightly lane. A box set up by ``git clone`` + ``bash install.sh``
-on the assumption that this is the end-user install lands on ``0.X.0.dev``
-builds while the desktop app sits on Stable, unless the installer says so.
+clone's checked-out branch -- and ``main`` is the Nightly lane. A box set up by
+``git clone`` + ``bash install.sh`` lands on ``0.X.0.dev`` builds unless the
+installer says so. This project publishes no prebuilt wheels, so the notice also
+says the clone is the supported install rather than pointing at a wheel.
 
 These tests lift ``source_checkout_ref`` / ``source_lane_notice`` (and the tiny
 print helpers they call) verbatim out of the real script and run them against
@@ -21,8 +22,12 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 INSTALL_SH = REPO_ROOT / "install.sh"
-CLI_SH_URL = "https://download.crew.kiro.dev/cli.sh"
-CLI_SH_LINE = f"curl -fsSL {CLI_SH_URL} | sh"
+#: What every lane notice says instead of pointing at a wheel install: this
+#: project publishes no prebuilt wheels, so the clone is the supported install.
+SOURCE_INSTALL_NOTE = "publishes no prebuilt wheels yet"
+#: Another project's release hosts. Nothing this installer prints or documents
+#: may send a reader there for a build of this one.
+FOREIGN_RELEASE_HOST = "crew.kiro.dev"
 
 pytestmark = pytest.mark.skipif(
     os.name == "nt", reason="POSIX shell installer; not exercised on native Windows"
@@ -100,7 +105,8 @@ def test_main_checkout_is_named_as_the_nightly_lane(tmp_path: Path) -> None:
     ref, notice = _notice(_clone(tmp_path))
     assert ref == "branch:main"
     assert "Nightly" in notice
-    assert CLI_SH_URL in notice
+    assert SOURCE_INSTALL_NOTE in notice
+    assert FOREIGN_RELEASE_HOST not in notice
 
 
 def test_feature_branch_is_named_and_not_called_nightly(tmp_path: Path) -> None:
@@ -110,7 +116,7 @@ def test_feature_branch_is_named_and_not_called_nightly(tmp_path: Path) -> None:
     assert ref == "branch:release/0.10"
     assert "release/0.10" in notice
     assert "Nightly" not in notice
-    assert CLI_SH_URL in notice
+    assert SOURCE_INSTALL_NOTE in notice
 
 
 def test_detached_tag_is_named_as_pinned(tmp_path: Path) -> None:
@@ -120,16 +126,16 @@ def test_detached_tag_is_named_as_pinned(tmp_path: Path) -> None:
     ref, notice = _notice(repo)
     assert ref == "detached:v0.10.0"
     assert "pinned at v0.10.0" in notice
-    assert CLI_SH_URL in notice
+    assert SOURCE_INSTALL_NOTE in notice
 
 
-def test_not_a_git_tree_still_points_at_the_wheel_install(tmp_path: Path) -> None:
+def test_not_a_git_tree_still_says_source_is_the_supported_install(tmp_path: Path) -> None:
     plain = tmp_path / "plain"
     plain.mkdir()
     ref, notice = _notice(plain)
     assert ref == "unknown"
     assert "from-source install" in notice
-    assert CLI_SH_URL in notice
+    assert SOURCE_INSTALL_NOTE in notice
 
 
 def test_notice_runs_at_start_and_end_of_the_install() -> None:
@@ -137,10 +143,12 @@ def test_notice_runs_at_start_and_end_of_the_install() -> None:
     text = INSTALL_SH.read_text(encoding="utf-8")
     body = text[text.index("# ── Pre-flight ──") :]
     assert body.count("\nsource_lane_notice\n") == 2
-    # The header names the end-user install too, for anyone reading the script.
+    # The header says the same for anyone reading the script, and names no
+    # other project's release host as the place to get a build.
     header = text[: text.index("set -euo pipefail")]
-    assert CLI_SH_LINE in header
+    assert SOURCE_INSTALL_NOTE in header
     assert "Nightly" in header
+    assert FOREIGN_RELEASE_HOST not in text
 
 
 def test_update_hint_is_printed_only_for_a_branch_checkout() -> None:

@@ -47,9 +47,7 @@ def test_a_set_cancel_starts_no_pip_and_reports_nothing_changed(tmp_path, locked
         g[1],
         g[2],
         g[3],
-        patch.object(
-            dep_sync, "locked_console_scripts", return_value=["ajcrew"] if locked else []
-        ),
+        patch.object(dep_sync, "locked_console_scripts", return_value=["ajcrew"] if locked else []),
         patch.object(dep_sync, "sync", side_effect=_no_pip),
         patch.object(dep_sync.subprocess, "run", side_effect=_no_pip),
     ):

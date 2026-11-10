@@ -65,7 +65,7 @@
   "writable_labels",
   "write_signals"
  ],
- "note": "A aj_crew._facade_mirror facade over the crew_runtime_* owners beside it; it keeps the sweep itself.",
+ "note": "An aj_crew._facade_mirror facade over the crew_runtime_* owners beside it; it keeps the sweep itself.",
  "rebound": {
   "atomic_write": "aj_crew.atomic_write",
   "crew_model": "aj_crew.apps.builtins.issue_radar.backend",

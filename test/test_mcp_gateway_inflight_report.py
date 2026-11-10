@@ -222,7 +222,7 @@ class TestProgressAwareWedgeDetection:
         assert post_timeout < DEFERRED_STEP_STUCK_SECS < PROGRESS_WEDGE_CEILING_SECS
 
     def test_ceiling_outlives_every_synchronous_tool_bound(self):
-        """A ajcrew-core tool that still runs on the worker bounds every call
+        """An ajcrew-core tool that still runs on the worker bounds every call
         it makes; the short ceiling must sit above each of those bounds with the
         slow-request margin, or a reporting backend is recycled under a healthy
         call. The bounds are scanned from source, not listed by hand: every

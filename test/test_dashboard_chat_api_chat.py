@@ -678,9 +678,7 @@ class TestApiChatStalledReader:
         broadcast: list[str] = []
         slot._on_message = lambda _key, msg: broadcast.append(str(msg.get("content", "")))
         finished = asyncio.Event()
-        monkeypatch.setattr(
-            "aj_crew.dashboard.chat_handlers._run_chat", _long_turn(8000, finished)
-        )
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers._run_chat", _long_turn(8000, finished))
 
         async with TestClient(TestServer(_make_app(state))) as client:
             raw = await _post_and_never_read(client, "s1")
@@ -718,9 +716,7 @@ class TestApiChatStalledReader:
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         finished = asyncio.Event()
-        monkeypatch.setattr(
-            "aj_crew.dashboard.chat_handlers._run_chat", _long_turn(8000, finished)
-        )
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers._run_chat", _long_turn(8000, finished))
 
         async with TestClient(TestServer(_make_app(state))) as client:
             resp = await client.post(

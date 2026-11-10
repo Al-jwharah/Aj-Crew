@@ -9,8 +9,8 @@ from __future__ import annotations
 
 import pytest
 
-from conftest import assert_rejected_without_backtracking
 from aj_crew import context as ctx
+from conftest import assert_rejected_without_backtracking
 
 _CLOSE_VARIANTS = [
     ">>>END_UNTRUSTED_THREAD_PARENT",

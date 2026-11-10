@@ -535,8 +535,7 @@ _COUNTED = [
         1,
     ),
     (
-        "import inspect, sys\n"
-        "inspect.getsource(sys.modules['aj_crew.dashboard.chat_runner'])\n",
+        "import inspect, sys\n" "inspect.getsource(sys.modules['aj_crew.dashboard.chat_runner'])\n",
         1,
     ),
     (

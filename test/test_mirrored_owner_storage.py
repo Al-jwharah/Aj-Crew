@@ -311,9 +311,7 @@ def test_the_discovery_rule_answers_both_ways() -> None:
         probe._TABLE = table  # type: ignore[attr-defined]
         assert one_reexported_pair(probe) is None, f"discovery accepted {why}"
 
-    probe.__dunder_table__ = {  # type: ignore[attr-defined]
-        "UTF8_TEXT": "aj_crew.subprocess_utf8"
-    }
+    probe.__dunder_table__ = {"UTF8_TEXT": "aj_crew.subprocess_utf8"}  # type: ignore[attr-defined]
     del probe._TABLE  # type: ignore[attr-defined]
     assert one_reexported_pair(probe) is None, "discovery read a dunder-named table"
 

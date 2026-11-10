@@ -284,7 +284,7 @@ FunctionEnd
 ; bypass fire for a directory we do not own. See the Var declaration.
 ;
 ; What remains covered: the loop this fixes needs an update whose install root is
-; already a Aj Crew install, which is exactly the case the executable check
+; already an Aj Crew install, which is exactly the case the executable check
 ; admits. An update that cannot prove ownership falls through to the ordinary
 ; fresh-install ownership path instead of adopting the directory.
 ;

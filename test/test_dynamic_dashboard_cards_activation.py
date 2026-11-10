@@ -30,9 +30,7 @@ def test_automatic_cards_default_off_and_config_roundtrips():
     from aj_crew.config.loader import AjCrewConfig, _build_dashboard_config
 
     assert AjCrewConfig().dashboard.dynamic_dashboard_cards is False
-    cfg = AjCrewConfig(
-        dashboard=_build_dashboard_config(set(), {"dynamic_dashboard_cards": True})
-    )
+    cfg = AjCrewConfig(dashboard=_build_dashboard_config(set(), {"dynamic_dashboard_cards": True}))
     assert cfg.dashboard.dynamic_dashboard_cards is True
     assert cfg.to_dict()["dashboard"]["dynamic_dashboard_cards"] is True
 

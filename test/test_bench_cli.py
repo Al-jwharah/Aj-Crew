@@ -16,9 +16,9 @@ from pathlib import Path
 
 import pytest
 
-from conftest import requires_symlinks
 from aj_crew.cli_bench import _load_report, bench_cmd
 from aj_crew.eval.bench.run import compare_reports
+from conftest import requires_symlinks
 
 
 class _Args:

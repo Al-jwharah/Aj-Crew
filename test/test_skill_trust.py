@@ -25,10 +25,10 @@ from unittest.mock import patch
 
 import pytest
 
-from conftest import make_dir_link, requires_symlinks
 from aj_crew import platform_compat, security, skill_trust
 from aj_crew.config import paths
 from aj_crew.config.loader import AjCrewConfig
+from conftest import make_dir_link, requires_symlinks
 
 pytestmark = pytest.mark.skipif(
     not skill_trust.project_skill_traversal_supported(),

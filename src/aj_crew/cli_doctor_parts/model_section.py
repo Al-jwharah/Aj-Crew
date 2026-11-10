@@ -310,9 +310,7 @@ def _doctor_effective_model(cfg: AjCrewConfig, project_dir: str, issues: list[st
         # The name is escaped like every other value read out of config: a
         # control-bearing kiro_agent would otherwise reach the terminal on the
         # one line the user is most likely to copy and run.
-        flag = (
-            "" if pinned_agent == "ajcrew" else f" --agent {render._safe_display(pinned_agent)}"
-        )
+        flag = "" if pinned_agent == "ajcrew" else f" --agent {render._safe_display(pinned_agent)}"
         global_shown = render._safe_display(cfg.agent.model) if cfg.agent.model else "unset"
         print(f"  ⚠️  the spec pin decides because the global is {global_shown}")
         print(f"      Fix: ajcrew agent reset-model{flag}   (clears the pin, tracks the default)")

@@ -370,9 +370,7 @@ class TestThroughTheTunnelWrapper:
         monkeypatch.setattr(tunnel_pkg, "_tunnel_public_url", "")
         async with FakeRelay() as relay, FakeCrew() as crew:
             provider = _provider(relay, crew)
-            set_context(
-                dataclasses.replace(build_default_context(AjCrewConfig()), tunnel=provider)
-            )
+            set_context(dataclasses.replace(build_default_context(AjCrewConfig()), tunnel=provider))
             origins: set = set()
             manager = await setup_tunnel(
                 middlewares=[_token_auth()],
@@ -403,9 +401,7 @@ class TestThroughTheTunnelWrapper:
 
         async with FakeRelay() as relay, FakeCrew() as crew:
             provider = _provider(relay, crew)
-            set_context(
-                dataclasses.replace(build_default_context(AjCrewConfig()), tunnel=provider)
-            )
+            set_context(dataclasses.replace(build_default_context(AjCrewConfig()), tunnel=provider))
             manager = await setup_tunnel(
                 middlewares=[],
                 allowed_origins=set(),
@@ -425,9 +421,7 @@ class TestThroughTheTunnelWrapper:
         monkeypatch.setattr(tunnel_pkg, "_publish_disabled", True)
         async with FakeRelay() as relay, FakeCrew() as crew:
             provider = _provider(relay, crew)
-            set_context(
-                dataclasses.replace(build_default_context(AjCrewConfig()), tunnel=provider)
-            )
+            set_context(dataclasses.replace(build_default_context(AjCrewConfig()), tunnel=provider))
             manager = await setup_tunnel(
                 middlewares=[_token_auth()],
                 allowed_origins=set(),

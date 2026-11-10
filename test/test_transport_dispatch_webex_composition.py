@@ -604,9 +604,7 @@ def test_dashboard_imports_stay_call_time() -> None:
         loaded = _imported_modules(_module_level_imports(ast.parse(source)))
         assert not [m for m in loaded if m.startswith("aj_crew.dashboard")], stem
     # Non-vacuous: the dashboard-link handler does import the dashboard, inside its body.
-    assert "aj_crew.dashboard.token_auth" in inspect.getsource(
-        _owner("commands")._handle_dashboard
-    )
+    assert "aj_crew.dashboard.token_auth" in inspect.getsource(_owner("commands")._handle_dashboard)
 
 
 def _instance_fields() -> set[str]:

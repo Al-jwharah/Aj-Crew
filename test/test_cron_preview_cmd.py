@@ -11,8 +11,8 @@ from unittest.mock import patch
 
 import pytest
 
-from conftest import forget_env_at_teardown
 from aj_crew.cli_commands import _cron_preview
+from conftest import forget_env_at_teardown
 
 
 @pytest.fixture(autouse=True)

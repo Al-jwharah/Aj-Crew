@@ -23,7 +23,6 @@ from acp_deepseek_backend_helpers import (  # noqa: F401 -- fixtures are used by
     _pinned_kiro_cli_version,
 )
 
-from conftest import make_dir_link
 from aj_crew.acp import launch as launch_mod
 from aj_crew.acp.client import AcpClient
 from aj_crew.acp.harness import deepseek as deepseek_mod
@@ -50,6 +49,7 @@ from aj_crew.acp_backends import (
     effort_config_option_id,
     routing_for,
 )
+from conftest import make_dir_link
 
 # ── Vocabulary ───────────────────────────────────────────────────────────────
 

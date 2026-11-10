@@ -663,7 +663,7 @@ def default_confinement() -> "str | None":
     ``wrap_argv`` (+ ``cgroup_scope_argv``): on a sandbox-capable host it lives
     inside a user/mount namespace (or macOS seatbelt) and the
     ``ajcrew-agents.slice`` cgroup scope. Namespaces and cgroups are
-    INHERITED by children regardless of ``start_new_session``, so a
+    INHERITED by children regardless of ``start_new_session``, so an
     ``ajcrew restart`` spawned from here would produce a replacement gateway
     that (a) sees the sandbox's altered filesystem view forever, (b) carries an
     agent-sized ``MemoryMax``/``TasksMax`` ceiling for the whole gateway, and

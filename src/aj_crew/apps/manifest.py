@@ -437,7 +437,7 @@ _KNOWN_FIELDS = frozenset(
 
 @dataclass
 class AppManifest:
-    """Static metadata for a AjCrew app — readable without executing app code.
+    """Static metadata for an AjCrew app — readable without executing app code.
 
     Parsed from ``app.json`` at the root of an app package.  Follows the same
     pattern as :class:`~aj_crew.plugins.manifest.PluginManifest`: dataclass

@@ -68,7 +68,7 @@ long before anything expires.
 
 A sibling PR (branch `fix/scratch-delete-clean-trees`) removes the regenerable
 directories (`node_modules`, `.venv` and similar) before a tree is quarantined.
-That takes a Aj Crew clone from about 4.2 GB to about 2.6 GB. The rest is
+That takes an Aj Crew clone from about 4.2 GB to about 2.6 GB. The rest is
 `.git` plus the checked-out source, and that is what this RFC covers.
 
 ### Why #19897 did not just ask git
@@ -186,7 +186,7 @@ the saving on by default therefore needs a trusted store that exists without
 setup, which is open question 9 and an entry condition of Phase 3.
 
 **For default hosts, the fix is the sibling PR**, which drops the regenerable
-directories with no setup and takes a Aj Crew clone from ~4.2 GB to ~2.6 GB.
+directories with no setup and takes an Aj Crew clone from ~4.2 GB to ~2.6 GB.
 This RFC accepts that trade. Phases 1a, 1b and 2 ship **only for operators
 who opt in** by configuring a mirror (or, after Phase 2, a provider
 credential). A default host gains nothing from them until open question 9 is
@@ -376,7 +376,7 @@ read and act on by hand, and the same goes for names inside `changed/` and
 `untracked/`.
 
 A whole-tree fallback keeps today's log line and today's recovery steps in
-`src/aj_crew/docs/troubleshooting.md`. A `ajcrew scratch restore` command
+`src/aj_crew/docs/troubleshooting.md`. An `ajcrew scratch restore` command
 is left as an open question.
 
 ### Worked sizes
@@ -535,7 +535,7 @@ The phase exit criteria above are the main tests. Beyond them:
 5. Are dangling commits (not on any ref or reflog) worth a `git fsck` pass, or
    is "the agent hid it" a fair line?
 6. Do SHA-256 repositories need anything extra?
-7. Is a `ajcrew scratch restore <path>` command wanted, or are `RESCUE.md`
+7. Is an `ajcrew scratch restore <path>` command wanted, or are `RESCUE.md`
    commands enough?
 8. Which config key and default name the opt-in flag?
 9. How does a host get a trusted store without setup? See "With nothing

@@ -106,25 +106,25 @@ _REBOUND: dict[str, dict[str, str]] = {
 #: own file. A split that changes one of these inventories updates that facade's row. A blank
 #: line between rows lets two splits of neighbouring facades each change their own row.
 _MOVE_DIGESTS: dict[str, str] = dict(row.split() for row in """
-    aj_crew.acp.client                                        e97dd3942cd81110
+    aj_crew.acp.client                                        951d713171faa17e
 
-    aj_crew.apps.builtins.issue_radar.backend.routes          e42a59c7e96875b3
+    aj_crew.apps.builtins.issue_radar.backend.routes          ea59835483f9b2eb
 
-    aj_crew.apps.builtins.ops_mission_control.backend.routes  4676b23fcf6c0cce
+    aj_crew.apps.builtins.ops_mission_control.backend.routes  3ee7d764ff8f3164
 
-    aj_crew.autonudge                                         57a726a2ffc0bbaa
+    aj_crew.autonudge                                         f8ce0af62654f590
 
-    aj_crew.crew_log.projection                               aa5a632cc0ca0c51
+    aj_crew.crew_log.projection                               ce3821aaa113ad88
 
-    aj_crew.cron                                              b6a4481b56885fac
+    aj_crew.cron                                              4d876c859b1034a3
 
-    aj_crew.mcp_gateway.gatewayd                              290c22d9c2d9df84
+    aj_crew.mcp_gateway.gatewayd                              2a4b7dfa520b6b2b
 
-    aj_crew.providers.acp                                     f3d54671b53ceb28
+    aj_crew.providers.acp                                     3532be7dc1efe12f
 
-    aj_crew.sandbox                                           c9e1858832fcd0e4
+    aj_crew.sandbox                                           f53c254b2a264ec3
 
-    aj_crew.slack.gateway                                     90d815f8e6349017
+    aj_crew.slack.gateway                                     18d55dbc90ce3631
     """.splitlines() if row.strip())
 
 #: Reads the rebound map from stdin, not argv: one argv string holding every facade's map

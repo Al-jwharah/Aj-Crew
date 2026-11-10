@@ -311,7 +311,7 @@ class LaunchJobStore:
         if root is not None:
             self._root = root
         else:
-            # config_dir() is called (not imported) late, so a AJCREW_HOME
+            # config_dir() is called (not imported) late, so an AJCREW_HOME
             # override — per-test isolation, a non-default home — is honoured.
             # Under run/ (a sensitive-path-floor tree) because a job awaiting
             # sign-in holds the device-login URL+code; see the class docstring.

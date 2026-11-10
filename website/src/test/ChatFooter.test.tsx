@@ -182,7 +182,7 @@ describe('ChatFooter', () => {
     expect(a).not.toEqual(b)                 // the two visible groups differ
   })
 
-  it('uses the ghost poses on a Kiro theme', () => {
+  it('uses the ghost poses on an Aj theme', () => {
     document.documentElement.setAttribute('data-theme', 'aj-dark')
     const { container } = render(<ChatFooter {...base} running={true} lastRole="user" />)
     // Brand art is an ASSET rendered as <img> (use-lucide-icons brand-mark rule),

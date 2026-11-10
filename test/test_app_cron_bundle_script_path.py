@@ -37,8 +37,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from conftest import make_escaping_link
 from aj_crew.cron_script import resolve_script_path
+from conftest import make_escaping_link
 
 APP = "bundle-app"
 CRON = f"{APP}/refresh"

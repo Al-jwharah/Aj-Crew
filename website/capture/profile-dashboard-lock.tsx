@@ -27,7 +27,7 @@ const theme = params.get('theme') === 'light' ? 'light' : 'dark'
 const locked = params.get('locked') === '1'
 
 localStorage.setItem('mc-theme', theme)
-localStorage.setItem('mc-color-theme', 'kiro')
+localStorage.setItem('mc-color-theme', 'aj')
 document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const MEMBER: MemberRosterRow = {

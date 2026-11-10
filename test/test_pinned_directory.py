@@ -22,8 +22,8 @@ from pathlib import Path
 
 import pytest
 
-from conftest import make_dir_link
 from aj_crew import platform_compat, skills
+from conftest import make_dir_link
 
 
 @pytest.fixture

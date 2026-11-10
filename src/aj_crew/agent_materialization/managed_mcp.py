@@ -378,7 +378,7 @@ def crew_owned_mcp_servers() -> frozenset[str]:
     from ``_extra_mcp_servers()``, an edition ADAPTER, not from user config, so they
     are host-owned in exactly the sense the managed map is. Whatever an edition
     contributes there is Crew's own server and belongs in this set; a user's own
-    ``mcp.json`` entry can never reach it. The names are not constrained to a
+    ``mcp.json`` entry can never reach it. The names are not constrained to an
     ``ajcrew-`` prefix, so no caller may assume one.
     """
     return frozenset((*agent_mod._MANAGED_MCP_SERVERS, *agent_mod._extra_mcp_servers()))

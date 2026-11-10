@@ -257,7 +257,7 @@ class _AcpRuntime(NamedTuple):
 
     ``owner`` is ``gateway`` (the running gateway recorded it, or spawned it and
     is still its ancestor), ``other`` (another live process recorded it and is
-    still its ancestor -- a ``ajcrew chat`` records its own runtime under its
+    still its ancestor -- an ``ajcrew chat`` records its own runtime under its
     own pid), ``stale`` (whoever recorded it is not its ancestor, so it is gone
     or the runtime was orphaned), ``untracked`` (this install spawned it, no
     registry names it and the running gateway is not its ancestor) or
@@ -544,7 +544,7 @@ def _acp_runtime_lines(census: _AcpCensus, window_secs: float) -> list[str]:
     if owned:
         parts.append(f"{owned} owned by the running gateway")
     if other:
-        parts.append(f"{other} owned by another live process (a ajcrew chat)")
+        parts.append(f"{other} owned by another live process (an ajcrew chat)")
     if unowned:
         parts.append(f"{len(unowned)} no running gateway owns")
     if unknown:

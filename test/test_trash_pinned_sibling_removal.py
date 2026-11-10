@@ -21,8 +21,8 @@ from pathlib import Path
 
 import pytest
 
-from conftest import make_dir_link
 from aj_crew import pinned_fs, platform_compat, session_storage
+from conftest import make_dir_link
 
 _NOW = 1_700_000_000.0
 _BATCH = "20231114-batch"

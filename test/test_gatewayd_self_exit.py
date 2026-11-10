@@ -25,10 +25,10 @@ from unittest.mock import patch
 
 import pytest
 
-from conftest import host_abs
 from aj_crew import session_pid as sp
 from aj_crew.mcp_gateway import gatewayd as gw
 from aj_crew.testing.wait import async_wait_until, await_until
+from conftest import host_abs
 
 # POSIX process/socket semantics: ``os.killpg`` does not exist on Windows
 # (even patching it fails with AttributeError), and the daemon's endpoint

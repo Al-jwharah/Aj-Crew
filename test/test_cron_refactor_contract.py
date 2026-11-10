@@ -361,9 +361,7 @@ class TestTheFacadeSurface:
         """
         from aj_crew.stall_attribution import classify_surface, parse_frames
 
-        dashboard = (
-            '  File "/venv/site-packages/aj_crew/dashboard/handlers/cron.py", line 1 in api'
-        )
+        dashboard = '  File "/venv/site-packages/aj_crew/dashboard/handlers/cron.py", line 1 in api'
         assert classify_surface(parse_frames([frame, dashboard])) == "cron"
 
     def test_every_owner_logs_on_the_cron_channel(self) -> None:

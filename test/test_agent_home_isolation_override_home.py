@@ -22,7 +22,7 @@ from agent_home_isolation_helpers import (
 
 # The non-default data home arm
 def test_override_home_declines_shared_write_even_from_durable_checkout(monkeypatch, tmp_path):
-    """A AJCREW_HOME-override instance must not overwrite existing shared
+    """An AJCREW_HOME-override instance must not overwrite existing shared
     specs.
 
     A durable checkout on a scratch ``AJCREW_HOME`` would pin that home into every
@@ -451,9 +451,7 @@ def test_custom_server_entries_cannot_vouch_ownership(monkeypatch, tmp_path):
     shared.mkdir()
     spec = {
         "name": "ajcrew",
-        "mcpServers": {
-            "my-custom-server": {"command": "x", "env": {"AJCREW_HOME": str(own_home)}}
-        },
+        "mcpServers": {"my-custom-server": {"command": "x", "env": {"AJCREW_HOME": str(own_home)}}},
     }
     (shared / agent.AGENT_FILENAME).write_text(json.dumps(spec), encoding="utf-8")
     _pretend_target_is_shared(monkeypatch, agent, shared)

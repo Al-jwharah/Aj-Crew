@@ -58,7 +58,7 @@ def _make_live_status_error(code: str) -> str:
         ),
         "no_user_unit": (
             f"the live gateway is not running as the user service "
-            f"{_LIVE_GATEWAY_UNIT} — Dev Fleet cannot restart it for you (a "
+            f"{_LIVE_GATEWAY_UNIT} — Dev Fleet cannot restart it for you (an "
             "`ajcrew service install` unit is its own manager's to restart)"
         ),
         "user_unit_inactive": (

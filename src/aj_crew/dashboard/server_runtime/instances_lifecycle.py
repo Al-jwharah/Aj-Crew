@@ -14,9 +14,9 @@ from aiohttp import web
 
 if TYPE_CHECKING:
     from aj_crew.dashboard.server import (
+        AjCrewConfig,
         DashboardState,
         InstancesRegistry,
-        AjCrewConfig,
         SshTunnelManager,
         TunnelState,
         logger,

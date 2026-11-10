@@ -312,7 +312,7 @@ async def test_repo_owner_name_ssh():
         return_value=(0, "git@github.com:Al-jwharah/Aj-Crew.git\n", ""),
     ):
         result = await mod._repo_owner_name()
-    assert result == "kirodotdev/KiroCrew"
+    assert result == "Al-jwharah/Aj-Crew"
 
 
 @pytest.mark.asyncio
@@ -327,7 +327,7 @@ async def test_repo_owner_name_https():
         return_value=(0, "https://github.com/Al-jwharah/Aj-Crew.git\n", ""),
     ):
         result = await mod._repo_owner_name()
-    assert result == "kirodotdev/KiroCrew"
+    assert result == "Al-jwharah/Aj-Crew"
 
 
 # --- _find_worktree ambiguity rejection ---

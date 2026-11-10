@@ -20,8 +20,8 @@ from agent_helpers import _pinned_kiro_cli_version  # noqa: F401
 # Re-exported under the original private names so the call sites below are unchanged.
 from mcp_merge_helpers import DEFAULT_MANAGED_MCPS as _DEFAULT_MANAGED_MCPS
 
-from conftest import requires_symlinks
 from aj_crew.agent import install_agent
+from conftest import requires_symlinks
 
 
 class TestKiroHooksMerge:

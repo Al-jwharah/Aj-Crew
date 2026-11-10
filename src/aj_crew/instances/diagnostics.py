@@ -81,7 +81,7 @@ SSM_TARGET_MISSING = "ssm_target_missing"
 # SSM second-rung failures the probe's own output tells apart from a gateway that
 # is simply not running, each worded with the crew setting that fixes it: the
 # AWS profile is refused ssm:SendCommand on the instance; sudo knows no Remote
-# user of that name; no ajcrew launcher where the mint looks for one; a Aj
+# user of that name; no ajcrew launcher where the mint looks for one; an Aj
 # Crew gateway answering on a port other than the configured Remote port.
 SSM_ACCESS_DENIED = "ssm_access_denied"
 SSM_USER_UNKNOWN = "ssm_user_unknown"
@@ -126,7 +126,7 @@ _SSM_REASONS = {
     "Set Remote user in Edit settings.",
     REMOTE_NOT_INSTALLED: "Aj Crew isn't installed for user {user} on this instance. Run the "
     "install there as that user, or set Remote ajcrew path in Edit settings.",
-    REMOTE_WRONG_PORT: "A Aj Crew gateway is listening on port {found}, not {port}. Set "
+    REMOTE_WRONG_PORT: "An Aj Crew gateway is listening on port {found}, not {port}. Set "
     "Remote port to {found} in Edit settings.",
 }
 

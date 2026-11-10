@@ -1526,7 +1526,7 @@ def test_memory_recall_uses_the_shared_gate_identity_once(monkeypatch, identifie
 
 # ---------------------------------------------------------------------------
 # A channel agent named strictly is named leniently too.
-# The `X-Session-Key` a `ajcrew-core` call forwards comes from the lenient
+# The `X-Session-Key` an `ajcrew-core` call forwards comes from the lenient
 # resolver, and an app route that holds an operation from channel agents
 # (Ops Mission Control's `POST /rotation/arm`) reads that header. The hold
 # matches the core deny it replaced only while every key the strict gate

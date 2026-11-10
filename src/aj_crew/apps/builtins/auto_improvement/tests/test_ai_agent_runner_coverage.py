@@ -557,9 +557,7 @@ def test_governance_denial_marks_a_command_bearing_request_as_shell(monkeypatch)
 
 
 def test_governance_denial_fails_closed_when_the_hook_layer_breaks(monkeypatch):
-    monkeypatch.setattr(
-        R, "AjCrewConfig", SimpleNamespace(load=lambda: SimpleNamespace(hooks={}))
-    )
+    monkeypatch.setattr(R, "AjCrewConfig", SimpleNamespace(load=lambda: SimpleNamespace(hooks={})))
     monkeypatch.setattr(R, "hooks_config_from_config_dict", lambda d: d)
 
     def _boom(cfg):

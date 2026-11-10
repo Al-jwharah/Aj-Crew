@@ -353,9 +353,7 @@ class TestModeBinding:
         prompt_file = tmp_path / "prompt.md"
         prompt_file.write_text("inlined from disk", encoding="utf-8")
         (crew_agent / "ajcrew.json").write_text(
-            json.dumps(
-                {"name": "ajcrew", "prompt": f"file://{prompt_file}", "tools": ["fs_read"]}
-            ),
+            json.dumps({"name": "ajcrew", "prompt": f"file://{prompt_file}", "tools": ["fs_read"]}),
             encoding="utf-8",
         )
         runtime = AcpRuntime(

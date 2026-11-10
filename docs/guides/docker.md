@@ -8,13 +8,22 @@ requires macOS and cannot run in this Linux image. It is the recommended way to
 run Aj Crew 24/7 on a server or NAS; the strongest fit is the always-on
 channel bot that does not need a desktop session.
 
-The image is public, so no registry login is needed. Start the gateway:
+> **No published image yet.** Aj Crew does not publish a container image today.
+> Build one from a checkout (see [Building locally](#building-locally)) and use
+> that tag, `ajcrew:dev`, wherever this guide shows
+> `ghcr.io/al-jwharah/ajcrew:<tag>`. The tag table and the provenance check
+> below describe what a release pipeline for this project publishes once one
+> exists; a `docker pull` of those names fails until then.
+
+Build the image, then start the gateway:
 
 ```
+make wheel
+docker build -f docker/Dockerfile -t ajcrew:dev .
 docker run -d --name ajcrew \
   -p 127.0.0.1:5476:5476 \
   -v ajcrew-home:/home/ajcrew \
-  ghcr.io/kirodotdev/kirocrew:stable
+  ajcrew:dev
 ```
 
 Or with compose: copy [`docker/compose.yaml`](../../docker/compose.yaml) and run
@@ -37,7 +46,7 @@ for. Every published manifest carries SLSA build
 provenance — verify with:
 
 ```
-gh attestation verify oci://ghcr.io/kirodotdev/kirocrew:stable --repo kirodotdev/KiroCrew
+gh attestation verify oci://ghcr.io/al-jwharah/ajcrew:stable --repo Al-jwharah/Aj-Crew
 ```
 
 ## First-run setup
@@ -275,7 +284,7 @@ docker run -d --name ajcrew \
   -p 127.0.0.1:5476:5476 \
   -v ajcrew-home:/home/ajcrew \
   --security-opt seccomp=ajcrew-seccomp.json \
-  ghcr.io/kirodotdev/kirocrew:stable
+  ghcr.io/al-jwharah/ajcrew:stable
 ```
 
 Or in compose (add to the `ajcrew` service):
@@ -303,7 +312,7 @@ docker run -d --name ajcrew \
   -v ajcrew-home:/home/ajcrew \
   --security-opt apparmor=unconfined \
   --security-opt seccomp=ajcrew-seccomp.json \
-  ghcr.io/kirodotdev/kirocrew:stable
+  ghcr.io/al-jwharah/ajcrew:stable
 ```
 
 `apparmor=unconfined` lifts only AppArmor's per-container rules; the seccomp
@@ -375,7 +384,7 @@ docker run -d --name ajcrew \
   -p 127.0.0.1:5476:5476 \
   -v ajcrew-home:/home/ajcrew \
   -e AJCREW_ALLOW_UNSANDBOXED=1 \
-  ghcr.io/kirodotdev/kirocrew:stable
+  ghcr.io/al-jwharah/ajcrew:stable
 ```
 
 In this posture the container is the only isolation boundary. Do not mount

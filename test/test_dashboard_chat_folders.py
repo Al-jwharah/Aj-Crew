@@ -731,9 +731,7 @@ class TestFolderCRUD:
         # json.dumps ("Object of type MagicMock is not JSON serializable"),
         # 500ing the create. Pin it to a string like the sibling cfg mocks.
         mock_cfg.default_agent = ""
-        monkeypatch.setattr(
-            "aj_crew.dashboard.chat_handlers.AjCrewConfig.load", lambda: mock_cfg
-        )
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.AjCrewConfig.load", lambda: mock_cfg)
         monkeypatch.setattr(
             "aj_crew.dashboard.chat_handlers.default_project_dir",
             lambda _workspace: str(root_project),

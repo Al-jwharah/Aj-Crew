@@ -1475,7 +1475,7 @@ def withhold_write_auto_approval(
     each tool of :data:`_WRITE_MCP_TOOLS` the policy auto-approves gets an exact
     ``ask``, which outranks the ``allow`` (the derived one and any the author's
     block relayed), so the call comes back as a request. Every other tool,
-    read-class ones included, keeps its auto-approval, a ``ajcrew-core/*`` grant
+    read-class ones included, keeps its auto-approval, an ``ajcrew-core/*`` grant
     too: the ``ask`` names one resource, not the server.
 
     The returned refs are what the spec granted: the gate's ``batch-guard-grant``

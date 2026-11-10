@@ -1,6 +1,6 @@
 """An LTS build's sandboxed processes take the ceiling from a read-only cache view.
 
-A Aj Crew MCP server that kiro-cli starts inside the agent sandbox enters the central
+An Aj Crew MCP server that kiro-cli starts inside the agent sandbox enters the central
 tier in an LTS build, but the sandbox hides the Kiro sign-in from it, so it can
 never fetch. Instead the sandbox shows it the policy cache the gateway wrote, read-only,
 and the process resolves the ceiling in cache-only mode: no fetch, no sign-in, and a
@@ -39,7 +39,7 @@ _MODES = ("standard", "cc", "strict")
 def _outside_any_sandbox(_floor_monkeypatch):
     """Start every test as the gateway: unsandboxed.
 
-    The suite itself may run inside a Aj Crew sandbox, whose marker would otherwise
+    The suite itself may run inside an Aj Crew sandbox, whose marker would otherwise
     make every process here a child.
     """
     _floor_monkeypatch.delenv(sandbox_launch_mark.SANDBOX_MARKER, raising=False)

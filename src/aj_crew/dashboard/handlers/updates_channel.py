@@ -22,8 +22,8 @@ from aiohttp import web
 
 from aj_crew.changelog import Release, build_release_list
 from aj_crew.config.loader import (
-    ConfigReadError,
     AjCrewConfig,
+    ConfigReadError,
     config_path,
     update_config_locked,
 )

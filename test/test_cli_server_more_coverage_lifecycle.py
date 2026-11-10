@@ -217,7 +217,7 @@ class TestStopLockHolderFallback:
         assert exc.value.code == 1
         assert signals == []
         out = capsys.readouterr().out
-        assert "does not look like a Aj Crew gateway" in out
+        assert "does not look like an Aj Crew gateway" in out
         assert "kill -TERM 99" in out
         assert len(sel_rec.calls) == 1
         assert sel_rec.calls[0]["operation"] == "gateway_stop"

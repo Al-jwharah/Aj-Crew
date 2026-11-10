@@ -1,10 +1,10 @@
 {
  "base_public_names": [
+  "AjCrewConfig",
   "ConfigReadError",
   "DOWNLOAD_ATTEMPTS_INTERACTIVE",
   "DashboardState",
   "FileTooLargeError",
-  "AjCrewConfig",
   "LEGACY_EMBEDDING_WARNING",
   "LoopBoundLock",
   "ReembedProgress",
@@ -91,11 +91,11 @@
  ],
  "note": "Frozen at the split of src/aj_crew/dashboard/handlers/memory.py (S14): every public name it defined, and every name it bound from the rest of aj_crew.",
  "rebound": {
+  "AjCrewConfig": "aj_crew.config.loader",
   "ConfigReadError": "aj_crew.config.loader",
   "DOWNLOAD_ATTEMPTS_INTERACTIVE": "aj_crew.embeddings",
   "DashboardState": "aj_crew.dashboard.state",
   "FileTooLargeError": "aj_crew.hooks",
-  "AjCrewConfig": "aj_crew.config.loader",
   "LEGACY_EMBEDDING_WARNING": "aj_crew.embeddings",
   "LoopBoundLock": "aj_crew.loop_lock",
   "ReembedProgress": "aj_crew.embeddings",

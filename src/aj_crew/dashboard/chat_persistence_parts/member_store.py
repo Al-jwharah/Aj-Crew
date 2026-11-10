@@ -16,8 +16,8 @@ if TYPE_CHECKING:
     from aj_crew.dashboard.chat_persistence import (
         _DEFER_MEMBER_RESTORE,
         _SKIP_MEMBER_RESTORE,
-        DashboardState,
         AjCrewConfig,
+        DashboardState,
         logger,
         named_store_or_empty,
         redact_log_via_context,

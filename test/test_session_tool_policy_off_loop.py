@@ -18,12 +18,12 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from conftest import requires_symlinks
 from aj_crew import agent_discovery
 from aj_crew import hooks as hooks_mod
 from aj_crew import security
 from aj_crew.dashboard.handlers import sessions as sessions_mod
 from aj_crew.security.paths import PathResolutionStalled
+from conftest import requires_symlinks
 
 AGENT = "reviewer"
 

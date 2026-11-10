@@ -24,7 +24,6 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from conftest import requires_symlinks
 from aj_crew import acp_backends
 from aj_crew.acp.client import AcpClient, AcpToolGateUnroutable
 from aj_crew.acp.harness import copilot as copilot_mod
@@ -39,6 +38,7 @@ from aj_crew.agent_sdk.backends import (
     session_config_drift_issue,
 )
 from aj_crew.agent_sdk.drivers.acp_vocab import is_user_worded_failure
+from conftest import requires_symlinks
 
 COPILOT = ACP_BACKEND_COPILOT
 _CORPUS = Path(__file__).parent / "fixtures" / "acp_frames" / "copilot"

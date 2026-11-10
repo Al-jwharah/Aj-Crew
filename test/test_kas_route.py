@@ -194,17 +194,13 @@ class TestKiroCliSignedOut:
             return fingerprint
 
         definitive_value = definitive
-        monkeypatch.setattr(
-            "aj_crew.config.loader.read_env_file_credential", lambda *a, **k: None
-        )
+        monkeypatch.setattr("aj_crew.config.loader.read_env_file_credential", lambda *a, **k: None)
         monkeypatch.setattr("aj_crew.kiro_prerequisite.identity_fingerprint", fake_fingerprint)
         assert kas_route.kiro_cli_signed_out(environ={}, home=tmp_path) is expected
 
     def test_a_relocated_store_proves_nothing(self, tmp_path, monkeypatch):
         """The fixed anchor is not the store a relocated kiro-cli signs in to."""
-        monkeypatch.setattr(
-            "aj_crew.config.loader.read_env_file_credential", lambda *a, **k: None
-        )
+        monkeypatch.setattr("aj_crew.config.loader.read_env_file_credential", lambda *a, **k: None)
         monkeypatch.setattr(
             "aj_crew.kiro_prerequisite.identity_store_is_relocated", lambda *a: True
         )
@@ -218,9 +214,7 @@ class TestKiroCliSignedOut:
         def boom(*a, **k):
             raise OSError("store unreadable")
 
-        monkeypatch.setattr(
-            "aj_crew.config.loader.read_env_file_credential", lambda *a, **k: None
-        )
+        monkeypatch.setattr("aj_crew.config.loader.read_env_file_credential", lambda *a, **k: None)
         monkeypatch.setattr("aj_crew.kiro_prerequisite.identity_fingerprint", boom)
         assert kas_route.kiro_cli_signed_out(environ={}, home=tmp_path) is False
 

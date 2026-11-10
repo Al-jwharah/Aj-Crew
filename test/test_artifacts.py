@@ -20,7 +20,6 @@ from artifacts_helpers import (  # noqa: F401 -- the fixture is requested by nam
     store_fixture,
 )
 
-from conftest import make_dir_link, requires_symlinks
 from aj_crew.artifacts import (
     MAX_CONTENT_BYTES,
     MAX_VERSIONS,
@@ -33,6 +32,7 @@ from aj_crew.artifacts import (
     has_unthemed_hardcoded_colors,
     slugify,
 )
+from conftest import make_dir_link, requires_symlinks
 
 # ── slugify ─────────────────────────────────────────────────────────────────
 

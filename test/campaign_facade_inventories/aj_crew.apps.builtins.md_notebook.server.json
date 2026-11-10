@@ -96,7 +96,7 @@
   "watch_state",
   "write_vaults"
  ],
- "note": "A aj_crew._facade_mirror facade over the server_store, server_http, server_paths and server_host owners beside it; it keeps the per-process state, every function that reaches it, every route and the app wiring.",
+ "note": "An aj_crew._facade_mirror facade over the server_store, server_http, server_paths and server_host owners beside it; it keeps the per-process state, every function that reaches it, every route and the app wiring.",
  "rebound": {
   "LoopBoundLock": "aj_crew.loop_lock",
   "WINDOWS_DEVICE_STEMS": "aj_crew.constants",

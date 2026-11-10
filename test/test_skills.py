@@ -395,8 +395,8 @@ class TestResolveDollarSkills:
         a skill reached only through that out-of-root ancestor resolves outside
         the roots and must not enumerate, while an in-tree sibling still does.
         """
-        from conftest import make_dir_link
         from aj_crew.skills import _iter_skill_files
+        from conftest import make_dir_link
 
         base = tmp_path / "skills"
         base.mkdir(parents=True, exist_ok=True)

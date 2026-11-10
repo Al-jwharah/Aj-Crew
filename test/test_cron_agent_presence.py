@@ -39,9 +39,7 @@ def test_unresolved_name_is_missing_after_a_complete_rescan() -> None:
     with (
         patch("aj_crew.config.loader_agents._resolve_agent_selection", _selection(False)),
         patch("aj_crew.config.loader_snapshots.refresh_materialized_agents", refresh),
-        patch(
-            "aj_crew.config.loader_snapshots.materialized_snapshot_complete", return_value=True
-        ),
+        patch("aj_crew.config.loader_snapshots.materialized_snapshot_complete", return_value=True),
     ):
         assert agent_presence.cron_agent_missing(object(), "gone", None) is True
     refresh.assert_called_once_with()
@@ -51,9 +49,7 @@ def test_incomplete_rescan_cannot_prove_a_miss() -> None:
     with (
         patch("aj_crew.config.loader_agents._resolve_agent_selection", _selection(False)),
         patch("aj_crew.config.loader_snapshots.refresh_materialized_agents"),
-        patch(
-            "aj_crew.config.loader_snapshots.materialized_snapshot_complete", return_value=False
-        ),
+        patch("aj_crew.config.loader_snapshots.materialized_snapshot_complete", return_value=False),
     ):
         assert agent_presence.cron_agent_missing(object(), "gone", None) is False
 
@@ -63,9 +59,7 @@ def test_name_found_by_the_rescan_is_not_missing() -> None:
     with (
         patch("aj_crew.config.loader_agents._resolve_agent_selection", selection),
         patch("aj_crew.config.loader_snapshots.refresh_materialized_agents"),
-        patch(
-            "aj_crew.config.loader_snapshots.materialized_snapshot_complete", return_value=True
-        ),
+        patch("aj_crew.config.loader_snapshots.materialized_snapshot_complete", return_value=True),
     ):
         assert agent_presence.cron_agent_missing(object(), "new", None) is False
 

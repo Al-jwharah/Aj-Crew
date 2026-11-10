@@ -1,6 +1,7 @@
 {
  "base_public_names": [
   "AUTO_EFFECT_UNKNOWN",
+  "AjCrewConfig",
   "AutoUpdateEffect",
   "CHECK_DEFERRED",
   "CHECK_FAILED",
@@ -18,7 +19,6 @@
   "ERR_UNKNOWN",
   "ERR_VERSION_UNPARSEABLE",
   "EXTERNALLY_MANAGED_MESSAGES",
-  "AjCrewConfig",
   "MANAGED_BY_COMMAND",
   "MANAGED_BY_GIT",
   "MODE_NONE",
@@ -97,6 +97,7 @@
  "note": "Frozen at the split of src/aj_crew/dashboard/handlers/updates.py (S36): every public name it defined, and every name it bound from the rest of aj_crew.",
  "rebound": {
   "AUTO_EFFECT_UNKNOWN": "aj_crew.platform.update_capability",
+  "AjCrewConfig": "aj_crew.config.loader",
   "AutoUpdateEffect": "aj_crew.platform.update_capability",
   "CHECK_DEFERRED": "aj_crew.platform.update_capability",
   "CHECK_FAILED": "aj_crew.platform.update_capability",
@@ -114,7 +115,6 @@
   "ERR_UNKNOWN": "aj_crew.platform.update_capability",
   "ERR_VERSION_UNPARSEABLE": "aj_crew.platform.update_capability",
   "EXTERNALLY_MANAGED_MESSAGES": "aj_crew.platform.update_capability",
-  "AjCrewConfig": "aj_crew.config.loader",
   "MANAGED_BY_COMMAND": "aj_crew.platform.update_capability",
   "MANAGED_BY_GIT": "aj_crew.platform.update_capability",
   "MODE_NONE": "aj_crew.platform.update_capability",

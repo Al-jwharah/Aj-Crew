@@ -379,9 +379,7 @@ class TestMarkedGroupMembers:
         for pid, (state, pgrp, inst) in rows.items():
             write_stat(tmp_path, pid, comm=comm, state=state, pgrp=pgrp, start_ticks=pid * 10)
             (tmp_path / str(pid) / "environ").write_bytes(
-                b"AJCREW_SPAWNED=1\x00AJCREW_SPAWN_INSTANCE="
-                + inst.encode()
-                + b"\x00PATH=/bin\x00"
+                b"AJCREW_SPAWNED=1\x00AJCREW_SPAWN_INSTANCE=" + inst.encode() + b"\x00PATH=/bin\x00"
             )
         (tmp_path / "self").mkdir()  # a non-digit entry, skipped
         return tmp_path

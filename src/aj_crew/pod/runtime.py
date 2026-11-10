@@ -446,7 +446,7 @@ def resolve_checkout(
     raise PodError(
         f"no git worktree {name!r}. Create one for your branch:\n"
         f"  git worktree add ../{name} -b feat/{name} main\n"
-        f"  (run `ajcrew pod up {name}` from inside a ajcrew checkout, "
+        f"  (run `ajcrew pod up {name}` from inside an ajcrew checkout, "
         f"or set AJCREW_POD_REPO to point at one)"
     )
 
@@ -1346,7 +1346,7 @@ def build_pod_env(
     memory and knowledge search through the keyword fallback, which is a
     supported mode rather than a broken one, so the instance stays usable.
 
-    Deliberately the existing skip-download switch rather than a
+    Deliberately the existing skip-download switch rather than an
     ``AJCREW_EMBED_MODEL_URL`` pointed at an unreachable host. That spelling
     reaches the same end state only after the downloader has spent its full
     attempt budget on HTTPS requests to a host chosen to fail, and it carries a

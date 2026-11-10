@@ -25,7 +25,6 @@ import pytest
 from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 
-from conftest import make_dir_link, requires_symlinks
 from aj_crew import folder_steering
 from aj_crew.dashboard.chat_folders import _resolve_folder_steering_dirs
 from aj_crew.folder_steering import (
@@ -36,6 +35,7 @@ from aj_crew.folder_steering import (
     render_folder_steering,
 )
 from aj_crew.member_essential_context import _MAX_SOURCE_BYTES
+from conftest import make_dir_link, requires_symlinks
 
 _LOGGER_NAME = "aj_crew.folder_steering"
 

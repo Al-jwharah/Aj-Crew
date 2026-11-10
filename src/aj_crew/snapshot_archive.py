@@ -733,7 +733,7 @@ def _report_skip(reason: str, path: str) -> None:
     elif reason == pinned_fs.SKIP_MASKED_BY_SANDBOX:
         print(
             f"⚠️  Not carrying {safe}: this run is inside Aj Crew's sandbox, which hides "
-            "it. A `ajcrew snapshot` run from your own terminal carries it."
+            "it. An `ajcrew snapshot` run from your own terminal carries it."
         )
     else:
         print(f"⚠️  Skipping hardlinked or non-regular file during snapshot copy: {safe}")

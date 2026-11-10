@@ -664,7 +664,7 @@ def _audit_fallback_tool(*, tool: str, detail: str, cwd: str | None) -> None:
 
 
 class SessionAgentRunner:
-    """A backend-AGNOSTIC agent runner that drives a Aj Crew **provider/session** instead
+    """A backend-AGNOSTIC agent runner that drives an Aj Crew **provider/session** instead
     of shelling out to ``claude -p`` directly (task #23). The provider is whatever the
     Aj Crew config selects (whichever LLM provider backend the user configured), so ANY
     backend can power the autonomous loop — not just a single CLI on PATH.
@@ -718,7 +718,7 @@ class SessionAgentRunner:
 
     @staticmethod
     def available() -> bool:
-        """True iff a Aj Crew provider factory can be built (a backend is configured).
+        """True iff an Aj Crew provider factory can be built (a backend is configured).
         Lets the backend prefer this runner; there is no subprocess fallback left, so a
         False here means the backend stays offline."""
         try:

@@ -1562,9 +1562,7 @@ class TestHoistManagedServers:
         # place (see ``TestMutedServersAreNotDeclared``), so it cannot reach here
         # to be hoisted or kept.
         self._managed(monkeypatch, {"command": "/opt/kc", "args": ["mcp-core"]})
-        projected = to_client_custom_agent(
-            "ajcrew", _spec(mcpServers={"ajcrew-core": entry}), "p"
-        )
+        projected = to_client_custom_agent("ajcrew", _spec(mcpServers={"ajcrew-core": entry}), "p")
         agents, array = hoist_servers_for_session([projected], "ajcrew", [])
         assert array == []
         if "command" in entry:
@@ -1677,9 +1675,7 @@ class TestUserServersStayInTheBlock:
             tools=["@ajcrew-core", "@my-server/tool_a"],
         )
         projected = to_client_custom_agent("ajcrew", spec, "p")
-        agents, array = hoist_servers_for_session(
-            [projected], "ajcrew", [], session_token="tok-x"
-        )
+        agents, array = hoist_servers_for_session([projected], "ajcrew", [], session_token="tok-x")
         assert [e["name"] for e in array] == ["ajcrew-core"]
         core_env = {pair["name"]: pair["value"] for pair in array[0]["env"]}
         assert core_env.get(STUB_SESSION_TOKEN_ENV) == "tok-x"

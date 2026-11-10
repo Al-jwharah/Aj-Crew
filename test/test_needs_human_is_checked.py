@@ -12,9 +12,7 @@ from pathlib import Path
 from aj_crew.agent_parts.spec_prompts import _WORKER_SYSTEM_PROMPT
 from aj_crew.mcp_work import _list_tools
 
-_SKILL = (
-    Path(__file__).resolve().parents[1] / "src/aj_crew/builtin_skills/goal-conductor/SKILL.md"
-)
+_SKILL = Path(__file__).resolve().parents[1] / "src/aj_crew/builtin_skills/goal-conductor/SKILL.md"
 
 # One marker per ask case, each a word the case cannot be stated without.
 _FIVE_ASKS = ("credentials", "spend", "someone else's work", "preference", "said they want")

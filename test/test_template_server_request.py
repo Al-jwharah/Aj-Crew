@@ -675,9 +675,7 @@ def test_existing_grants_cover_every_reached_template(monkeypatch):
     monkeypatch.setattr(
         agents_handlers, "_agent_detail_candidates", lambda name: [("p", specs.get(name, {}))]
     )
-    assert tsr.existing_grants("ajcrew-conductor", "files") == [
-        "ajcrew-ledger-conductor: @files"
-    ]
+    assert tsr.existing_grants("ajcrew-conductor", "files") == ["ajcrew-ledger-conductor: @files"]
 
 
 def test_a_failed_undo_never_overwrites_a_newer_approval(env, tmp_path, monkeypatch):
@@ -710,9 +708,7 @@ def test_a_failed_undo_never_overwrites_a_newer_approval(env, tmp_path, monkeypa
 
 
 def test_only_if_absent_leaves_an_existing_addition(env):
-    additions.add_addition(
-        "ajcrew-conductor", "files", GATEWAY_ENTRY, approved_by="u", card_id="a"
-    )
+    additions.add_addition("ajcrew-conductor", "files", GATEWAY_ENTRY, approved_by="u", card_id="a")
     assert (
         additions.add_addition(
             "ajcrew-conductor",
@@ -1119,9 +1115,7 @@ def test_a_settings_write_passes_the_card_middleware_without_a_card(env, tmp_pat
 
     status, body = _run(store, go)
     assert status == 200, body
-    assert (
-        additions.read_additions("ajcrew")["ajcrew-dashboard"].card_id == tsr.SETTINGS_CARD_ID
-    )
+    assert additions.read_additions("ajcrew")["ajcrew-dashboard"].card_id == tsr.SETTINGS_CARD_ID
 
 
 @pytest.mark.parametrize(

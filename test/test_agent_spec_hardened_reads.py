@@ -36,7 +36,6 @@ import pytest
 import source_corpus
 from aiohttp import web
 
-from conftest import requires_symlinks
 from aj_crew.agent import _install_heartbeat_agent, migrate_agent_specs
 from aj_crew.agent_files import AGENT_FILENAME, HEARTBEAT_AGENT_FILENAME
 from aj_crew.connections import mint
@@ -51,6 +50,7 @@ from aj_crew.dashboard.handlers.mcp import (
     _launch_specs_for,
     api_mcp_active,
 )
+from conftest import requires_symlinks
 
 # One xdist worker for the whole module: the call-site ratchet below streams src/ through
 # ``test/source_corpus.py`` once per target and memoises only its own small result. Under
@@ -860,9 +860,7 @@ class TestProjectNamesDenialAttribution:
 
         project_dir, events = self._denial_events(tmp_path, monkeypatch)
 
-        result = project_agent_names(
-            project_dir, operation="api_ajcrew_agents", source="dashboard"
-        )
+        result = project_agent_names(project_dir, operation="api_ajcrew_agents", source="dashboard")
         assert result == frozenset()
         assert len(events) == 1
         assert events[0]["operation"] == "api_ajcrew_agents"

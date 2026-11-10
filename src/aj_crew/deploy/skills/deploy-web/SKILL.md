@@ -1,6 +1,6 @@
 ---
 name: deploy-web
-description: Publish a Aj Crew artifact (HTML / markdown / widget) to a public HTTPS URL on the user's own AWS account (private S3 + CloudFront + OAC). Use when the user says "publish this publicly", "deploy this artifact to the web", "make this a public URL", "deploy-web", or asks to set up / recall / destroy a deploy-web site. Aj Crew never stores credentials — only an AWS profile name.
+description: Publish an Aj Crew artifact (HTML / markdown / widget) to a public HTTPS URL on the user's own AWS account (private S3 + CloudFront + OAC). Use when the user says "publish this publicly", "deploy this artifact to the web", "make this a public URL", "deploy-web", or asks to set up / recall / destroy a deploy-web site. Aj Crew never stores credentials — only an AWS profile name.
 ---
 
 # deploy-web — publish artifacts to your own AWS

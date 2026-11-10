@@ -17,10 +17,10 @@ if TYPE_CHECKING:
     from aj_crew.slack.gateway import (
         L4_GATEWAYD,
         LADDER,
+        AjCrewConfig,
         GatewayManager,
         GatewayOrchestrator,
         GatewaySpec,
-        AjCrewConfig,
         LaunchApprovals,
         Path,
         asyncio,

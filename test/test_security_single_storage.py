@@ -22,7 +22,7 @@ for the six lazily re-exporting packages, and this file holds it for
 ``aj_crew.security`` alone so the two land in either order without touching one
 another.
 
-    Retire this file when ``test/test_lazy_reexport_storage.py`` on main contains a
+    Retire this file when ``test/test_lazy_reexport_storage.py`` on main contains an
     ``aj_crew.security`` entry in ``PACKAGES``.
 """
 

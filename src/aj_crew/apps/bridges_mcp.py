@@ -240,7 +240,7 @@ def resolve_stdio_command(cfg: dict, app_root: Path | None = None) -> dict:
     ABI-bound to that interpreter), else the app's own venv interpreter when a
     version-matched one exists, else ``sys.executable`` - and expose the provisioned deps
     dir through ``PYTHONPATH`` exactly as the backend spawn env does, EXCEPT to a server
-    launching a ``aj_crew`` module, which must never see an app-supplied ``aj_crew``
+    launching an ``aj_crew`` module, which must never see an app-supplied ``aj_crew``
     copy. The two spawn paths share one policy on purpose; a second divergent copy is the
     defect this shape removes.
 
@@ -289,7 +289,7 @@ def resolve_stdio_command(cfg: dict, app_root: Path | None = None) -> dict:
         # absolute script whose shebang names an ABI-matched interpreter,
         # which is relaunched through deps_boot under that interpreter - and
         # it still needs the app's provisioned deps on import. NEVER injected into a server that
-        # launches a aj_crew module: an app that pip-pins its own aj_crew
+        # launches an aj_crew module: an app that pip-pins its own aj_crew
         # copy would otherwise shadow the gateway's code with a foreign
         # version on the gateway's own interpreter - the same reason
         # _targets_gateway_module pins sys.executable below. Registration can
@@ -760,7 +760,7 @@ def _py_target_index(args: list) -> int | None:
 
 
 def _targets_gateway_module(cfg: dict) -> bool:
-    """True when a python stdio entry launches a ``aj_crew``-owned module.
+    """True when a python stdio entry launches an ``aj_crew``-owned module.
 
     Scans only the INTERPRETER-OPTION prefix of ``args``, mirroring CPython's
     own argv parsing. The full branch table (each row is pinned by a test):

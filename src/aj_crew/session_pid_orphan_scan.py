@@ -269,7 +269,7 @@ def _our_orphan_pids() -> list[int]:
 
 
 def _is_orphan_mcp(cmdline: bytes) -> bool:
-    """True if cmdline matches a Aj Crew MCP entrypoint (not a peer gateway)."""
+    """True if cmdline matches an Aj Crew MCP entrypoint (not a peer gateway)."""
     # Exclude peer gateways — they're not orphan MCP targets
     if any(marker in cmdline for marker in _GATEWAY_MARKERS):
         return False
@@ -436,7 +436,7 @@ def _is_sweepable_orphan_mcp(pid: int, cmdline: bytes) -> bool:
     """Positive-identity gate for the orphan sweep (find AND pre-kill re-verify).
 
     Two independent paths:
-    1. cmdline carries a Aj Crew fingerprint (:func:`_is_orphan_mcp`) —
+    1. cmdline carries an Aj Crew fingerprint (:func:`_is_orphan_mcp`) —
        the pre-existing behavior, works on Linux and macOS.
     2. cmdline is a fingerprint-less MCP launcher shape AND the process
        environ carries the ``AJCREW_SPAWNED`` marker (catches escaped
@@ -1002,7 +1002,7 @@ def find_orphan_mcp_candidates(active_pids: set[int]) -> list[int]:
                 # /api/logs. repr escapes control characters.
                 logger.error(
                     "Leaked agent runtime pid=%s (argv0 %r, age %.0fs): reparented "
-                    "to init/systemd with a AJCREW_SPAWNED environ marker but "
+                    "to init/systemd with an AJCREW_SPAWNED environ marker but "
                     "recorded in NEITHER PID file, so no reaper can reclaim it. "
                     "Not terminated — report only.",
                     pid,

@@ -15,7 +15,7 @@ they keep are :mod:`aj_crew.cloud.login`'s and are not repeated here. The two
 halves share the capture loop, the private login directory and the sentinels, so
 the local Python reads one set of outputs whichever program produced them.
 
-Every vault-route verb is a ``ajcrew kas`` subcommand (:mod:`aj_crew.cli_kas_login`)
+Every vault-route verb is an ``ajcrew kas`` subcommand (:mod:`aj_crew.cli_kas_login`)
 that speaks ``kiro-cli``'s vocabulary on purpose: ``login`` prints the same
 verification URL + ``code:`` lines the capture loop greps for, ``whoami --format
 json`` prints the document :func:`aj_crew.cloud.login_target.parse_whoami_output`
@@ -58,7 +58,7 @@ ROUTE_UNKNOWN_SENTINEL = "__AJCREW_ROUTE_UNKNOWN__"
 #: ``ajcrew kas route`` did not answer ``kas-bundle`` and it has no ``kiro-cli``
 #: either. Without this the kiro-cli branch would run on a box that has none and the
 #: operator would read ``kiro-cli: command not found`` where the real cause is a
-#: bundle-route box whose route probe failed (an unreadable config, a ``ajcrew``
+#: bundle-route box whose route probe failed (an unreadable config, an ``ajcrew``
 #: too old for the verb). The script prints the probe's own output after the
 #: sentinel so the local side can show it.
 NO_SIGNIN_PROGRAM_SENTINEL = "__AJCREW_NO_SIGNIN_PROGRAM__"
@@ -98,7 +98,7 @@ def route_prelude() -> str:
     scripts keep them apart: ``0`` is an answer; :data:`ROUTE_UNKNOWN_EXIT` (``1``) is
     the verb saying it could not decide (``$KC_ROUTE_UNKNOWN=1``, and
     :func:`require_sign_in_program` then refuses before either program runs);
-    anything else -- argparse's ``2`` from a ``ajcrew`` too old to have the verb,
+    anything else -- argparse's ``2`` from an ``ajcrew`` too old to have the verb,
     the shell's ``127`` for no ``ajcrew`` at all -- is "no route answer", and the
     script takes its kiro-cli branch, the behaviour every box had before the verb
     existed. Only the exact spelling :data:`ROUTE_KAS_BUNDLE` selects the vault
@@ -136,7 +136,7 @@ def require_sign_in_program() -> str:
 
     Each names the real situation instead -- a box with no kiro-cli whose
     route probe did not say ``kas-bundle`` -- echoes the probe's own output (the
-    ``kas route`` error text, or the shell's "not found" for a ``ajcrew`` the box
+    ``kas route`` error text, or the shell's "not found" for an ``ajcrew`` the box
     lacks), and names the remedy. The sentinel comes first so the local side can
     classify the answer without parsing the prose. ``$KC_ROUTE_OUT`` and
     ``$KC_ROUTE_ERR`` are both printed here (blank lines dropped), since a failed

@@ -125,9 +125,7 @@ def _public_async_route_methods(source: str) -> tuple[set[str], dict[str, set[tu
     """Return public wrappers with route calls and the routes extracted per wrapper."""
     tree = ast.parse(source)
     client = next(
-        node
-        for node in tree.body
-        if isinstance(node, ast.ClassDef) and node.name == "AjCrewClient"
+        node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == "AjCrewClient"
     )
     callers: set[str] = set()
     routes: dict[str, set[tuple[str, str]]] = {}

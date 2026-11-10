@@ -436,9 +436,7 @@ class TestTheAccountBakedIntoTheImageIsReadFromTheOperatorsOwnArns:
     def test_the_activation_role_names_the_account(self):
         from aj_crew.cloud.microvm.engine import spec_account_id
 
-        spec = self._spec(
-            activation_role_arn="arn:aws:iam::123456789012:role/ajcrew-microvm-crew"
-        )
+        spec = self._spec(activation_role_arn="arn:aws:iam::123456789012:role/ajcrew-microvm-crew")
         assert spec_account_id(spec) == "123456789012"
 
     def test_the_configured_spec_in_this_file_resolves_to_its_account(self):

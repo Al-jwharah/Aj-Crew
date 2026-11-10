@@ -711,7 +711,7 @@ test("an orphaned gateway of the other release family is offered a stop, not a q
   assert.equal(await state.supervisor.start(), true);
   assert.equal(state.dialogs.length, 1, "one takeover prompt, no stale dialog");
   assert.equal(state.dialogs[0].message,
-    "A Aj Crew Nightly gateway (0.1.2-nightly.20260729t073648) is still running with your Aj Crew data.");
+    "An Aj Crew Nightly gateway (0.1.2-nightly.20260729t073648) is still running with your Aj Crew data.");
   assert.deepStrictEqual(state.dialogs[0].buttons, ["Stop and continue", "Cancel"]);
   assert.match(state.dialogs[0].detail, /quitting Aj Crew Nightly would not stop it/);
   assert.match(state.dialogs[0].detail, /ajcrew stop --port 5476/);

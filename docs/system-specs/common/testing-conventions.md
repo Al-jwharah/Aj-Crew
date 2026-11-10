@@ -116,7 +116,7 @@ promise-sleep, `waitForTimeout`); a deliberate one says why with
   registered under that name with `monkeypatch.setitem(sys.modules, name, mod)` before
   `exec_module` (a `@dataclass` module needs it), never under the real name.
   A `sys.modules` eviction restores the entry AND its parent package's attribute in the
-  same scope (the rootdir package-attribute floor puts back a `aj_crew` one a test
+  same scope (the rootdir package-attribute floor puts back an `aj_crew` one a test
   left changed, and names the test), and a new process-global ships its floor entry.
   [Class 4](#4-order-dependence-and-shared-state).
 - **D12. Prove it.** Each new or changed test passes 20 times at `-n0`, 10 times at
@@ -128,12 +128,12 @@ promise-sleep, `waitForTimeout`); a deliberate one says why with
 
 ### Production deadlines are not test boundaries
 
-A test passes no value that is not literal ``0``/``None`` or a ``aj_crew.testing``
+A test passes no value that is not literal ``0``/``None`` or an ``aj_crew.testing``
 import as a duration-named argument.
 
 - **``0`` for the timeout path.** Literal ``0`` (or ``None``) is the "no deadline /
   already expired" value.
-- **A ``aj_crew.testing`` name for a generous safety net.** Use
+- **An ``aj_crew.testing`` name for a generous safety net.** Use
   ``from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS`` (60 s) for the
   happy-path pin. Any name imported from ``aj_crew.testing.*`` is allowed.
 - **A fixture-pinned seam for a production constant.** ``_floor_monkeypatch.setattr``
@@ -194,7 +194,7 @@ module through any binding is the semgrep rule's), a `sys.modules` eviction with
 no restore in the same function, raw environment writes, duration bounds, literal waits
 under two seconds (the too-tight lost-run bound of class 6; a negative such as
 `assert not done.wait(0.3)` is not one), literal listener ports, fixed crew-log flush
-ceilings, crew-log removals outside `eager.paused()`, Event waits a test parks on a thread-pool executor, direct writes of asyncio Tasks or TimerHandles to a ``aj_crew`` module attribute from a test function (K16), ``pytest.mark.xfail(strict=False)`` overrides (K18), a non-zero numeric literal used as a duration-named keyword argument or as a ``setattr`` value on a duration-named attribute — the production-deadline-as-test-boundary shape (K19), an `update_metadata` or `update_metadata_if` call in a coroutine's own frame (K20, [Async tests](#async-tests)), and five frontend shapes. In a file
+ceilings, crew-log removals outside `eager.paused()`, Event waits a test parks on a thread-pool executor, direct writes of asyncio Tasks or TimerHandles to an ``aj_crew`` module attribute from a test function (K16), ``pytest.mark.xfail(strict=False)`` overrides (K18), a non-zero numeric literal used as a duration-named keyword argument or as a ``setattr`` value on a duration-named attribute — the production-deadline-as-test-boundary shape (K19), an `update_metadata` or `update_metadata_if` call in a coroutine's own frame (K20, [Async tests](#async-tests)), and five frontend shapes. In a file
 the pinned semgrep reads no line of, it counts the `time` patches the semgrep rule would
 refuse as well: a file over 1,000,000 bytes, or one holding both a lambda with a bare `*`
 (`lambda a, *, b: ...`) and a parenthesized `with (a as b, ...):`, which semgrep 1.78
@@ -996,7 +996,7 @@ Three layers, told apart by how much of the product is real:
 |---|---|---|---|---|
 | Unit | `test/`, `src/aj_crew/apps/builtins/*/tests/` | one function or one handler on a bare `web.Application()` | everything else | every shard, every platform |
 | Integration | `test/integration/` | the whole gateway, booted by `GatewayOrchestrator.run()` in the pytest process, on a `tmp_path` home; real config, stores, policy files, routes | the model (`aj_crew.testing.fake_acp_backend`) | the `integration` job, Linux, behind `AJCREW_INTEGRATION=1` |
-| E2E | `test/test_e2e_smoke.py`, `test/e2e/`, `test/test_playwright_e2e.py` | a `ajcrew gateway` subprocess, and for the browser suite a real Chromium | the model | the `e2e*` jobs, behind `AJCREW_E2E=1` |
+| E2E | `test/test_e2e_smoke.py`, `test/e2e/`, `test/test_playwright_e2e.py` | an `ajcrew gateway` subprocess, and for the browser suite a real Chromium | the model | the `e2e*` jobs, behind `AJCREW_E2E=1` |
 
 The middle layer exists because the other two cannot see the seams between
 boot steps. A handler test mocks the store the handler reads; the E2E harness
@@ -1982,7 +1982,7 @@ found these further classes. Each one passed on the host that wrote it.
   postinstall), so four test files raced the network on a fresh checkout. The `test` script
   now preloads `website/electron/test/_preload.cjs`, which sets `ELECTRON_OVERRIDE_DIST_PATH`
   before any source loads. Details: [website/docs/testing.md](../../../website/docs/testing.md).
-- **The basetemp can sit INSIDE a guarded root.** A Aj Crew agent session sets `TMPDIR`
+- **The basetemp can sit INSIDE a guarded root.** An Aj Crew agent session sets `TMPDIR`
   to its scratch dir under `~/.kiro/crew/scratch/`, so pytest's basetemp — and every
   correctly pinned home — resolves inside the real `~/.kiro` while touching nothing of the
   operator's. The sessions-dir fence and `test_host_isolation_floor.py`'s guard therefore
@@ -2004,7 +2004,7 @@ found these further classes. Each one passed on the host that wrote it.
   unfaked run uses.
 
 The third full-run audit ran five backend and five frontend runs on a **macOS** host,
-from inside a Aj Crew agent session, with the audit hook attributing every write,
+from inside an Aj Crew agent session, with the audit hook attributing every write,
 spawn, connect and kill to a test and a per-test census of duration, RSS, threads and
 descriptors. Both changes of venue mattered: the two earlier audits ran on Linux, and a
 suite that is clean there had 227 deterministic failures and four 120-second hangs on a
@@ -2025,7 +2025,7 @@ tests; the classes below are what the rest was made of.
   `pytest.MonkeyPatch.context()`.
 - **A pin that lives in `test/conftest.py` is not a floor.** `AJCREW_PROFILE=standalone`
   was pinned there, so the ~108 modules under `src/aj_crew/apps/builtins/*/tests/`
-  never saw it. A Aj Crew agent session exports the enterprise `AJCREW_PROFILE` to every
+  never saw it. An Aj Crew agent session exports the enterprise `AJCREW_PROFILE` to every
   child it spawns; with no companion installed that profile FAILS CLOSED, and 150+
   builtin-app tests were red (every governance-gated route 500, every gated
   notification dropped) while `test/` was green. The pin is a rootdir autouse fixture
@@ -2313,7 +2313,7 @@ added a fourth; each was a real defect:
 
 ### What the fourth five-run pass found (Linux, 106k tests per run)
 
-Five full backend runs plus five frontend runs on a 32-core Linux host, from inside a
+Five full backend runs plus five frontend runs on a 32-core Linux host, from inside an
 Aj Crew agent session, with an in-process audit hook attributing every write, spawn,
 connect and kill to a test and a per-test census of duration, RSS, threads and
 descriptors. **Zero flaky tests across 5 × 106,199** — every failure was identical in

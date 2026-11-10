@@ -402,8 +402,8 @@ if TYPE_CHECKING:  # names this module re-exported from other modules
     from aj_crew.config.loader import resolve_agent_bindings  # noqa: F401
     from aj_crew.config.resolution import DEGRADED_WHOLE_CONFIG  # noqa: F401
     from aj_crew.config.sections import DEFAULT_MODEL  # noqa: F401
-    from aj_crew.config.sections import AutocompactPctError  # noqa: F401
     from aj_crew.config.sections import AjCrewAgentConfig  # noqa: F401
+    from aj_crew.config.sections import AutocompactPctError  # noqa: F401
     from aj_crew.config.sections import coerce_effort  # noqa: F401
     from aj_crew.config.sections import parse_autocompact_pct  # noqa: F401
     from aj_crew.config.sections import worker_session_defaults  # noqa: F401

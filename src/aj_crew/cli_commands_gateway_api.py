@@ -7,7 +7,7 @@ that very connection is proven to be this install's recorded gateway. ``_spawn``
 starts one (``_spawn_run``, which waits for the result unless told not to);
 ``_artifact`` lists, saves, shows, updates and deletes artifacts and lists an
 artifact's versions. ``_create_cron_folder`` creates the missing Schedule-page
-folder a ``ajcrew cron add/update --folder`` names, through the dashboard.
+folder an ``ajcrew cron add/update --folder`` names, through the dashboard.
 
 An owner of the mirror facade ``aj_crew.cli_commands``: callers and tests reach every
 name here as ``aj_crew.cli_commands.<name>``, and a patch through the facade reaches

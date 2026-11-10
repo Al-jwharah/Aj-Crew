@@ -1631,8 +1631,8 @@ it too: with
 `agent.member_dispatch` on, a member-created worker passes the HTTP gate and
 `_member_bypass` and can `session_create` its own children — grandchildren of the
 original member — without the operator's global `session_control` switch. This is
-INTENDED, not an accidental widening: the conductor model is recursive by design (a
-`ajcrew-conductor` dispatches a `ajcrew-conductor` child for a sub-goal that
+INTENDED, not an accidental widening: the conductor model is recursive by design (an
+`ajcrew-conductor` dispatches an `ajcrew-conductor` child for a sub-goal that
 itself decomposes), and depth is bounded elsewhere — the conductor agent caps
 nesting (children may conduct, grandchildren may not), not this fence. Every node
 in that tree stays bounded by the SAME ownership fence: a worker reaches only the

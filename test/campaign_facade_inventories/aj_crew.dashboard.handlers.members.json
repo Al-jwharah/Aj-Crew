@@ -1,7 +1,7 @@
 {
  "base_public_names": [
-  "DashboardState",
   "AjCrewConfig",
+  "DashboardState",
   "MEMBER_APPROVAL_MODE_UNSET_EFFECTIVE",
   "MemberSlugError",
   "api_member_activity",
@@ -27,8 +27,8 @@
  ],
  "note": "Frozen at the split of src/aj_crew/dashboard/handlers/members.py (S58): every public name it defined, and every name it bound from the rest of aj_crew.",
  "rebound": {
-  "DashboardState": "aj_crew.dashboard.state",
   "AjCrewConfig": "aj_crew.config.loader",
+  "DashboardState": "aj_crew.dashboard.state",
   "MEMBER_APPROVAL_MODE_UNSET_EFFECTIVE": "aj_crew.config.sections",
   "MemberSlugError": "aj_crew.members",
   "default_project_dir": "aj_crew.config.loader",

@@ -155,11 +155,7 @@ class TestContextTrace:
         import ast
 
         runner = (
-            Path(__file__).resolve().parents[2]
-            / "src"
-            / "aj_crew"
-            / "dashboard"
-            / "chat_runner.py"
+            Path(__file__).resolve().parents[2] / "src" / "aj_crew" / "dashboard" / "chat_runner.py"
         )
         source = "\n".join(
             turn_file.read_text(encoding="utf-8")
@@ -289,11 +285,7 @@ class TestContextTrace:
         import ast
 
         runner = (
-            Path(__file__).resolve().parents[2]
-            / "src"
-            / "aj_crew"
-            / "dashboard"
-            / "chat_runner.py"
+            Path(__file__).resolve().parents[2] / "src" / "aj_crew" / "dashboard" / "chat_runner.py"
         )
         source = "\n".join(
             turn_file.read_text(encoding="utf-8")

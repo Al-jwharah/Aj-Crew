@@ -48,7 +48,6 @@ from registry_store_art_prewarm_helpers import (
     _settled,
 )
 
-from conftest import requires_symlinks
 from aj_crew.apps import registry as reg_mod
 from aj_crew.apps.registry import (
     _TRUST_INDEX,
@@ -65,6 +64,7 @@ from aj_crew.apps.registry import (
 )
 from aj_crew.subprocess_utf8 import UTF8_TEXT
 from aj_crew.testing.wait import finished
+from conftest import requires_symlinks
 
 # ---------------------------------------------------------------------------
 # What lands where

@@ -299,7 +299,7 @@ def test_a_reference_passes_the_publish_floor_and_the_whole_document_save_is_gat
     :meth:`AjCrewConfig.save` also publishes whole documents, so the rule sits in
     the one function both writers reach.
     """
-    from aj_crew.config.loader import ConfigWriteRefused, AjCrewConfig, update_config_locked
+    from aj_crew.config.loader import AjCrewConfig, ConfigWriteRefused, update_config_locked
 
     path = tmp_path / "config.json"
 

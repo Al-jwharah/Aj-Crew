@@ -252,9 +252,7 @@ async def test_named_slot_refuses_while_stage_controller_runs():
         slot._pending.append({"cls": "done"})
         slot.event.set()
 
-    with patch(
-        "aj_crew.dashboard.openai_compat._run_chat", side_effect=fake_run_chat
-    ) as run_chat:
+    with patch("aj_crew.dashboard.openai_compat._run_chat", side_effect=fake_run_chat) as run_chat:
         response = await api_completions(request)
 
     assert response.status == 409
@@ -901,9 +899,7 @@ class TestRemainingCoverage:
         with (
             patch("aj_crew.dashboard.openai_compat._run_chat", side_effect=fake_run_chat),
             patch("aj_crew.dashboard.openai_compat.web.StreamResponse", return_value=mock_resp),
-            patch(
-                "aj_crew.dashboard.openai_compat.asyncio.wait_for", side_effect=patched_wait_for
-            ),
+            patch("aj_crew.dashboard.openai_compat.asyncio.wait_for", side_effect=patched_wait_for),
         ):
             await api_completions(request)
 
@@ -940,9 +936,7 @@ class TestRemainingCoverage:
 
         with (
             patch("aj_crew.dashboard.openai_compat._run_chat", side_effect=fake_run_chat),
-            patch(
-                "aj_crew.dashboard.openai_compat.asyncio.wait_for", side_effect=patched_wait_for
-            ),
+            patch("aj_crew.dashboard.openai_compat.asyncio.wait_for", side_effect=patched_wait_for),
         ):
             resp = await api_completions(request)
 

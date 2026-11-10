@@ -466,9 +466,7 @@ class TestProjectTree:
         def gate(p: str) -> bool:
             return p == fenced or real(p)
 
-        with patch(
-            "aj_crew.dashboard.handlers.files.is_sensitive_resolved_path", side_effect=gate
-        ):
+        with patch("aj_crew.dashboard.handlers.files.is_sensitive_resolved_path", side_effect=gate):
             async with TestClient(TestServer(_make_app(str(repo)))) as client:
                 on = await (await client.get(f"/api/project/tree?path={repo}&hidden=1")).json()
         assert ".env" not in on["paths"]

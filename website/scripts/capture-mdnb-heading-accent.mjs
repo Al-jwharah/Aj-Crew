@@ -139,11 +139,11 @@ async function main() {
   const { srv, base } = await serveDist()
   const browser = await chromium.launch()
   try {
-    await shoot(browser, base, { file: '01-aj-dark.png', mode: 'dark', palette: 'kiro' })
+    await shoot(browser, base, { file: '01-aj-dark.png', mode: 'dark', palette: 'aj' })
     await shoot(browser, base, { file: '02-monokai-dark.png', mode: 'dark', palette: 'monokai' })
     await shoot(browser, base, { file: '03-gruvbox-light.png', mode: 'light', palette: 'gruvbox' })
     await shoot(browser, base, { file: '04-everforest-light.png', mode: 'light', palette: 'everforest' })
-    await shoot(browser, base, { file: '05-editing-a-heading.png', mode: 'dark', palette: 'kiro', edit: true })
+    await shoot(browser, base, { file: '05-editing-a-heading.png', mode: 'dark', palette: 'aj', edit: true })
   } finally {
     await browser.close()
     srv.close()

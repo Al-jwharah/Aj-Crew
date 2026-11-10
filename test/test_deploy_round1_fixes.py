@@ -10,8 +10,8 @@ from pathlib import Path
 
 import pytest
 
-from conftest import _find_posix_test_shell, requires_symlinks
 from aj_crew.deploy import handlers, pending
+from conftest import _find_posix_test_shell, requires_symlinks
 
 
 def _bash():

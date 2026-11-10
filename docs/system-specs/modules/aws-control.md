@@ -192,7 +192,7 @@ bucket is left untagged rather than becoming a usable drive without versioning.
 `test_aws_control_storage.py::TestCreateDrive.test_versioning_is_enabled_before_hardening_tags_land`
 pins the sequence.
 
-Before the discovery tags, `storage.ensure_tls_only_policy` merges a `AjCrewDenyInsecureTransport` statement (`aws:SecureTransport=false`) into the bucket policy. It rewrites only a statement under its own Sid and keeps every other statement as written, so an owner's own transport rule, however strict, is never removed. It runs in `create_drive` rather than in the shared `_harden_bucket`, because deploy-web later replaces its bucket policy with `put_oac_bucket_policy`. It is best effort: the recommended drive IAM tier deliberately has no `s3:PutBucketPolicy`, since with it the same principal could grant itself reads of the write-only `backup/` prefix, so a denied call is logged and the drive is still created (`TestCreateDrive.test_a_failed_tls_policy_still_creates_the_drive`). A drive created before this statement existed gets it on its first upload in each gateway process; that check runs once per process, is best effort, and never fails the upload. `TestCreateDrive.test_a_new_drive_gets_a_tls_only_bucket_policy_before_its_tags`, `TestEnsureTlsOnlyPolicy` and `test_aws_control_routes.py::TestDriveUpload.test_an_upload_confirms_the_tls_only_policy_once_per_drive` pin this.
+Before the discovery tags, `storage.ensure_tls_only_policy` merges an `AjCrewDenyInsecureTransport` statement (`aws:SecureTransport=false`) into the bucket policy. It rewrites only a statement under its own Sid and keeps every other statement as written, so an owner's own transport rule, however strict, is never removed. It runs in `create_drive` rather than in the shared `_harden_bucket`, because deploy-web later replaces its bucket policy with `put_oac_bucket_policy`. It is best effort: the recommended drive IAM tier deliberately has no `s3:PutBucketPolicy`, since with it the same principal could grant itself reads of the write-only `backup/` prefix, so a denied call is logged and the drive is still created (`TestCreateDrive.test_a_failed_tls_policy_still_creates_the_drive`). A drive created before this statement existed gets it on its first upload in each gateway process; that check runs once per process, is best effort, and never fails the upload. `TestCreateDrive.test_a_new_drive_gets_a_tls_only_bucket_policy_before_its_tags`, `TestEnsureTlsOnlyPolicy` and `test_aws_control_routes.py::TestDriveUpload.test_an_upload_confirms_the_tls_only_policy_once_per_drive` pin this.
 
 Drive objects live beneath the `artifacts/`, `drive/`, and `backup/` prefixes.
 `storage.validate_key` rejects paths that could escape a section. Folder deletion
@@ -2632,7 +2632,7 @@ refused at boot rather than answering 400 per turn. `crew-` is free of every nam
 Crew manages, and because the container imports no `aj_crew` that claim is pinned by a
 test that imports both rather than by a comment.
 
-The derivation holds the other end: it refuses to overwrite a `ajcrew-worker.json` that
+The derivation holds the other end: it refuses to overwrite an `ajcrew-worker.json` that
 does not carry the marks every derived mirror carries -- its declared name and a
 reference to the `ajcrew-work` server -- on the boot path and on the spawn path alike.
 Provenance, not existence, which is what covers a spec placed by hand or by an older

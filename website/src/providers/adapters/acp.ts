@@ -251,7 +251,7 @@ export class AcpAdapter implements ProviderAdapter {
     // the configured default, and the mismatch would only self-correct once the
     // first turn backfilled slot.model from the live session.
     //
-    // `agentName` is a AjCrew agent name (a "crew"), not a kiro agent
+    // `agentName` is an AjCrew agent name (a "crew"), not a kiro agent
     // template — the per-agent default is stored per crew, and several crews can
     // share one template. `app` names the app that owns the session, so the
     // answer includes that app's own model setting as the session start does.

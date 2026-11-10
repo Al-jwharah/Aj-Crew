@@ -23,7 +23,6 @@ import pytest
 from taskrunner_v2_scenarios_helpers import _passthrough_sandbox  # noqa: F401
 from taskrunner_v2_scenarios_helpers import _llm_event, _make_provider, _mock_sessions
 
-from conftest import requires_git
 from aj_crew.taskrunner import (
     MAX_TOTAL_TASKS,
     Step,
@@ -31,6 +30,7 @@ from aj_crew.taskrunner import (
     TaskRun,
     TaskRunner,
 )
+from conftest import requires_git
 
 
 def _non_git_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, name: str) -> Path:

@@ -175,7 +175,7 @@ class TestStrictIdentityDiagnosis:
 class TestExternalClientNote:
     """Three refusals, one missing identity, one sentence set.
 
-    A ``ajcrew-core`` an editor spawns from its own MCP config has no identity
+    An ``ajcrew-core`` an editor spawns from its own MCP config has no identity
     channel and never will. With ``AJCREW_SESSION_KEY`` copied into that config
     the tool-policy gate refuses every call (``identity_unattested``); without it
     ``memory_recall`` refuses through the strict diagnosis and ``learn_add`` hands
@@ -195,20 +195,18 @@ class TestExternalClientNote:
 
         note = mcp_shared.external_client_identity_note()
         # What the reader must learn, in the words they will search for.
-        assert "not started by a Aj Crew session" in note
+        assert "not started by an Aj Crew session" in note
         assert "not supported" in note
         assert "AJCREW_SESSION_KEY" in note and "not a credential" in note
         assert "identity_unattested" in note
         assert "learn_list" in note and "local_knowledge_search" in note
         assert "dashboard" in note
-        assert "connect INTO a Aj Crew session" in note
+        assert "connect INTO an Aj Crew session" in note
         assert "~/.kiro/settings/mcp.json" in note
         assert "docs/architecture/mcp.md" in note
         # The server name is substituted, so ajcrew-dashboard's refusal
         # does not blame ajcrew-core.
-        assert "ajcrew-dashboard" in mcp_shared.external_client_identity_note(
-            "ajcrew-dashboard"
-        )
+        assert "ajcrew-dashboard" in mcp_shared.external_client_identity_note("ajcrew-dashboard")
         # No absolute path or host name: this text is echoed to the model and
         # to Slack. The two tilde paths are documentation locations.
         for token in note.replace("~/.kiro/settings/mcp.json", "").split():
@@ -352,12 +350,12 @@ class TestExternalClientNote:
         for server in STALE_MANAGED_MCP_SERVERS:
             note = mcp_shared.external_client_identity_note(server)
             assert f"not to spawn {server} itself" in note
-            assert f"a {server} entry in ~/.kiro/settings/mcp.json is leftover" in note
+            assert f"an {server} entry in ~/.kiro/settings/mcp.json is leftover" in note
         for server in OPT_IN_BIN_MCP_SERVERS:
             note = mcp_shared.external_client_identity_note(server)
             assert f"not to spawn {server} itself" in note
             assert "leftover" not in note, server
-            assert "a ajcrew-core entry" not in note, server
+            assert "an ajcrew-core entry" not in note, server
             assert "learn_list" not in note, server
         core = mcp_shared.external_client_identity_note()
         assert "learn_list" in core and "local_knowledge_search" in core

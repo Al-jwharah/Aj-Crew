@@ -415,7 +415,7 @@ class TestNoDashboardModuleSavesTheWholeConfig:
 
     @classmethod
     def _names_ajcrew_config(cls, node: ast.AST) -> bool:
-        """True for an expression that yields a ``AjCrewConfig`` instance."""
+        """True for an expression that yields an ``AjCrewConfig`` instance."""
         if isinstance(node, ast.Await):
             node = node.value
         if not isinstance(node, ast.Call):

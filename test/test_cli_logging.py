@@ -26,7 +26,6 @@ from unittest.mock import MagicMock
 import pytest
 
 import aj_crew.cli as cli_mod
-from conftest import requires_symlinks
 from aj_crew.cli import (
     _CliLogQueueHandler,
     _fd_targets_file,
@@ -42,6 +41,7 @@ from aj_crew.cli_logging import _fd_is_regular_file as _real_fd_is_regular_file
 from aj_crew.cli_logging import _rotate_boot_logs, _start_gateway_log_after_lock
 from aj_crew.config import config_dir, loader_credentials, loader_pipeline
 from aj_crew.dashboard import token_secret
+from conftest import requires_symlinks
 
 
 @pytest.fixture(autouse=True)
@@ -1509,9 +1509,7 @@ class TestEveryGatewayHardExitDrainsTheQueue:
     _MODULES = (
         Path(__file__).resolve().parents[1] / "src/aj_crew/slack/gateway.py",
         *sorted(
-            (Path(__file__).resolve().parents[1] / "src/aj_crew/slack/gateway_runtime").glob(
-                "*.py"
-            )
+            (Path(__file__).resolve().parents[1] / "src/aj_crew/slack/gateway_runtime").glob("*.py")
         ),
         *sorted((Path(__file__).resolve().parents[1] / "src/aj_crew/slack").glob("events*.py")),
     )

@@ -7,7 +7,7 @@ closes that by construction: the supervisor installs the bundle BEFORE the
 backend starts, and refuses to boot unless the named crew is the one installed.
 
 WHERE EACH ENTRY GOES -- verified against the Aj Crew source at
-a Aj Crew source checkout (0.6.0), not inferred from a plausible
+an Aj Crew source checkout (0.6.0), not inferred from a plausible
 name. ``config_dir()`` and ``data_home()`` resolve to the SAME directory, so a
 ``<home>/config/`` guess would land two of these where nothing reads them:
 

@@ -62,7 +62,7 @@ def test_every_named_cloud_subcommand_is_registered():
         name: sites for name, sites in _named_subcommands().items() if name not in registered
     }
     assert unknown == {}, (
-        "These texts name a `ajcrew cloud` subcommand the parser does not register "
+        "These texts name an `ajcrew cloud` subcommand the parser does not register "
         f"(registered: {sorted(registered)}): {unknown}"
     )
 

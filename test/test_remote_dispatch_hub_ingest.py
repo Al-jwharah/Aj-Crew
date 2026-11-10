@@ -581,9 +581,7 @@ def test_a_rebuild_keeps_the_crew_pair_and_the_ingested_report(peer, monkeypatch
 
     monkeypatch.setattr(routes.crew_log_emit, "enabled", lambda: True)
     monkeypatch.setattr(routes, "unit_for_session_key", lambda sessions, key: "u-conductor")
-    CrewLog.create(
-        lg.KIND_SESSION, "u-conductor", owner="raymond", agent="ajcrew", slot=CONDUCTOR
-    )
+    CrewLog.create(lg.KIND_SESSION, "u-conductor", owner="raymond", agent="ajcrew", slot=CONDUCTOR)
 
     def _append(unit: str, data: dict[str, Any]) -> bool:
         projection.open_session_log(unit).append("work/recorded", data, src="gateway")

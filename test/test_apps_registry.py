@@ -565,7 +565,7 @@ class TestApplyTrustFields:
     @pytest.mark.parametrize(
         "spelling",
         [
-            "Ｋｉｒｏ　Ｃｒｅｗ",  # fullwidth, ideographic space
+            "Ａｊ　Ｃｒｅｗ",  # fullwidth, ideographic space
             "aj\u200bcrew",  # zero-width space
             "Aj\u00adCrew",  # soft hyphen
             "  aj   crew  ",  # padded, doubled inner space

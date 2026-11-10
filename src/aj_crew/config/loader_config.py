@@ -82,6 +82,7 @@ from aj_crew.config.sections import (
     BACKGROUND_WORKER_AGENTS,
     DEFAULT_MODEL,
     AgentConfig,
+    AjCrewAgentConfig,
     BrowserConfig,
     ChannelConfig,
     ComputerUseConfig,
@@ -94,7 +95,6 @@ from aj_crew.config.sections import (
     HeartbeatConfig,
     IMessageConfig,
     InstancesConfig,
-    AjCrewAgentConfig,
     KnowledgeConfig,
     McpConfig,
     McpGatewayConfig,
@@ -548,8 +548,7 @@ class AjCrewConfig:
         default="",
         metadata=_meta(
             "Snapshot Directory",
-            "Directory for ajcrew snapshot output. "
-            "Defaults to ~/.kiro/crew/snapshots if empty.",
+            "Directory for ajcrew snapshot output. " "Defaults to ~/.kiro/crew/snapshots if empty.",
         ),
     )
     registries: list[ExternalRegistryConfig] = field(
@@ -1107,9 +1106,7 @@ class AjCrewConfig:
         crew = self._crew_record(agent, crew_agent)
         return coerce_effort(crew.reasoning_effort) if crew is not None else ""
 
-    def _crew_record(
-        self, agent: str | None, crew_agent: str | None
-    ) -> "AjCrewAgentConfig | None":
+    def _crew_record(self, agent: str | None, crew_agent: str | None) -> "AjCrewAgentConfig | None":
         """The ``config.agents`` record this session runs as, or ``None``."""
         key = resolve_crew_identity(self, agent, crew_agent)
         return self.agents.get(key) if key else None

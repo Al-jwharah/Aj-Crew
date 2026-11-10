@@ -21,8 +21,8 @@ import pytest
 
 from aj_crew.config import loader
 from aj_crew.config.loader import (
-    ConfigReadError,
     AjCrewConfig,
+    ConfigReadError,
     config_local_path,
     config_path,
     read_config_for_update,

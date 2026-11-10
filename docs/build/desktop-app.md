@@ -101,7 +101,7 @@ The electron-builder configuration lives in
 
 ### macOS default — one universal DMG for both arches
 
-On macOS, `make desktop` produces a `AjCrew-<version>-universal.dmg` for
+On macOS, `make desktop` produces an `AjCrew-<version>-universal.dmg` for
 first install and a matching `AjCrew-<version>-universal-mac.zip` for the
 update/signing handoff. Both run **natively** on Apple Silicon and Intel Macs.
 It needs only
@@ -551,7 +551,7 @@ instead — two single-arch trees, selected at launch by `process.arch`.
 ### Refreshing / cleaning the DMGs
 
 The `dist/` directory is **not** cleaned between builds, so old artifacts pile up
-(e.g. a `AjCrew-1.0.0.dmg` from before a version bump, or a stale `mac/`
+(e.g. an `AjCrew-1.0.0.dmg` from before a version bump, or a stale `mac/`
 app-staging dir). After a version change or a re-build, remove the stale ones so
 only the current set remains:
 
@@ -767,7 +767,7 @@ When the app starts, [`main.js`](../../website/electron/main.js) composes the
 desktop lifecycle and delegates gateway ownership to
 [`gateway-supervisor.js`](../../website/electron/gateway-supervisor.js). The
 supervisor first checks whether a gateway is already running. An existing
-gateway that this machine runs (a Aj Crew process or its service) is reused.
+gateway that this machine runs (an Aj Crew process or its service) is reused.
 A gateway whose parent is init (PID 1) counts as service-managed, so the app
 reuses it and never force-stops it, except on macOS when launchd's job list
 (`launchctl print` of the user's `gui` and `user` domains and of `system`)
@@ -811,7 +811,7 @@ restart first proves again that the same pid is still the orphan on the port
 (a port that emptied is started into, and a different holder goes back
 through this decision), then runs `ajcrew stop --port <port>`, the command
 the other warning names. It has no `--expect-pid`, which needs a pidfd macOS
-does not have; the CLI still signals only a Aj Crew listener on that port
+does not have; the CLI still signals only an Aj Crew listener on that port
 and refuses a gateway the desktop app runs. The shell then waits for the port
 to clear and for the old process to exit, and starts the bundled backend. A
 stop that leaves the orphan on the port surfaces the start-failure dialog,
@@ -1463,9 +1463,9 @@ it).
   signal escalation contract. On POSIX,
   [`gateway-stop.js`](../../website/electron/gateway-stop.js) lists the child's
   descendants before its SIGTERM, so a gateway a launcher shim forked is not
-  orphaned: after the child exits, each listed pid that is still a
+  orphaned: after the child exits, each listed pid that is still an
   `ajcrew gateway` command gets SIGTERM, then SIGKILL after a grace window.
-  Identity is re-read before each signal, so a recycled pid or a `ajcrew mcp-*`
+  Identity is re-read before each signal, so a recycled pid or an `ajcrew mcp-*`
   child is never signalled.
 - When the other release family's app (Aj Crew vs Aj Crew Nightly) holds the
   port, macOS

@@ -167,9 +167,9 @@ from pathlib import Path
 
 from aj_crew.agent_spec_format import NATIVE_SKILL_ALIAS_PREFIX
 from aj_crew.config.loader import (
-    ConfigReadError,
     AjCrewAgentConfig,
     AjCrewConfig,
+    ConfigReadError,
     _config_write_lock,
     _lock_target,
     coerce_dict_section,

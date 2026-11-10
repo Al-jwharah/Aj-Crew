@@ -1,6 +1,6 @@
 """``agent.native_skill_projection``: a config switch for the native skill views.
 
-With projection on, every spawn writes a ``ajcrew-skill-view-*`` view of every
+With projection on, every spawn writes an ``ajcrew-skill-view-*`` view of every
 agent it lists -- the operator's own kiro-cli agents included -- into the kiro
 agents directory kiro-cli shares, and overlays
 ``chat.disableInheritingDefaultResources: true`` onto the workspace

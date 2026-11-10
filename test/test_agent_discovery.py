@@ -17,7 +17,6 @@ from types import SimpleNamespace
 
 import pytest
 
-from conftest import requires_symlinks
 from aj_crew import agent_state
 from aj_crew.agent_discovery import (
     SCOPE_GLOBAL,
@@ -32,6 +31,7 @@ from aj_crew.agent_discovery import (
     project_agent_names,
     spec_by_declared_name,
 )
+from conftest import requires_symlinks
 
 # caplog collects records from EVERY logger, not just the one at_level() names, so
 # a negative "logged no warning" assertion must filter by logger: an unrelated

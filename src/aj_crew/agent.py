@@ -80,10 +80,10 @@ from aj_crew.agent_files import (
 )
 from aj_crew.agent_parts.ajcrew_launcher import (
     _AJCREW_BIN,
-    _bin_is_usable,
-    _interpreter_runnable,
     _ajcrew_bin_subpath,
     _ajcrew_mcp_invocation,
+    _bin_is_usable,
+    _interpreter_runnable,
     _launcher_works,
     _migrations_dir,
     _resolve_ajcrew_bin,

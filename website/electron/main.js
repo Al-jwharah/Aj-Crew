@@ -504,7 +504,7 @@ if (!app.requestSingleInstanceLock()) {
   deepLinks.handleArgv(process.argv);
 
   app.on("second-instance", (_event, argv) => {
-    // On Windows and Linux a ajcrew:// link launches a second copy with the
+    // On Windows and Linux an ajcrew:// link launches a second copy with the
     // URL in argv; route to it. Otherwise a relaunch is explicit intent to see
     // the existing window. The window owner cancels a pending fullscreen/tray
     // hide before restore/show/focus.

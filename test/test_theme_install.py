@@ -41,7 +41,6 @@ from types import ModuleType
 import pytest
 from theme_install_helpers import _VALID_MP3, _VALID_VARS, _make_theme, _make_tiered, _write
 
-from conftest import requires_symlinks
 from aj_crew.dashboard.handlers.themes import (
     _atomic_write_theme_json,
     _clone_github,
@@ -63,6 +62,7 @@ from aj_crew.dashboard.theme_validate import (
     _validate_theme_dir,
 )
 from aj_crew.testing.wait import wait_until
+from conftest import requires_symlinks
 
 
 def _allow_pinned_source_rename_on_windows(

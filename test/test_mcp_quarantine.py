@@ -855,9 +855,7 @@ class TestShutdownRounds:
         monkeypatch.setattr(mcp_mod, "_mcp_probe_in_progress", False)
         monkeypatch.setattr(mcp_mod, "_mcp_probe_task", None)
         monkeypatch.setattr(mcp_mod, "_GLOBAL_MCP_JSON", tmp_path / "absent" / "mcp.json")
-        monkeypatch.setattr(
-            "aj_crew.session.shutdown_event", SimpleNamespace(is_set=lambda: False)
-        )
+        monkeypatch.setattr("aj_crew.session.shutdown_event", SimpleNamespace(is_set=lambda: False))
         for _ in range(2):
             mcp_quarantine.record_verdicts(_fail("srv", "error", "timeout"))
         return mcp_mod
@@ -906,9 +904,7 @@ class TestShutdownRounds:
     async def test_a_round_during_a_signal_shutdown_with_no_sessions_leaves_the_count(
         self, probe_env, monkeypatch
     ):
-        monkeypatch.setattr(
-            "aj_crew.session.shutdown_event", SimpleNamespace(is_set=lambda: True)
-        )
+        monkeypatch.setattr("aj_crew.session.shutdown_event", SimpleNamespace(is_set=lambda: True))
 
         self._install_round(monkeypatch, "error")
         await probe_env._bg_mcp_probe(None)

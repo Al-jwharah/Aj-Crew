@@ -37,9 +37,7 @@ from aj_crew.apps.route_registry import RouteRegistry
 def _admit_third_party_execution(_floor_monkeypatch) -> None:
     # The floor monkeypatch, not the shared one: a test that calls
     # ``monkeypatch.undo()`` must not lift this admission (D11).
-    _floor_monkeypatch.setattr(
-        "aj_crew.apps.execution.third_party_execution_allowed", lambda: True
-    )
+    _floor_monkeypatch.setattr("aj_crew.apps.execution.third_party_execution_allowed", lambda: True)
 
 
 @pytest.fixture(autouse=True)

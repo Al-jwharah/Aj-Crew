@@ -586,7 +586,7 @@ async def test_refresh_does_not_flag_upstream_ahead(store, fake_client):
 
 @pytest.mark.asyncio
 async def test_pull_upstream_widget_unwraps_and_stays_widget(store, fake_client, tmp_path):
-    """A Aj Crew-published widget pulled back is unwrapped from its standalone
+    """An Aj Crew-published widget pulled back is unwrapped from its standalone
     document to the original inner fragment and STAYS a widget — so it remains
     inline-embeddable in chat (no html regression)."""
     art = store.create(name="W", content="<b>inner</b>", kind="widget")

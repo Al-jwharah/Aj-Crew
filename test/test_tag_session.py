@@ -836,9 +836,7 @@ class TestTopicTags:
             keys["k"] = "cron:job-1"  # rebound during the config read
             return True
 
-        monkeypatch.setattr(
-            "aj_crew.dashboard.chat_auto_tag._topic_tags_enabled", _rebinding_load
-        )
+        monkeypatch.setattr("aj_crew.dashboard.chat_auto_tag._topic_tags_enabled", _rebinding_load)
         state = _make_state()
         slot = _topic_slot(project="")
 

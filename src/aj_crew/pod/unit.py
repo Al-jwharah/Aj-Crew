@@ -1,6 +1,6 @@
 """systemd ``--user`` template unit for pods — generated, not shipped.
 
-The unit's ``ExecStart`` re-enters a ``ajcrew`` binary as ``ajcrew pod _run
+The unit's ``ExecStart`` re-enters an ``ajcrew`` binary as ``ajcrew pod _run
 %i``, so the boot logic lives in Python (see :func:`aj_crew.pod.runtime.boot`)
 and nothing is shipped outside the package. The template can only name ONE
 binary for every instance, so each pod additionally gets a per-instance drop-in

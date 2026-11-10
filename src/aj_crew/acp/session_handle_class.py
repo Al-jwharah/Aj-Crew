@@ -1125,7 +1125,7 @@ class AcpSessionHandle:
         the roster notifications — kiro-cli ``subagent_list`` when this handle
         is the roster's sole owner, KAS ``agentSubtaskId`` / pipeline stages
         (``_handle_kas_subagent``). A ``spawn_run`` child of this session is
-        NOT here: it is a Aj Crew task row with its own handle, and native
+        NOT here: it is an Aj Crew task row with its own handle, and native
         grandchildren under it are counted on THAT handle (parity row H16).
         """
         return frozenset(self._native_child_sids)

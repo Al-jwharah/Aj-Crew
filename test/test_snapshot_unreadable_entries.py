@@ -22,9 +22,9 @@ import tarfile
 import pytest
 from test_snapshot import _setup_fake_ajcrew, unpinnable_argv
 
-from conftest import make_dir_link
 from aj_crew import pinned_fs
 from aj_crew import snapshot as snap
+from conftest import make_dir_link
 
 # Unique enough that the interception below can key on the base name alone, which is
 # what makes it work for a bare name opened relative to a directory descriptor as

@@ -31,8 +31,8 @@ from named_cases_helpers import named_cases
 
 import aj_crew.config.loader as loader
 import aj_crew.dashboard.handlers.messaging as mod
-from conftest import forget_env_at_teardown
 from aj_crew.secrets import SecretVault
+from conftest import forget_env_at_teardown
 
 # ── notifications ──
 

@@ -9,10 +9,6 @@
 </p>
 
 <p align="center">
-  <a href="https://trendshift.io/repositories/103032" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/103032/daily?language=Python" alt="Aj Crew on Trendshift" width="250" height="55"></a>
-</p>
-
-<p align="center">
   Aj Crew is an open source development workspace that runs locally or remotely on
   your hardware. It is persistent, self-learning, and self-evolving. Work with it
   from the desktop app, web dashboard, and CLI, or continue the same work through
@@ -24,7 +20,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Al-jwharah/Aj-Crew/releases"><img src="https://img.shields.io/badge/Download-macOS%20%7C%20Linux%20%7C%20Windows-2f6feb?style=flat-square" alt="Download Aj Crew for macOS, Linux, or Windows"></a>
+  <a href="#build-from-source"><img src="https://img.shields.io/badge/Build%20from%20source-macOS%20%7C%20Linux%20%7C%20Windows-2f6feb?style=flat-square" alt="Build Aj Crew from source on macOS, Linux, or Windows"></a>
   <a href="docs/README.md"><img src="https://img.shields.io/badge/Documentation-1f6feb?style=flat-square" alt="Read the documentation"></a>
   <a href="docs/guides/install.md"><img src="https://img.shields.io/badge/Install%20guide-macOS%20%7C%20Linux%20%7C%20Windows-6e7781?style=flat-square" alt="Install guide for macOS, Linux, and Windows"></a>
   <a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/Contributing-238636?style=flat-square" alt="Contributing guide"></a>
@@ -46,75 +42,18 @@
 
 ## Quick start
 
-You choose how to run Aj Crew: the desktop app with automatic updates, a
-one-line install on your machine or a remote host, the Docker image for
-always-on servers, or a build from source. The default agent runs on
-`kiro-cli`, which you install and sign in to separately. First launch checks
-that prerequisite and links to the official setup guide when it is missing.
+Aj Crew installs from source today: clone the repository and build it, as shown
+below. The project does not publish desktop installers, a one-line wheel
+install, or a container image yet, so nothing here downloads a prebuilt Aj Crew.
+The default agent runs on `kiro-cli`, which you install and sign in to
+separately. First launch checks that prerequisite and links to the official
+setup guide when it is missing.
 
-### App downloads
-
-Each link fetches the newest build on that channel, and the app then updates
-itself on the same channel. Take Stable unless you have a reason not to; see
-[Release channels](#release-channels) below.
-
-| Download | Stable | Insider | Nightly |
-|---|---|---|---|
-| **macOS** (Apple Silicon/Intel) `.dmg` | [Stable](https://download.crew.kiro.dev/desktop/stable/latest/AjCrew.dmg) | [Insider](https://download.crew.kiro.dev/desktop/insider/latest/AjCrew.dmg) | [Nightly](https://download.crew.kiro.dev/desktop/nightly/latest/AjCrew.dmg) |
-| **Windows** (x64) `.exe` | [Stable](https://download.crew.kiro.dev/desktop/stable/latest/AjCrew-Setup.exe) | [Insider](https://download.crew.kiro.dev/desktop/insider/latest/AjCrew-Setup.exe) | [Nightly](https://download.crew.kiro.dev/desktop/nightly/latest/AjCrew-Setup.exe) |
-| **Linux** x86_64 `.deb` | [Stable](https://download.crew.kiro.dev/desktop/stable/latest/AjCrew-x86_64.deb) | [Insider](https://download.crew.kiro.dev/desktop/insider/latest/AjCrew-x86_64.deb) | [Nightly](https://download.crew.kiro.dev/desktop/nightly/latest/AjCrew-x86_64.deb) |
-| **Linux** aarch64 `.deb` | [Stable](https://download.crew.kiro.dev/desktop/stable/latest/AjCrew-aarch64.deb) | [Insider](https://download.crew.kiro.dev/desktop/insider/latest/AjCrew-aarch64.deb) | [Nightly](https://download.crew.kiro.dev/desktop/nightly/latest/AjCrew-aarch64.deb) |
-| **Linux** x86_64 `.rpm` | [Stable](https://download.crew.kiro.dev/desktop/stable/latest/AjCrew-x86_64.rpm) | [Insider](https://download.crew.kiro.dev/desktop/insider/latest/AjCrew-x86_64.rpm) | [Nightly](https://download.crew.kiro.dev/desktop/nightly/latest/AjCrew-x86_64.rpm) |
-| **Linux** aarch64 `.rpm` | [Stable](https://download.crew.kiro.dev/desktop/stable/latest/AjCrew-aarch64.rpm) | [Insider](https://download.crew.kiro.dev/desktop/insider/latest/AjCrew-aarch64.rpm) | [Nightly](https://download.crew.kiro.dev/desktop/nightly/latest/AjCrew-aarch64.rpm) |
-| **Linux** x86_64 AppImage | [Stable](https://download.crew.kiro.dev/desktop/stable/latest/AjCrew-x86_64.AppImage) | [Insider](https://download.crew.kiro.dev/desktop/insider/latest/AjCrew-x86_64.AppImage) | [Nightly](https://download.crew.kiro.dev/desktop/nightly/latest/AjCrew-x86_64.AppImage) |
-| **Linux** aarch64 AppImage | [Stable](https://download.crew.kiro.dev/desktop/stable/latest/AjCrew-aarch64.AppImage) | [Insider](https://download.crew.kiro.dev/desktop/insider/latest/AjCrew-aarch64.AppImage) | [Nightly](https://download.crew.kiro.dev/desktop/nightly/latest/AjCrew-aarch64.AppImage) |
-
-On Linux, start with the one-line install below and add a desktop package when
-you want a native window and in-app updates. The
-[install guide](docs/guides/install.md#installing-a-linux-desktop-package) owns
-which Linux package to pick, platform requirements, and sandbox setup.
-
-### Release channels
-
-Stable is the default; Insider follows release candidates, and Nightly follows
-`main`. The [release runbook](docs/build/release.md#the-three-channels) owns the
-current triggers, version shapes, promotion behavior, cadence, and update-lane
-semantics.
-
-### One-line install
-
-Install the signed Stable wheel without cloning the repository or building the
-frontend:
-
-```bash
-curl -fsSL https://download.crew.kiro.dev/cli.sh | sh
-```
-
-Then open `http://localhost:5476`. Pass `--version` to pin an exact release —
-the minimum pinnable release is `0.1.2`, because `0.1.0` and `0.1.1` predate
-manifest signing and have no signed manifest to resolve:
-
-```bash
-curl -fsSL https://download.crew.kiro.dev/cli.sh | sh -s -- --version 0.6.0
-```
-
-The [install guide](docs/guides/install.md#a-one-line-install-fastest) owns
-channel selection, managed versus system Python, mirrors, first-run setup,
-upgrades, and recovery.
-
-### Docker
-
-For always-on servers, the Gateway ships as a public multi-arch image on GHCR:
-
-```bash
-docker run -d --name ajcrew \
-  -p 127.0.0.1:5476:5476 \
-  -v ajcrew-home:/home/ajcrew \
-  ghcr.io/kirodotdev/kirocrew:stable
-```
-
-See the [Docker guide](docs/guides/docker.md) for first-run login, channel tags, and
-the container security model.
+Aj Crew is an independent fork of
+[Kiro Crew](https://github.com/kirodotdev/KiroCrew) under the Apache 2.0
+license; see [NOTICE](NOTICE). It is not affiliated with or endorsed by the
+upstream project, and it does not use that project's release feed, app catalog,
+or telemetry collector.
 
 ### Build from source
 
@@ -129,7 +68,7 @@ is supported through a native source install; follow the
 ```bash
 # 1. Clone and build Aj Crew
 git clone https://github.com/Al-jwharah/Aj-Crew.git
-cd AjCrew
+cd Aj-Crew
 make build
 source .venv/bin/activate
 
@@ -138,6 +77,35 @@ ajcrew setup
 ajcrew doctor
 ajcrew gateway
 ```
+
+Then open `http://localhost:5476`. To update a source install, run `git pull`
+and then `ajcrew update`. The [install guide](docs/guides/install.md) owns
+first-run setup, optional dependencies, upgrades, and recovery.
+
+### Docker
+
+No container image is published for Aj Crew yet. Build one from the checkout
+and run it:
+
+```bash
+make wheel
+docker build -f docker/Dockerfile -t ajcrew:dev .
+docker run -d --name ajcrew \
+  -p 127.0.0.1:5476:5476 \
+  -v ajcrew-home:/home/ajcrew \
+  ajcrew:dev
+```
+
+See the [Docker guide](docs/guides/docker.md) for first-run login and the
+container security model.
+
+### Release channels
+
+Aj Crew has no published release channels yet. A source checkout follows the
+branch it is on, and `main` carries development builds. The channel machinery
+(Stable, Insider, Nightly) is still in the code; the
+[release runbook](docs/build/release.md#the-three-channels) describes it for
+when this project runs a release pipeline of its own.
 
 ## Why Aj Crew
 
@@ -255,16 +223,25 @@ levels, diagnostics bundles, and recovery steps.
 
 ## Anonymous usage telemetry
 
-Aj Crew sends **one anonymous heartbeat per day** so maintainers can see how
-many copies are actively running and which releases, Python minors, and install
-paths still need support. After a successful install or update from the official
-app catalog, it also sends one anonymous per-app receipt. Both signals are
-enabled by default, but first egress waits until the first-run privacy disclosure
-has been shown; they use the same controls below.
+**Aj Crew sends nothing by default.** The daily heartbeat and the per-app
+install receipt described below are inherited from the upstream project. In Aj
+Crew both are off, and no collector address is built in, so there is nowhere
+for them to go. They send only when you turn the heartbeat on **and** name a
+collector of your own:
 
-To turn it off, click **Turn off** on the Privacy screen of first-run
-onboarding, or flip **Settings > Privacy > Send anonymous usage heartbeat** in
-the dashboard. Or from a terminal:
+```bash
+ajcrew config set telemetry.beacon_enabled true
+ajcrew config set telemetry.beacon_endpoint https://<your-collector>
+```
+
+With both set, Aj Crew sends **one anonymous heartbeat per day** to that
+collector, and one anonymous receipt after a successful install or update from
+the official app catalog. First egress still waits until the first-run privacy
+disclosure has been shown. The rest of this section describes exactly what
+those two signals carry, for anyone who chooses to run a collector.
+
+To turn it back off, flip **Settings > Privacy > Send anonymous usage
+heartbeat** in the dashboard. Or from a terminal:
 
 ```bash
 ajcrew telemetry disable        # local metrics and the heartbeat; persists to config.json
@@ -273,13 +250,10 @@ export DO_NOT_TRACK=1             # everything: local metrics and the heartbeat
 ajcrew telemetry status         # print both switches and exactly what would be sent
 ```
 
-Turn off and `ajcrew telemetry disable` write the same settings, so either
-one sticks across restarts and upgrades. `AJCREW_TELEMETRY_DISABLED` and
-`DO_NOT_TRACK` override them: when one is set, the dashboard toggle is disabled
-and says so. When the Privacy screen's text changes, existing users see it once
-more at their next dashboard load while local recording is on.
+`AJCREW_TELEMETRY_DISABLED` and `DO_NOT_TRACK` override the settings: when one
+is set, the dashboard toggle is disabled and says so.
 
-**Exactly these five fields are sent, at most once per day, and nothing else:**
+**When the heartbeat is on, exactly these five fields are sent, at most once per day, and nothing else:**
 
 | Field | Example | Why |
 |-------|---------|-----|
@@ -318,8 +292,8 @@ Crews.
 
 **Never sent:** your prompts, model responses, file contents, file paths, repo
 or branch names, credentials, environment variables, hostname, username, or IP
-address. The receiving CDN is configured **not to log client IP addresses** — the
-log delivery does not include that field, so no IP is stored at all.
+address. Whether client IP addresses are logged is a property of the collector you
+name; Aj Crew itself never puts one in the request.
 
 **Automatically off** in CI, and whenever `AJCREW_HOME` points somewhere other
 than `~/.kiro/crew` (dev instances and pods are never counted).
@@ -361,11 +335,10 @@ feature requests; report vulnerabilities privately through
 
 ## Contributors
 
-Aj Crew was made possible by its internal community, the people who supported the
-project and shipped its code, together with everyone who has since opened a pull
-request in the open. This is that founding group; as Aj Crew grows in the open, we
-look forward to many more contributors joining them. Thank you to everyone who helped
-make this tool possible:
+Aj Crew is a fork of [Kiro Crew](https://github.com/kirodotdev/KiroCrew), and
+almost all of its code was written by that project's community. The people below
+are the upstream contributors whose work this project builds on. Thank you to
+everyone who helped make this tool possible:
 
 <a href="https://github.com/0618" title="MJ Zhang"><img src="https://github.com/0618.png?size=64" width="64" height="64" alt="MJ Zhang" /></a>
 <a href="https://github.com/0V" title="G2"><img src="https://github.com/0V.png?size=64" width="64" height="64" alt="G2" /></a>

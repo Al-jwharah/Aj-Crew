@@ -408,9 +408,7 @@ class TestGetOrCreatePoolIntegration:
         mgr._drain_and_claim = AsyncMock(return_value=pooled)
         mgr._schedule_replenish = MagicMock()
 
-        provider, is_new, _ = await mgr.get_or_create(
-            "test-key", agent="ajcrew", channel_id="ch-1"
-        )
+        provider, is_new, _ = await mgr.get_or_create("test-key", agent="ajcrew", channel_id="ch-1")
 
         assert provider is pooled
         # crew_agent="" — the caller supplied no canonical crew identity, and
@@ -480,9 +478,7 @@ class TestGetOrCreatePoolIntegration:
         from aj_crew.session_capabilities import CapabilityStartupError, prepare_runtime
 
         cfg = AjCrewConfig.load()
-        cfg.agents["legacy-member"] = AjCrewAgentConfig(
-            kiro_agent="ajcrew", memory_store="default"
-        )
+        cfg.agents["legacy-member"] = AjCrewAgentConfig(kiro_agent="ajcrew", memory_store="default")
         cfg.save()
         path = agent_state._state_path()
         path.parent.mkdir(parents=True, exist_ok=True)

@@ -13,8 +13,8 @@ from aiohttp.test_utils import make_mocked_request
 
 import aj_crew.config.loader as loader
 import aj_crew.dashboard.handlers.messaging as mod
-from conftest import forget_env_at_teardown
 from aj_crew.secrets import SecretVault
+from conftest import forget_env_at_teardown
 
 
 def _vault_value(env: Path, key: str) -> str | None:

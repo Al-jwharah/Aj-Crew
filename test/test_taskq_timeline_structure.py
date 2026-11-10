@@ -101,9 +101,7 @@ def test_the_crew_log_is_reached_only_through_its_read_surface() -> None:
     tree = _timeline_tree()
     pulled: set[str] = set()
     for node in ast.walk(tree):
-        if isinstance(node, ast.ImportFrom) and (node.module or "").startswith(
-            "aj_crew.crew_log"
-        ):
+        if isinstance(node, ast.ImportFrom) and (node.module or "").startswith("aj_crew.crew_log"):
             pulled |= {f"{node.module}.{alias.name}" for alias in node.names}
     assert pulled == {
         "aj_crew.crew_log.read.read_page",

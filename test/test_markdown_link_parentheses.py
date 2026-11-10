@@ -33,7 +33,6 @@ from markdown_link_parentheses_helpers import (
     _slack_reader_sees,
 )
 
-from conftest import assert_rejected_without_backtracking
 from aj_crew import preview_text, voice_reply
 from aj_crew.dashboard.handlers import artifacts as artifact_handlers
 from aj_crew.deploy import render as deploy_render
@@ -70,6 +69,7 @@ from aj_crew.telegram.renderer import (
 )
 from aj_crew.whatsapp import renderer as whatsapp_renderer
 from aj_crew.whatsapp.renderer import to_whatsapp_text
+from conftest import assert_rejected_without_backtracking
 
 #: The link patterns every renderer composes from ``md_link_destination``. Each
 #: label class must be no wider than the screen's ``_MD_LINK`` class: a label the

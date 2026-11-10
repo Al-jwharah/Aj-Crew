@@ -166,6 +166,10 @@ def _run_cli_with_fake_env(
         "PATH": str(tools),
         "HOME": str(tmp_path / "home"),
         "AJCREW_HOME": str(tmp_path / "data-home"),
+        # The installer has no built-in release host and refuses to run
+        # without one. The recording curl answers every URL, so the host only
+        # has to be named; `.invalid` can never resolve if a real curl leaks in.
+        "AJCREW_CDN_BASE": "https://releases.example.invalid",
         **(extra_env or {}),
     }
     argv = [str(tools / "sh"), str(CLI_SH), *(extra_args or [])]

@@ -19,7 +19,7 @@ Quirks preserved (characterized, kept deliberately):
   burst for long-lived companions); seeding sets ``dirty`` but does not
   schedule a flush — the baseline persists on the next activity.
 
-DELIBERATE DEVIATIONS from the TypeScript (authorized; each is a fix or a
+DELIBERATE DEVIATIONS from the TypeScript (authorized; each is a fix or an
 AjCrew-composition change, not a silent drift):
 
 1. **No singleton, no hardcoded path.** The original baked

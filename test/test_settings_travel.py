@@ -31,12 +31,12 @@ from pathlib import Path
 import pytest
 from test_snapshot import _make_snapshot, _setup_fake_ajcrew, unpinnable_argv
 
-from conftest import requires_symlinks
 from aj_crew import portability
 from aj_crew.config.loader import AjCrewConfig
 from aj_crew.notifications.settings import ChannelSettings
 from aj_crew.snapshot import restore_main
 from aj_crew.snapshot_components import COMPONENT_JSON_OBJECTS, CORE_FILES
+from conftest import requires_symlinks
 
 _SETTINGS_FILES = ("config.local.json", "ui-prefs.json", "notification_settings.json")
 _ALL_FOUR = ("config.json", *_SETTINGS_FILES)

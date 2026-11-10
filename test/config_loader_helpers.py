@@ -19,9 +19,9 @@ from hypothesis import strategies as st
 
 from aj_crew.config.loader import (
     AgentConfig,
-    DashboardConfig,
     AjCrewAgentConfig,
     AjCrewConfig,
+    DashboardConfig,
     MemoryConfig,
     MemoryStoreConfig,
     SessionConfig,

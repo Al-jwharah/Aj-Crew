@@ -22,9 +22,9 @@ import os
 import pytest
 from named_cases_helpers import named_cases
 
-from conftest import requires_o_nofollow, requires_symlinks
 from aj_crew import pinned_fs
 from aj_crew.pinned_fs import PinnedPathRefusal, open_pinned_descendant_dir
+from conftest import requires_o_nofollow, requires_symlinks
 
 
 def _fstat_ino(fd: int) -> tuple[int, int]:

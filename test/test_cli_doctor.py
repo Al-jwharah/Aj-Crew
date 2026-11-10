@@ -16,9 +16,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from conftest import make_dir_link
 from aj_crew import cli_doctor
 from aj_crew.doctor_checks import resources as doctor_resources
+from conftest import make_dir_link
 
 
 class TestManagedServicePolicyDoctor:

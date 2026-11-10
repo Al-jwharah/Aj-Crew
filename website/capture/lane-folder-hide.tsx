@@ -47,7 +47,7 @@ const NESTED = 'folder-nested'
 // alone is overridden on mount. Both keys are pinned: the colour theme otherwise
 // drifts with whatever the machine's gateway last stored.
 localStorage.setItem('mc-theme', light ? 'light' : 'dark')
-localStorage.setItem('mc-color-theme', 'kiro')
+localStorage.setItem('mc-color-theme', 'aj')
 // The lane opens directly. The two board renderers are reached through the columns
 // switch instead, because columns preempt the union's choice whenever any exist: `board`
 // draws folder blocks per column, `board-flat` draws the column's rows with no blocks.

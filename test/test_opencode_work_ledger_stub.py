@@ -138,9 +138,7 @@ _LOOK_ALIKES = {
     "conflicting token pairs": _with_env(
         [dict(_TOKEN_PAIR), {"name": STUB_SESSION_TOKEN_ENV, "value": "session-token-b"}]
     ),
-    "extra env pair": _with_env(
-        [dict(_TOKEN_PAIR), {"name": "AJCREW_SESSION_KEY", "value": "x"}]
-    ),
+    "extra env pair": _with_env([dict(_TOKEN_PAIR), {"name": "AJCREW_SESSION_KEY", "value": "x"}]),
     "env as a mapping": _with(env={STUB_SESSION_TOKEN_ENV: _TOKEN}),
     "pair with extra keys": _with_env([{**_TOKEN_PAIR, "extra": "1"}]),
     "not the stub module": _with(args=["-m", "aj_crew.mcp_work", "--server", _WORK]),

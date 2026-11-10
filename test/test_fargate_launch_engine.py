@@ -887,7 +887,7 @@ def test_the_key_is_the_writers_object_and_no_caller_can_substitute_one() -> Non
 def test_module_defines_no_name_its_owners_already_export() -> None:
     """This module assigns nothing that ``cloud.fargate`` or ``cloud.ec2`` owns.
 
-    Derived from the owners' surfaces, so the next re-spelled value is caught too. A
+    Derived from the owners' surfaces, so the next re-spelled value is caught too. An
     ``ajcrew:`` literal is the same defect: a second copy of a value another module owns.
     """
     owned = set(fargate.__all__) | {"MANAGED_TAG_KEY", "INSTANCE_TAG_KEY"}

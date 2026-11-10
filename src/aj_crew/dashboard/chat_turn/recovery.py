@@ -36,8 +36,8 @@ if TYPE_CHECKING:
     from aj_crew.dashboard.chat_runner import (
         SUBAGENT_COMPLETION_KIND,
         SYNTHETIC_RECOVERY_KIND,
-        DashboardState,
         AjCrewConfig,
+        DashboardState,
         RefusalInfo,
         _ChatSlot,
         _has_user_queued_followup,

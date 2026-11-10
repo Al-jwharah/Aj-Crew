@@ -22,7 +22,6 @@ from app_backend_helpers import app_env_fixture  # noqa: F401
 from app_backend_helpers import _make_app_with_backend
 from test_update_provider import _UNALLOCATABLE_PID
 
-from conftest import requires_symlinks
 from aj_crew.apps.backend import (
     AppProcess,
     PortUnavailableError,
@@ -34,6 +33,7 @@ from aj_crew.apps.backend import (
     stop_app_backend,
 )
 from aj_crew.apps.manager import APP_MANIFEST_FILENAME, install_app
+from conftest import requires_symlinks
 
 
 def _own_probe_sel(probe_home: str):

@@ -269,9 +269,7 @@ class TestMainCli:
             return copy.deepcopy(sound_report)
 
         monkeypatch.setattr(member_v2, "evaluate", cli_report)
-        monkeypatch.setattr(
-            "aj_crew.embeddings.LlamaCppEmbedder", self._FakeBackend, raising=True
-        )
+        monkeypatch.setattr("aj_crew.embeddings.LlamaCppEmbedder", self._FakeBackend, raising=True)
         monkeypatch.setattr(
             "sys.argv",
             ["member_v2", "--model-path", str(model_path), "--json", str(out_json)],

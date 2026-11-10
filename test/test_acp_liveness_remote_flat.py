@@ -21,7 +21,6 @@ import pytest
 from test_acp_liveness import FakeProc, _Clock
 from test_acp_stale_recovery import _SilentQueue
 
-from conftest import requires_symlinks
 from aj_crew import platform_compat
 from aj_crew.acp import liveness
 from aj_crew.acp.liveness import (
@@ -47,6 +46,7 @@ from aj_crew.acp.session_handle import (
 from aj_crew.acp.types import STOP_REASON_TOOL_STALL
 from aj_crew.config.loader import WatchdogConfig
 from aj_crew.testing.ids import UNALLOCATABLE_PID
+from conftest import requires_symlinks
 
 # ── Oracle: /proc ────────────────────────────────────────────────────────────
 

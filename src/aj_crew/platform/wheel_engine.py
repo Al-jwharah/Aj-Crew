@@ -840,8 +840,7 @@ def verify_shadow_venv(
     if rc != 0:
         detail = _redacted_detail(err, FAILURE_TEXT_CHARS)
         raise WheelUpdateError(
-            "shadow venv cannot import aj_crew — not promoting"
-            + (f": {detail}" if detail else "")
+            "shadow venv cannot import aj_crew — not promoting" + (f": {detail}" if detail else "")
         )
     # `-X utf8` makes the probe write UTF-8 whatever the host locale is.
     got = utf8_stdout(out).strip()

@@ -19,7 +19,6 @@ from pathlib import Path
 
 import pytest
 
-from conftest import make_dir_link, requires_symlinks
 from aj_crew import mcp_cron
 from aj_crew.mcp_cron import (
     _SENSITIVE_HOME_DIRS,
@@ -30,6 +29,7 @@ from aj_crew.mcp_cron import (
     _vet_script_file,
     _vet_shell_command,
 )
+from conftest import make_dir_link, requires_symlinks
 
 
 @pytest.fixture(autouse=True)

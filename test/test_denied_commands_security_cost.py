@@ -25,11 +25,11 @@ from denied_commands_security_helpers import (
     _rule_pattern,
 )
 
-from conftest import assert_rejected_without_backtracking
 from aj_crew import security
 from aj_crew.security import _GIT_PUBLISH_RULE_PATTERNS, BUILTIN_DENIED_RULES
 from aj_crew.security import argv_floor as _argv_floor
 from aj_crew.security import is_denied, is_safe_user_regex
+from conftest import assert_rejected_without_backtracking
 
 # Each test starts with the macOS libc and libproc handle caches unbuilt and puts them
 # back after, as every test of the test_denied_commands_security family does (see conftest.py).

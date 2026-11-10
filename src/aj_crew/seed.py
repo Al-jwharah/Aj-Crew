@@ -734,8 +734,7 @@ def seed(fixture_name: str, *, replace: bool = False) -> None:
             )
         if not replace:
             raise SeedError(
-                f"$AJCREW_HOME is not empty: {dst}. "
-                "Pass --seed-replace to wipe it and re-seed.",
+                f"$AJCREW_HOME is not empty: {dst}. " "Pass --seed-replace to wipe it and re-seed.",
                 guardrail=SeedError.GUARDRAIL_NON_EMPTY,
             )
         shutil.rmtree(dst)

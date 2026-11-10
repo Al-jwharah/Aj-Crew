@@ -13,9 +13,9 @@ from pathlib import Path
 import pytest
 from test_snapshot import _setup_fake_ajcrew, unpinnable_argv
 
-from conftest import make_dir_link
 from aj_crew import snapshot as snap_mod
 from aj_crew.snapshot import restore_main, snapshot_main
+from conftest import make_dir_link
 
 
 @pytest.fixture

@@ -1,12 +1,12 @@
 {
  "base_public_names": [
+  "AjCrewConfig",
   "BANNER",
   "ConversationLog",
   "DASHBOARD_PORT",
   "GatewayLock",
   "GatewayLockError",
   "HistoryConsolidator",
-  "AjCrewConfig",
   "KnowledgeStore",
   "LIVE_HOLDER_EXIT_CODE",
   "MIN_NODE_VERSION",
@@ -49,13 +49,13 @@
  ],
  "note": "cli.py keeps main() and the entry-point helpers; the argparse registrars live in cli_parser_*.py and the logging, jail, gateway-boot and knowledge helpers in owners served through aj_crew._facade_mirror.",
  "rebound": {
+  "AjCrewConfig": "aj_crew.config",
   "BANNER": "aj_crew.constants",
   "ConversationLog": "aj_crew.history",
   "DASHBOARD_PORT": "aj_crew.config.loader",
   "GatewayLock": "aj_crew.gateway_lock",
   "GatewayLockError": "aj_crew.gateway_lock",
   "HistoryConsolidator": "aj_crew.history",
-  "AjCrewConfig": "aj_crew.config",
   "KnowledgeStore": "aj_crew.knowledge.store",
   "LIVE_HOLDER_EXIT_CODE": "aj_crew.gateway_lock",
   "MIN_NODE_VERSION": "aj_crew.constants",

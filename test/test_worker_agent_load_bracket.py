@@ -231,9 +231,7 @@ def test_the_derive_time_pair_is_also_one_observation(tmp_path, monkeypatch):
     agent._install_worker_agent()
 
     # The fingerprint names what was actually mirrored, not what the file now holds.
-    assert agent_state.get_mirrored_from("ajcrew-worker") == agent._spec_fingerprint(
-        mirrored_bytes
-    )
+    assert agent_state.get_mirrored_from("ajcrew-worker") == agent._spec_fingerprint(mirrored_bytes)
     # And no identity is claimed at all, because none of them describes those bytes.
     assert agent_state.get_mirrored_stat("ajcrew-worker") is None
 
@@ -965,9 +963,7 @@ def test_the_array_projection_carries_the_snapshot_it_was_built_from(tmp_path, m
     monkeypatch.setattr(session_mcp, "ensure_agent_materialized", lambda _a: None)
     monkeypatch.setattr(session_mcp, "_global_settings", lambda: {})
 
-    projection = session_mcp.session_mcp_projection(
-        "ajcrew-worker", work_dir=str(tmp_path / "wd")
-    )
+    projection = session_mcp.session_mcp_projection("ajcrew-worker", work_dir=str(tmp_path / "wd"))
     snap = projection.derived_spec_snapshot
     assert snap is not None
     assert snap.identity == agent.default_spec_identity()
@@ -976,9 +972,7 @@ def test_the_array_projection_carries_the_snapshot_it_was_built_from(tmp_path, m
     assert {e["name"] for e in projection.servers} >= {"ajcrew-work"}
 
     # An agent that mirrors nothing has no generation to be stale against.
-    assert (
-        session_mcp.session_mcp_projection("ajcrew", work_dir=None).derived_spec_snapshot is None
-    )
+    assert session_mcp.session_mcp_projection("ajcrew", work_dir=None).derived_spec_snapshot is None
 
 
 def test_every_array_mirror_passes_the_snapshot_through(monkeypatch):

@@ -104,7 +104,7 @@ def control_plane_identity_env(
 
 
 def control_plane_instance_env(*, label: str) -> dict[str, str]:
-    """The env that names WHICH gateway a Aj Crew server belongs to, and nothing else.
+    """The env that names WHICH gateway an Aj Crew server belongs to, and nothing else.
 
     The managed data home (only under an override, exactly as
     :func:`control_plane_identity_env` emits it) and ``AJCREW_BOUND_PORT``. No

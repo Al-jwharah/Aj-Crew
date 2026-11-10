@@ -55,7 +55,7 @@
   "validate_secret_env_grant",
   "wrap_argv"
  ],
- "note": "Frozen at the split of src/aj_crew/cron_script.py (S40): every public name it defined, and every name it bound from the rest of aj_crew. A aj_crew._facade_mirror facade: cron_script.py keeps the two runners and the command-shell probe, and serves each other name from the cron_script_<role> owner that binds it, so a read through the facade is the owner's own object.",
+ "note": "Frozen at the split of src/aj_crew/cron_script.py (S40): every public name it defined, and every name it bound from the rest of aj_crew. An aj_crew._facade_mirror facade: cron_script.py keeps the two runners and the command-shell probe, and serves each other name from the cron_script_<role> owner that binds it, so a read through the facade is the owner's own object.",
  "rebound": {
   "CANONICAL_TEMP_KEYS": "aj_crew.sandbox",
   "CRON_SCRIPT_CHILD_ENV": "aj_crew.sandbox",

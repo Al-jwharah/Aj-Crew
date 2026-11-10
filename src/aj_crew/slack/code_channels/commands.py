@@ -82,7 +82,7 @@ _tasks: set[asyncio.Future[Any]] = set()
 
 _seen: Any = None
 
-NOT_A_CODE_CHANNEL_TEXT = "That command works only in a Aj Crew code channel."
+NOT_A_CODE_CHANNEL_TEXT = "That command works only in an Aj Crew code channel."
 NOT_AUTHORIZED_TEXT = "⛔ You are not authorized to use this command here."
 ARCHIVED_TEXT = "This channel is archived."
 NO_PR_TEXT = {

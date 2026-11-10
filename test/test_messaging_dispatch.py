@@ -634,7 +634,7 @@ class TestToollessTurnReadsTheGuestSpecOnDisk:
 
 
 class TestBackgroundTurnRefusesATooledLiteSpec:
-    """A ``ajcrew-lite`` turn runs only on a spec that mounts nothing, on every
+    """An ``ajcrew-lite`` turn runs only on a spec that mounts nothing, on every
     turn; otherwise the session is reset and released and the acquire fails, so
     the caller reads it as nothing sent."""
 

@@ -454,7 +454,7 @@ assert _CREW_UNREADABLE_MASK_LEAVES <= set(_CREW_HIDDEN_LEAVES)
 
 #: Crew-home leaves masked at a RELOCATED data home on top of ``_CREW_HIDDEN_LEAVES``:
 #: the secret vault. The tier lists name the vault only at its two ``$HOME``-joined
-#: spellings, so a ``AJCREW_HOME`` outside ``$HOME`` needs it re-anchored here the
+#: spellings, so an ``AJCREW_HOME`` outside ``$HOME`` needs it re-anchored here the
 #: way ``kas`` is. Kept out of ``_CREW_HIDDEN_LEAVES`` on purpose: that list also
 #: drives the alias walk and the planted-link spawn refusal, and the vault's mask at
 #: the default home goes through neither. Joined at each call site, not here, so a
@@ -804,7 +804,7 @@ _CREW_READONLY_LEAVES: tuple[str, ...] = (
     # The skill projection's side files (``acp/skill_projection_parts/side_files.py``): its
     # publication lock, the per-process lease records and the ownership sidecars with the view
     # ledger. The sidecars and the ledger are an INPUT TO AN AUTHORIZATION DECISION: a
-    # conversation stored under a ``ajcrew-skill-view-*`` name resumes under the agent
+    # conversation stored under an ``ajcrew-skill-view-*`` name resumes under the agent
     # its record maps it to (``source_agent_name``), with that agent's grants, and this
     # directory is read before the legacy one in the agents tree -- which the sandbox
     # already seals read-only. A sandboxed shell that could write a record here would

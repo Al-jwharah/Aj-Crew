@@ -18,7 +18,6 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from conftest import make_escaping_link
 from aj_crew.task_models import Project, Task, TaskStatus
 from aj_crew.task_planner import (
     decompose_yaml,
@@ -27,6 +26,7 @@ from aj_crew.task_planner import (
     update_plan_tasks,
 )
 from aj_crew.taskrunner import TaskRunner
+from conftest import make_escaping_link
 
 _CURRENT = re.compile(r"^## Current Task \(\d+/\d+\)\n(.*?)(?=^## |\Z)", re.S | re.M)
 

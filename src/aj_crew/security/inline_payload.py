@@ -92,9 +92,7 @@ _ALIAS_BINDING_RE = re.compile(r"([A-Za-z_]\w*)\s*=\s*\Z")
 #: call after the first as nameless.
 _CALL_NAME_RE = re.compile(r"([A-Za-z_]\w*)")
 _PACKAGE_LITERAL_RE = re.compile(r"(?<![a-z0-9_./\\-])aj_crew(?![a-z0-9_/\\-])")
-_CONSOLE_SCRIPT_LITERAL_RE = re.compile(
-    r"(?<![a-z0-9_.-])aj[-.]?crew(?:\.exe)?(?![a-z0-9_./\\-])"
-)
+_CONSOLE_SCRIPT_LITERAL_RE = re.compile(r"(?<![a-z0-9_.-])aj[-.]?crew(?:\.exe)?(?![a-z0-9_./\\-])")
 _LOADER_ARG_DELIMITERS_RE = re.compile(
     r"""^\s*(?:[rbfu]{1,2})?(?:\"\"\"|'''|[\"'])|(?:\"\"\"|'''|[\"'])\s*$"""
 )

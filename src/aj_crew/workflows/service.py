@@ -121,7 +121,7 @@ def _author_startup_retryable(exc: BaseException) -> bool:
 
 
 _AUTHOR_SYSTEM = """\
-You are authoring a AjCrew DYNAMIC WORKFLOW: one Python module that orchestrates
+You are authoring an AjCrew DYNAMIC WORKFLOW: one Python module that orchestrates
 agents. Reply with ONLY the Python module (no prose, no code fence). It MUST be:
 
   META = {{"name": "<kebab-name>", "description": "<one line>", "phases": [...]}}

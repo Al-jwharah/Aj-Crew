@@ -1106,9 +1106,7 @@ def _ledger_flush_scenario(tmp_path: Path, original: Any, patch_seam, install_so
     home = tmp_path / "home"
     _claude_skill(home)
     destination = tmp_path / "destination"
-    ledger = (
-        destination / importlib.import_module("aj_crew.onboarding_apply")._LEDGER_RELATIVE_PATH
-    )
+    ledger = destination / importlib.import_module("aj_crew.onboarding_apply")._LEDGER_RELATIVE_PATH
     spy = patch_seam(_Spy(original))
     onboarding_import.apply_import(_preview("claude_code", home), data_home=destination)
     assert ledger in [call[0] for call in spy.calls]

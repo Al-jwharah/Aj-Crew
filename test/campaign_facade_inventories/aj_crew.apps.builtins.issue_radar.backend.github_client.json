@@ -87,7 +87,7 @@
   "update_issue_comment",
   "verify_repo_access"
  ],
- "note": "A aj_crew._facade_mirror facade over the github_client_* owners beside it.",
+ "note": "An aj_crew._facade_mirror facade over the github_client_* owners beside it.",
  "rebound": {
   "PrSearchError": "aj_crew.apps.builtins.issue_radar.backend.errors",
   "ProviderCliError": "aj_crew.apps.builtins.issue_radar.backend.errors",

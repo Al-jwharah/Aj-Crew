@@ -60,7 +60,7 @@ mint, diagnostics, injection validation, run-marker, shared constants
 
 ## 1. Overview
 
-A Aj Crew gateway normally binds the dashboard to loopback only. The Instances
+An Aj Crew gateway normally binds the dashboard to loopback only. The Instances
 feature lets the hub reach *other* gateways running on remote hosts by opening an
 SSH `-L` forward to each remote's loopback dashboard port, minting (for a crew
 that runs a gateway; a headless crew mints nothing, §16) a short-lived

@@ -143,7 +143,7 @@ def main() -> int:
 
     # Defaults are the product's DEFAULT colour theme, aj-dark, copied from
     # website/src/styles/theme-palettes.css (the [data-theme="aj-dark"] block). Not a look chosen
-    # here: useTheme.tsx sets DEFAULT_COLOR_THEME = "kiro", so these are the colours
+    # here: useTheme.tsx sets DEFAULT_COLOR_THEME = "aj", so these are the colours
     # a viewer already sees in the product, and the capture is recorded on the same
     # theme so a slide and the dashboard behind it are the same product.
     accent = _css(b, "accent", "#8e48ff", _COLOR_RE)

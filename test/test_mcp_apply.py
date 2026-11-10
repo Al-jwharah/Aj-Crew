@@ -453,9 +453,7 @@ class TestApplyEndpoint:
         )
         monkeypatch.setattr(mcp_mod, "sel", lambda: MagicMock())
 
-        request = _make_request(
-            {"changes": [{"name": "srv", "ajcrew": False, "kiroGlobal": True}]}
-        )
+        request = _make_request({"changes": [{"name": "srv", "ajcrew": False, "kiroGlobal": True}]})
         with pytest.raises(mcp_mod.McpConfigHasComments) as excinfo:
             await mcp_mod.api_mcp_apply(request)
 

@@ -125,7 +125,7 @@ class _BuiltTargets(set[str]):
     crew-prefixed entry of the caller's ``home_dirs`` under ``AJCREW_HOME``, a
     kiro-cli path under ``KIRO_HOME``, or a DECLARED credential leaf under whichever
     harness variable relocates it. So a symlinked ``sessions`` or ``models`` leaf
-    under a ``AJCREW_HOME`` that sits below ``$HOME`` pins the write tier, and a
+    under an ``AJCREW_HOME`` that sits below ``$HOME`` pins the write tier, and a
     symlinked ``goose`` directory pins the tier handed that leaf whether it sits
     under ``~/.config`` or under whatever ``XDG_CONFIG_HOME`` resolves to, because
     the leaf is resolved under each root. What CANNOT set it is a dotfile that is
@@ -714,7 +714,7 @@ def _report_expiry_pin(home_dirs: list[str], pinned: bool) -> None:
     crew-prefixed entry under ``AJCREW_HOME``, a kiro-cli path under
     ``KIRO_HOME``, or a declared harness credential leaf under its override -- and
     it has to sit BELOW the resolved root, since ``_resolve_root_anchors``
-    canonicalises each root first. A symlinked ``sessions`` leaf under a
+    canonicalises each root first. A symlinked ``sessions`` leaf under an
     ``AJCREW_HOME`` below ``$HOME`` is that shape, and so is a ``goose`` directory
     symlinked into a store under ``~/.config`` or under whatever
     ``XDG_CONFIG_HOME`` resolves to. A dotfile that is neither a protected entry

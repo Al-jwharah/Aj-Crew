@@ -176,7 +176,7 @@ def test_a_runtime_a_live_cli_chat_recorded_is_owned_and_not_called_idle(table: 
     (runtime,) = table.census(tracked={10: (7, "500")}, gateway_pid=99)
     assert runtime.owner == "other"
     lines = resources._acp_runtime_lines(resources._AcpCensus([runtime]), 1.0)
-    assert lines[0] == ("  runtimes:    1 alive: 1 owned by another live process (a ajcrew chat)")
+    assert lines[0] == ("  runtimes:    1 alive: 1 owned by another live process (an ajcrew chat)")
     assert "               pid 10: 40%, up 2.0h, owned by another live process" in lines
     assert not any(line.startswith("  no owner:") for line in lines)
 

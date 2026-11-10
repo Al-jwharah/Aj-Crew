@@ -520,7 +520,7 @@ def test_a_conductor_duplicate_renamed_to_the_stem_is_not_overwritten(
 ) -> None:
     """A conductor copy renamed to this stem is read as a user file and left untouched.
 
-    It has the name, a ``ajcrew-core`` reference and no ``ajcrew-cron`` mount, so it
+    It has the name, an ``ajcrew-core`` reference and no ``ajcrew-cron`` mount, so it
     matches every content mark, but not the recorded digest."""
     rig = _Rig(tmp_path, monkeypatch)
     target = rig.agents / DASHBOARD_AUTHOR_AGENT_FILENAME
@@ -601,9 +601,7 @@ def test_a_user_markdown_spec_at_the_stem_blocks_the_install(
     rig = _Rig(tmp_path, monkeypatch)
     md = rig.agents / "ajcrew-dashboard-author.md"
     json_target = rig.agents / DASHBOARD_AUTHOR_AGENT_FILENAME
-    md_body = (
-        "---\nname: ajcrew-dashboard-author\n---\nThe user's own markdown dashboard author.\n"
-    )
+    md_body = "---\nname: ajcrew-dashboard-author\n---\nThe user's own markdown dashboard author.\n"
     md.write_text(md_body, encoding="utf-8")
 
     wa._install_dashboard_author_agent()

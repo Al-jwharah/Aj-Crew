@@ -431,9 +431,7 @@ class TestTheOverlay:
         def _boom():
             raise OSError("unreadable")
 
-        monkeypatch.setattr(
-            "aj_crew.config.AjCrewConfig.load", staticmethod(_boom), raising=True
-        )
+        monkeypatch.setattr("aj_crew.config.AjCrewConfig.load", staticmethod(_boom), raising=True)
         assert agent_env_overlay() == {}
 
 

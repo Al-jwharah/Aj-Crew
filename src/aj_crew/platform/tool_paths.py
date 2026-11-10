@@ -601,7 +601,7 @@ def mcp_document_body_keys(
     no exemption. A server-qualified *tool_name* resolves only when its
     qualifier names that same server.
 
-    *params* are the call's arguments. A ``ajcrew-cron`` ``cron_add`` that
+    *params* are the call's arguments. An ``ajcrew-cron`` ``cron_add`` that
     names ``script`` or ``command`` (any value) is a script job, which reads
     ``message`` as its arguments, so it gets no exemption; omitting *params*
     for it does the same (fail closed).

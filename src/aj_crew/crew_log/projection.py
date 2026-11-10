@@ -853,9 +853,7 @@ if TYPE_CHECKING:  # names it serves from outside the fold family, from their ho
         attribute_seq,
     )
     from aj_crew.session_ledger import _FOLD_NAME as LEDGER_FOLD_NAME  # noqa: F401
-    from aj_crew.session_ledger import (  # noqa: F401
-        _MAX_ARTIFACT_KEY as LEDGER_ARTIFACT_KEY_LIMIT,
-    )
+    from aj_crew.session_ledger import _MAX_ARTIFACT_KEY as LEDGER_ARTIFACT_KEY_LIMIT  # noqa: F401
     from aj_crew.session_ledger import _MAX_ARTIFACTS as LEDGER_ARTIFACT_LIMIT  # noqa: F401
     from aj_crew.session_ledger import _MAX_EVENTS as LEDGER_EVENT_LIMIT  # noqa: F401
     from aj_crew.session_ledger import _MAX_PHASE as LEDGER_PHASE_LIMIT  # noqa: F401

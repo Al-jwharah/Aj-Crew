@@ -114,7 +114,7 @@ export function AddInstanceForm({ onAdded }: { onAdded: () => void }) {
   // per mount: a later read would fight the live form state.
   const dispatch = useAppDispatch()
   const stored = useAppSelector(s => s.instances.crewForms?.add ?? null)
-  // A `ajcrew://remote-crew/add` link the values started from
+  // An `ajcrew://remote-crew/add` link the values started from
   // (`prefillCrewAddForm`). Read live, so the line naming it goes once a
   // successful add or a cleared form drops it.
   const link = useAppSelector(s => s.instances.crewForms?.addLink ?? null)

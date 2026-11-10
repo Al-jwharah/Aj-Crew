@@ -19,9 +19,7 @@ from dataclasses import dataclass
 from typing import Any
 
 # The directive families below stay served through the facade under these names.
-from aj_crew.directive_origin import (  # noqa: F401
-    USER_ORIGIN_DIRECTIVES as _USER_ORIGIN_DIRECTIVES,
-)
+from aj_crew.directive_origin import USER_ORIGIN_DIRECTIVES as _USER_ORIGIN_DIRECTIVES  # noqa: F401
 from aj_crew.directive_origin import (  # noqa: F401
     USER_SURFACE_DIRECTIVES as _USER_SURFACE_DIRECTIVES,
 )

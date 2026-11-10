@@ -20,7 +20,6 @@ from unittest.mock import MagicMock, patch
 import pytest
 from source_corpus import parsed_candidates
 
-from conftest import MockSlackClient
 from aj_crew.slack import sessions_view
 from aj_crew.slack.handler import _handle_sessions_command, _is_sessions_keyword
 from aj_crew.slack.sessions_view import (
@@ -36,6 +35,7 @@ from aj_crew.slack.sessions_view import (
     sessions_include_ended,
 )
 from aj_crew.testing.wait import await_until
+from conftest import MockSlackClient
 
 
 def _write_jsonl(

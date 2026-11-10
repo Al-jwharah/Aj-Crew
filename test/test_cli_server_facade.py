@@ -275,8 +275,7 @@ def test_the_mirror_indexes_exactly_the_owners_with_no_exclusion_and_no_forward(
 def test_the_owners_are_every_cli_server_sibling() -> None:
     assert cli_server.__file__ is not None
     siblings = sorted(
-        f"aj_crew.{path.stem}"
-        for path in Path(cli_server.__file__).parent.glob("cli_server_*.py")
+        f"aj_crew.{path.stem}" for path in Path(cli_server.__file__).parent.glob("cli_server_*.py")
     )
     assert siblings == sorted(OWNERS)
 
@@ -435,9 +434,7 @@ def test_the_facade_imports_nothing_beyond_its_frozen_inventory() -> None:
 def test_the_inventory_check_reports_a_planted_import() -> None:
     """The F401 stand-in must be able to fail: a stray import, and an owner import of a
     name that owner does not define, are both reported."""
-    planted = (
-        _source(cli_server) + "\nimport pickle\nfrom aj_crew.cli_server_stop import _update\n"
-    )
+    planted = _source(cli_server) + "\nimport pickle\nfrom aj_crew.cli_server_stop import _update\n"
     assert unexpected_imports(planted, _owner_names()) == [
         "pickle",
         "aj_crew.cli_server_stop._update",

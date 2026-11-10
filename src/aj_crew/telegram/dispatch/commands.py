@@ -78,8 +78,7 @@ async def _handle_dashboard(
     if not self._is_private_route(route):
         await self._reply(
             chat_id,
-            "🔒 Dashboard links are only sent in a direct message — "
-            "DM me `/ajcrew dashboard`.",
+            "🔒 Dashboard links are only sent in a direct message — " "DM me `/ajcrew dashboard`.",
             thread=thread,
         )
         return

@@ -5,7 +5,7 @@ U1 the agent spec's redirect check judged only the FINAL component, so a junctio
    fence made in its first version, and the same function fixes it -- which is the point:
    there was already a whole-chain walker, and this call site used the single-entry predicate.
 
-U2 the staging marker said "a aj-crew build made this" and nothing more, so two concurrent
+U2 the staging marker said "an aj-crew build made this" and nothing more, so two concurrent
    builds against one --out each read the OTHER's marker as their own and deleted the other's
    staging tree with the recursive delete the marker authorises.
 """

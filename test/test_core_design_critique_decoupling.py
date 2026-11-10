@@ -70,8 +70,7 @@ def test_no_core_string_names_the_app(core_trees):
         ("from .builtins.design_critique.backend import routes", "aj_crew.apps.y", False),
         ("from .builtins import design_critique", "aj_crew.apps", True),
         (
-            "import importlib\n"
-            "importlib.import_module('aj_crew.apps.builtins.design_critique')",
+            "import importlib\n" "importlib.import_module('aj_crew.apps.builtins.design_critique')",
             "aj_crew.x",
             False,
         ),

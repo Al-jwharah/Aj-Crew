@@ -624,9 +624,7 @@ def test_non_string_env_path_does_not_abort_the_rewrite(tmp_path: Path) -> None:
     out of the rewrite pass and disable pooling for every agent."""
     from aj_crew.mcp_gateway import rewriter as _rw
 
-    resolved = _rw._resolve_target_command(
-        "ajcrew-test-definitely-missing-cmd", {"PATH": 7}, None
-    )
+    resolved = _rw._resolve_target_command("ajcrew-test-definitely-missing-cmd", {"PATH": 7}, None)
     assert resolved == ""  # unresolvable, but no exception
 
 
@@ -1379,9 +1377,7 @@ def test_short_form_still_unsafe_falls_back_to_the_original(monkeypatch) -> None
     """A short form that itself carries a metacharacter is not an improvement;
     the original spelling is kept for the guard to report."""
     monkeypatch.setattr("aj_crew.mcp_gateway.rewriter.platform_compat.IS_WINDOWS", True)
-    monkeypatch.setattr(
-        "aj_crew.platform_compat.short_path_name", lambda p: r"C:\PROGRA%1\py.exe"
-    )
+    monkeypatch.setattr("aj_crew.platform_compat.short_path_name", lambda p: r"C:\PROGRA%1\py.exe")
     original = r"C:\Program Files\py.exe"
     assert rewriter._cmd_safe_command(original) == original
 
@@ -1409,9 +1405,7 @@ def test_parenthesised_path_is_normalised_too(monkeypatch) -> None:
     moment quote-stripping unquotes the line -- ``C:\\Program Files (x86)\\``
     is the everyday spelling of this hazard."""
     monkeypatch.setattr("aj_crew.mcp_gateway.rewriter.platform_compat.IS_WINDOWS", True)
-    monkeypatch.setattr(
-        "aj_crew.platform_compat.short_path_name", lambda p: r"C:\PROGRA~2\py.exe"
-    )
+    monkeypatch.setattr("aj_crew.platform_compat.short_path_name", lambda p: r"C:\PROGRA~2\py.exe")
     assert rewriter._cmd_safe_command(r"C:\Program Files (x86)\py.exe") == r"C:\PROGRA~2\py.exe"
     assert rewriter._cmd_safe_command(r"C:\Kiro(dev)\py.exe") == r"C:\PROGRA~2\py.exe"
 

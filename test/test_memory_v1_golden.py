@@ -485,14 +485,14 @@ def _blocks(payload: str) -> dict[str, str]:
 EXPECTED_EXTENTS = {
     "[CRITICAL RULES": 4338,
     "[CURRENT DATE]": 48,
-    "[CURRENT AGENT]": 196,
+    "[CURRENT AGENT]": 194,
     "[WORKSPACE IDENTITY]": 376,
-    "[DOCUMENTATION]": 235,
-    "[Memory —": 2077,
+    "[DOCUMENTATION]": 227,
+    "[Memory —": 2073,
     "[Skills:]": 413,
     "[Learned corrections": 320,
 }
-EXPECTED_TOTAL = 8003
+EXPECTED_TOTAL = 7989
 
 
 def test_session_context_char_extents(seeded: Seeded) -> None:

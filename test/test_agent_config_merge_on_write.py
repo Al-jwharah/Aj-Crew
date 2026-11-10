@@ -21,8 +21,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from aiohttp import web
 
-from conftest import requires_symlinks
 from aj_crew.dashboard.handlers import api_agent_config
+from conftest import requires_symlinks
 
 
 @pytest.fixture(autouse=True)

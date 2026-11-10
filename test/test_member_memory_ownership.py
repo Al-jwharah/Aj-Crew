@@ -13,7 +13,6 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from conftest import make_dir_link
 from aj_crew.config.loader import (
     AjCrewAgentConfig,
     AjCrewConfig,
@@ -36,6 +35,7 @@ from aj_crew.memory_stores import (
     resolve_store_path,
 )
 from aj_crew.vector_memory import read_member_database_identity
+from conftest import make_dir_link
 
 
 def _new_member(name: str = "reviewer") -> tuple[AjCrewConfig, str]:

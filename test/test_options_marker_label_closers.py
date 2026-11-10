@@ -45,7 +45,6 @@ from __future__ import annotations
 import pytest
 from named_cases_helpers import named_cases
 
-from conftest import assert_rejected_without_backtracking
 from aj_crew.constants import (
     MARKER_CLOSERS,
     OPTIONS_RE_LINE,
@@ -53,6 +52,7 @@ from aj_crew.constants import (
     _marker_labels_have_unmatched_opener,
 )
 from aj_crew.messaging.renderer import split_options_trailer
+from conftest import assert_rejected_without_backtracking
 
 #: Same-line shapes that must NOT match: the swallowed closer has no ``[`` to
 #: match it AND is followed by an ordinary word rather than a separator, so

@@ -22,8 +22,8 @@ _K = "k" + "ill"
 _PK = "p" + _K
 _KA = _K + "all"
 _NAME = "aj" + "crew"
-_HEAD = _NAME[:4]
-_TAIL = _NAME[4:]
+_HEAD = _NAME[:2]
+_TAIL = _NAME[2:]
 
 
 def _floor(cmd: str) -> bool:

@@ -157,9 +157,7 @@ def test_a_full_rebuild_and_a_member_cron_s_worker_keep_the_edition_refs(
     monkeypatch.setattr(mate_worker, "mate_file_for_member", lambda member, config=None: member)
     monkeypatch.setattr(mate_worker, "globally_disabled_refs", lambda names: [])
     store = MemoryStoreRef("member-alpha", "alpha")
-    worker = mate_worker.cron_worker_execution(
-        ExecutionContext("alpha", store, "member", "ajcrew")
-    )
+    worker = mate_worker.cron_worker_execution(ExecutionContext("alpha", store, "member", "ajcrew"))
     assert worker is not None and worker.template_id == MATE_WORKER_AGENT
     monkeypatch.setattr(
         "aj_crew.execution_context.read_session_execution",

@@ -658,7 +658,7 @@ def _up(cfg: PodConfig, args: argparse.Namespace) -> None:
         # so a setting recorded against a live pod has not applied yet.
         # `embeddings=off` is keyed on what the pod boots WITH, not on this command's
         # flag. The merge-preserving env file keeps EMBEDDINGS=0 from an earlier `up`,
-        # so a re-up without the flag boots the same embedding-light pod; and a
+        # so a re-up without the flag boots the same embedding-light pod; and an
         # AJCREW_SKIP_MODEL_DOWNLOAD=1 already in this environment is what
         # pod_context hands every `pod exec` and what an inheriting boot carries,
         # with no key ever written. Either pod answers search from a different

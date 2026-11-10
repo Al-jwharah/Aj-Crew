@@ -252,7 +252,7 @@ _SKIP_DOWNLOAD_ENV = "AJCREW_SKIP_MODEL_DOWNLOAD"
 # Distribution: public CloudFront CDN in front of Aj Crew's OWN model bucket
 # (ajcrew-models, reachable only through the distribution's OAC — the bucket
 # itself blocks public access). Serving our own copy rather than sharing another
-# project's bucket keeps the download signal attributable: a fetch here is a
+# project's bucket keeps the download signal attributable: a fetch here is an
 # Aj Crew first-install, uncontaminated by another product's traffic.
 # Plain HTTPS, no git access and no cloud SDK required. The
 # sha256 pin above is the trust anchor for every source, so a tampered CDN

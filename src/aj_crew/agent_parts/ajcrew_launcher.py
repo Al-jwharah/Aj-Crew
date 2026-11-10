@@ -383,7 +383,7 @@ def _ajcrew_mcp_invocation(subcommand: str) -> tuple[str, list[str]]:
 def ensure_ajcrew_on_path(
     bin_dir: Path | None = None, *, claim_existing: bool = False
 ) -> str | None:
-    """Ensure a ``ajcrew`` launcher is reachable on the user's PATH.
+    """Ensure an ``ajcrew`` launcher is reachable on the user's PATH.
 
     The source ``install.sh`` symlinks ``~/.local/bin/ajcrew`` → the venv
     entry point, but install paths that don't run it (notably the packaged
@@ -428,7 +428,7 @@ def ensure_ajcrew_on_path(
     # worktree is ephemeral by construction: `git worktree remove` deletes its
     # `.venv` along with the tree, and the shim is then a dangling symlink, so
     # `ajcrew` stops working EVERYWHERE — not just in the tree that went away.
-    # Any process running out of a worktree's venv (a pod gateway, a dev run, a
+    # Any process running out of a worktree's venv (a pod gateway, a dev run, an
     # `ajcrew setup` invoked from that tree) resolves its own venv entrypoint
     # here, so without this guard routine worktree work silently hijacks the
     # global command. `instances/token_mint.py` documents the same hazard from
@@ -440,7 +440,7 @@ def ensure_ajcrew_on_path(
     # no `.git` marker and wave the worktree through — reopening this hole.
     if _in_linked_git_worktree(Path(target).resolve()):
         logger.info(
-            "Not installing a ajcrew launcher: %s is inside a linked git worktree, "
+            "Not installing an ajcrew launcher: %s is inside a linked git worktree, "
             "which is ephemeral (removing the worktree would break `ajcrew` "
             "machine-wide). Install from your primary clone, or link it yourself: "
             "ln -sfn <clone>/.venv/bin/ajcrew ~/.local/bin/ajcrew",
@@ -456,7 +456,7 @@ def ensure_ajcrew_on_path(
     # /opt) or a venv install is the shape that can carry a durable launcher.
     if _in_ephemeral_tree(Path(target).resolve()):
         logger.info(
-            "Not installing a ajcrew launcher: %s is inside an ephemeral tree (an "
+            "Not installing an ajcrew launcher: %s is inside an ephemeral tree (an "
             "AppImage runtime mount, or the system temp directory), which is reaped "
             "out from under the link. Install the deb/rpm package for a durable "
             "`ajcrew` on PATH, or link a persistent install yourself.",

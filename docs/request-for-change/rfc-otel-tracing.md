@@ -238,7 +238,7 @@ Producers:
 
 - **Every ledger write goes through one function**, `on_work_recorded`
   (`src/aj_crew/crew_log/emit_surfaces.py`). It handles all eleven actions and the worker's `work_report`.
-  Each write becomes a `ajcrew.work.<action>` span in the acting turn, with attributes only: `item_id`, round,
+  Each write becomes an `ajcrew.work.<action>` span in the acting turn, with attributes only: `item_id`, round,
   generation, state, verdict, fail count, closed-vocabulary status and reason, and the PR number. No title,
   acceptance, decision, summary or artifact text.
 - **Worker creation** (`session_create`, `work_dispatch`, `session_fork`) is a span in the conductor's turn. The
@@ -366,7 +366,7 @@ esc(p)   = "%" -> "%25", "|" -> "%7C"
 ## 6. Correlation IDs
 
 Every span carries whichever of these exist for it. Names are #24884's
-(`docs/guides/hook-correlation-contract.md` on that branch), with a `ajcrew.` prefix and the same meaning.
+(`docs/guides/hook-correlation-contract.md` on that branch), with an `ajcrew.` prefix and the same meaning.
 #24884 notes `agent_id` is a workflow agent call, distinct from `subagent_id`, and this design keeps that split.
 
 - **Raw** means a random value that reveals nothing.
@@ -429,7 +429,7 @@ counted once there. A query that sums every span must filter on `chat`.
 - I found no AWS page that maps Transaction Search's token and model fields to attribute keys. They correspond to
   the conventions' `gen_ai.usage.*` and `gen_ai.request.model`. Phase 2 verifies this against a live Transaction
   Search.
-- Credits are a `ajcrew.*` attribute. Filter on it in Transaction Search, or sum it with Logs Insights over the
+- Credits are an `ajcrew.*` attribute. Filter on it in Transaction Search, or sum it with Logs Insights over the
   `aws/spans` log group, filtered to `chat` spans. Phase 2's guide ships that query.
 
 ### 7.3 Langfuse mapping

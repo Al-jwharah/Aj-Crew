@@ -415,7 +415,7 @@ def isolated_python_argv(
     executable: str | os.PathLike[str] | None = None,
     force_isolation: bool = False,
 ) -> list[str]:
-    """Argv for a Aj Crew-owned Python child with bundle-safe user-site policy.
+    """Argv for an Aj Crew-owned Python child with bundle-safe user-site policy.
 
     ``-s`` is the narrow control: it removes the user site while preserving
     ``PYTHONPATH``, the working-directory import path, and every other

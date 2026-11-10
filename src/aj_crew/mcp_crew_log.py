@@ -41,7 +41,7 @@ else, which is why a reviewer looking for the security argument should read
 dispatched is the ordinary shape of the work rather than a special case, and the
 recorded ``session/opened`` lineage already says which session created which, so
 the entitlement is derived from a fact rather than asserted. The wider premise --
-that sessions on a Aj Crew gateway belong to one operator, so any may read any
+that sessions on an Aj Crew gateway belong to one operator, so any may read any
 other -- was considered and is NOT the rule: a channel-linked session's
 conversation is a Slack or Telegram thread that several allow-listed people read
 and prompt-injectable content enters, so "one operator" does not reach it.

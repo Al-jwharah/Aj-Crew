@@ -15,12 +15,12 @@ from types import SimpleNamespace
 
 import pytest
 
-from conftest import requires_symlinks
 from aj_crew import sandbox_leaves, sandbox_precreate
 from aj_crew.browser_harness import HARNESS_VERSION, build_deps, chromium, install
 from aj_crew.security import paths_lists
 from aj_crew.subprocess_utf8 import UTF8_TEXT
 from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS
+from conftest import requires_symlinks
 
 
 @pytest.fixture(autouse=True)

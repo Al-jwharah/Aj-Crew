@@ -547,9 +547,7 @@ def _fake_config():
 
 
 def _patched_config():
-    return patch(
-        "aj_crew.dashboard.handlers.teams.AjCrewConfig.load", return_value=_fake_config()
-    )
+    return patch("aj_crew.dashboard.handlers.teams.AjCrewConfig.load", return_value=_fake_config())
 
 
 def _as_owner():

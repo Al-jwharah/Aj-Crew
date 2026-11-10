@@ -10,7 +10,7 @@ import pytest
 from real_dashboard_state import _settle_real_dashboard_states  # noqa: F401
 from real_dashboard_state import drain, open_feed, real_dashboard_state
 
-from aj_crew.config.loader import ACTIVATION_ALWAYS, ChannelConfig, AjCrewConfig
+from aj_crew.config.loader import ACTIVATION_ALWAYS, AjCrewConfig, ChannelConfig
 from aj_crew.sel import SecurityEventLog
 from aj_crew.slack.events import SeenCache, _route_message
 from aj_crew.slack.handler import set_owner_id

@@ -119,9 +119,7 @@ class TestIdentityFieldsStayAsWritten:
     def test_a_non_string_is_not_pinned_to_the_default(self, field_name: str, bad: object) -> None:
         cfg = _load({"agents": {"x": {field_name: bad}}, "default_agent": "x"})
         assert getattr(cfg.agents["x"], field_name) == bad
-        assert getattr(cfg.agents["x"], field_name) != field_default(
-            AjCrewAgentConfig, field_name
-        )
+        assert getattr(cfg.agents["x"], field_name) != field_default(AjCrewAgentConfig, field_name)
 
 
 class TestCliAgentListSurvivesWrongTypedFields:

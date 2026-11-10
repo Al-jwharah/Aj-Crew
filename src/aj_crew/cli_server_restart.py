@@ -113,7 +113,7 @@ def _incumbent_from_lock_holder(port: int, *, shutdown_acknowledged: bool) -> li
     exiting incumbent, and only then is it returned as ``[holder_pid]`` to be
     waited on, whatever its argv reads. Returns ``[]`` when the lock is free or its recorded holder
     is dead (nothing left to outwait). Every other live holder -- a foreign
-    process, or a Aj Crew gateway that did not acknowledge the shutdown
+    process, or an Aj Crew gateway that did not acknowledge the shutdown
     (``_stop`` has already refused it) -- is refused through
     :func:`_refuse_lock_holder` with a ``denied`` event: the lock names the
     pid but never makes it safe to signal or to spawn against. An
@@ -350,7 +350,7 @@ def _spawn_detached_gateway(port: int | None = None) -> subprocess.Popen[bytes]:
     log_fh = open(log_path, "a", encoding="utf-8", opener=owner_only_opener)  # noqa: SIM115
 
     # The PATH fallback goes through ``resolved_command_casing`` for the same
-    # reason as in ``_own_console_script``: a ``ajcrew.EXE`` spelling makes a
+    # reason as in ``_own_console_script``: an ``ajcrew.EXE`` spelling makes a
     # Windows launcher shim exit at once, after the old gateway was stopped.
     bin_path = _own_console_script() or resolved_command_casing(shutil.which("ajcrew"))
     if bin_path:
@@ -902,7 +902,7 @@ def _restart(cli_port: int | None = None) -> None:
                     lines.append(f"   {outcome.scope} scope: restarted.")
             else:
                 lines = [
-                    "❌ A ajcrew service is installed and running, but the restart did "
+                    "❌ An ajcrew service is installed and running, but the restart did "
                     "not take — the gateway was NOT restarted."
                 ]
             for failure in failures:

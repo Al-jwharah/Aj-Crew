@@ -114,7 +114,7 @@ Committed as `fix(embeddings): skip the embedder's unused scores buffer (#6827)`
   existing values, so accepted context, logical batch, and micro-batching are
   untouched and the produced embedding vectors are **byte-identical for every
   input**, including unspaced text.
-- Marked with a `aj_crew DIVERGENCE FROM UPSTREAM` comment and recorded under
+- Marked with an `aj_crew DIVERGENCE FROM UPSTREAM` comment and recorded under
   "Local divergences from upstream" in `src/aj_crew/_vendor/README.md`, since
   the documented upgrade procedure replaces `llama_cpp/` wholesale and would
   otherwise drop the patch.

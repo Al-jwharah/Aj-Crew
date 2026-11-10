@@ -110,7 +110,7 @@ Notes on what it does and does not do:
   tool payload that merely looks like a block is the acceptable direction.
 - An image with no compliant rendition becomes a text marker rather than being
   left in place. Losing one image beats losing every later turn.
-- It is not a sweeper and not a `ajcrew` subcommand, on purpose: it rewrites
+- It is not a sweeper and not an `ajcrew` subcommand, on purpose: it rewrites
   another tool's data directory, so it stays an explicit operator action. The
   dashboard's "Repair images and resume" button is that explicit operator action
   -- a human pressing "repair this session" -- so wiring the module behind it

@@ -662,7 +662,7 @@ def test_a_portless_acquirer_is_called_a_gateway_only_when_it_may_be_one(
 ):
     """A holder without the port is a gateway starting or stopping -- or a
     stray process that took the lock. Only a command line read and recognised
-    as not a Aj Crew server earns the second wording; the exit stays
+    as not an Aj Crew server earns the second wording; the exit stays
     restartable either way."""
     from aj_crew import gateway_lock, platform_compat
 
@@ -680,7 +680,7 @@ def test_a_portless_acquirer_is_called_a_gateway_only_when_it_may_be_one(
         assert err.holder_pid == 16968
         assert err.live_holder is False
         assert ("another gateway already owns" in text) is names_a_gateway
-        assert ("which is not a Aj Crew gateway" in text) is not names_a_gateway
+        assert ("which is not an Aj Crew gateway" in text) is not names_a_gateway
 
 
 def test_a_live_acquirer_listening_but_not_answering_http_is_not_a_live_holder(

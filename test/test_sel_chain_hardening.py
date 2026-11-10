@@ -25,9 +25,9 @@ from sel_helpers import (  # noqa: F401 -- the autouse fixture registers by impo
 )
 
 import aj_crew.sel as sel_mod
-from conftest import requires_symlinks
 from aj_crew import platform_compat
 from aj_crew.sel import SecurityEventLog, sel_hmac_key_path
+from conftest import requires_symlinks
 
 # ─────────────────────────────────────────────────────────────────────────
 # Audit-chain hardening regression tests (Track B):

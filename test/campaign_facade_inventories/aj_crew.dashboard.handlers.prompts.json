@@ -1,8 +1,8 @@
 {
  "base_public_names": [
+  "AjCrewConfig",
   "DashboardState",
   "FileTooLargeError",
-  "AjCrewConfig",
   "LoopBoundLock",
   "MAX_PROMPT_BYTES",
   "MAX_PROMPT_NAME_BYTES",
@@ -62,9 +62,9 @@
  ],
  "note": "Frozen at the split of src/aj_crew/dashboard/handlers/prompts.py (S22): every public name it defined, and every name it bound from the rest of aj_crew.",
  "rebound": {
+  "AjCrewConfig": "aj_crew.config.loader",
   "DashboardState": "aj_crew.dashboard.state",
   "FileTooLargeError": "aj_crew.hooks",
-  "AjCrewConfig": "aj_crew.config.loader",
   "LoopBoundLock": "aj_crew.loop_lock",
   "MAX_SKILL_KEY_CHARS": "aj_crew.validation",
   "PROJECT_SKILL_BODY_CAP": "aj_crew.skills",

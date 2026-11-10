@@ -272,7 +272,7 @@ class KasLoginService:
         self._replaces: dict[str, str] = {}
         # login_id -> the store's sign-out generation when that login began. Checked
         # again before the credential is persisted: a different value means a
-        # sign-out landed meanwhile in SOME process on this host (this gateway or a
+        # sign-out landed meanwhile in SOME process on this host (this gateway or an
         # `ajcrew kas logout` in a shell), and the credential must not re-fill
         # the vault that sign-out emptied. The epoch below is the same guard for
         # this process alone, read without a file.

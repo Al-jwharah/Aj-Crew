@@ -14,9 +14,9 @@ from pathlib import Path
 import pytest
 from test_slack_handler import FakeSessionManager
 
-from conftest import MockSlackClient
 from aj_crew.slack import handler as h
 from aj_crew.stats import Stats
+from conftest import MockSlackClient
 
 
 @pytest.mark.asyncio

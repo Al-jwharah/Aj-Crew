@@ -921,9 +921,7 @@ async def test_logs_past_the_scan_cap_are_counted_on_the_payload_not_dropped_sil
     from aj_crew import crew_log as lg
     from aj_crew.crew_log import CrewLog
 
-    closed = CrewLog.create(
-        lg.KIND_SESSION, "a-closed", owner="raymond", agent="ajcrew", slot="z"
-    )
+    closed = CrewLog.create(lg.KIND_SESSION, "a-closed", owner="raymond", agent="ajcrew", slot="z")
     closed.append(
         "session/opened",
         {

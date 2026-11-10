@@ -1,7 +1,7 @@
 """The Strands gate module's own behaviour, run against stand-in ``strands`` modules.
 
 The gate module is loaded by the Strands CLI's Python worker, never by Aj Crew, and
-the Strands SDK is not a Aj Crew dependency. So these tests load the module from its
+the Strands SDK is not an Aj Crew dependency. So these tests load the module from its
 packaged path with small stand-ins for exactly the ``strands`` names it imports, and
 drive the one behaviour that lives in its own code: what happens to the next prompt
 when a cancel left an approval interrupt open. On Strands CLI 0.2.3 that state is

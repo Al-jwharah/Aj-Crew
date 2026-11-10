@@ -38,9 +38,7 @@ from aj_crew.instances.constants import (
 from aj_crew.instances.constants import (
     DEFAULT_MODELS_CAPABILITY_PROXY_TIMEOUT_SECS as _MODELS_CAPABILITY_PROXY_TIMEOUT,
 )
-from aj_crew.instances.constants import (
-    DEFAULT_PROXY_CONNECT_TIMEOUT_SECS as _PROXY_CONNECT_TIMEOUT,
-)
+from aj_crew.instances.constants import DEFAULT_PROXY_CONNECT_TIMEOUT_SECS as _PROXY_CONNECT_TIMEOUT
 from aj_crew.instances.constants import (
     DEFAULT_PROXY_READ_IDLE_TIMEOUT_SECS as _PROXY_READ_IDLE_TIMEOUT,
 )

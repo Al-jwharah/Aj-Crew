@@ -21,4 +21,4 @@ writing both marks, not editing the page and leaving the rule to look broken.
 Where Aj Crew's own behavior differs from a mirrored page, Aj Crew's docs win.
 These pages document the `kiro-cli` backend; Aj Crew also supports other ACP
 backends, whose contracts live in the [providers specification](../system-specs/modules/providers.md).
-A capability shown in this mirror is not automatically a Aj Crew capability.
+A capability shown in this mirror is not automatically an Aj Crew capability.

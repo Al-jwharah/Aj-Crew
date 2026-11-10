@@ -33,7 +33,6 @@ from slack_interactions_coverage_helpers import orch_fixture  # noqa: F401
 from slack_interactions_coverage_helpers import sel_log_fixture  # noqa: F401
 from slack_interactions_coverage_helpers import _ix_messages, _payload
 
-from conftest import MockSlackClient
 from aj_crew.config.loader import config_path
 from aj_crew.slack import handler as sh
 from aj_crew.slack import interactions as ix
@@ -45,6 +44,7 @@ from aj_crew.slack.allowlist import (
     persist_allowed_user,
     persist_tracking_channel,
 )
+from conftest import MockSlackClient
 
 NOT_OBJECTS = [["x"], "x", 7, None]
 NOT_OBJECT_IDS = ["list", "str", "int", "null"]

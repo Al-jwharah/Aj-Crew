@@ -69,7 +69,7 @@ def kiro_oauth_cache_dir(*, home: Path | None = None) -> Path:
     directory; it is never derived a second way elsewhere in this module.
 
     Defaults through :func:`aj_crew.config.paths.kiro_oauth_cache_home`
-    rather than a bare :func:`Path.home` call, so a
+    rather than a bare :func:`Path.home` call, so an
     ``AJCREW_OS_HOME``-scoped pod resolves its OWN grant tree here -- the
     same tree its pod-spawned kiro-cli children's ``HOME`` is remapped to at
     ACP spawn time (see ``acp/client.py`` / ``acp/runtime.py``). Without this,

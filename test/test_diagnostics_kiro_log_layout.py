@@ -13,8 +13,8 @@ from pathlib import Path
 
 import pytest
 
-from conftest import make_dir_link
 from aj_crew import agent_scratch, diagnostics, platform_compat, release_channel
+from conftest import make_dir_link
 
 _NESTED = ("kiro-log", "logs")
 

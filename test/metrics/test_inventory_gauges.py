@@ -701,8 +701,7 @@ def _roster_config(agents):
 
     cfg = AjCrewConfig()
     cfg.agents = {
-        name: AjCrewAgentConfig(kiro_agent="ajcrew", **fields)
-        for name, fields in agents.items()
+        name: AjCrewAgentConfig(kiro_agent="ajcrew", **fields) for name, fields in agents.items()
     }
     return cfg
 

@@ -298,8 +298,7 @@ def test_the_inventory_check_reports_a_planted_import() -> None:
     name that owner does not define, are both reported."""
     source = _FACADE_PATH.read_text(encoding="utf-8")
     planted = (
-        source
-        + "\nimport tempfile\nfrom aj_crew.validation_parts.input_bounds import FieldSpec\n"
+        source + "\nimport tempfile\nfrom aj_crew.validation_parts.input_bounds import FieldSpec\n"
     )
     assert unexpected_imports(planted, _owner_names()) == [
         "tempfile",

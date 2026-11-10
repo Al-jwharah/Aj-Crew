@@ -1,6 +1,6 @@
 """``aj_crew.history_projection`` stays the import path and the patch surface of its family.
 
-The module keeps ``SessionMetadataProjection`` and is a ``aj_crew._facade_mirror`` facade
+The module keeps ``SessionMetadataProjection`` and is an ``aj_crew._facade_mirror`` facade
 over two owners: ``history_projection_contract`` (the family's module-level vocabulary: the
 line states, the page and revision types, the read tuning and the logger) and
 ``history_projection_reads`` (``TranscriptReadProjection``). ``test_facade_mirror_guards``

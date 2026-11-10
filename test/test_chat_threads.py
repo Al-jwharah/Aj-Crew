@@ -1840,9 +1840,7 @@ async def test_a_crewmate_that_no_longer_resolves_gets_no_substitute_answer(tmp_
     monkeypatch.setattr(
         chat_threads,
         "resolve_agent_bindings",
-        lambda cfg, agent, project, **kw: MagicMock(
-            kiro_agent="ajcrew", requested_resolved=False
-        ),
+        lambda cfg, agent, project, **kw: MagicMock(kiro_agent="ajcrew", requested_resolved=False),
     )
     await _run_thread_turn(
         state, slot, mid, "run-1", "hi", _parent(), [], f"{slot.key}:{mid}", _identity(state, slot)

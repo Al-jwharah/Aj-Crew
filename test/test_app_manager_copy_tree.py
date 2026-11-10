@@ -15,7 +15,6 @@ import pytest
 from app_manager_helpers import app_home_fixture  # noqa: F401 - fixture
 from app_manager_helpers import _DATA_IS_A_FILE, _DATA_IS_A_LINK, _make_app_source
 
-from conftest import requires_symlinks
 from aj_crew.apps.manager import (
     APP_MANIFEST_FILENAME,
     _read_installed,
@@ -28,6 +27,7 @@ from aj_crew.apps.manager import (
     update_app,
 )
 from aj_crew.testing.wait import await_until, finished, wait_until
+from conftest import requires_symlinks
 
 #: The update's refusal for an installed `.app_secret` that is a symlink; the
 #: test pins the full sentence so a wording change is visible.

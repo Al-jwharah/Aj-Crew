@@ -27,8 +27,8 @@ from pathlib import Path
 import pytest
 from non_utf8_comm import comm_is_settable, renamed_child
 
-from conftest import _find_posix_test_shell
 from aj_crew.testing.wait import wait_until
+from conftest import _find_posix_test_shell
 
 _SKILL = (
     Path(__file__).resolve().parent.parent

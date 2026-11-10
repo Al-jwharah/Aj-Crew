@@ -1492,9 +1492,7 @@ class TestStoredPinDisplay:
             async def no_probe(*args, **kwargs):
                 return None
 
-            monkeypatch.setattr(
-                "aj_crew.dashboard.handlers.agents._revalidate_crew_pin", no_probe
-            )
+            monkeypatch.setattr("aj_crew.dashboard.handlers.agents._revalidate_crew_pin", no_probe)
         async with TestClient(TestServer(_app(), host="127.0.0.1")) as client:
             response = await client.put(f"/api/agents/{seeded}", json={field: "some-model"})
             assert response.status == (409 if locked else 400)

@@ -26,9 +26,9 @@ from apps_registry_coverage_helpers import bundled_interpreter_fixture  # noqa: 
 from apps_registry_coverage_helpers import pip_importable_fixture  # noqa: F401
 from apps_registry_coverage_helpers import _DATA_IS_A_FILE, _asgi_backend, _fake_sandbox, _FakeProc
 
-from conftest import requires_symlinks
 from aj_crew.apps import registry
 from aj_crew.apps.manifest import AppManifest
+from conftest import requires_symlinks
 
 # Build step selection + execution
 

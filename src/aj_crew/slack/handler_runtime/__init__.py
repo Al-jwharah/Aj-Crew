@@ -27,7 +27,7 @@ handler stays ONE namespace, as the one-module file was. Four consequences follo
 * State stays on the handler module. Every module-level value -- the constants, the
   pending and linked approval registries, the voice state, the owner id and allowlist,
   the per-thread agent and project maps, the phase-emoji table, the privacy and
-  auto-title tracker aliases -- is a ``aj_crew.slack.handler`` global that owner
+  auto-title tracker aliases -- is an ``aj_crew.slack.handler`` global that owner
   functions reach by name, so a test that rebinds one there is the binding every
   function sees, and a ``global`` statement inside a rebound owner function writes the
   handler's namespace.

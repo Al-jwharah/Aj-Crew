@@ -156,7 +156,7 @@ class NativeSkillProjection:
         switch to a mode this projection never prepared must be rejected, so an
         agent cannot escape the scope it was launched under. Spawn selection asks
         a softer question. An agent whose spec an authored restriction refused --
-        a ``ajcrew-core`` exclusion, a disabled ``skill_search`` -- is a
+        an ``ajcrew-core`` exclusion, a disabled ``skill_search`` -- is a
         user-facing spawn refusal that still raises (the callers wrap it as
         ``AcpRuntimeError`` and the startup paths translate the sentence). An
         agent that simply has no prepared view -- its spec is not among the

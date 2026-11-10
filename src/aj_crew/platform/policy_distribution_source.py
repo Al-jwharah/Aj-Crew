@@ -524,7 +524,7 @@ def cache_only() -> bool:
     repoint rule when it did. The child is inheriting a decision, not making one.
 
     **An LTS build puts every sandboxed process in this mode too**, with no flag:
-    a Aj Crew MCP server kiro-cli starts inside the agent sandbox enters the central
+    an Aj Crew MCP server kiro-cli starts inside the agent sandbox enters the central
     tier (RFC D2) but can reach neither the sign-in nor the control plane, and the
     sandbox shows it the cache read-only (``sandbox_tiers.enterprise_policy_cache_view``).
     "Sandboxed" is the launcher's marker, which the entry points note before they drop it

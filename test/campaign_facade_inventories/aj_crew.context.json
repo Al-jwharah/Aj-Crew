@@ -1,5 +1,6 @@
 {
  "base_public_names": [
+  "AjCrewConfig",
   "CONTEXT_GROUP_LESSONS",
   "CONTEXT_GROUP_MEMORY",
   "CONTEXT_GROUP_PROJECT",
@@ -11,7 +12,6 @@
   "HOOK_MODIFY",
   "HookManager",
   "HookResult",
-  "AjCrewConfig",
   "LessonStore",
   "MemberEssentialContextError",
   "MemberLifecycle",
@@ -88,6 +88,7 @@
  ],
  "note": "aj_crew.context stays the facade and defines ContextBuilder; its other public names are re-exported from their home modules, including the context_assembly owners its split moved them to (test_context_composition_contract.py pins the whole frozen surface).",
  "rebound": {
+  "AjCrewConfig": "aj_crew.config.loader",
   "CONTEXT_GROUP_LESSONS": "aj_crew.context_assembly.inclusion",
   "CONTEXT_GROUP_MEMORY": "aj_crew.context_assembly.inclusion",
   "CONTEXT_GROUP_PROJECT": "aj_crew.context_assembly.inclusion",
@@ -98,7 +99,6 @@
   "HOOK_MODIFY": "aj_crew.hooks",
   "HookManager": "aj_crew.hooks",
   "HookResult": "aj_crew.hooks",
-  "AjCrewConfig": "aj_crew.config.loader",
   "LessonStore": "aj_crew.learn",
   "MemberEssentialContextError": "aj_crew.member_essential_context",
   "MemberLifecycle": "aj_crew.members",

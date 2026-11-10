@@ -1,5 +1,5 @@
 /**
- * A `ajcrew://remote-crew/add` link that arrives while Settings → Remote Crew
+ * An `ajcrew://remote-crew/add` link that arrives while Settings → Remote Crew
  * is already open remounts the panel: its add form reads the link's values only
  * when it mounts, and the panel's own tab state starts on "Your crews", where
  * that form is. Anything else the store changes leaves the panel mounted.

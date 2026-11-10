@@ -63,7 +63,7 @@ def scan_in_child(
     from aj_crew import platform_compat
 
     if argv is None:
-        # -P: never put the working directory on the child's sys.path, so a
+        # -P: never put the working directory on the child's sys.path, so an
         # aj_crew/ directory in the gateway's cwd cannot shadow the package.
         argv = platform_compat.isolated_python_argv("-P", "-m", _CHILD_MODULE, kind)
     try:

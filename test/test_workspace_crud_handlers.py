@@ -16,7 +16,6 @@ from aiohttp.test_utils import make_mocked_request
 from body_stream_helpers import BodyStreamPayload
 from dashboard_owner_helpers import NoConfiguredOwner
 
-from conftest import requires_symlinks
 from aj_crew.config.loader import (
     AjCrewAgentConfig,
     AjCrewConfig,
@@ -28,6 +27,7 @@ from aj_crew.dashboard.handlers import (
     api_workspaces_delete,
     api_workspaces_update,
 )
+from conftest import requires_symlinks
 
 # ── Helpers ──
 

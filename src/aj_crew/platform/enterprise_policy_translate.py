@@ -1,4 +1,4 @@
-"""Turn the control plane's enterprise-management policy into a Aj Crew policy document.
+"""Turn the control plane's enterprise-management policy into an Aj Crew policy document.
 
 The policy arrives as Trust V2 YAML: ``rules: [{capability, effect, match | exclude,
 when?}]``, already resolved for the ``CREW`` client surface. Aj Crew governs only the

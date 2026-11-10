@@ -20,7 +20,6 @@ import pytest
 from registry_store_art_prewarm_helpers import ART, MANIFEST, _entry, _fake_fetch, _pin_registry
 from stray_line_helpers import too_deep_to_decode
 
-from conftest import requires_symlinks
 from aj_crew.apps import registry as reg_mod
 from aj_crew.apps.registry import (
     _TRUST_OWNER,
@@ -31,6 +30,7 @@ from aj_crew.apps.registry import (
     _read_manifest_cache,
 )
 from aj_crew.testing.wait import finished
+from conftest import requires_symlinks
 
 # ---------------------------------------------------------------------------
 # The rewarm-age import guard

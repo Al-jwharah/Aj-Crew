@@ -19,7 +19,7 @@ import type { AgentImportScanResponse } from '../api/client'
 
 /** Mutable so a test can pick which first-run flags the shell boots with. */
 const themeState = {
-  colorTheme: 'kiro',
+  colorTheme: 'aj',
   theme: 'dark' as const,
   mode: 'dark' as const,
   onboarded: true,

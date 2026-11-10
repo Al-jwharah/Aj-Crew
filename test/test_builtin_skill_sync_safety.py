@@ -26,7 +26,6 @@ from pathlib import Path
 import pytest
 from windows_sim import replace_sharing_violation
 
-from conftest import requires_symlinks
 from aj_crew import atomic_write as aw
 from aj_crew import platform_compat
 from aj_crew import skills as skills_mod
@@ -36,6 +35,7 @@ from aj_crew.skills import (
     _record_builtin_provenance,
     _skill_tree_fingerprint,
 )
+from conftest import requires_symlinks
 
 
 def _make_skill(root: Path, name: str, body: str, extra: dict[str, str] | None = None) -> Path:
@@ -1432,7 +1432,7 @@ def _currency(name: str) -> str:
 
 
 class TestContextBudgetSwitchSurvivesUpdate:
-    """The per-skill Context-budget switch must survive a Aj Crew update.
+    """The per-skill Context-budget switch must survive an Aj Crew update.
 
     The switch is the one user-mutable setting on a built-in skill: turning it
     off writes ``inject_on_trigger: false`` into the installed SKILL.md

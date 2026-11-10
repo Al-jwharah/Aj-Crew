@@ -44,7 +44,7 @@ def _route_fields(route: object) -> tuple[str, str, Callable[..., Any]] | None:
     """``(method, path, handler)`` for one item a ``routes`` hook returned, or None.
 
     Structural on purpose: an installed app returns its OWN dataclass with these
-    three attributes instead of importing :class:`AppRoute`, because a
+    three attributes instead of importing :class:`AppRoute`, because an
     ``aj_crew`` import pins the app to one wheel's private layout. An
     :class:`AppRoute` is read as before. Any other object is accepted only when
     ``method`` is a str naming one of :data:`_ROUTE_METHODS` (any case),

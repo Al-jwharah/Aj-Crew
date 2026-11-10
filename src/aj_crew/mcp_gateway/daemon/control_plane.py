@@ -284,8 +284,7 @@ def _aj_crew_import_is_shadowed(
     directory without ``__init__.py`` does not shadow.
     """
     module_form = any(
-        arg == "-m" and i + 1 < len(argv) and argv[i + 1] == "aj_crew"
-        for i, arg in enumerate(argv)
+        arg == "-m" and i + 1 < len(argv) and argv[i + 1] == "aj_crew" for i, arg in enumerate(argv)
     )
     cwd = os.fspath(work_dir) if work_dir else os.getcwd()
     if module_form:

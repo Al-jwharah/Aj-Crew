@@ -2,7 +2,7 @@
 
 Two records outlive what they name. A crewmate row the startup prune removed is
 covered for its basic shape in ``test_chat_agent_selection.py``; the cases here
-pin the edges of that fallback. A ``ajcrew-skill-view-<digest>`` name recorded
+pin the edges of that fallback. An ``ajcrew-skill-view-<digest>`` name recorded
 while the native skill projection was on outlives its view file once a boot
 drain or cleanup removes it; resolution maps it back to its source agent through
 the projection's ownership sidecar before deciding the turn is unavailable.

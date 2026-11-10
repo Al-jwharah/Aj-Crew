@@ -724,9 +724,7 @@ def test_advertised_mode_origin_reads_the_v3_stamp_and_nothing_else():
             },
         }
 
-    resp = _new_resp(
-        {"availableModes": [stamped("plan", "bundled"), stamped("ajcrew", "client")]}
-    )
+    resp = _new_resp({"availableModes": [stamped("plan", "bundled"), stamped("ajcrew", "client")]})
     assert advertised_mode_origin(resp, "plan") == "bundled"
     assert advertised_mode_origin(resp, "ajcrew") == "client"
     assert advertised_mode_origin(resp, "absent") == ""

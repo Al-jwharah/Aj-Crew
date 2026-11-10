@@ -1452,9 +1452,7 @@ class TestAnAcceptedButUnpersistedPromptIsReported:
         slot = _busy_slot(state)
         frames: list[tuple[str, dict]] = []
         monkeypatch.setattr(state, "broadcast_ws", lambda kind, data: frames.append((kind, data)))
-        monkeypatch.setattr(
-            "aj_crew.dashboard.chat_delivery.start_queue_persist", lambda *_a: None
-        )
+        monkeypatch.setattr("aj_crew.dashboard.chat_delivery.start_queue_persist", lambda *_a: None)
 
         queue_for_next_turn(state, slot, "my follow-up", directive_user_origin=True)
 
@@ -1476,9 +1474,7 @@ class TestAnAcceptedButUnpersistedPromptIsReported:
             slot.queue_append(f"earlier {i}")
         frames: list[tuple[str, dict]] = []
         monkeypatch.setattr(state, "broadcast_ws", lambda kind, data: frames.append((kind, data)))
-        monkeypatch.setattr(
-            "aj_crew.dashboard.chat_delivery.start_queue_persist", lambda *_a: None
-        )
+        monkeypatch.setattr("aj_crew.dashboard.chat_delivery.start_queue_persist", lambda *_a: None)
 
         with caplog.at_level(logging.WARNING, logger=_QUEUE_LOGGER):
             queue_for_next_turn(state, slot, "the 33rd", directive_user_origin=True)
@@ -1511,9 +1507,7 @@ class TestAnAcceptedButUnpersistedPromptIsReported:
         slot.queue_append("x" * (MAX_DURABLE_QUEUE_BYTES - 120))
         frames: list[tuple[str, dict]] = []
         monkeypatch.setattr(state, "broadcast_ws", lambda kind, data: frames.append((kind, data)))
-        monkeypatch.setattr(
-            "aj_crew.dashboard.chat_delivery.start_queue_persist", lambda *_a: None
-        )
+        monkeypatch.setattr("aj_crew.dashboard.chat_delivery.start_queue_persist", lambda *_a: None)
         work = SimpleNamespace(
             passthrough=False, service=None, work=SimpleNamespace(work_id="w" * 100)
         )

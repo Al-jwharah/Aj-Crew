@@ -818,7 +818,7 @@ def _start_app_backend_body(app_name: str, manifest: Any) -> AppProcess | None:
     # signals VOUCHED MEMBERS instead -- see _reap_orphaned_backend_group and
     # session_pid.signal_orphaned_spawn_group.
     #
-    # AJCREW_SPAWNED says a Aj Crew spawned the process; the instance says
+    # AJCREW_SPAWNED says an Aj Crew spawned the process; the instance says
     # WHICH spawn, and is minted here (before the process exists) because it has
     # to travel in the child's environment where /proc/<pid>/environ can read it
     # back. Random rather than pid-derived so a recycled pid cannot false-match.

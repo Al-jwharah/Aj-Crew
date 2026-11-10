@@ -31,8 +31,8 @@ from pathlib import Path
 
 import pytest
 
-from conftest import make_dir_link
 from aj_crew import frontend, platform_compat
+from conftest import make_dir_link
 
 _DIR_ENV = "AJCREW_EDITION_DIR"
 _OPT_IN_ENV = "AJCREW_ALLOW_EDITION"

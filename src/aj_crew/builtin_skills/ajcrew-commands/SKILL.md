@@ -94,7 +94,7 @@ Scheduler. `<wt>` is a worktree name
 | `ajcrew pod down <wt>` | Evict the pod and delete its isolated HOME |
 | `ajcrew pod prune` | Bulk-reclaim orphaned pod HOMEs (`--older-than 3d` by default, `--all`, `--dry-run`, `--json`) |
 | `ajcrew pod scenarios` | List the seed scenarios `pod up --seed <scenario>` accepts (`--json`) |
-| `ajcrew pod exec <wt> -- <args>` | Run a ajcrew command against a pod, using the pod's own binary and data |
+| `ajcrew pod exec <wt> -- <args>` | Run an ajcrew command against a pod, using the pod's own binary and data |
 | `ajcrew pod api <wt> <METHOD> <path>` | Call a running pod's HTTP API with its own token; prints `{name, method, path, status, ok, body}` |
 | `ajcrew pod api <wt> POST config --data '{…}' --allow-write` | GET and HEAD are permitted by default; every other method needs `--allow-write` |
 
@@ -133,7 +133,7 @@ type a reply to the agent instead. Anything else denies.
 
 ## Browsing (`browser` MCP tool)
 
-Browsing is not a `ajcrew` subcommand. It is the **`browser` MCP tool**:
+Browsing is not an `ajcrew` subcommand. It is the **`browser` MCP tool**:
 `op=navigate|back|snapshot|click|drag|scroll|type|press_key|hover|select_option|wait_for|console|screenshot|tabs|reflex|ask`.
 It drives one browser the gateway owns (the user's own Chrome where there is
 one, Edge on Windows without Chrome, otherwise Kiro's headless Chromium), and the

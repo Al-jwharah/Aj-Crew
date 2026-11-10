@@ -12,9 +12,9 @@ from pathlib import Path
 
 import pytest
 
-from conftest import requires_symlinks
 from aj_crew import platform_compat
 from aj_crew.kiro_prerequisite import _AUTH_STAGING_RELATIVE, _ensure_auth_staging_parent
+from conftest import requires_symlinks
 
 
 def test_stray_file_is_removed(tmp_path: Path) -> None:

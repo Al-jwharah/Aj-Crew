@@ -316,9 +316,7 @@ class TestLogScanIsSecondary:
         ts = _ts_from_file(log)
         _write_log(
             log,
-            [
-                f"{ts} WARNING aj_crew.dashboard.chat: ACP error in slot chat-1-1: [AcpPromptBusy] x"
-            ],
+            [f"{ts} WARNING aj_crew.dashboard.chat: ACP error in slot chat-1-1: [AcpPromptBusy] x"],
         )
         mon = sh.SessionHealthMonitor(include_log_scan=True)
         out = mon.compute(
@@ -333,9 +331,7 @@ class TestLogScanIsSecondary:
         ts = _ts_from_file(log)
         _write_log(
             log,
-            [
-                f"{ts} WARNING aj_crew.dashboard.chat: ACP error in slot chat-1-1: [AcpPromptBusy] x"
-            ],
+            [f"{ts} WARNING aj_crew.dashboard.chat: ACP error in slot chat-1-1: [AcpPromptBusy] x"],
         )
         mon = sh.SessionHealthMonitor(include_log_scan=True)
         out = mon.compute(_health([_snap()], wall=log.stat().st_mtime), log_path=log)
@@ -348,9 +344,7 @@ class TestLogScanIsSecondary:
         ts = _ts_from_file(log)
         _write_log(
             log,
-            [
-                f"{ts} WARNING aj_crew.dashboard.chat: ACP error in slot chat-5-5: [AcpPromptBusy] x"
-            ],
+            [f"{ts} WARNING aj_crew.dashboard.chat: ACP error in slot chat-5-5: [AcpPromptBusy] x"],
         )
         out = sh.compute_session_health(None, log_path=log, now=log.stat().st_mtime)
         assert out["stalled"]["chat-5-5"]["reason"] == "prompt_stuck"

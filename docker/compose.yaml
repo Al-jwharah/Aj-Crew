@@ -9,7 +9,10 @@
 
 services:
   ajcrew:
-    image: ghcr.io/kirodotdev/kirocrew:stable
+    # No image is published for Aj Crew yet, so this names the one you build
+    # locally: `make wheel && docker build -f docker/Dockerfile -t ajcrew:dev .`
+    # from a checkout (docs/guides/docker.md, "Building locally").
+    image: ajcrew:dev
     container_name: ajcrew
     restart: unless-stopped
     ports:

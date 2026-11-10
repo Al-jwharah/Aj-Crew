@@ -32,7 +32,7 @@ consequences follow:
 * State stays on the facade. Every module-level value -- the constants and event
   vocabularies, the deny-target grammar tables, the internal-read allowlists, the
   app and builtin-agent registries, the two UNC root memos, the global script-hook
-  store, the ``_GATE_UNCOUNTED`` ContextVar -- is a ``aj_crew.hooks`` global that
+  store, the ``_GATE_UNCOUNTED`` ContextVar -- is an ``aj_crew.hooks`` global that
   owner functions reach by name, so a test that rebinds one there is the binding
   every function sees. No owner defines a module-level value, and a ``global``
   statement inside a rebound owner function writes the FACADE's namespace, which is

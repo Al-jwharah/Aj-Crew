@@ -361,9 +361,7 @@ def test_package_twins_of_a_private_copy_still_name_its_owner() -> None:
 def _lineage_bodies() -> list[tuple[str, int, ast.Dict]]:
     """Every dict literal in the agent-admin owners whose ``code`` is
     ``lineage_unverifiable``."""
-    root = (
-        Path(__file__).resolve().parent.parent / "src" / "aj_crew" / "dashboard" / "agent_admin"
-    )
+    root = Path(__file__).resolve().parent.parent / "src" / "aj_crew" / "dashboard" / "agent_admin"
     found = []
     for path in sorted(root.glob("*.py")):
         for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):

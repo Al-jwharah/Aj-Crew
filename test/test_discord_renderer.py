@@ -15,7 +15,6 @@ import pytest
 from discord_helpers import _drop_live_config_snapshot  # noqa: F401
 from discord_helpers import FakeClient
 
-from conftest import CREDENTIAL_STRADDLE_SHAPES
 from aj_crew.discord import renderer as discord_renderer
 from aj_crew.discord.client import DISCORD_MAX_TEXT
 from aj_crew.discord.renderer import (
@@ -29,6 +28,7 @@ from aj_crew.discord.transport import DISCORD_CAPABILITIES
 from aj_crew.messaging.display_safety import canonicalize_display, severs_a_credential
 from aj_crew.messaging.split import split_markdown_safe
 from aj_crew.testing.wait import async_wait_until, await_until, finished
+from conftest import CREDENTIAL_STRADDLE_SHAPES
 
 # ── renderer.py streaming/finalization ───────────────────────────────────
 

@@ -15,7 +15,6 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from conftest import MockSlackClient
 from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, STOP_REASON_END_TURN
 from aj_crew.context import ContextBuilder
 from aj_crew.history import ConversationLog
@@ -24,6 +23,7 @@ from aj_crew.session import BACKGROUND_KEY
 from aj_crew.skills import SkillsLoader
 from aj_crew.slack import thread_replies, transport_dispatch
 from aj_crew.slack.handler import handle_message, set_allowed_users, set_owner_id
+from conftest import MockSlackClient
 
 if TYPE_CHECKING:
     from aj_crew.session import SessionManager

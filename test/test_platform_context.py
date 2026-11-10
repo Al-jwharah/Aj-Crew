@@ -152,17 +152,13 @@ class TestProfileResolution:
         monkeypatch.setenv("AJCREW_PROFILE", "bogus")
         assert resolve_profile(cfg, entry_points=[]) == PROFILE_STANDALONE
 
-    def test_entry_points_take_precedence_over_marker(
-        self, cfg: AjCrewConfig, monkeypatch
-    ) -> None:
+    def test_entry_points_take_precedence_over_marker(self, cfg: AjCrewConfig, monkeypatch) -> None:
         # A present companion (entry points) is the authoritative signal and is
         # checked BEFORE the SSO-marker stat — no subprocess is spawned.
         monkeypatch.delenv("AJCREW_PROFILE", raising=False)
         assert resolve_profile(cfg, entry_points=[object()]) == PROFILE_ENTERPRISE
 
-    def test_marker_stat_ignored_without_probe_optin(
-        self, cfg: AjCrewConfig, monkeypatch
-    ) -> None:
+    def test_marker_stat_ignored_without_probe_optin(self, cfg: AjCrewConfig, monkeypatch) -> None:
         # A stray SSO marker must NOT force the enterprise profile by default:
         # the public edition has no companion to compose, so forcing enterprise
         # would brick every command at boot. The heuristic is opt-in only.
@@ -210,9 +206,7 @@ class TestLtsEditionProfile:
     """An LTS build resolves enterprise before every other signal."""
 
     @pytest.mark.parametrize("value", ["standalone", "bogus", "", "enterprise"])
-    def test_env_profile_cannot_change_it(
-        self, cfg: AjCrewConfig, monkeypatch, value: str
-    ) -> None:
+    def test_env_profile_cannot_change_it(self, cfg: AjCrewConfig, monkeypatch, value: str) -> None:
         monkeypatch.setattr("aj_crew.edition.EDITION", "lts")
         monkeypatch.setenv("AJCREW_PROFILE", value)
         assert resolve_profile(cfg, entry_points=[]) == PROFILE_ENTERPRISE
@@ -418,9 +412,7 @@ class TestLtsBuildWithoutCompanion:
         with pytest.raises(PlatformCompositionError, match="failed to compose"):
             bootstrap_mod.bootstrap_context(cfg)
 
-    def test_mismatched_companion_still_fails_closed(
-        self, cfg: AjCrewConfig, monkeypatch
-    ) -> None:
+    def test_mismatched_companion_still_fails_closed(self, cfg: AjCrewConfig, monkeypatch) -> None:
         self._lts_build(monkeypatch)
         import dataclasses
 
@@ -476,9 +468,7 @@ class TestLtsBuildWithoutCompanion:
         def _corrupt():
             raise TypeError("malformed entry_points.txt")
 
-        monkeypatch.setattr(
-            "aj_crew.platform.discovery.importlib.metadata.entry_points", _corrupt
-        )
+        monkeypatch.setattr("aj_crew.platform.discovery.importlib.metadata.entry_points", _corrupt)
         monkeypatch.setattr(bootstrap_mod, "discover_companion_context", self._no_discovery)
         with pytest.raises(PlatformCompositionError, match="could not read"):
             bootstrap_mod.bootstrap_context(cfg)
@@ -491,9 +481,7 @@ class TestLtsBuildWithoutCompanion:
         def _corrupt():
             raise TypeError("malformed entry_points.txt")
 
-        monkeypatch.setattr(
-            "aj_crew.platform.discovery.importlib.metadata.entry_points", _corrupt
-        )
+        monkeypatch.setattr("aj_crew.platform.discovery.importlib.metadata.entry_points", _corrupt)
         assert plugin_entry_points() == []
 
     def test_oss_build_with_enterprise_profile_still_fails_closed(

@@ -60,8 +60,8 @@
         "tool_call_id": "toolu_probe_01",
         "tool_final": true,
         "tool_output": "aj-crew-gate-probe\n",
-        "tool_output_bytes": 21,
-        "tool_output_digest": "9ad76f96e1b8e32791de50b9c3b9019149fe830b0f70a7adcd40024bb2795385",
+        "tool_output_bytes": 19,
+        "tool_output_digest": "5a3642bd149fcb664af5101b56e0581262651f27e7da046b7f44dc895bc85fc1",
         "tool_status": "completed"
       }
     ],

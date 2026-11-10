@@ -1125,9 +1125,7 @@ class TestTheDeliveryHookCharacterization:
     )
     def test_the_detail_defaults_and_collapses(self, description: Any, detail: str) -> None:
         d, cli, _sess = _dispatcher({7})
-        asyncio.run(
-            d.deliver_spawn_approval("spawn:abc", description, "telegram:ajcrew:direct:7")
-        )
+        asyncio.run(d.deliver_spawn_approval("spawn:abc", description, "telegram:ajcrew:direct:7"))
         assert cli.sent[0][0] == f"🔐 Approve sub-agent spawn?\n<pre>{detail}</pre>"
 
     def test_the_window_is_armed_detached_before_the_send(self) -> None:
@@ -1162,9 +1160,7 @@ class TestTheDeliveryHookCharacterization:
             return False
 
         d._spawn_prompt_destination_permitted = _check  # type: ignore[method-assign]
-        result = asyncio.run(
-            d.deliver_spawn_approval("spawn:abc", "d", "telegram:ajcrew:direct:7")
-        )
+        result = asyncio.run(d.deliver_spawn_approval("spawn:abc", "d", "telegram:ajcrew:direct:7"))
         assert result is None and seen == [(7, None, True)] and cli.sent == []
         assert _no_window_left(key)
 
@@ -1180,9 +1176,7 @@ class TestTheDeliveryHookCharacterization:
             return None if outcome == "none" else 0
 
         d.client.send_message = _send  # type: ignore[method-assign]
-        result = asyncio.run(
-            d.deliver_spawn_approval("spawn:abc", "d", "telegram:ajcrew:direct:7")
-        )
+        result = asyncio.run(d.deliver_spawn_approval("spawn:abc", "d", "telegram:ajcrew:direct:7"))
         assert result is None
         assert _no_window_left(key)
 
@@ -1244,9 +1238,7 @@ class TestTheDeliveryHookCharacterization:
             return real_check(chat_id, thread_id)
 
         d._spawn_prompt_destination_permitted = _count  # type: ignore[method-assign]
-        result = asyncio.run(
-            d.deliver_spawn_approval("spawn:abc", "d", "telegram:ajcrew:direct:7")
-        )
+        result = asyncio.run(d.deliver_spawn_approval("spawn:abc", "d", "telegram:ajcrew:direct:7"))
         assert result is True and asked == [("telegram", "spawn:abc")]
         assert reads == [(7, None), (7, None)]
 
@@ -1261,9 +1253,7 @@ class TestTheDeliveryHookCharacterization:
             return True
 
         d.transport = SimpleNamespace(may_send_to=_gate)  # type: ignore[assignment]
-        result = asyncio.run(
-            d.deliver_spawn_approval("spawn:abc", "d", "telegram:ajcrew:direct:7")
-        )
+        result = asyncio.run(d.deliver_spawn_approval("spawn:abc", "d", "telegram:ajcrew:direct:7"))
         assert result is None and len(cli.sent) == 1
 
     def test_the_destination_table(self) -> None:

@@ -9,7 +9,6 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from conftest import make_dir_link
 from aj_crew.apps.dev_mode import (
     _read_dev_sentinel,
     _reconcile_sentinel_from_installed,
@@ -27,6 +26,7 @@ from aj_crew.apps.manager import (
 )
 from aj_crew.apps.routes import register_app_routes
 from aj_crew.testing.wait import async_wait_until
+from conftest import make_dir_link
 
 
 @pytest.fixture(autouse=True)

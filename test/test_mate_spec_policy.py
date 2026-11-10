@@ -328,9 +328,7 @@ def test_a_bot_following_claude_takes_a_template_with_a_policy_on_kas(home, monk
     pinned = SimpleNamespace(
         agent=agent,
         agents={
-            "pixel": AjCrewAgentConfig(
-                member_id="pixel", kiro_agent="pixel", acp_backend="claude"
-            )
+            "pixel": AjCrewAgentConfig(member_id="pixel", kiro_agent="pixel", acp_backend="claude")
         },
     )
     assert worker_backend_for_spec(pinned, "pixel", True) == "claude"

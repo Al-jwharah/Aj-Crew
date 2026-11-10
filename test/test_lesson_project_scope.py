@@ -12,10 +12,10 @@ from pathlib import Path
 
 import pytest
 
-from conftest import requires_symlinks
 from aj_crew.learn import Lesson, LessonStore
 from aj_crew.project_scope import project_scope_satisfied
 from aj_crew.vector_memory import _lesson_display_text, _lesson_scope, _lesson_slug
+from conftest import requires_symlinks
 
 
 class TestProjectScopeSatisfied:

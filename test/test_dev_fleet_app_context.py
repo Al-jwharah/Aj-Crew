@@ -95,13 +95,10 @@ def test_pick_summary_falls_back_to_latest_when_all_bumps():
 def test_parse_html_repo_base_variants():
     p = mod._parse_html_repo_base
     assert p("git@github.com:Al-jwharah/Aj-Crew.git") == "https://github.com/Al-jwharah/Aj-Crew"
-    assert (
-        p("https://github.com/Al-jwharah/Aj-Crew.git") == "https://github.com/Al-jwharah/Aj-Crew"
-    )
+    assert p("https://github.com/Al-jwharah/Aj-Crew.git") == "https://github.com/Al-jwharah/Aj-Crew"
     assert p("https://github.com/Al-jwharah/Aj-Crew") == "https://github.com/Al-jwharah/Aj-Crew"
     assert (
-        p("ssh://git@github.com/Al-jwharah/Aj-Crew.git")
-        == "https://github.com/Al-jwharah/Aj-Crew"
+        p("ssh://git@github.com/Al-jwharah/Aj-Crew.git") == "https://github.com/Al-jwharah/Aj-Crew"
     )
     assert p("") is None
     assert p("not a url") is None
@@ -168,7 +165,7 @@ async def test_build_context_parses_pr_body_and_commits():
         ctx = await mod._build_context("feat/thing", "/wt/thing", {"_body": "Closes #147\nsee #12"})
     # ordered-unique across pr body + commit subjects + commit bodies
     assert [i["number"] for i in ctx["issues"]] == [147, 12, 99]
-    assert ctx["issues"][0]["url"] == "https://github.com/kirodotdev/KiroCrew/issues/147"
+    assert ctx["issues"][0]["url"] == "https://github.com/Al-jwharah/Aj-Crew/issues/147"
     assert [t["id"] for t in ctx["tickets"]] == ["TT-5"]
     assert ctx["tickets"][0]["url"] == "https://t.example/TT-5"
     assert ctx["summary"] == "feat(dev-fleet): surface context"

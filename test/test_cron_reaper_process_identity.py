@@ -157,9 +157,7 @@ class TestAGoneWindowsRootDrainsItsPendingTreeCleanup:
         with (
             patch("aj_crew.platform_compat.get_process_start_id", return_value=None),
             patch("aj_crew.platform_compat.pid_exists", return_value=False),
-            patch(
-                "aj_crew.platform_compat.windows_tree_cleanup_pending", return_value=True
-            ) as pin,
+            patch("aj_crew.platform_compat.windows_tree_cleanup_pending", return_value=True) as pin,
             patch("aj_crew.platform_compat.kill_process_tree_pinned") as drain,
             patch("aj_crew.acp.client._kill_escaped_children"),
         ):
@@ -242,9 +240,7 @@ class TestALiveWindowsRootIsKilledThroughItsPinnedHandle:
             ) as pid_kill,
             # The recycled pid: no process object with the recorded creation time
             # can be opened any more, and the old identity owes no cleanup.
-            patch(
-                "aj_crew.platform_compat.kill_process_tree_pinned", return_value=False
-            ) as drain,
+            patch("aj_crew.platform_compat.kill_process_tree_pinned", return_value=False) as drain,
             patch("aj_crew.platform_compat.windows_tree_cleanup_pending", return_value=False),
         ):
             await svc._force_reap("win-live1", _JOB_TIMEOUT_SECS + 60, claim=claim)
@@ -488,9 +484,7 @@ class TestProcessSurvived:
         with (
             patch("aj_crew.platform_compat.get_process_start_id", return_value=_START_ID),
             patch("aj_crew.platform_compat.pid_exists", return_value=False),
-            patch(
-                "aj_crew.platform_compat.windows_tree_cleanup_pending", return_value=True
-            ) as pin,
+            patch("aj_crew.platform_compat.windows_tree_cleanup_pending", return_value=True) as pin,
             patch("aj_crew.platform_compat.pgroup_exists") as group,
         ):
             assert process_survived(self._handle()) is True

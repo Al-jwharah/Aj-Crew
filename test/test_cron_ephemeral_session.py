@@ -235,9 +235,7 @@ async def _fire(gw, job, events, *, extra=()):
         stack.enter_context(
             patch("aj_crew.cron_service.agent_presence.cron_agent_missing", return_value=False)
         )
-        stack.enter_context(
-            patch("aj_crew.mate_worker.cron_worker_execution", lambda *args: None)
-        )
+        stack.enter_context(patch("aj_crew.mate_worker.cron_worker_execution", lambda *args: None))
         stack.enter_context(patch.object(ConversationLog, "update_metadata", recording_update))
         for ctx in extra:
             stack.enter_context(ctx)

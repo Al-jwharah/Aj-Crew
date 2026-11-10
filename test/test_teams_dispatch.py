@@ -551,9 +551,7 @@ class TestCommands:
             ingested.append(list(raw))
             return IngestResult()
 
-        monkeypatch.setattr(
-            "aj_crew.teams.transport_dispatch.process_teams_attachments", _no_fetch
-        )
+        monkeypatch.setattr("aj_crew.teams.transport_dispatch.process_teams_attachments", _no_fetch)
 
         await d.handle_message(_inbound("/help", attachments=[_BODY_ECHO, _FILE_UPLOAD]))
 

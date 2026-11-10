@@ -19,9 +19,7 @@ from typing import Any
 from aj_crew import agent as agent_mod
 from aj_crew import agent_discovery, template_mcp_additions
 from aj_crew.agent_files import CONDUCTOR_AGENT_FILENAME as _CONDUCTOR_AGENT_FILENAME
-from aj_crew.agent_files import (
-    LEDGER_CONDUCTOR_AGENT_FILENAME as _LEDGER_CONDUCTOR_AGENT_FILENAME,
-)
+from aj_crew.agent_files import LEDGER_CONDUCTOR_AGENT_FILENAME as _LEDGER_CONDUCTOR_AGENT_FILENAME
 from aj_crew.agent_files import (
     PIPELINE_CONDUCTOR_AGENT_FILENAME as _PIPELINE_CONDUCTOR_AGENT_FILENAME,
 )

@@ -21,13 +21,13 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from slack_wire_helpers import SlackWire, slack_wire
 
-from conftest import MockSlackClient
 from aj_crew import agent_discovery
 from aj_crew.config.loader import ConfigReadError
 from aj_crew.messaging import auto_title
 from aj_crew.messaging import commands as mc
 from aj_crew.providers.base import LLMEvent
 from aj_crew.slack import handler as h
+from conftest import MockSlackClient
 
 #: These tests start background helper turns, which are skipped while the host's
 #: memory posture is critical (see ``ample_host_free_memory``).

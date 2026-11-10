@@ -102,7 +102,7 @@ _DSH_GATE_MARKER_MAX_BYTES = 64 * 1024
 # Same seal, same reason, for the DeepSeek Harness gate plugin. Pinned by
 # ``test_acp_deepseek_backend``, so editing the plugin is a deliberate two-file
 # edit.
-DEEPSEEK_GATE_EXTENSION_SHA256 = "6a9ac9cf23ed7478ec61125840a8aa278690a7021a3b18f29c53681f6cd71ce7"
+DEEPSEEK_GATE_EXTENSION_SHA256 = "246e9fd0cd60e5c7dca414b68d3ba20327961e697cf137dbc16336591ab2875a"
 
 # ── deepseek (ACP_BACKEND_DEEPSEEK) ──
 # DeepSeek Harness is a plugin host, and ACP is one of the profiles it boots. So the
@@ -310,7 +310,7 @@ def _validate_deepseek_env_mapping(mapping: dict[str, str]) -> None:
       (:data:`_DEEPSEEK_ENV_CHILD_SCRUB_CLASS`) is FORWARDED by the harness into
       every shell it spawns, which hands the model's own bash tool the key -- the
       exact exposure feeding it through the environment exists to close;
-    * a ``DSH_``-prefixed name is the harness's reserved namespace, a
+    * a ``DSH_``-prefixed name is the harness's reserved namespace, an
       ``AJCREW_``-prefixed one is Crew's -- it carries this session's identity
       credentials, which are written onto the child AFTER the provider key and
       would replace it, handing the harness's provider a live Crew credential --
@@ -345,7 +345,7 @@ def _validate_deepseek_env_mapping(mapping: dict[str, str]) -> None:
                 "harness sets on this child itself (the DSH_ and AJCREW_ namespaces, "
                 "and Aj Crew's own session credentials), so the mapping would either "
                 "lose the key, overwrite the tool gate's own value, or hand the "
-                "harness's provider a Aj Crew credential. Choose a provider "
+                "harness's provider an Aj Crew credential. Choose a provider "
                 "credential name instead, such as DEEPSEEK_API_KEY."
             )
         if not _DEEPSEEK_ENV_CHILD_SCRUB_CLASS.search(key):
@@ -611,7 +611,7 @@ def _verify_deepseek_gate(
     if not published and not os.path.lexists(marker_path):
         return (
             "the gate's load marker was not written within "
-            f"{_DSH_GATE_READBACK_TIMEOUT_S:.0f}s of booting the harness, so Kiro "
+            f"{_DSH_GATE_READBACK_TIMEOUT_S:.0f}s of booting the harness, so Aj "
             "Crew's gate plugin did not load and tools would run unasked",
             acp_tool_gate.remediation_for(backend),
         )

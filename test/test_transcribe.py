@@ -771,9 +771,7 @@ class TestSensitivePathGuard:
         snap = root / "kc-meetings-x-import" / "recording.wav"
         snap.parent.mkdir()
         snap.write_bytes(b"bytes")
-        monkeypatch.setattr(
-            "aj_crew.sandbox.prime_voice_runtime_sandbox_paths", lambda: str(root)
-        )
+        monkeypatch.setattr("aj_crew.sandbox.prime_voice_runtime_sandbox_paths", lambda: str(root))
         with patch("aj_crew.security.is_sensitive_path", return_value=True):
             assert transcribe._is_sensitive_audio_path(str(snap)) is False
 
@@ -787,9 +785,7 @@ class TestSensitivePathGuard:
         outside.write_bytes(b"bytes")
         link = root / "recording.wav"
         link.symlink_to(outside)
-        monkeypatch.setattr(
-            "aj_crew.sandbox.prime_voice_runtime_sandbox_paths", lambda: str(root)
-        )
+        monkeypatch.setattr("aj_crew.sandbox.prime_voice_runtime_sandbox_paths", lambda: str(root))
         with patch("aj_crew.security.is_sensitive_path", return_value=True):
             assert transcribe._is_sensitive_audio_path(str(link)) is True
 

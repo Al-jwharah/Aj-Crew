@@ -17,9 +17,9 @@ from pathlib import Path
 
 import pytest
 
-from conftest import make_dir_link
 from aj_crew import platform_compat
 from aj_crew.apps.builtins.dev_fleet import npm_preflight, sync_runner
+from conftest import make_dir_link
 
 _BACKUP = sync_runner._BACKUP_SUFFIX
 

@@ -27,9 +27,9 @@ from aj_crew.mcp_cleanup import (
 from aj_crew.mcp_discovery_managed import _fix_stale_managed_command
 from aj_crew.mcp_discovery_probe_state import _get_cached, _probe_identity, probe_metadata
 from aj_crew.mcp_discovery_server_info import (
+    SCOPE_AJCREW,
     SCOPE_CC_GLOBAL,
     SCOPE_KIRO_GLOBAL,
-    SCOPE_AJCREW,
     McpServerInfo,
     _extra_scope_sources,
     _extra_scopes,
@@ -426,7 +426,7 @@ def list_servers() -> list[McpServerInfo]:
             elif disabled and name not in servers:
                 # Disabled in a SHARED scope (the Kiro-global ``mcp.json`` the IDE
                 # edits, or a provider global) and held by no other source: the
-                # two arms above cover a Aj Crew store entry and an agent entry
+                # two arms above cover an Aj Crew store entry and an agent entry
                 # stamped by the toggle, and nothing else ever introduces this
                 # one. Discovery skips disabled entries and the rebuild never adds
                 # a disabled shared server to the agent config, so without this
@@ -502,7 +502,7 @@ def list_servers() -> list[McpServerInfo]:
     servers = canonical_servers
 
     # 3c. Consent is per SCOPE: a ``disabled: true`` ANYWHERE withholds the
-    #     spawn, not only the branch above that INTRODUCES a Aj-Crew-scope row
+    #     spawn, not only the branch above that INTRODUCES an Aj-Crew-scope row
     #     which exists nowhere else. ``/api/mcp/toggle`` writes the flag into the
     #     Kiro-global ``mcp.json``, and a row that step 1 already introduced from
     #     the agent config would otherwise keep ``disabled = False`` and stay

@@ -101,7 +101,7 @@ Goals:
 - A session subscribes to a (server, URI) pair on an MCP server it already has,
   and is woken when the server reports a change.
 - The subscription survives the session's kiro-cli being stopped, the backend
-  process dying, and a Aj Crew restart.
+  process dying, and an Aj Crew restart.
 - Updates are coalesced and budgeted, and reach the model as untrusted data.
 - A subscription that cannot be kept up pauses with a reason. It never stops
   silently.
@@ -249,11 +249,11 @@ and a kiro-cli stub of the same session on a server the gateway fronts:
 - `raw`: `_caller_from_register` leaves it the empty default. It is populated only
   by `CallerContext.from_meta`, which parses a forwarded request on the backend
   side, not the daemon-side caller the grant records. So it is empty for both.
-- `session_token`: `_caller_for_backend` attaches the token only to a Aj Crew
+- `session_token`: `_caller_for_backend` attaches the token only to an Aj Crew
   control-plane backend; for a third-party server it returns the caller unchanged,
   and `_caller_from_register` never set a token, so the field is empty for both.
   The token value never enters the comparison on a server the gateway fronts. On
-  a Aj Crew control plane the holder carries its own token, so it is a separate
+  an Aj Crew control plane the holder carries its own token, so it is a separate
   caller there with its own grant, and the gateway and the server agree.
 - `identity_denial`: set only on a frame forwarded to a denied control-plane
   backend (`_caller_for_backend`). Empty for a third-party server, for both.

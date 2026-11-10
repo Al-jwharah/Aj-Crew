@@ -17,21 +17,21 @@ from pathlib import Path
 
 from aj_crew.config.paths import kiro_agents_dir
 from aj_crew.dashboard.handlers.mcp_config_entries import (
-    _remove_from_agent_file,
     _remove_ajcrew_entry,
+    _remove_from_agent_file,
     _rmw_remove_entry,
 )
 from aj_crew.dashboard.handlers.mcp_config_files import (
     _GLOBAL_MCP_JSON,
     AmbiguousServerKey,
+    _ajcrew_mcp_json,
     _atomic_write,
     _config_key_for,
     _extra_mcp_scopes,
     _get_mcp_lock_sync,
-    _ajcrew_mcp_json,
     _load_json_or_empty,
 )
-from aj_crew.mcp_discovery import SCOPE_KIRO_GLOBAL, SCOPE_AJCREW
+from aj_crew.mcp_discovery import SCOPE_AJCREW, SCOPE_KIRO_GLOBAL
 from aj_crew.user_json import loads_user_json
 
 logger = logging.getLogger("aj_crew.dashboard.handlers.mcp")

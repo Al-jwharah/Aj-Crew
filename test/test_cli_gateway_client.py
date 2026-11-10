@@ -110,9 +110,7 @@ class TestLogout:
         from aj_crew.dashboard.handlers import core
 
         monkeypatch.setattr(core, "_sel", MagicMock)
-        monkeypatch.setattr(
-            "aj_crew.cli_server.read_local_secret", lambda _port, **_kw: cli_secret
-        )
+        monkeypatch.setattr("aj_crew.cli_server.read_local_secret", lambda _port, **_kw: cli_secret)
         app = web.Application()
         app["local_secret"] = server_secret
         app.router.add_post("/api/logout", core.api_logout)
@@ -524,9 +522,7 @@ class TestResolveClientPortRunMarker:
 
     def _owned(self, ports):
         """Pretend a verified Aj Crew gateway listens on each of *ports*."""
-        return patch(
-            "aj_crew.cli_server._gateway_owns_port", side_effect=lambda p: p in set(ports)
-        )
+        return patch("aj_crew.cli_server._gateway_owns_port", side_effect=lambda p: p in set(ports))
 
     def test_sole_owned_marker_used_when_nothing_configured(self):
         """The bug: one gateway on 6776, no config → must not return 5476."""
@@ -818,9 +814,7 @@ class TestSpawnCliAuth:
     """
 
     def test_internal_secret_reads_local_secret_file(self, tmp_path, monkeypatch):
-        monkeypatch.setattr(
-            "aj_crew.cli_commands.read_local_secret", lambda _port, **_kw: "abc123"
-        )
+        monkeypatch.setattr("aj_crew.cli_commands.read_local_secret", lambda _port, **_kw: "abc123")
 
         from aj_crew.cli_commands import _internal_secret
 

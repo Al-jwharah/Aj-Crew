@@ -20,10 +20,10 @@ from pathlib import Path
 
 import pytest
 
-from conftest import requires_symlinks
 from aj_crew import portability
 from aj_crew import snapshot as snapshot_mod
 from aj_crew import snapshot_merge
+from conftest import requires_symlinks
 
 pytestmark = pytest.mark.skipif(os.name != "posix", reason="POSIX link fixtures")
 

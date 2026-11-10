@@ -1,4 +1,4 @@
-"""The port a Aj Crew MCP tool reaches the dashboard through.
+"""The port an Aj Crew MCP tool reaches the dashboard through.
 
 Every MCP server Aj Crew ships talks to the gateway the same way: an
 authenticated loopback request to an ``/api`` route, answered with JSON. This

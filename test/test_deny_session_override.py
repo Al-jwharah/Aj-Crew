@@ -151,9 +151,7 @@ class TestIsDeniedWaiver:
         # A push a person waived is not a feature-branch push: its only audit is the
         # override's own deny_exception, never a BRANCH_GATE push_allowed.
         pushes: list[str] = []
-        monkeypatch.setattr(
-            "aj_crew.security.deny_gate._schedule_push_allow_audit", pushes.append
-        )
+        monkeypatch.setattr("aj_crew.security.deny_gate._schedule_push_allow_audit", pushes.append)
         key = deny_reason_key(is_denied(push) or "")
         assert is_denied(push, waived=frozenset({key})) is None
         assert pushes == []
@@ -161,9 +159,7 @@ class TestIsDeniedWaiver:
 
     def test_feature_branch_push_still_records_push_allowed(self, audit_ok, monkeypatch):
         pushes: list[str] = []
-        monkeypatch.setattr(
-            "aj_crew.security.deny_gate._schedule_push_allow_audit", pushes.append
-        )
+        monkeypatch.setattr("aj_crew.security.deny_gate._schedule_push_allow_audit", pushes.append)
         feature = "git " + "push origin feature-x"
         assert is_denied(feature) is None
         assert pushes == [feature]

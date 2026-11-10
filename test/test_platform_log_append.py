@@ -12,11 +12,11 @@ from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 
-from conftest import make_dir_link
 from aj_crew import platform_log_append as pla
 from aj_crew.decisions import log
 from aj_crew.pinned_fs import PinnedPathRefusal
 from aj_crew.testing.wait import wait_until
+from conftest import make_dir_link
 
 
 @pytest.fixture

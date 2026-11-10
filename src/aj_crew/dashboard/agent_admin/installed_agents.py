@@ -143,7 +143,7 @@ async def _do_agents_sync(request: web.Request) -> web.Response:
                 # ``builtin`` (``ajcrew_owned``) and the generated specs a
                 # side turn or skill view runs under. A row for one would sit
                 # on the shared ``default`` memory store as a Bot nobody
-                # created, and the startup prune never removes a
+                # created, and the startup prune never removes an
                 # ``ajcrew_owned`` row.
                 and not disc.ajcrew_owned
                 and not is_internal_agent_spec(disc)

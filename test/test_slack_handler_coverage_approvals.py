@@ -20,9 +20,9 @@ from slack_handler_coverage_helpers import (  # noqa: F401 -- fixtures are reque
     slack_fixture,
 )
 
-from conftest import MockSlackClient
 from aj_crew.providers.base import LLMEvent
 from aj_crew.slack import handler as h
+from conftest import MockSlackClient
 
 #: Lost-run ceiling for a wait the test itself must end (a park, a click it
 #: delivers). These paths make no executor hop. Timed wait by wait: at most 0.06 s,

@@ -119,7 +119,7 @@ class _GitStub:
 
 @pytest.fixture
 def git_checkout(monkeypatch, tmp_path):
-    """A AJCREW_PROJECT_DIR that looks like a git checkout, with git stubbed out."""
+    """An AJCREW_PROJECT_DIR that looks like a git checkout, with git stubbed out."""
     proj = tmp_path / "proj"
     (proj / ".git").mkdir(parents=True)
     # ``.git/HEAD``, not just ``.git/``: the install shape is derived by asking
@@ -138,9 +138,7 @@ def git_checkout(monkeypatch, tmp_path):
         "aj_crew.platform.update_governance.resolve_remote_url",
         lambda p, remote="", branch="", **_k: "https://github.com/Al-jwharah/Aj-Crew.git",
     )
-    monkeypatch.setattr(
-        "aj_crew.platform.update_governance.update_blocked_reason", lambda url: ""
-    )
+    monkeypatch.setattr("aj_crew.platform.update_governance.update_blocked_reason", lambda url: "")
     # The fake `subprocess.run` below cannot answer the repo-config probe; that
     # refusal is covered against a real repo in test_host_git_repo_exec_neutralization.
     monkeypatch.setattr(
@@ -918,9 +916,7 @@ def wheel_feed(monkeypatch):
         "aj_crew.platform.update_layout.wheel_update_command",
         lambda channel=None: "curl -fsSL https://cdn.example.com/cli.sh | sh",
     )
-    monkeypatch.setattr(
-        "aj_crew.platform.update_governance.update_blocked_reason", lambda url: ""
-    )
+    monkeypatch.setattr("aj_crew.platform.update_governance.update_blocked_reason", lambda url: "")
     monkeypatch.setattr(
         "aj_crew.platform.update_governance.repo_exec_config_reason", lambda proj, **_k: ""
     )

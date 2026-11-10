@@ -292,9 +292,7 @@ class TestLLMPoolEffort:
         # The tier is read per worker construction, so state the answer here
         # rather than depending on whatever this host has configured.
         with (
-            patch(
-                "aj_crew.knowledge.llm_pool.AcpWorker", return_value=fake_worker
-            ) as worker_type,
+            patch("aj_crew.knowledge.llm_pool.AcpWorker", return_value=fake_worker) as worker_type,
             patch("aj_crew.knowledge.llm_pool._get_sandbox_mode", return_value="auto"),
             patch(
                 "aj_crew.knowledge.llm_pool._get_acp_backend",

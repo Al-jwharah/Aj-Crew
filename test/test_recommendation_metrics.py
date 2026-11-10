@@ -570,9 +570,7 @@ async def test_a_tips_metric_error_does_not_change_the_response(tmp_path: Path) 
 
     cache = _tips_cache()
     state = types.SimpleNamespace(_tips_cache=cache)
-    with patch(
-        "aj_crew.metrics.feature_usage.record_tip_feedback", side_effect=RuntimeError("x")
-    ):
+    with patch("aj_crew.metrics.feature_usage.record_tip_feedback", side_effect=RuntimeError("x")):
         resp = await api_tips_feedback(
             _feedback_request(state, {"id": "monitor-loops-tip", "action": "ack"})
         )

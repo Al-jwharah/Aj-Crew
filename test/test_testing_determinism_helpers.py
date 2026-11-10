@@ -1352,18 +1352,14 @@ def test_the_helper_modules_import_without_pytest(tmp_path):
 def test_the_helpers_import_only_the_standard_library(name):
     import ast
 
-    tree = ast.parse(
-        (_REPO_ROOT / "src" / "aj_crew" / "testing" / f"{name}.py").read_text("utf-8")
-    )
+    tree = ast.parse((_REPO_ROOT / "src" / "aj_crew" / "testing" / f"{name}.py").read_text("utf-8"))
     imported = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             imported.update(alias.name.partition(".")[0] for alias in node.names)
         elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
             imported.add(
-                node.module
-                if node.module.startswith("aj_crew")
-                else node.module.partition(".")[0]
+                node.module if node.module.startswith("aj_crew") else node.module.partition(".")[0]
             )
     allowed = set(sys.stdlib_module_names) | {"__future__", "aj_crew.loop_lock"}
     assert imported <= allowed, sorted(imported - allowed)

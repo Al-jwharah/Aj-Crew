@@ -214,7 +214,7 @@ operator's gateway. On every bump:
 
 The upgrade step above replaces `llama_cpp/` wholesale with the new wheel's
 Python code, which would silently drop the patches below. Each is marked in
-source with a `aj_crew DIVERGENCE FROM UPSTREAM` comment, so
+source with an `aj_crew DIVERGENCE FROM UPSTREAM` comment, so
 `grep -rn 'aj_crew DIVERGENCE' llama_cpp/` lists what must be re-applied.
 
 - `llama_cpp/llama.py`, `Llama.__init__` — the eager `self.scores` per-token

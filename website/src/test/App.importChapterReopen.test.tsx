@@ -27,7 +27,7 @@ import type { ReactNode } from 'react'
 
 /** Mutable so a test can flip a flag and re-render, the way boot resolving does. */
 const themeState = {
-  colorTheme: 'kiro',
+  colorTheme: 'aj',
   theme: 'dark' as const,
   mode: 'dark' as const,
   onboarded: true,

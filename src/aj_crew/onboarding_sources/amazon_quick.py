@@ -99,7 +99,7 @@ _WEEKDAYS = ("mon", "tue", "wed", "thu", "fri", "sat", "sun")
 #: preferences saved in two profiles are offered once.
 _PREFERENCES_ORIGIN = "user_preferences.json#custom_prompt"
 
-#: Task fields whose value binds a run to something a Aj Crew schedule cannot
+#: Task fields whose value binds a run to something an Aj Crew schedule cannot
 #: carry: conditions that gate each run, a conversation or chat agent the run
 #: continues, preferred connector accounts, and skills resolved ahead of the run.
 #: A task that sets any of them is reported, never narrowed into a plain prompt.

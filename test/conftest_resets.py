@@ -1016,6 +1016,27 @@ def _no_release_feed_network(_floor_monkeypatch) -> None:
 
 
 @pytest.fixture(autouse=True)
+def _release_feed_test_hosts(_floor_monkeypatch) -> None:
+    """Give the update machinery a release feed to be tested against.
+
+    The shipped build names no feed: ``update_layout.DEFAULT_FEED_BASE`` and
+    ``DEFAULT_ARTIFACT_BASE`` are empty, so the wheel lane has nothing to check
+    and nothing to install from. The suite's update tests cover that lane with a
+    feed configured, so the floor names the two hosts those tests are written
+    against. Nothing is fetched from them: ``_no_release_feed_network`` above
+    refuses the check's seam, each test stubs the transport it exercises, and the
+    hosts are otherwise only compared as strings. A test of the shipped default
+    sets both back to ``""`` itself.
+    """
+    from aj_crew.platform import update_layout
+
+    _floor_monkeypatch.setattr(update_layout, "DEFAULT_FEED_BASE", "https://updates.crew.kiro.dev")
+    _floor_monkeypatch.setattr(
+        update_layout, "DEFAULT_ARTIFACT_BASE", "https://download.crew.kiro.dev"
+    )
+
+
+@pytest.fixture(autouse=True)
 def _no_carried_auto_update_effect(_floor_monkeypatch) -> None:
     """Start every test with no derived ``auto_update_effect`` on the status frame.
 

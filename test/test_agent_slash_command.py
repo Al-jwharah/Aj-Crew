@@ -544,9 +544,7 @@ class TestChannelAgentCommand:
         from aj_crew.agent_switch_command import ChannelAgentPicks
 
         # The live session is the DEFAULT agent's; the switch leaves it behind.
-        reply = await _channel_agent(
-            ChannelAgentPicks(), "beta", _ChannelSessions(live="k:ajcrew")
-        )
+        reply = await _channel_agent(ChannelAgentPicks(), "beta", _ChannelSessions(live="k:ajcrew"))
         assert "leaves the current conversation" in reply
 
     @pytest.mark.asyncio

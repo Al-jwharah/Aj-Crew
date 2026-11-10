@@ -550,9 +550,7 @@ class TestEndToEnd:
         marker stays off and the line is the routine one."""
         forge = Forge(
             timeline=[a_xref(8100)],
-            pulls={
-                8100: a_pull(8100, head="leozhad/AjCrew", user="leozhad", association="MEMBER")
-            },
+            pulls={8100: a_pull(8100, head="leozhad/AjCrew", user="leozhad", association="MEMBER")},
         )
         assert run_main(mod, monkeypatch, forge) == 10
         out = capsys.readouterr().out.strip()

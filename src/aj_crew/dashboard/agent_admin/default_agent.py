@@ -14,9 +14,9 @@ if TYPE_CHECKING:
     from aj_crew.dashboard.handlers.agents import (
         SCOPE_GLOBAL,
         AgentInfo,
-        ConfigReadError,
         AjCrewAgentConfig,
         AjCrewConfig,
+        ConfigReadError,
         _foreign_private_copy_owner,
         _ForeignPrivateCopy,
         _lineage_unverifiable_error,
@@ -134,9 +134,7 @@ async def _installed_template_alias(
             # the startup prune of generated sync rows nor the sync's prune of
             # package rows may treat it as one they wrote.
             return (
-                AjCrewAgentConfig(
-                    kiro_agent=name, description=info.description, source="ajcrew"
-                ),
+                AjCrewAgentConfig(kiro_agent=name, description=info.description, source="ajcrew"),
                 info.filename,
             )
     return None
@@ -276,9 +274,7 @@ def _spec_lock_or_unlocked_read(agents_dir: Path) -> contextlib.ExitStack:
     return held
 
 
-async def _set_default_template(
-    request: web.Request, cfg: AjCrewConfig, name: str
-) -> web.Response:
+async def _set_default_template(request: web.Request, cfg: AjCrewConfig, name: str) -> web.Response:
     """Make installed template *name* what a session created without a crewmate runs.
 
     Writes ``agent.default_agent`` (read back through :func:`default_template`)

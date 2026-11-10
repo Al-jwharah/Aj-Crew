@@ -175,7 +175,7 @@ def _format_runtime_rpc_error(error: object) -> str:
                 source = remembered_view_source(name)
                 who = f"agent '{source}'" if source else "this agent"
                 return (
-                    f"kiro-cli could not switch to the skill view '{name}' that Kiro "
+                    f"kiro-cli could not switch to the skill view '{name}' that Aj "
                     f"Crew generated for {who}. It may be on disk in "
                     f"{kiro_agents_dir()} but not loaded by this kiro-cli process. "
                     f"Start a new session to retry. If it keeps failing, turn "

@@ -339,9 +339,7 @@ class TestSignedPrincipalProxy:
             context=self._OWNER_CONTEXT,
             headers={header_name: "0123456789abcdef0123456789abcdef"},
         )
-        assert self._only(received, "x-ajcrew-proxy-nonce") != (
-            "0123456789abcdef0123456789abcdef"
-        )
+        assert self._only(received, "x-ajcrew-proxy-nonce") != ("0123456789abcdef0123456789abcdef")
         assert self._v2_verifies(received)
 
     @pytest.mark.parametrize(

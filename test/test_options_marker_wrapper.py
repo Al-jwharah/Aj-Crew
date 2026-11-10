@@ -22,7 +22,6 @@ from __future__ import annotations
 
 import pytest
 
-from conftest import assert_rejected_without_backtracking
 from aj_crew.constants import (
     MARKER_WRAPPERS,
     OPTIONS_RE_LINE,
@@ -30,6 +29,7 @@ from aj_crew.constants import (
     split_trailing_protocol_suffix,
 )
 from aj_crew.messaging.renderer import split_options_trailer
+from conftest import assert_rejected_without_backtracking
 
 WRAPPED = [
     "`[OPTIONS: Alpha | Beta]`",  # backtick-wrapped (the reported shape)

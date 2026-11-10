@@ -112,7 +112,7 @@ class TestAgentList:
         row = next(line for line in lines if line.startswith("oncall "))
         assert "oncall\\x0aagent" in row
         assert "oncall-ws" in row
-        assert "kiro\\x0acrew" in row
+        assert "aj\\x0acrew" in row
         assert "\x07" not in row
 
 
@@ -755,9 +755,7 @@ class TestAgentResetModel:
     def test_reset_exits_nonzero_for_an_unknown_agent(self, tmp_path: Path, monkeypatch) -> None:
         self._isolated_spec(tmp_path, monkeypatch, "claude-opus-4.8")
 
-        with unittest.mock.patch(
-            "sys.argv", ["ajcrew", "agent", "reset-model", "--agent", "nope"]
-        ):
+        with unittest.mock.patch("sys.argv", ["ajcrew", "agent", "reset-model", "--agent", "nope"]):
             with pytest.raises(SystemExit) as exc:
                 main()
         assert exc.value.code == 1
@@ -1108,9 +1106,7 @@ class TestAgentUpdateWorkspace:
             assert kwargs["changed_fields"] == {"model"}
             return persist_member_config(*args, **kwargs)
 
-        with unittest.mock.patch(
-            "aj_crew.cli_commands.persist_member_config", side_effect=publish
-        ):
+        with unittest.mock.patch("aj_crew.cli_commands.persist_member_config", side_effect=publish):
             _run_agent_cli(
                 cfg_path, "update", "research", "--workspace", "", "--model", "test-model-1"
             )

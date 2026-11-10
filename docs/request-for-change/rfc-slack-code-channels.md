@@ -68,7 +68,7 @@ change and whether their installed app already carries them.
 ## Motivation
 
 Today a Slack thread is a plain thread. A long coding turn shows a reaction and a
-streaming message, and Stop is a Aj Crew button. Code work, which spans many
+streaming message, and Stop is an Aj Crew button. Code work, which spans many
 turns, a worktree, a diff and a PR, has nowhere in Slack to live except a thread
 that scrolls away.
 

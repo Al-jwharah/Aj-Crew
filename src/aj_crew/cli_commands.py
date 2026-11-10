@@ -73,9 +73,9 @@ from aj_crew.apps.scaffold import scaffold_app
 from aj_crew.cli_server import _marker_port, resolve_client_port
 from aj_crew.config import config_dir
 from aj_crew.config.loader import (
-    ConfigReadError,
     AjCrewAgentConfig,
     AjCrewConfig,
+    ConfigReadError,
     WorkspaceConfig,
     WorkspaceDirUnusable,
     build_provider_factory,
@@ -335,7 +335,7 @@ def _tailnet(args: argparse.Namespace) -> None:
     # configured port was occupied and the gateway moved (``--port``), publishing in
     # front of the configured port aims `tailscale serve` at whatever unrelated
     # loopback service now holds it, exposing it on the tailnet. So the verified run
-    # marker wins: it only reports a port where a Aj Crew gateway process is actually
+    # marker wins: it only reports a port where an Aj Crew gateway process is actually
     # listening (`_gateway_owns_port`, and it refuses when several are up), which is
     # evidence, whereas ``dashboard.url`` is a statement of intent.
     #
@@ -379,7 +379,7 @@ def _tailnet(args: argparse.Namespace) -> None:
     if action == "up" and not port_source:
         # Publishing needs EVIDENCE about the port, not a default. Every source above
         # is evidence -- an explicit flag/env is the operator naming the target, and
-        # the run marker only reports a port a Aj Crew gateway is actually listening
+        # the run marker only reports a port an Aj Crew gateway is actually listening
         # on. `resolve_client_port` is not: it falls back to the configured
         # `dashboard.url` (or the built-in default) whether or not anything answers
         # there. `tailscale serve` does not care what is behind the port -- so if the

@@ -52,7 +52,7 @@ spawns — and those are exactly the processes that act on untrusted external
 content, so you do not want them unmonitored.
 
 The process that starts and then replaces itself is **the Python interpreter
-Aj Crew runs under**, not a `ajcrew` launcher. Security products key
+Aj Crew runs under**, not an `ajcrew` launcher. Security products key
 exceptions on the image path, so the exception must name that interpreter's real
 path — the path reported by `sys.executable` for the running gateway, typically
 the `python3` inside the install's virtual environment — otherwise the exception
@@ -87,7 +87,7 @@ the agent running them for you, but you are not blocked on migrating or working.
   shows up as a `publickey`/permission-denied failure on `fetch` and `push`.
   `git branch` needs no SSH at all, so a sensor killing `git branch` is this
   behavioral-block issue, not an SSH one — do not wait on an SSH fix for it.
-- **Not something a Aj Crew setting can turn off.** On macOS and Linux there
+- **Not something an Aj Crew setting can turn off.** On macOS and Linux there
   is deliberately no switch to make the agent spawn tools "unwrapped": the shim
   exists to prevent a gateway deadlock and a listening-socket fd leak, and
   removing it to appease a false positive would reintroduce both. The exception

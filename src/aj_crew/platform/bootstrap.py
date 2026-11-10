@@ -118,7 +118,7 @@ def boot_platform(cfg: "AjCrewConfig") -> PlatformContext:
 def compose_telemetry_provider(cfg: "AjCrewConfig") -> "TelemetryProvider":
     """Compose ONLY the edition's telemetry provider, installing no context.
 
-    For a Aj Crew process that deliberately does not boot the platform -- the
+    For an Aj Crew process that deliberately does not boot the platform -- the
     MCP gateway daemon -- but must still send its metrics where the edition's
     collector is. Without it such a process resolves OTLP destinations through
     ``current_context()``, which on a non-standalone profile raises
@@ -249,9 +249,7 @@ def _lts_on_core_defaults(eps: "Sequence[Any]") -> bool:
     return edition.is_lts() and not eps
 
 
-def _checked_companion(
-    profile: str, cfg: "AjCrewConfig", eps: "Sequence[Any]"
-) -> PlatformContext:
+def _checked_companion(profile: str, cfg: "AjCrewConfig", eps: "Sequence[Any]") -> PlatformContext:
     """Discover the companion for a non-standalone *profile* and check its contract.
 
     The one copy of these steps, shared by :func:`bootstrap_context` and

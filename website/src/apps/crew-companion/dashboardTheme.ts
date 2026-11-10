@@ -162,7 +162,7 @@ export async function adoptDashboardTheme(): Promise<void> {
  */
 export function applyThemeId(): void {
   try {
-    const color = localStorage.getItem('mc-color-theme') || 'kiro'
+    const color = localStorage.getItem('mc-color-theme') || 'aj'
     const pref = localStorage.getItem('mc-theme') || 'system'
     // Mirror the dashboard's getSystemMode(): dark when the OS prefers dark, else light.
     const mode = pref === 'system'

@@ -71,5 +71,5 @@ def test_cited_ajcrew_commands_parse() -> None:
             parser.add_subparsers(dest="command", parser_class=exact)
         )
         args, unknown = parser.parse_known_args(command.split())
-        assert args.command == "doctor", f"{command!r} is not a ajcrew doctor command"
+        assert args.command == "doctor", f"{command!r} is not an ajcrew doctor command"
         assert unknown == [], f"{command!r}: {unknown} are not options of ajcrew doctor"

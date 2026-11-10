@@ -237,7 +237,7 @@ async def test_only_input_asr_is_emitted_exactly_once(wire):
     session._emit(None)
     events = [event async for event in session.events()]
     assert events == [
-        {"type": "partial", "text": "Kiro"},
+        {"type": "partial", "text": "Aj"},
         {"type": "partial", "text": "Aj Crew"},
         {"type": "partial", "text": "Aj Crew works"},
         {"type": "final", "text": "Aj Crew works"},

@@ -6,8 +6,8 @@ from aj_crew.config.loader import (
     ACTIVATION_ALWAYS,
     ACTIVATION_MENTION,
     ACTIVATION_OFF,
-    ChannelConfig,
     AjCrewConfig,
+    ChannelConfig,
     config_dir,
 )
 

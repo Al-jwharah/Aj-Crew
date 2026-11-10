@@ -211,9 +211,7 @@ from aj_crew.dashboard.persistence_watchdog import (
     probe_data_home,
     run_persistence_watchdog,
 )
-from aj_crew.dashboard.persistence_watchdog import (
-    shutdown_exit_code as persistence_lost_exit_code,
-)
+from aj_crew.dashboard.persistence_watchdog import shutdown_exit_code as persistence_lost_exit_code
 from aj_crew.dashboard.sign_in_refresher import drain_sign_in_refresher, run_sign_in_refresher
 from aj_crew.dashboard.stale_asset_watchdog import (
     run_stale_asset_watchdog,

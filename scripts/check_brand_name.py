@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """check_brand_name.py — gate the product name's spelling on lines a change adds.
 
-The product is **Aj Crew**: two words, a space between them, capital ``K``.
+The product is **Aj Crew**: two words, a space between them, capital ``A``.
 Everything else in the tree — the GitHub repo ``kirodotdev/KiroCrew``, the
 ``ajcrew`` CLI, the ``aj_crew`` Python package, ``AJCREW_*`` environment
 variables, the ``AjCrew.dmg`` artifact — is an *identifier*, and identifiers

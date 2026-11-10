@@ -97,9 +97,7 @@ class TestDescribeFrame:
         frame is asyncio's ``Handle._run``; the reading names the callback the
         handle is running, not the program's entry point further out."""
         lock = threading.Lock()
-        handle = _handle_frame(
-            lock.acquire, back=_loop_frames_from(_frame("aj_crew.cli", "main"))
-        )
+        handle = _handle_frame(lock.acquire, back=_loop_frames_from(_frame("aj_crew.cli", "main")))
         assert describe_frame(handle) == "asyncio.events.Handle._run via _thread.lock.acquire"
 
     def test_a_library_callback_is_not_named_by_the_entry_point(self) -> None:

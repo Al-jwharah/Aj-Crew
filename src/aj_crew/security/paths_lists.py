@@ -1271,7 +1271,7 @@ _WRITE_PROTECTED_HOME_PATHS += [
 # ── kiro-cli agent-spec directory (~/.kiro/agents) ──
 # The user-level directory kiro-cli reads its ``--agent <name>`` specs from
 # (config.paths.kiro_agents_dir()). Each spec's ``mcpServers.<name>.command``
-# is materialised by the MCP-gateway rewriter into a
+# is materialised by the MCP-gateway rewriter into an
 # ``AJCREW_MCP_TARGET_<SERVER>`` env value the gateway resolves and EXECS, and
 # a stubbed server can be routed to a pooled backend that gatewayd spawns
 # OUTSIDE the per-session sandbox, as the user. A prompt-injected agent that

@@ -1054,7 +1054,7 @@ document. The expectation is the raw on-disk digest, deliberately not filtered b
 a legitimate repoint does not look like a lost race.
 
 **Boot takes the same swap**, with the same before-the-fetch snapshot. It is not exempt: a
-slow boot fetch of v2 racing a `ajcrew policy fetch --force` that publishes v3 would
+slow boot fetch of v2 racing an `ajcrew policy fetch --force` that publishes v3 would
 otherwise overwrite the cache with v2 and install it, rolling the ceiling backward on the one
 path where nothing is running yet to notice. The install is **recorded only once the publish has resolved**, because
 `central_ceiling_installed` is what the gateway flags an app backend cache-only on: recording the
@@ -1725,7 +1725,7 @@ could read the document the keystone exists to keep it from reading on disk;
 pre-signed object URL, and even unsigned it names the control plane that the SEL, the
 viewer and `RefreshOutcome.detail` all deliberately withhold.
 
-They are listed as **concrete names, not a `AJCREW_POLICY_` prefix**, because that
+They are listed as **concrete names, not an `AJCREW_POLICY_` prefix**, because that
 list has consumers with two different matching rules: the spawn scrubs use
 `startswith`, but `cron_script._CRON_ENV_DENY` tests exact membership and `mcp_cron`
 builds `\b`-anchored regexes from it — so a prefix entry silently matches nothing in
@@ -1764,7 +1764,7 @@ prevent.
 
 ### Sandboxed processes in an LTS build
 
-An LTS build always enters the central tier, and that includes a Aj Crew MCP server kiro-cli starts inside the agent sandbox (`mcp_entry.slim_server` → `boot_platform`). That process cannot reach the Kiro sign-in, so it can never fetch. It runs in cache-only mode instead, with no flag:
+An LTS build always enters the central tier, and that includes an Aj Crew MCP server kiro-cli starts inside the agent sandbox (`mcp_entry.slim_server` → `boot_platform`). That process cannot reach the Kiro sign-in, so it can never fetch. It runs in cache-only mode instead, with no flag:
 
 | Part | Behaviour | Where |
 |---|---|---|

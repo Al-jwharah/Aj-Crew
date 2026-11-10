@@ -346,7 +346,7 @@ def enterprise_policy_cache_view(
 ) -> tuple[str, ...]:
     """The governance cache to lift READ-ONLY for a sandboxed spawn, in an LTS build.
 
-    An LTS build always enters the central tier (RFC D2), including a Aj Crew
+    An LTS build always enters the central tier (RFC D2), including an Aj Crew
     MCP server kiro-cli starts inside the agent sandbox. That process reaches neither the
     sign-in nor the control plane, so it resolves the ceiling from the cache in cache-only
     mode (``policy_distribution_source.cache_only``) and fails closed without it. The cache
@@ -1170,7 +1170,7 @@ _AGENT_DENIED_ENV_KEYS: list[str] = [
     #   string — and even unsigned it names the control plane, which the SEL, the
     #   policy viewer and ``RefreshOutcome.detail`` all deliberately withhold.
     #
-    # Spelled as CONCRETE NAMES rather than a ``AJCREW_POLICY_`` prefix, because this
+    # Spelled as CONCRETE NAMES rather than an ``AJCREW_POLICY_`` prefix, because this
     # list has consumers with two different matching rules: the spawn scrubs here use
     # ``startswith``, but ``cron_script._CRON_ENV_DENY`` tests exact membership and
     # ``mcp_cron`` builds ``\b``-anchored regexes from it, and a prefix entry silently
@@ -1251,7 +1251,7 @@ def configured_sandbox_mode() -> str:
         return _SANDBOX_MODE_FALLBACK
 
 
-# The single environment marker that proves this process is already INSIDE a
+# The single environment marker that proves this process is already INSIDE an
 # Aj Crew namespace sandbox. Deny-by-default: the gate keys ONLY on the
 # explicit, single-purpose ``AJCREW_SANDBOX_ACTIVE``, which is exported at
 # exactly one site — the namespace launcher's ``scrub_env`` stage
@@ -1283,7 +1283,7 @@ _CGROUP_AGENTS_SLICE = "ajcrew-agents.slice"
 # Companion to ``_IN_SANDBOX_MARKER``: records WHICH tier the outer sandbox was
 # built at (``standard``/``cc``/``strict``), exported at the same two launcher
 # sites and with the same non-droppable placement (after each platform's env
-# scrub / ``-u`` flags). The marker alone proves "a Aj Crew sandbox is active"
+# scrub / ``-u`` flags). The marker alone proves "an Aj Crew sandbox is active"
 # but not its tier; without this record the nested passthrough is tier-blind —
 # an in-sandbox caller requesting ``strict`` under a ``standard`` outer sandbox
 # silently runs at ``standard``. The passthrough compares this against the

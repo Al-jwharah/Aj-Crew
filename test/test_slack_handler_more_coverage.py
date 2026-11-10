@@ -30,7 +30,6 @@ import pytest
 
 import aj_crew.slack.handler as h
 import aj_crew.voice_reply as voice_reply
-from conftest import MockSlackClient
 from aj_crew.acp.client import AcpProcessDied, AcpPromptBusy, AcpTimeoutError
 from aj_crew.acp.types import (
     EVENT_COMPACTION_STATUS,
@@ -46,6 +45,7 @@ from aj_crew.messaging import auto_title
 from aj_crew.slack.handler import handle_interaction, handle_message
 from aj_crew.task_models import Project, Task, TaskStatus
 from aj_crew.task_reporter import build_status
+from conftest import MockSlackClient
 
 #: These tests start background helper turns, which are skipped while the host's
 #: memory posture is critical (see ``ample_host_free_memory``).

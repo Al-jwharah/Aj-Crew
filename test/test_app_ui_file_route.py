@@ -18,10 +18,10 @@ import pytest
 from aiohttp import ClientPayloadError, web
 from aiohttp.test_utils import TestClient, TestServer
 
-from conftest import make_dir_link, requires_symlinks
 from aj_crew.apps import dev_mode
 from aj_crew.apps import routes as app_routes
 from aj_crew.testing.wait import async_wait_until, await_until, finished
+from conftest import make_dir_link, requires_symlinks
 
 APP = "demo-app"
 

@@ -303,7 +303,7 @@ def main():
             sys.stderr.write(
                 "error: aj_crew.hooks is unavailable — cannot read "
                 "--origin-verify-secret-file without the shared sensitive-path "
-                "gate. Run this script from a aj_crew environment (fail-closed).\n"
+                "gate. Run this script from an aj_crew environment (fail-closed).\n"
             )
             sys.exit(2)
     # Argument validation — FieldSpec patterns with ImportError fallback for

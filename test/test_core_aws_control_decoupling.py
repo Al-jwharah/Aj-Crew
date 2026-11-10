@@ -73,9 +73,10 @@ def core_trees() -> dict[Path, ast.AST]:
 
 def test_no_core_module_or_script_imports_the_app(core_trees):
     offenders = independence.core_app_imports(core_trees, APP_PACKAGE)
-    assert not offenders, (
-        "core imports the aws-control app; ask a seam in aj_crew.apps.seams instead:\n"
-        + "\n".join(offenders)
+    assert (
+        not offenders
+    ), "core imports the aws-control app; ask a seam in aj_crew.apps.seams instead:\n" + "\n".join(
+        offenders
     )
 
 

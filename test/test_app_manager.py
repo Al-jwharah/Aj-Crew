@@ -20,7 +20,6 @@ import pytest
 from app_manager_helpers import app_home_fixture  # noqa: F401 - fixture
 from app_manager_helpers import _DATA_IS_A_FILE, _DATA_IS_A_LINK, _make_app_source
 
-from conftest import requires_symlinks
 from aj_crew import platform_compat
 from aj_crew.apps.manager import (
     APP_MANIFEST_FILENAME,
@@ -36,6 +35,7 @@ from aj_crew.apps.manager import (
     uninstall_app,
     update_app,
 )
+from conftest import requires_symlinks
 
 # App-name admission contract
 

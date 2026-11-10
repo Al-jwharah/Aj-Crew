@@ -41,7 +41,6 @@ from slack_transport_dispatch_helpers import (
 from telegram_helpers import _drop_live_config_snapshot  # noqa: F401
 from telegram_helpers import _dispatcher, _dm
 
-from conftest import MockSlackClient
 from aj_crew import executors
 from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, STOP_REASON_END_TURN
 from aj_crew.hooks import HookResult
@@ -58,6 +57,7 @@ from aj_crew.slack import handler as slack_handler
 from aj_crew.slack import transport_dispatch as slack_transport
 from aj_crew.telegram.dispatch import turn_engine
 from aj_crew.testing.wait import await_until, finished, until_parked
+from conftest import MockSlackClient
 
 _BUSY = "Memory is busy"
 

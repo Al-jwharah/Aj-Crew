@@ -25,7 +25,7 @@ from typing import Any
 import pytest
 
 from aj_crew import cli_doctor
-from aj_crew.config.loader import DiscordConfig, AjCrewConfig
+from aj_crew.config.loader import AjCrewConfig, DiscordConfig
 from aj_crew.discord import intent_probe
 
 _TOKEN = "MFYzNQ.qXpLwZ.vKjHgFdSaPoIuYtReWq"

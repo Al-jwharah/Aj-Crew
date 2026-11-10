@@ -605,9 +605,7 @@ class TestCommandProviderNoShellAndTimeout:
         # This class owns only process doubles. PID 4242 is not ours to signal.
         tree = AsyncMock()
         monkeypatch.setattr("aj_crew.platform_compat.kill_process_tree_async", tree)
-        monkeypatch.setattr(
-            "aj_crew.platform_compat._shares_own_process_group", lambda pid: False
-        )
+        monkeypatch.setattr("aj_crew.platform_compat._shares_own_process_group", lambda pid: False)
         return tree
 
     @pytest.mark.asyncio

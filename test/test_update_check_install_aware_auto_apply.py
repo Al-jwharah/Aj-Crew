@@ -777,9 +777,7 @@ class TestAutoUpdateEffect:
             with (
                 patch.object(handlers, "_do_update_check", new_callable=AsyncMock),
                 patch("aj_crew.config.AjCrewConfig.load", return_value=cfg),
-                patch(
-                    "aj_crew.platform.governance.active_update_pins", return_value=UpdatePins()
-                ),
+                patch("aj_crew.platform.governance.active_update_pins", return_value=UpdatePins()),
             ):
                 asyncio.run(orch._check_for_updates())
             published = dict(handlers._update_info)
@@ -1199,9 +1197,7 @@ class TestTheStatusFrameAnswersBeforeAnyCheck:
         monkeypatch.setattr(
             "aj_crew.platform.update_capability._runs_from_managed_venv", lambda: True
         )
-        monkeypatch.setattr(
-            "aj_crew.platform.update_capability._installer_runs_here", lambda: True
-        )
+        monkeypatch.setattr("aj_crew.platform.update_capability._installer_runs_here", lambda: True)
         monkeypatch.setattr("aj_crew.platform_compat.trusted_system_bin", lambda _n: "/bin/sh")
         monkeypatch.setattr("aj_crew.platform.update_layout.cdn_bases_are_safe", lambda: True)
         monkeypatch.setattr(
@@ -1210,9 +1206,7 @@ class TestTheStatusFrameAnswersBeforeAnyCheck:
         monkeypatch.setattr(
             "aj_crew.platform.update_governance.update_blocked_reason", lambda _u: ""
         )
-        monkeypatch.setattr(
-            "aj_crew.platform.update_governance.update_required", lambda _v: False
-        )
+        monkeypatch.setattr("aj_crew.platform.update_governance.update_required", lambda _v: False)
         monkeypatch.setattr(
             "aj_crew.platform.update_governance.unattended_apply_allowed", lambda: unattended
         )
@@ -1234,9 +1228,7 @@ class TestTheStatusFrameAnswersBeforeAnyCheck:
             "aj_crew.platform.update_provider.resolve_provider",
             lambda: _provider(can_apply=can_apply),
         )
-        monkeypatch.setattr(
-            "aj_crew.platform.update_governance.update_required", lambda _v: floor
-        )
+        monkeypatch.setattr("aj_crew.platform.update_governance.update_required", lambda _v: floor)
 
         original = dict(_no_derivation_yet._update_info)
         try:
@@ -1331,9 +1323,7 @@ class TestTheProviderPathPublishesItsOwnCanApply:
             handlers._update_info.clear()
             with (
                 patch("aj_crew.config.AjCrewConfig.load", return_value=cfg),
-                patch(
-                    "aj_crew.platform.governance.active_update_pins", return_value=UpdatePins()
-                ),
+                patch("aj_crew.platform.governance.active_update_pins", return_value=UpdatePins()),
                 patch("aj_crew.slack.gateway.respawn_executable", create=True),
             ):
                 asyncio.run(orch._check_for_updates())
@@ -1361,9 +1351,7 @@ def test_a_pipx_install_answers_notify_without_git(monkeypatch):
     monkeypatch.setattr("aj_crew.platform.update_capability.distribution", lambda: "wheel")
     monkeypatch.setattr("aj_crew.platform.update_provider.resolve_provider", lambda: None)
     monkeypatch.setattr("aj_crew.platform.update_capability._source_checkout_root", lambda: None)
-    monkeypatch.setattr(
-        "aj_crew.platform.update_capability._runs_from_managed_venv", lambda: False
-    )
+    monkeypatch.setattr("aj_crew.platform.update_capability._runs_from_managed_venv", lambda: False)
     monkeypatch.setattr("aj_crew.platform.update_capability._installer_runs_here", lambda: True)
     monkeypatch.setattr("aj_crew.platform_compat.trusted_system_bin", lambda _n: "/bin/sh")
 

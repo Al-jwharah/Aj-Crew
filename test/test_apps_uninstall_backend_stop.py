@@ -71,9 +71,7 @@ class TestCliUninstallDelegatesToTheGateway:
             return _FakeResponse({"ok": True, "message": "Uninstalled demo"})
 
         with (
-            patch(
-                "aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)
-            ),
+            patch("aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)),
             patch("aj_crew.app_lifecycle_client.read_local_secret", return_value="secret"),
             patch("aj_crew.app_lifecycle_client.unix_socket_urlopen", side_effect=_open),
             patch("aj_crew.cli_commands.uninstall_app") as local_uninstall,

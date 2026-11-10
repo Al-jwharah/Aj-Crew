@@ -170,9 +170,7 @@ def test_managed_servers_survive_in_the_desktop_bundle(tmp_path, monkeypatch):
         stack.enter_context(
             patch("aj_crew.agent._user_overrides_path", return_value=_missing_overrides)
         )
-        stack.enter_context(
-            patch("aj_crew.agent._prompt_path", return_value=cfg_dir / "prompt.md")
-        )
+        stack.enter_context(patch("aj_crew.agent._prompt_path", return_value=cfg_dir / "prompt.md"))
         stack.enter_context(
             patch("aj_crew.agent._mc_config_path", return_value=tmp_path / "missing_mc.json")
         )
@@ -426,7 +424,7 @@ def test_first_run_survives_a_failing_backfill(tmp_path, monkeypatch):
 
 # Resolver: the running interpreter is never the answer
 def test_resolver_never_returns_the_interpreter(tmp_path, monkeypatch):
-    """The resolver must return a ``ajcrew`` launcher, never whatever
+    """The resolver must return an ``ajcrew`` launcher, never whatever
     interpreter happens to be running — a source install with the launcher only
     on PATH must resolve through PATH."""
     path_bin = tmp_path / "ajcrew"
@@ -479,9 +477,7 @@ def test_ensure_shim_noop_when_already_on_path(tmp_path, monkeypatch):
     monkeypatch.setattr(agent, "_AJCREW_BIN", "", raising=False)
     monkeypatch.setattr(agent, "_bin_is_usable", lambda p: str(p) == str(exe))
     # `ajcrew` already resolves on PATH to the SAME binary.
-    monkeypatch.setattr(
-        agent.shutil, "which", lambda c, **kw: str(exe) if c == "ajcrew" else None
-    )
+    monkeypatch.setattr(agent.shutil, "which", lambda c, **kw: str(exe) if c == "ajcrew" else None)
     bin_dir = tmp_path / "localbin"
     assert agent.ensure_ajcrew_on_path(bin_dir=bin_dir) is None
     assert not (bin_dir / "ajcrew").exists()
@@ -489,10 +485,8 @@ def test_ensure_shim_noop_when_already_on_path(tmp_path, monkeypatch):
 
 # ensure_ajcrew_on_path never links into a linked git worktree:
 # `git worktree remove` deletes its .venv, and a dangling shim breaks `ajcrew` machine-wide.
-def _checkout_with_ajcrew(
-    root: Path, *, linked_worktree: bool, bare_parent: bool = False
-) -> Path:
-    """Build a fake checkout at *root* whose venv holds a `ajcrew` entrypoint.
+def _checkout_with_ajcrew(root: Path, *, linked_worktree: bool, bare_parent: bool = False) -> Path:
+    """Build a fake checkout at *root* whose venv holds an `ajcrew` entrypoint.
 
     ``linked_worktree`` chooses the repository marker: a ``.git`` FILE with a
     ``gitdir:`` pointer (what `git worktree add` writes) versus a ``.git``
@@ -1148,7 +1142,7 @@ _posix_exec_bit_only = pytest.mark.skipif(
 def test_interpreter_that_is_not_executable_is_not_usable(tmp_path):
     """A present-but-non-executable interpreter fails at exec time (EACCES), so
     the launcher naming it is as dead as one naming a reaped path -- existence
-    alone must not qualify, or gateway startup would decline to repair a
+    alone must not qualify, or gateway startup would decline to repair an
     `ajcrew` that cannot run."""
     python = tmp_path / "venvless" / "bin" / "python3"
     python.parent.mkdir(parents=True)

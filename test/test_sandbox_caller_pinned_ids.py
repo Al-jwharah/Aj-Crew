@@ -393,9 +393,7 @@ class TestAWindowAtOrAboveAHiddenLeaf:
             sandbox_plan.SandboxRequest(
                 tier="cc", extra_hidden_dirs=(str(apps),), extra_private_dirs=(str(window),)
             ),
-            sandbox_plan.PlanHost(
-                home=str(home), tier_dirs=(".ajcrew/apps/meetings/data/edits",)
-            ),
+            sandbox_plan.PlanHost(home=str(home), tier_dirs=(".ajcrew/apps/meetings/data/edits",)),
         )
         assert plan.sensitive_dirs == (str(nested), str(apps))
         assert plan.windows == (str(window),), "the namespace plan refused a containing window"

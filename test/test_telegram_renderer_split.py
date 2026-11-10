@@ -16,7 +16,6 @@ import pytest
 from telegram_helpers import _drop_live_config_snapshot  # noqa: F401
 from telegram_helpers import FakeClient
 
-from conftest import CREDENTIAL_STRADDLE_SHAPES
 from aj_crew.messaging.display_safety import (
     canonicalize_display,
     joins_to_a_credential,
@@ -36,6 +35,7 @@ from aj_crew.telegram.renderer import (
     safe_split_offset,
 )
 from aj_crew.telegram.transport import TELEGRAM_CAPABILITIES
+from conftest import CREDENTIAL_STRADDLE_SHAPES
 
 
 class TestTableAwareSplitting:

@@ -35,9 +35,7 @@ def cfg(monkeypatch):
     config.agents = {
         "default": AjCrewAgentConfig(kiro_agent=TEMPLATE),
         LEGACY_KEY: AjCrewAgentConfig(kiro_agent=TEMPLATE, member_id=LEGACY_ID),
-        NEW_KEY: AjCrewAgentConfig(
-            kiro_agent=TEMPLATE, member_id=NEW_KEY, display_name=NEW_LABEL
-        ),
+        NEW_KEY: AjCrewAgentConfig(kiro_agent=TEMPLATE, member_id=NEW_KEY, display_name=NEW_LABEL),
     }
     config.default_agent = "default"
 

@@ -98,9 +98,7 @@ def test_a_request_value_is_shown_on_one_capped_line():
 
 
 def test_the_agent_row_reads_the_same_line_as_the_agent_command():
-    assert session_switch_notice("agent", "ajcrew-worker") == switch_announcement(
-        "ajcrew-worker"
-    )
+    assert session_switch_notice("agent", "ajcrew-worker") == switch_announcement("ajcrew-worker")
 
 
 # ── Workspace ──

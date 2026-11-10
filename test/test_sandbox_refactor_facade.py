@@ -1426,12 +1426,8 @@ _LAYERED: dict[str, frozenset[str]] = {
             "aj_crew.sandbox_launcher_parts.pinned_mounts",
         }
     ),
-    "aj_crew.sandbox_launcher_parts.pinned_mounts": frozenset(
-        {"aj_crew.sandbox_launcher_program"}
-    ),
-    "aj_crew.sandbox_launcher_parts.mask_stages": frozenset(
-        {"aj_crew.sandbox_launcher_program"}
-    ),
+    "aj_crew.sandbox_launcher_parts.pinned_mounts": frozenset({"aj_crew.sandbox_launcher_program"}),
+    "aj_crew.sandbox_launcher_parts.mask_stages": frozenset({"aj_crew.sandbox_launcher_program"}),
     "aj_crew.sandbox_launcher_parts.exec_lockdown": frozenset(),
     "aj_crew.sandbox_launcher": frozenset({"aj_crew.sandbox_plan"}),
     "aj_crew.sandbox_seatbelt": frozenset({"aj_crew.sandbox_plan"}),

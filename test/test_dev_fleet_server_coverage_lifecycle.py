@@ -84,9 +84,7 @@ def test_gateway_label_honours_unit_prefix_override(monkeypatch, tmp_path):
     [((".ajcrew-pods", "feat"), True), (("home", "ajcrew"), False)],
 )
 def test_in_pod_detection(monkeypatch, tmp_path, home_parts, expected):
-    monkeypatch.setattr(
-        "aj_crew.config.loader.config_dir", lambda: tmp_path.joinpath(*home_parts)
-    )
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path.joinpath(*home_parts))
     assert live._in_pod() is expected
 
 

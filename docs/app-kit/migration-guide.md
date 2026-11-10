@@ -147,7 +147,7 @@ custom HTTP client, WS manager, and auth helper files.
 ### Step 1: Install
 
 The package is not published to PyPI or included in the main wheel. Install it
-from a Aj Crew source checkout:
+from an Aj Crew source checkout:
 
 ```bash
 python -m pip install -e /path/to/AjCrew/packages/ajcrew-client-py

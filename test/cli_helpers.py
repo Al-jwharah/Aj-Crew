@@ -34,7 +34,7 @@ async def _noop_probe_server(server):
 
 
 def _write_agent_config(path: Path, *, tools: list[str], allowed: list[str], servers: dict) -> None:
-    """Write a ``ajcrew.json`` agent config with the given managed
+    """Write an ``ajcrew.json`` agent config with the given managed
     servers + tool references. Typed keyword arguments make it obvious
     which fields each test cares about.
     """
@@ -54,7 +54,7 @@ def _write_agent_config(path: Path, *, tools: list[str], allowed: list[str], ser
 
 
 def _healthy_agent_file(path: Path) -> None:
-    """Write a ``ajcrew.json`` whose managed MCP servers are all present
+    """Write an ``ajcrew.json`` whose managed MCP servers are all present
     so ``_doctor()``'s MCP section passes its static config check and only
     the (mocked) live probe remains. Used by doctor tests that exercise an
     unrelated section and must not trip the MCP exit path on an empty config.

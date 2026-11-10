@@ -16,8 +16,8 @@ if TYPE_CHECKING:
         _TEARDOWN_INCOMPLETE_WARNING,
         ACP_BACKENDS_MODEL_EFFORT_PAIR_IDS,
         AcpProvider,
-        DashboardState,
         AjCrewConfig,
+        DashboardState,
         LLMProvider,
         _app_cancel_denied,
         _append_session_switch_notice,
@@ -44,9 +44,7 @@ if TYPE_CHECKING:
     )
 
 
-async def _configured_backend_for_slot(
-    slot: _ChatSlot, config: AjCrewConfig | None = None
-) -> str:
+async def _configured_backend_for_slot(slot: _ChatSlot, config: AjCrewConfig | None = None) -> str:
     """Resolve a cold slot through the same member-aware gate as the provider factory.
 
     *config* is the one to select from; without it, ``config.json`` is read.

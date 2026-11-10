@@ -17,7 +17,6 @@ from __future__ import annotations
 import pytest
 from test_slack_handler import FakeProvider, FakeSessionManager
 
-from conftest import MockSlackClient
 from aj_crew.messaging.renderer import credential_redaction_notice, redaction_notice
 from aj_crew.providers.base import LLMEvent
 from aj_crew.slack.handler import (
@@ -26,6 +25,7 @@ from aj_crew.slack.handler import (
     _trusted_sessions,
     handle_message,
 )
+from conftest import MockSlackClient
 
 _SECRET_URI = "postgresql://user:SuperSecret123@db.example.com:5432/prod"
 # Trips ``redact_exfiltration_urls`` (long opaque query payload to an unknown

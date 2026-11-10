@@ -185,9 +185,9 @@ def _state_digest(state: dict[str, Any]) -> str:
 #: lands at the base version with no bump, since ``_resume_one`` matches files by name
 #: and none exists yet; only an existing fold's digest moving obliges a bump.
 _FOLD_STATE_PINS: dict[str, tuple[str, int]] = {
-    "status": ("929af8634f6d6a5f", 4),
+    "status": ("62cf78203d79b482", 4),
     "usage": ("e3a396c492999e74", 22),
-    "timeline": ("4f461179faff39a3", 5),
+    "timeline": ("a54f0494c46c3e85", 5),
     "tools": ("008b36fed498d32b", 4),
     "approvals": ("c9db629215cc2620", 4),
     "subagents": ("698287ed09ff8981", 7),

@@ -221,9 +221,7 @@ class TestTheConfigSource:
         with (
             unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_file),
             unittest.mock.patch("aj_crew.config.loader.config_local_path", return_value=local),
-            unittest.mock.patch(
-                "aj_crew.config.live._WATCH", ConfigWatch(poll_interval_secs=0.05)
-            ),
+            unittest.mock.patch("aj_crew.config.live._WATCH", ConfigWatch(poll_interval_secs=0.05)),
         ):
             watch = live.watch()
             boot = AjCrewConfig.load()
@@ -254,9 +252,7 @@ class TestTheConfigSource:
         with (
             unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_file),
             unittest.mock.patch("aj_crew.config.loader.config_local_path", return_value=local),
-            unittest.mock.patch(
-                "aj_crew.config.live._WATCH", ConfigWatch(poll_interval_secs=0.05)
-            ),
+            unittest.mock.patch("aj_crew.config.live._WATCH", ConfigWatch(poll_interval_secs=0.05)),
             unittest.mock.patch(
                 "aj_crew.session.build_provider_factory",
                 lambda _cfg: unittest.mock.MagicMock(),

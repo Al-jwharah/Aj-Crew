@@ -102,7 +102,7 @@ describe('extractDenyNotice', () => {
   // fired, the exact claim the reason disclaims, and the reason never showed.
   const CRASH_ROW =
     '🚫 Running: ls — Blocked: the safety check crashed while judging this call ' +
-    '(SystemError), so the call was refused and nothing ran. This is a Aj Crew ' +
+    '(SystemError), so the call was refused and nothing ran. This is an Aj Crew ' +
     'bug, not a policy rule and not a user action.'
 
   it('returns the host sentence for a marker-less row', () => {

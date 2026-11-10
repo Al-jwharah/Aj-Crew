@@ -14,7 +14,7 @@ pins that contract:
   function, and a ``*_impl`` member, which ``bind_component_globals`` rebinds in place, runs
   the owner's code object; no owner keeps a function the class does not bind;
 * every ``*_impl`` member runs on ``aj_crew.subagent``'s globals and every global it reads
-  resolves there, so a patch of a ``aj_crew.subagent`` name reaches it; every other member
+  resolves there, so a patch of an ``aj_crew.subagent`` name reaches it; every other member
   runs on its owner's globals and every global it reads resolves there;
 * no bound function uses zero-argument ``super()``, ``__class__`` or a name-mangled
   attribute, which only work inside a class body;

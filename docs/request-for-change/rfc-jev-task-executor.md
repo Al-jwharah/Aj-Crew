@@ -118,7 +118,7 @@ executor is itself a trust-boundary component, not a surface:
   the existing Decisions card and the existing tool card in chat.
 
 The cost is release coupling: the loop's heuristics can no longer change
-without a Aj Crew release. Core takes only the generic loop. Site-specific
+without an Aj Crew release. Core takes only the generic loop. Site-specific
 rules stay out, and JevOnly stays the place to experiment before a rule is
 generic enough to land.
 

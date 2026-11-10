@@ -15,7 +15,7 @@ The contract pinned here:
   per-child identity, so the handle's counter stays 0 and the liveness oracle still
   bounds the parent; with the declaration the per-session ``AcpClient`` reads the
   child form (``test_claude_native_subagent_cards.py``);
-* a Aj Crew ``spawn_run`` child is the boundary for its OWN native
+* an Aj Crew ``spawn_run`` child is the boundary for its OWN native
   grandchildren -- they are counted on that child's handle only;
 * a 200-child parent inflates neither ``HostBudget`` nor the adaptive
   controller's timeout-rate signal;
@@ -112,7 +112,7 @@ from aj_crew.testing.wait import finished
 pytestmark = pytest.mark.timeout(30)
 
 PARENT = "sA"
-CHILD_RUN = "sB"  # a Aj Crew spawn_run child: its own handle, its own task row
+CHILD_RUN = "sB"  # an Aj Crew spawn_run child: its own handle, its own task row
 N_CHILDREN = 200
 
 
@@ -486,7 +486,7 @@ def test_report_counts_overflow_too():
 
 
 def test_child_status_frame_is_rejected_child_origin():
-    """M's origin rule: a ``ajcrew/status`` riding a child-routed frame is
+    """M's origin rule: an ``ajcrew/status`` riding a child-routed frame is
     the child's, and the child has no task row -- rejected, never
     re-attributed to the parent. The child is still counted."""
     handle = _handle()

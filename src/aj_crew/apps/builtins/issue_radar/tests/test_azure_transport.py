@@ -239,9 +239,7 @@ class TestAzBinResolution(unittest.TestCase):
             with self.subTest(error=type(error).__name__):
                 azure_client._az_bin_cache = None
                 candidates = mock.Mock(return_value=("/usr/bin/az",))
-                with mock.patch.dict(
-                    os.environ, {"AJCREW_ISSUE_RADAR_AZ": "/tmp/az"}, clear=False
-                ):
+                with mock.patch.dict(os.environ, {"AJCREW_ISSUE_RADAR_AZ": "/tmp/az"}, clear=False):
                     with mock.patch.multiple(
                         source_providers,
                         provider_executable_candidates=candidates,

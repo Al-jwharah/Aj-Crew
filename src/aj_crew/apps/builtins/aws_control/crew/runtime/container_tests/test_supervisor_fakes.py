@@ -3,7 +3,7 @@
 This module is named ``test_supervisor_*`` so it falls inside Track S3's
 ownership, but it defines no test functions -- pytest collects nothing from it.
 It provides a fake backend process that is a real OS process tree (so process
-groups, draining and killpg escalation are exercised for real) and never boots a
+groups, draining and killpg escalation are exercised for real) and never boots an
 Aj Crew gateway.
 """
 

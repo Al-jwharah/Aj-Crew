@@ -17,10 +17,10 @@ if TYPE_CHECKING:
     from aj_crew.dashboard.server import (
         _STRICT_INTERNAL_API_PATHS,
         AMBIGUOUS_LOOPBACK_HOSTS,
+        AjCrewConfig,
         DashboardState,
         DirectGate,
         GateRef,
-        AjCrewConfig,
         PendingEditBlocksSave,
         SsmGateRef,
         _apply_security_headers,

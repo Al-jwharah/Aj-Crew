@@ -287,9 +287,7 @@ class TestAmbiguousFolderPaths:
     }
 
     def test_create_refuses_an_ambiguous_parent_path(self) -> None:
-        out, dash = _call(
-            "chat_folder_create", {"name": "x", "parent": "ajcrew/0811"}, self.ROUTES
-        )
+        out, dash = _call("chat_folder_create", {"name": "x", "parent": "ajcrew/0811"}, self.ROUTES)
         assert out.startswith("Error:")
         assert "bbbbbbbbbbbb" in out and "cccccccccccc" in out
         assert _writes(dash) == []

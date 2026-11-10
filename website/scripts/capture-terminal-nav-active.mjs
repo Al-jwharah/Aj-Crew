@@ -74,7 +74,7 @@ async function main() {
         // Registered after the stub, so it lands after the stub's
         // localStorage.clear() only while Chromium runs init scripts in
         // registration order: Playwright does not define that order.
-        // `mc-color-theme` picks the kiro palette; `mc-nav` is the
+        // `mc-color-theme` picks the aj palette; `mc-nav` is the
         // rail-collapsed flag App reads on mount.
         await page.addInitScript(([attr, collapsed]) => {
           localStorage.setItem('mc-color-theme', attr)

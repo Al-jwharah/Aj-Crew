@@ -14,12 +14,12 @@ from unittest.mock import patch
 import pytest
 
 import aj_crew.memory as memory_module
-from conftest import plant_day_link
 from aj_crew.context import ContextBuilder
 from aj_crew.learn import LessonStore
 from aj_crew.memory import MemoryStore
 from aj_crew.skills import SkillsLoader
 from aj_crew.testing.clock import ManualClock
+from conftest import plant_day_link
 
 # A fixed instant near midday UTC. The history reader computes "today" from the process's
 # zone, so the test derives yesterday from the same frozen instant, in that zone.

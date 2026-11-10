@@ -501,9 +501,7 @@ async def test_a_cancel_inside_the_admission_save_still_clears_the_marker(tmp_pa
         await real_begin(st, sl, generation)
         raise asyncio.CancelledError()
 
-    monkeypatch.setattr(
-        "aj_crew.dashboard.chat_runner._begin_local_turn_marker", cancelling_begin
-    )
+    monkeypatch.setattr("aj_crew.dashboard.chat_runner._begin_local_turn_marker", cancelling_begin)
 
     # _run_chat absorbs the cancellation (_on_cancelled in chat_turn/turn_failures.py, its
     # except arm, persists the partial reply) and reaches its finally, which owns the clear.

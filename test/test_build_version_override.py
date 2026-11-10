@@ -197,7 +197,7 @@ def test_an_undecodable_file_keeps_the_base(tmp_path) -> None:
 
 
 def _stamped_package_root(tmp_path: Path, stamp: str | None, base: str = _PINNED_BASE) -> Path:
-    """A ``aj_crew`` package that IS the source tree's, with the file beside it.
+    """An ``aj_crew`` package that IS the source tree's, with the file beside it.
 
     ``__init__.py`` is a byte copy of the real one (the code under test) apart
     from its ``__version__`` literal, which is rewritten to *base*, plus a

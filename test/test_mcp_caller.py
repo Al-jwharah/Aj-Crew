@@ -459,9 +459,7 @@ def test_the_policy_lookup_separates_an_absence_from_an_unusable_record(
         "resolve_own_identity",
         lambda **kw: _exhausted_walk(tmp_path, plant=plant),
     )
-    monkeypatch.setattr(
-        mcp_shared, "resolve_own_identity", aj_crew.mcp_caller.resolve_own_identity
-    )
+    monkeypatch.setattr(mcp_shared, "resolve_own_identity", aj_crew.mcp_caller.resolve_own_identity)
 
     assert mcp_shared._policy_session_key() == expected
 

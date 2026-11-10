@@ -12,9 +12,9 @@ from __future__ import annotations
 
 import time
 
-from conftest import assert_rejected_without_backtracking
 from aj_crew.dashboard.state import _ChatSlot
 from aj_crew.preview_text import strip_markdown_preview
+from conftest import assert_rejected_without_backtracking
 
 
 class TestStripMarkdownPreview:

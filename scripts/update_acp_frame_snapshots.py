@@ -26,7 +26,7 @@ import sys
 from pathlib import Path
 
 # Replay is offline, but the parsers it drives are the production ones, and
-# ``_dispatch`` records a ``ajcrew.tool.call.duration`` sample for every
+# ``_dispatch`` records an ``ajcrew.tool.call.duration`` sample for every
 # ``tool_call`` -> terminal ``tool_call_update`` pair it sees. Under pytest the
 # root conftest pins ``AJCREW_TELEMETRY=0`` for the same reason; this script
 # runs outside pytest, so on a host with telemetry enabled the fixtures' tool

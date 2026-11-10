@@ -325,8 +325,7 @@ def test_the_artifact_store_is_never_imported_at_module_scope():
     offenders = [
         node.module
         for node in tree.body  # module scope ONLY -- nested imports are the fix
-        if isinstance(node, ast.ImportFrom)
-        and (node.module or "").startswith("aj_crew.artifacts")
+        if isinstance(node, ast.ImportFrom) and (node.module or "").startswith("aj_crew.artifacts")
     ]
     assert offenders == [], f"module-scope import of {offenders} recreates the cycle"
 

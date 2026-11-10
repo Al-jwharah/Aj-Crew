@@ -19,10 +19,10 @@ import pytest
 from slack_handler_helpers import FakeProvider, FakeSessionManager
 from slack_wire_helpers import slack_wire
 
-from conftest import MockSlackClient
 from aj_crew.providers.base import LLMEvent
 from aj_crew.slack.handler import _build_phase_emojis, handle_message, phase_emojis
 from aj_crew.slack.renderer import SlackRenderer
+from conftest import MockSlackClient
 
 _ACK = "eyes"
 _ERROR = "scream"

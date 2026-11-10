@@ -112,7 +112,7 @@ Formalize AjCrew's configuration by making the Python dataclass hierarchy the si
 
   - [x]* 5.6 Write property test: load() always returns valid AjCrewConfig (Property 12)
     - **Property 12: load() always returns valid AjCrewConfig**
-    - Generate arbitrary strings/bytes as config input, verify load() returns a AjCrewConfig without raising
+    - Generate arbitrary strings/bytes as config input, verify load() returns an AjCrewConfig without raising
     - **Validates: Requirements 6.6**
 
   - [x]* 5.7 Write property test: deprecated fields are accepted during loading (Property 14)

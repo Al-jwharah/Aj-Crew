@@ -15,7 +15,6 @@ from typing import Any
 
 import pytest
 
-from conftest import requires_symlinks
 from aj_crew import crew_log as lg
 from aj_crew.crew_log import CrewLog, CrewLogError, session_tree
 from aj_crew.crew_log import store as crew_store
@@ -36,6 +35,7 @@ from aj_crew.crew_log.session_tree import (
 )
 from aj_crew.session_ledger import _store_name
 from aj_crew.validation import MAX_ACP_SESSION_ID_LEN
+from conftest import requires_symlinks
 
 GATEWAY = "gateway"
 

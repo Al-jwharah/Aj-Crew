@@ -34,11 +34,11 @@ from unittest import mock
 import pytest
 from git_maintenance_helpers import GIT_MAINTENANCE_OFF_CONFIG
 
-from conftest import make_dir_link, requires_symlinks
 from aj_crew import atomic_write, platform_compat, sandbox
 from aj_crew.apps.builtins.papyrus.backend import gitops, store
 from aj_crew.testing.ids import UNALLOCATABLE_PID
 from aj_crew.testing.wait import await_until
+from conftest import make_dir_link, requires_symlinks
 
 
 def _hermetic_git_env() -> dict[str, str]:

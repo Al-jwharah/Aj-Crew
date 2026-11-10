@@ -43,7 +43,7 @@ const params = new URLSearchParams(location.search)
 const theme = params.get('theme') === 'light' ? 'light' : 'dark'
 const state = params.get('state') || 'refused'
 localStorage.setItem('mc-theme', theme)
-localStorage.setItem('mc-color-theme', 'kiro')
+localStorage.setItem('mc-color-theme', 'aj')
 document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const REPLY = 'About "Ship the release notes": Approve the plan'

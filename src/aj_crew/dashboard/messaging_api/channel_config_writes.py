@@ -125,7 +125,7 @@ class _LockedSectionWrite:
 
         A nested object the caller changed only part of (Slack's
         ``code_channel_defaults``) is merged key by key into the object as
-        re-read inside the lock, so a concurrent edit to a sibling key -- a
+        re-read inside the lock, so a concurrent edit to a sibling key -- an
         ``ajcrew config set slack.code_channel_defaults.agent`` that landed
         while the save verified a token -- is kept rather than replaced by the
         caller's older snapshot of the whole object.

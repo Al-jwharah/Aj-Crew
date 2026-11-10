@@ -472,7 +472,27 @@ def derive_capability(
 
     # Function-local: update_layout imports this module for its own shape
     # detection, so importing it at module scope would close a cycle.
-    from aj_crew.platform.update_layout import release_channel, wheel_update_command
+    from aj_crew.platform.update_layout import (
+        NO_RELEASE_FEED_NOTE,
+        release_channel,
+        release_feed_configured,
+        wheel_update_command,
+    )
+
+    if not release_feed_configured():
+        # No feed to compare against and no installer to re-run. Still the
+        # gateway's own install (not deferred to another surface), so the shape
+        # stays ``ajcrew`` and the remediation says where updates come from
+        # instead of offering a command that cannot work.
+        return UpdateCapability(
+            supported=True,
+            managed_by=MANAGED_BY_AJCREW,
+            mode=MODE_NOTIFY,
+            can_download=False,
+            can_apply=False,
+            requires_restart=True,
+            remediation=_command_remediation(NO_RELEASE_FEED_NOTE, ""),
+        )
 
     return UpdateCapability(
         supported=True,

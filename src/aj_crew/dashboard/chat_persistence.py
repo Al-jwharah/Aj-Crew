@@ -772,9 +772,7 @@ _facade_compose(
 # too (test_chat_persistence_composition_contract derives that set from the tests).
 from aj_crew.dashboard.slot_persistence import metadata_codec as _metadata_codec  # noqa: E402
 from aj_crew.dashboard.slot_persistence import metadata_line as _metadata_line  # noqa: E402
-from aj_crew.dashboard.slot_persistence import (  # noqa: E402
-    takeover_ordering as _takeover_ordering,
-)
+from aj_crew.dashboard.slot_persistence import takeover_ordering as _takeover_ordering  # noqa: E402
 from aj_crew.dashboard.slot_persistence import transcript_merge as _transcript_merge  # noqa: E402
 from aj_crew.dashboard.slot_persistence import write_guards as _write_guards  # noqa: E402
 from aj_crew.dashboard.slot_persistence.message_entries import (  # noqa: E402,F401

@@ -627,9 +627,7 @@ class TestTeardownWorkerSlot:
         slot = _Slot("spec-builder-demo")
         slot.key = "not a slot key"  # type: ignore[assignment]
         state = _State(**{"spec-builder-demo": slot})
-        with mock.patch(
-            "aj_crew.dashboard.chat_persistence.save_slot_off_loop", mock.AsyncMock()
-        ):
+        with mock.patch("aj_crew.dashboard.chat_persistence.save_slot_off_loop", mock.AsyncMock()):
             assert await r._teardown_worker_slot(state, "demo", only_slot=slot) is True
         assert state._slots == {}
 

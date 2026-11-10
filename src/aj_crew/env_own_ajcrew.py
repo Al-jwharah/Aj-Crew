@@ -17,7 +17,7 @@ from aj_crew.config.paths import peek_data_home
 
 logger = logging.getLogger(__name__)
 
-#: The crew-home directory holding ONE entry, a ``ajcrew`` link to the install
+#: The crew-home directory holding ONE entry, an ``ajcrew`` link to the install
 #: this gateway runs.
 OWN_AJCREW_DIR = "ajcrew-bin"
 

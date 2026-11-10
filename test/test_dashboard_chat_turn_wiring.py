@@ -44,9 +44,7 @@ class TestRuntimeWiringTurn:
         from aj_crew.memory_stores import provision_member_memory
 
         mock_cfg = AjCrewConfig.load()
-        mock_cfg.agents["oncall"] = AjCrewAgentConfig(
-            kiro_agent="ajcrew", workspace="oncall-ws"
-        )
+        mock_cfg.agents["oncall"] = AjCrewAgentConfig(kiro_agent="ajcrew", workspace="oncall-ws")
         mock_cfg.workspaces["oncall-ws"] = WorkspaceConfig(dir=str(tmp_path / "oncall-ws"))
         private_store = provision_member_memory(mock_cfg, "oncall")
         mock_cfg.save()

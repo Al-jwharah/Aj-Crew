@@ -475,9 +475,7 @@ class TestTakeTurnContext:
         no identity for the recycled key (the warm memo goes with the file), and
         once a replacement file exists its ``created_at`` is a new one."""
         state = _state(tmp_path)
-        monkeypatch.setattr(
-            "aj_crew.history.metadata_now_iso", lambda: "2026-10-01T12:00:00+00:00"
-        )
+        monkeypatch.setattr("aj_crew.history.metadata_now_iso", lambda: "2026-10-01T12:00:00+00:00")
         first, twin, key = self._twins_with_a_transcript(state)
         card = self._card("deleted chat", chat_runner.effective_session_key(first))
         first._pending_context = [card]
@@ -494,9 +492,7 @@ class TestTakeTurnContext:
         assert consumed == []
         assert first._pending_context == [card]
 
-        monkeypatch.setattr(
-            "aj_crew.history.metadata_now_iso", lambda: "2026-10-01T12:00:01+00:00"
-        )
+        monkeypatch.setattr("aj_crew.history.metadata_now_iso", lambda: "2026-10-01T12:00:01+00:00")
         state.conversation_log.append(key, "user", "new conversation")
         replacement_identity = state.conversation_log.thread_transcript_identity(key)
         assert replacement_identity and replacement_identity != first._disk_meta_created_at

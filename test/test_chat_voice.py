@@ -745,9 +745,7 @@ class TestVoiceSynthesize:
             raise RuntimeError("Polly synthesis failed")
             yield  # noqa: unreachable - makes this a generator
 
-        monkeypatch.setattr(
-            "aj_crew.dashboard.chat_voice.streaming_voice_reply", mock_stream_error
-        )
+        monkeypatch.setattr("aj_crew.dashboard.chat_voice.streaming_voice_reply", mock_stream_error)
 
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()

@@ -59,9 +59,7 @@ _PREFIX = f"/api/apps/{APP_NAME}"
 # Resolved from the installed package, in-process — never via a `python3 -c
 # "import aj_crew"` SHELL command, which the gateway's own security filter
 # hard-blocks because the string contains the package name.
-_SKILL_DIR = (
-    Path(aj_crew.__file__).parent / "apps/builtins/design_critique/skills/design-critique"
-)
+_SKILL_DIR = Path(aj_crew.__file__).parent / "apps/builtins/design_critique/skills/design-critique"
 _SCRIPTS_DIR = _SKILL_DIR / "scripts"
 
 # A route path or discovery id can be anything; collapse to a safe filename stem.

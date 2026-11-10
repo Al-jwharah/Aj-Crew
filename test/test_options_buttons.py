@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from conftest import assert_rejected_without_backtracking
 from aj_crew.slack.format import (
     OPTIONS_ACTION_PREFIX,
     OPTIONS_SEVERAL_ACTION,
@@ -10,6 +9,7 @@ from aj_crew.slack.format import (
     build_options_selected_blocks,
     extract_options,
 )
+from conftest import assert_rejected_without_backtracking
 
 
 class TestExtractOptions:

@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import pytest
 
-from conftest import CREDENTIAL_STRADDLE_SHAPES
 from aj_crew.messaging.display_safety import (
     _INTERIOR_RUN_PIECES,
     _balanced_link_reading,
@@ -25,6 +24,7 @@ from aj_crew.messaging.display_safety import (
 )
 from aj_crew.messaging.renderer import _default_redactor
 from aj_crew.telegram.renderer import _strip_hr
+from conftest import CREDENTIAL_STRADDLE_SHAPES
 
 
 class TestTheOracleIsAsStrongAsTheSendPath:

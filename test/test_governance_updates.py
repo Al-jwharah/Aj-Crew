@@ -14,7 +14,6 @@ import sys
 import pytest
 from git_maintenance_helpers import git_maintenance_off_entries
 
-from conftest import host_abs
 from aj_crew.platform import update_governance
 from aj_crew.platform.context import PlatformCompositionError
 from aj_crew.platform.governance import (
@@ -24,6 +23,7 @@ from aj_crew.platform.governance import (
     parse_profile,
 )
 from aj_crew.subprocess_utf8 import UTF8_TEXT
+from conftest import host_abs
 
 
 @pytest.fixture(autouse=True)
@@ -214,9 +214,7 @@ class TestUnattendedApplyPin:
         assert update_governance.unattended_apply_allowed() is False
 
     def test_an_ungoverned_host_installs_unattended(self, monkeypatch):
-        monkeypatch.setattr(
-            "aj_crew.platform.governance.active_update_pins", lambda: UpdatePins()
-        )
+        monkeypatch.setattr("aj_crew.platform.governance.active_update_pins", lambda: UpdatePins())
         assert update_governance.unattended_apply_allowed() is True
 
     def test_an_unreadable_governance_turns_only_this_pin_off(self, monkeypatch):
@@ -238,9 +236,7 @@ class TestSeam:
     """The shared gate the API, CLI and boot paths call."""
 
     def test_ungoverned_host_is_unpinned(self, monkeypatch):
-        monkeypatch.setattr(
-            "aj_crew.platform.governance.active_update_pins", lambda: UpdatePins()
-        )
+        monkeypatch.setattr("aj_crew.platform.governance.active_update_pins", lambda: UpdatePins())
         assert update_governance.update_blocked_reason("https://anywhere") == ""
         assert update_governance.update_required("0.0.1") is False
         assert update_governance.min_version() == ""

@@ -251,7 +251,7 @@ class TestKiroCliV2PromptHook:
         )
         assert (
             "The first message after a compaction carries part of it again (the agent "
-            "prompt, the memory index, skills and lessons), and later messages carry Kiro "
+            "prompt, the memory index, skills and lessons), and later messages carry Aj "
             "Crew's per-turn context instead." in para
         )
         assert "the first after a compaction, carries the full" not in para, (

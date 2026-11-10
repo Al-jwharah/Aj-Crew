@@ -2,15 +2,20 @@
 # ──────────────────────────────────────────────────────────────────────
 # AjCrew CLI installer (channel / wheel based).
 #
-#   curl -fsSL https://download.crew.kiro.dev/cli.sh | sh
-#   curl -fsSL https://download.crew.kiro.dev/cli.sh | sh -s -- --channel nightly
+#   sh cli.sh --cdn https://<your-release-host>
+#   sh cli.sh --cdn https://<your-release-host> --channel nightly
 #
-# Installs the prebuilt `ajcrew` wheel for a release channel. It resolves the
+# Installs a prebuilt `ajcrew` wheel for a release channel. It resolves the
 # channel feed, verifies its RSA-SHA256 signature against the public key pinned
-# below, downloads the wheel over HTTPS from CloudFront, verifies its SHA-256
-# against the signed digest, then installs it (pipx if available, else a managed
-# venv). No unsigned/checksum-only fallback exists. Unlike install.sh (which
-# builds from a git clone), this pulls the published wheel.
+# below, downloads the wheel over HTTPS, verifies its SHA-256 against the signed
+# digest, then installs it (pipx if available, else a managed venv). No
+# unsigned/checksum-only fallback exists. Unlike install.sh (which builds from a
+# git clone), this pulls a published wheel.
+#
+# Aj Crew publishes no release feed of its own yet, so there is no default
+# host: name one with --cdn (or AJCREW_CDN_BASE), or install from source with
+# install.sh, which is the supported install for this project today. The script
+# never falls back to another project's feed.
 #
 # Python: provisions a python-build-standalone CPython via a SHA-256-pinned uv
 # into a user-owned directory (the default) — no package manager, no sudo,
@@ -28,7 +33,8 @@
 #   --channel <nightly|insider|stable|lts>   (default: stable; env AJCREW_CHANNEL)
 #   --version <X.Y.Z>                    pin an exact version, verified against
 #                                        its immutable signed CLI manifest
-#   --cdn <base-url>                     (default CloudFront; env AJCREW_CDN_BASE)
+#   --cdn <base-url>                     release host to install from (required:
+#                                        there is no default; env AJCREW_CDN_BASE)
 #   --managed-python                     force the managed default back on after
 #                                        a recorded --system-python opt-out
 #                                        (env AJCREW_MANAGED_PYTHON=1)
@@ -56,10 +62,11 @@ unset PYTHONPATH PYTHONHOME
 
 # The URL contract splits by class: FEED_BASE serves the mutable pointers
 # (latest-cli.json), ARTIFACT_BASE serves the bytes (wheels, cli-manifest.json).
-# Both are aliases of the same distribution today; --cdn / AJCREW_CDN_BASE
-# overrides BOTH (test / alternate-CDN escape hatch).
-FEED_BASE="${AJCREW_CDN_BASE:-https://updates.crew.kiro.dev}"
-ARTIFACT_BASE="${AJCREW_CDN_BASE:-https://download.crew.kiro.dev}"
+# --cdn / AJCREW_CDN_BASE sets BOTH. There is no built-in default: this project
+# publishes no release feed yet, and installing another project's wheel under
+# this name would be wrong, so an unset base is refused below.
+FEED_BASE="${AJCREW_CDN_BASE:-}"
+ARTIFACT_BASE="${AJCREW_CDN_BASE:-}"
 CHANNEL="${AJCREW_CHANNEL:-stable}"
 PIN_VERSION=""
 # Three states: "" = undecided (fall back to the persisted python-mode marker,
@@ -114,10 +121,13 @@ while [ $# -gt 0 ]; do
       cat <<'EOF'
 AjCrew CLI installer (channel / wheel based).
 
-  curl -fsSL https://download.crew.kiro.dev/cli.sh | sh
-  curl -fsSL https://download.crew.kiro.dev/cli.sh | sh -s -- --channel nightly
+  sh cli.sh --cdn https://<your-release-host>
+  sh cli.sh --cdn https://<your-release-host> --channel nightly
 
-Installs the prebuilt `ajcrew` wheel for a release channel: resolves the
+Aj Crew publishes no release feed of its own yet, so --cdn (or AJCREW_CDN_BASE)
+is required. To install without one, clone the repository and run install.sh.
+
+Installs a prebuilt `ajcrew` wheel for a release channel: resolves the
 channel feed, verifies its signature against the installer-pinned public key,
 downloads the wheel over HTTPS, verifies its SHA-256 against the signed digest,
 then installs it (pipx if available, else a managed venv BESIDE the data home —
@@ -128,7 +138,8 @@ Options / env:
   --channel <nightly|insider|stable|lts>   (default: stable; env AJCREW_CHANNEL)
   --version <X.Y.Z>                    pin an exact version, verified against
                                        its immutable signed CLI manifest
-  --cdn <base-url>                     (default CloudFront; env AJCREW_CDN_BASE)
+  --cdn <base-url>                     release host to install from (required:
+                                       there is no default; env AJCREW_CDN_BASE)
   --managed-python                     force the managed default back on after
                                        a recorded --system-python opt-out
                                        (env AJCREW_MANAGED_PYTHON=1)
@@ -164,6 +175,11 @@ FEED_BASE="${FEED_BASE%/}"
 ARTIFACT_BASE="${ARTIFACT_BASE%/}"
 
 err() { echo "ajcrew-install: $*" >&2; exit 1; }
+
+# No release host named: refuse before any network I/O rather than guess one.
+if [ -z "$FEED_BASE" ] || [ -z "$ARTIFACT_BASE" ]; then
+  err "no release feed is configured. Aj Crew publishes no prebuilt wheels yet: install from source (git clone https://github.com/Al-jwharah/Aj-Crew.git, then bash install.sh), or name a release host with --cdn <base-url>."
+fi
 
 # ── Progress output ──────────────────────────────────────────────────────────
 # The slow steps (the wheel download, pip resolving and fetching every
@@ -1403,7 +1419,7 @@ echo "  AJCREW_PORT=5477 ajcrew service install   # for the service (baked into 
 # restart_command_hint: one active scope gets its own command, both active
 # defer to `ajcrew restart`, which reads both managers. A gateway outside a
 # service manager is found through the pid gateway.lock records, accepted only
-# when that pid still runs a Aj Crew gateway (the stamp is never cleared, so
+# when that pid still runs an Aj Crew gateway (the stamp is never cleared, so
 # a stale pid may name an unrelated process).
 #
 # A systemd scope counts only when the manager reports the canonical
@@ -1485,7 +1501,7 @@ _running_gateway_restart_command() {
 if [ "$_KC_REPLACED_INSTALL" = 1 ]; then
   if _KC_RESTART_CMD="$(_running_gateway_restart_command)"; then
     echo "" >&2
-    echo "WARNING: a Aj Crew gateway is running and still has the previous version loaded." >&2
+    echo "WARNING: an Aj Crew gateway is running and still has the previous version loaded." >&2
     echo "Until it restarts it runs a mix of old and new code. Restart it now:" >&2
     echo "  $_KC_RESTART_CMD" >&2
   fi

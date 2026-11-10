@@ -18,12 +18,12 @@ import json
 
 import pytest
 
-from conftest import MockSlackClient
 from aj_crew.acp.client import AcpProcessDied
 from aj_crew.acp.types import EVENT_TOOL_CALL
 from aj_crew.providers.base import LLMEvent
 from aj_crew.slack import handler as slack_handler
 from aj_crew.slack.handler import handle_message
+from conftest import MockSlackClient
 
 _handler_tests = importlib.import_module("test_slack_handler")
 FakeSessionManager = _handler_tests.FakeSessionManager

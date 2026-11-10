@@ -1,4 +1,4 @@
-"""Single-writer guard for a ``AJCREW_HOME``.
+"""Single-writer guard for an ``AJCREW_HOME``.
 
 Two ``ajcrew gateway`` processes bound to the same home each open the same
 ``sessions/*.jsonl`` as ``ConversationLog`` writers. The steady-save fast path
@@ -973,7 +973,7 @@ class GatewayLock:
             )
         elif not verdict.holds_port and _command_line_is_not_a_gateway(pid):
             message = (
-                f"{self._path} is held by pid {pid}{detail}, which is not a Aj Crew gateway; "
+                f"{self._path} is held by pid {pid}{detail}, which is not an Aj Crew gateway; "
                 f"see what it is with ps -f -p {pid}, stop it, or set AJCREW_HOME to an "
                 "isolated directory"
             )
@@ -1521,7 +1521,7 @@ def _release_fd(fd: int) -> None:
 
 
 def _command_line_is_not_a_gateway(pid: int) -> bool:
-    """True only when *pid*'s command line was read AND is not a Aj Crew server's.
+    """True only when *pid*'s command line was read AND is not an Aj Crew server's.
 
     An unreadable command line (``""``: dead pid, missing ``ps``, WMI error) is
     no evidence either way, so it answers False and the refusal keeps naming
@@ -1531,7 +1531,7 @@ def _command_line_is_not_a_gateway(pid: int) -> bool:
     (:func:`aj_crew.port_resolution._args_look_like_ajcrew`). That one gates
     a kill, so it is strict and rejects valid launches such as
     ``ajcrew -v gateway``. This one only chooses the refusal's wording, so any
-    Aj Crew program counts as possibly a gateway: a ``ajcrew`` token, or a
+    Aj Crew program counts as possibly a gateway: an ``ajcrew`` token, or a
     ``-m`` whose module's package is a gateway module root. The helpers are
     imported here, not at module level, because this module loads before the
     config stack they pull in.

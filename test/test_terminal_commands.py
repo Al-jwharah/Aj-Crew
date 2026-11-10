@@ -17,9 +17,9 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from conftest import host_abs
 from aj_crew.dashboard import terminal_commands as tc
 from aj_crew.testing.wait import finished
+from conftest import host_abs
 
 
 @pytest.fixture(autouse=True)

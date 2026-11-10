@@ -485,9 +485,7 @@ class TestKiroHooksAutoimport:
         # this window and falsely trip a bare records scan. We only care that THIS
         # code path emits no WARNING+.
         warnings = [
-            r
-            for r in caplog.records
-            if r.levelno >= logging.WARNING and r.name == "aj_crew.agent"
+            r for r in caplog.records if r.levelno >= logging.WARNING and r.name == "aj_crew.agent"
         ]
         assert warnings == []
 

@@ -6,11 +6,11 @@ import asyncio
 
 import pytest
 
-from conftest import host_abs
 from aj_crew.messaging.display_safety import canonicalize_display
 from aj_crew.messaging.transport import TransportCapabilities
 from aj_crew.whatsapp.group_gate import SILENCE_SENTINEL
 from aj_crew.whatsapp.turn_renderer import WhatsAppRenderer
+from conftest import host_abs
 
 CAPS = TransportCapabilities(max_message_chars=4096, max_buttons=0)
 

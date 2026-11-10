@@ -671,9 +671,7 @@ class TestNamedAgentModelReadsTheSnapshot:
         # is filename-sorted, so the precedence is restated explicitly.
         (tmp_path / "aaa.md").write_text("---\nname: shared\nmodel: from-md\n---\nprompt\n")
         (tmp_path / "zzz.json").write_text(json.dumps({"name": "shared", "model": "from-json"}))
-        assert (
-            AjCrewConfig._resolve_named_agent_model("shared", agents_dir=tmp_path) == "from-json"
-        )
+        assert AjCrewConfig._resolve_named_agent_model("shared", agents_dir=tmp_path) == "from-json"
 
     def test_a_snapshot_failure_is_no_pin_not_an_exception(self, tmp_path, monkeypatch) -> None:
         def boom(*a, **k):

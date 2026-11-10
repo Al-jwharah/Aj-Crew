@@ -7,8 +7,8 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from aj_crew.dashboard.server import (
-        DashboardState,
         AjCrewConfig,
+        DashboardState,
         cautious_boot,
         channel_slots,
         chat,

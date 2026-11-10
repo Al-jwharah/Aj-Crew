@@ -291,9 +291,7 @@ def test_a_default_mount_only_addition_round_trips_and_reaches_the_worker(home):
     assert tma.merge_into_spec("ajcrew", spec) == ["fetch"]
     assert spec["tools"] == ["fs_read", "@fetch"]
     assert spec["allowedTools"] == ["fs_read"]
-    assert (
-        "mount_only" in json.loads(tma.record_path().read_text())["templates"]["ajcrew"]["fetch"]
-    )
+    assert "mount_only" in json.loads(tma.record_path().read_text())["templates"]["ajcrew"]["fetch"]
 
 
 def test_a_default_addition_without_the_flag_or_on_the_worker_is_refused(home):
@@ -440,9 +438,7 @@ def _pin_conductor_template(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> 
             "allowedTools": [],
         },
     )
-    monkeypatch.setattr(
-        agent, "_ajcrew_mcp_invocation", lambda sub: ("/resolved/ajcrew", [sub])
-    )
+    monkeypatch.setattr(agent, "_ajcrew_mcp_invocation", lambda sub: ("/resolved/ajcrew", [sub]))
     monkeypatch.setattr(agent, "_may_auto_approve", lambda ref: True)
 
 

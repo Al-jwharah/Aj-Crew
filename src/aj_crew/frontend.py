@@ -97,7 +97,7 @@ _REAP_TIMEOUT = 30
 # no pipes to drain because the build's output goes to DEVNULL or a log file.
 _BUILD_KILL_GRACE = 10
 #: How long ``python -m aj_crew.frontend stage`` waits for the staging lock.
-#: A holder is a Aj Crew build that publishes its own bundle, so a stager
+#: A holder is an Aj Crew build that publishes its own bundle, so a stager
 #: run by hand reports that plainly rather than queueing behind the build.
 _CLI_STAGE_LOCK_TIMEOUT = 30.0
 #: How long gateway start waits for the staging lock before an edition serves
@@ -1697,7 +1697,7 @@ def main(argv: Optional[list[str]] = None) -> int:
 
     The one entry point the build drivers (Makefile, make.ps1) and the docs use.
     Waits at most :data:`_CLI_STAGE_LOCK_TIMEOUT` for the staging lock, and
-    refuses a directory that is not a Aj Crew checkout before creating anything
+    refuses a directory that is not an Aj Crew checkout before creating anything
     in it.
     """
     platform_compat.ensure_utf8_console()
@@ -1708,7 +1708,7 @@ def main(argv: Optional[list[str]] = None) -> int:
     args = parser.parse_args(argv)
     repo = Path(args.repo).resolve()
     if not (repo / _DIR_NAME).is_dir() or not (repo / "src" / "aj_crew").is_dir():
-        _print_safe(f"error: {repo} is not a Aj Crew checkout (no website/ and src/aj_crew/)")
+        _print_safe(f"error: {repo} is not an Aj Crew checkout (no website/ and src/aj_crew/)")
         return 1
     try:
         stage_built_dist(repo, lock_timeout=_CLI_STAGE_LOCK_TIMEOUT)

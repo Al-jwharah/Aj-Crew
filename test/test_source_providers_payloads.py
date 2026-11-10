@@ -17,7 +17,7 @@ def test_parse_github_pull_request() -> None:
     ref = source.parse_source_url("https://github.com/kirodotdev/KiroCrew/pull/58?tab=checks")
     assert ref.provider == "github"
     assert ref.owner == "kirodotdev"
-    assert ref.repo == "AjCrew"  # brand-ok: the kirodotdev/KiroCrew repository name
+    assert ref.repo == "KiroCrew"  # brand-ok: the kirodotdev/KiroCrew repository name
     assert ref.number == 58
     assert ref.url == "https://github.com/kirodotdev/KiroCrew/pull/58"
 

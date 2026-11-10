@@ -316,9 +316,7 @@ async def test_home_size_failure_is_none(monkeypatch, _cfg):
         return 1, "", "err"
 
     monkeypatch.setattr(runtime, "_run_cmd", _fail)
-    assert (
-        await fleet_state._pod_home_size(_cfg, "alpha", "ajcrew-pod@alpha.service", 1.0) is None
-    )
+    assert await fleet_state._pod_home_size(_cfg, "alpha", "ajcrew-pod@alpha.service", 1.0) is None
 
 
 def test_orphan_count(monkeypatch, _cfg):

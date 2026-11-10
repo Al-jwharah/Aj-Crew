@@ -733,9 +733,7 @@ def test_rebuild_leaves_an_unmanaged_hand_authored_client_untouched(monkeypatch)
     def _must_not_resolve(*_a, **_k):  # pragma: no cover - the assertion
         raise AssertionError("an unmanaged entry must not consult the operator client")
 
-    monkeypatch.setattr(
-        "aj_crew.connections.oauth_clients.resolve_oauth_client", _must_not_resolve
-    )
+    monkeypatch.setattr("aj_crew.connections.oauth_clients.resolve_oauth_client", _must_not_resolve)
     hand_authored = {
         "url": GITHUB_MCP_URL,
         "oauth": {
@@ -864,9 +862,7 @@ def test_rebuild_strips_the_client_from_a_managed_provider_whose_url_moved(monke
     def _must_not_resolve(*_a, **_k):  # pragma: no cover - the assertion
         raise AssertionError("a moved URL must not consult the operator client")
 
-    monkeypatch.setattr(
-        "aj_crew.connections.oauth_clients.resolve_oauth_client", _must_not_resolve
-    )
+    monkeypatch.setattr("aj_crew.connections.oauth_clients.resolve_oauth_client", _must_not_resolve)
     moved = {
         "url": "https://mcp.example.test/github",
         "oauth": {"clientId": "op", "clientSecret": "op-secret", "issuer": "https://i"},

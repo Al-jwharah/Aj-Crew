@@ -1,7 +1,17 @@
 # Release Reference
 
-The single reference for how a Aj Crew release is cut, what CI does at each
+The single reference for how an Aj Crew release is cut, what CI does at each
 step, where the artifacts land, and how to verify one.
+
+> **Fork status.** This document describes the release pipeline this fork
+> inherited from upstream Kiro Crew. The fork has not published a release and
+> operates none of the infrastructure named below: the `updates.crew.kiro.dev`
+> and `download.crew.kiro.dev` hosts, the `kirodotdev` package namespaces and
+> the signing keys are all upstream's. The product ships with an empty release
+> feed, so nothing here is contacted by default. Before cutting a release from
+> this fork, stand up your own hosts and keys and substitute them throughout;
+> until then, install and update from a source checkout
+> ([install guide](../guides/install.md)).
 
 Ownership boundary: this file owns the whole release process — the **human**
 steps (cutting a release branch, numbering RCs, promoting, back-merging, bumping
@@ -459,7 +469,7 @@ stable) moves only after the version tag and its attestation exist. GHCR needs
 no AWS credentials: the push authenticates with the workflow's own
 `GITHUB_TOKEN`, so this lane also works on forks.
 
-The GHCR package is public, so `docker pull ghcr.io/kirodotdev/kirocrew:stable`
+The GHCR package is public, so `docker pull ghcr.io/al-jwharah/ajcrew:stable`
 works with no login. That is not automatic: GHCR creates every package private
 and inherits only *access permissions* from the linked repository, never
 visibility — a public repo does not imply a pullable image, and the flip is

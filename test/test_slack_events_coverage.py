@@ -854,9 +854,7 @@ class TestOnEventDispatch:
     async def test_ack_failure_short_circuits(self):
         orch = _socket_orch()
         on_event = await _install_on_event(orch, ev.SeenCache())
-        with patch(
-            "aj_crew.slack.events.dispatch_interactive", new_callable=AsyncMock
-        ) as dispatch:
+        with patch("aj_crew.slack.events.dispatch_interactive", new_callable=AsyncMock) as dispatch:
             client = _client(ack_fails=True)
             await on_event(client, _req("interactive"))
         client.send_socket_mode_response.assert_awaited_once()
@@ -867,9 +865,7 @@ class TestOnEventDispatch:
     async def test_interactive_is_dispatched(self):
         orch = _socket_orch()
         on_event = await _install_on_event(orch, ev.SeenCache())
-        with patch(
-            "aj_crew.slack.events.dispatch_interactive", new_callable=AsyncMock
-        ) as dispatch:
+        with patch("aj_crew.slack.events.dispatch_interactive", new_callable=AsyncMock) as dispatch:
             await on_event(_client(), _req("interactive", {"action": "x"}))
             await _drain(orch)
         dispatch.assert_awaited_once_with({"action": "x"})
@@ -880,9 +876,7 @@ class TestOnEventDispatch:
         orch.sessions.reserve_inbound_callback = MagicMock(return_value=None)
         on_event = await _install_on_event(orch, ev.SeenCache())
         client = _client()
-        with patch(
-            "aj_crew.slack.events.dispatch_interactive", new_callable=AsyncMock
-        ) as dispatch:
+        with patch("aj_crew.slack.events.dispatch_interactive", new_callable=AsyncMock) as dispatch:
             await on_event(client, _req("interactive", {"action": "x"}))
             await _drain(orch)
 
@@ -924,9 +918,7 @@ class TestOnEventDispatch:
         on_event = await _install_on_event(orch, ev.SeenCache())
         payload = {"event": {"type": "app_home_opened", "tab": "home", "user": "U_OWNER"}}
         with patch("aj_crew.slack.events.is_allowed_user", return_value=True):
-            with patch(
-                "aj_crew.slack.events._publish_home_tab", new_callable=AsyncMock
-            ) as publish:
+            with patch("aj_crew.slack.events._publish_home_tab", new_callable=AsyncMock) as publish:
                 await on_event(_client(), _req("events_api", payload))
                 await asyncio.sleep(0)
                 await asyncio.gather(*list(ev._background_tasks), return_exceptions=True)
@@ -940,9 +932,7 @@ class TestOnEventDispatch:
         on_event = await _install_on_event(orch, ev.SeenCache())
         payload = {"event": {"type": "app_home_opened", "tab": "home", "user": "U_BAD"}}
         with patch("aj_crew.slack.events.is_allowed_user", return_value=False):
-            with patch(
-                "aj_crew.slack.events._publish_home_tab", new_callable=AsyncMock
-            ) as publish:
+            with patch("aj_crew.slack.events._publish_home_tab", new_callable=AsyncMock) as publish:
                 await on_event(_client(), _req("events_api", payload))
         publish.assert_not_called()
         assert _mock_sel.log_api_access.call_args.kwargs["error"] == "unauthorized sender"

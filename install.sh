@@ -1,19 +1,18 @@
 #!/usr/bin/env bash
 # ──────────────────────────────────────────────────────────────────────
-# Aj Crew from-source installer (contributor layout)
+# Aj Crew from-source installer
 # Builds the git clone it sits in, on macOS and Linux. Public build — no Brazil
 # workspace, no internal tooling required. Uses python3/pip (backend) +
 # npm/vite (frontend).
 #
-# This is NOT the end-user install. The result follows the clone's checked-out
-# branch, and `main` is the Nightly lane: dev builds (0.X.0.devYYYYMMDD) ahead of
-# Stable, which the desktop app and the one-line install follow. For a Stable
-# install on a laptop or a server, use the signed wheel instead:
-#   curl -fsSL https://download.crew.kiro.dev/cli.sh | sh
+# This is the supported install for Aj Crew today: the project
+# publishes no prebuilt wheels yet. The result follows the clone's checked-out
+# branch, and `main` is the Nightly lane: dev builds (0.X.0.devYYYYMMDD) ahead
+# of the tagged releases. Update it with `git pull`, then `ajcrew update`.
 #
 # Usage (from a local clone):
 #   git clone https://github.com/Al-jwharah/Aj-Crew.git
-#   cd ajcrew
+#   cd Aj-Crew
 #   bash install.sh
 #
 # Options:
@@ -165,14 +164,14 @@ source_checkout_ref() {
     printf 'unknown\n'
 }
 
-# Say which lane this install follows and where the Stable install lives, so a
+# Say which lane this install follows and how it is updated, so a
 # box set up from a clone does not land on Nightly by surprise.
 source_lane_notice() {
     _lane_ref="$(source_checkout_ref)"
     case "$_lane_ref" in
         branch:main)
             warn "This clone is on ${BOLD}main${RESET}: the install follows the ${BOLD}Nightly${RESET} lane"
-            detail "(dev builds ahead of Stable). This installer is for contributors." ;;
+            detail "(dev builds ahead of the tagged releases)." ;;
         branch:*)
             warn "This clone is on branch ${BOLD}${_lane_ref#branch:}${RESET}: the install follows that branch, not a release lane." ;;
         detached:*)
@@ -180,10 +179,11 @@ source_lane_notice() {
         *)
             warn "This is a from-source install: it follows the clone, not a release lane." ;;
     esac
-    # Named by URL and guide, not as a `curl … | sh` line: this script never
-    # prints or runs a pipe-to-shell (test_installer_tool_pins.py).
-    detail "For Stable on a laptop or server, use the one-line install of the signed"
-    detail "wheel instead: https://download.crew.kiro.dev/cli.sh (docs/guides/install.md)."
+    # No pointer at a wheel install: this project publishes no prebuilt wheels
+    # yet, so a clone is the supported install. Never a `curl … | sh` line either
+    # (test_installer_tool_pins.py).
+    detail "Aj Crew publishes no prebuilt wheels yet, so this source install is the"
+    detail "supported one. Update it with git pull, then ajcrew update (docs/guides/install.md)."
 }
 
 # True only when a usable node is on PATH: present AND at or above the build's
@@ -247,8 +247,8 @@ echo "  ${DIM}Platform:${RESET}           $(uname -s) $(uname -m)"
 echo ""
 
 if [ ! -f "$AJCREW_APP_DIR/pyproject.toml" ]; then
-    die "Run this from inside a AjCrew clone (pyproject.toml not found in $AJCREW_APP_DIR).
-     git clone https://github.com/Al-jwharah/Aj-Crew.git && cd ajcrew && bash install.sh"
+    die "Run this from inside an AjCrew clone (pyproject.toml not found in $AJCREW_APP_DIR).
+     git clone https://github.com/Al-jwharah/Aj-Crew.git && cd Aj-Crew && bash install.sh"
 fi
 
 source_lane_notice

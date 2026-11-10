@@ -29,7 +29,7 @@ the defects it retires.
 
 ## Why
 
-Today an agent drives a browser through `@playwright/mcp` behind a Aj Crew
+Today an agent drives a browser through `@playwright/mcp` behind an Aj Crew
 proxy that exists to keep accessibility trees out of the model context. The
 proxy earns its keep, but the surrounding machinery does not:
 
@@ -210,7 +210,7 @@ browser view to the network.
 ## Existing installs
 
 An operator on the current design has a `playwright-mcp` entry in
-`~/.kiro/settings/mcp.json`, possibly a `AJCREW_PLAYWRIGHT_CMD` pin, a
+`~/.kiro/settings/mcp.json`, possibly an `AJCREW_PLAYWRIGHT_CMD` pin, a
 `playwright-config.json`, a storage-state file, and an extension token.
 
 What the migration does:

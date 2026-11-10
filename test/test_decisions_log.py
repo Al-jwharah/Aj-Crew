@@ -18,11 +18,11 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from conftest import requires_symlinks
 from aj_crew import platform_log_append
 from aj_crew.decisions import log as log_mod
 from aj_crew.decisions.log import append, build_row, log_path, session_digest
 from aj_crew.decisions.types import Answer
+from conftest import requires_symlinks
 
 
 @pytest.fixture

@@ -803,7 +803,7 @@ def register_agent_parser(sub: _Commands) -> None:
     agent_parser = cli_help.add_command(sub, "agent")
     agent_sub = agent_parser.add_subparsers(dest="agent_action")
     agent_sub.add_parser("list", help="List Aj Crew agents")
-    agent_create = agent_sub.add_parser("create", help="Create a Aj Crew agent")
+    agent_create = agent_sub.add_parser("create", help="Create an Aj Crew agent")
     agent_create.add_argument(
         "--name",
         required=True,
@@ -839,7 +839,7 @@ def register_agent_parser(sub: _Commands) -> None:
             "the template's pinned model, then agent.model"
         ),
     )
-    agent_update = agent_sub.add_parser("update", help="Update a Aj Crew agent")
+    agent_update = agent_sub.add_parser("update", help="Update an Aj Crew agent")
     agent_update.add_argument("name", help="Agent name to update")
     agent_update.add_argument("--kiro-agent", help="New kiro agent name")
     agent_update.add_argument("--workspace", help="New workspace name")
@@ -858,7 +858,7 @@ def register_agent_parser(sub: _Commands) -> None:
             "so it follows the template's pinned model, then agent.model"
         ),
     )
-    agent_delete = agent_sub.add_parser("delete", help="Delete a Aj Crew agent")
+    agent_delete = agent_sub.add_parser("delete", help="Delete an Aj Crew agent")
     agent_delete.add_argument("name", help="Agent name to delete")
     agent_pin = agent_sub.add_parser(
         "pin",

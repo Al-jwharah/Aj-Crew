@@ -582,7 +582,7 @@ Decisions made during the spec session:
 
 ### Property 12: load() always returns valid AjCrewConfig
 
-*For any* input string (valid JSON, invalid JSON, empty string, random bytes), `AjCrewConfig.load()` must return a `AjCrewConfig` instance without raising an exception, and all fields must have values matching their declared types.
+*For any* input string (valid JSON, invalid JSON, empty string, random bytes), `AjCrewConfig.load()` must return an `AjCrewConfig` instance without raising an exception, and all fields must have values matching their declared types.
 
 **Validates: Requirements 6.6**
 

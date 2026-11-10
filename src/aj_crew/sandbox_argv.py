@@ -389,9 +389,7 @@ def _live_plan_host(request: sandbox_plan.SandboxRequest) -> sandbox_plan.PlanHo
     )
     # The pod's remapped home, gated on ``AJCREW_POD == "1"`` exactly as
     # ``config.paths`` gates the resolver, so a non-pod session's mask is unchanged.
-    pod_os_home = (
-        os.environ.get("AJCREW_OS_HOME") if os.environ.get("AJCREW_POD") == "1" else None
-    )
+    pod_os_home = os.environ.get("AJCREW_OS_HOME") if os.environ.get("AJCREW_POD") == "1" else None
     relocated_policy_cache_dirs = tuple(_relocated_policy_cache_dirs())
     md_notebook_degraded_dirs = tuple(_md_notebook_degraded_mask_dirs())
     voice_runtime_roots = tuple(_voice_runtime_sandbox_paths())

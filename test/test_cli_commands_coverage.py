@@ -415,9 +415,7 @@ class TestAppCli:
             )
 
         with (
-            patch(
-                "aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)
-            ),
+            patch("aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)),
             patch(
                 "aj_crew.app_lifecycle_client.read_local_secret",
                 return_value="port-scoped-secret",
@@ -532,9 +530,7 @@ class TestAppCli:
             raise TimeoutError("timed out")
 
         with (
-            patch(
-                "aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)
-            ),
+            patch("aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)),
             patch("aj_crew.app_lifecycle_client.read_local_secret", return_value="local-secret"),
             patch("aj_crew.app_lifecycle_client.unix_socket_urlopen", side_effect=_open),
             patch("aj_crew.cli_commands.enable_app") as local_enable,
@@ -560,9 +556,7 @@ class TestAppCli:
             json.dumps({"error": "busy\x1b]0;evil\x07 now\x1b[2J\x07"}).encode(),
         )
         with (
-            patch(
-                "aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)
-            ),
+            patch("aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)),
             patch("aj_crew.app_lifecycle_client.read_local_secret", return_value="local-secret"),
             patch(
                 "aj_crew.app_lifecycle_client.unix_socket_urlopen",
@@ -599,9 +593,7 @@ class TestAppCli:
             )
 
         with (
-            patch(
-                "aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)
-            ),
+            patch("aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)),
             patch("aj_crew.app_lifecycle_client.read_local_secret", return_value="local-secret"),
             patch("aj_crew.app_lifecycle_client.unix_socket_urlopen", side_effect=_open),
             patch("aj_crew.cli_commands.disable_app") as local_disable,
@@ -673,9 +665,7 @@ class TestAppCli:
         self, capsys: pytest.CaptureFixture[str]
     ) -> None:
         with (
-            patch(
-                "aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)
-            ),
+            patch("aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)),
             patch("aj_crew.app_lifecycle_client.read_local_secret", return_value=""),
             patch("aj_crew.app_lifecycle_client.unix_socket_urlopen") as urlopen,
             patch("aj_crew.cli_commands.enable_app", return_value=_result(True)) as local_enable,
@@ -699,9 +689,7 @@ class TestAppCli:
     ) -> None:
         error = _http_error(409, json.dumps({"error": "app is busy"}).encode())
         with (
-            patch(
-                "aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)
-            ),
+            patch("aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)),
             patch("aj_crew.app_lifecycle_client.read_local_secret", return_value="local-secret"),
             patch(
                 "aj_crew.app_lifecycle_client.unix_socket_urlopen",
@@ -721,9 +709,7 @@ class TestAppCli:
     ) -> None:
         error = _http_error(403, json.dumps({"error": "local credential denied"}).encode())
         with (
-            patch(
-                "aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)
-            ),
+            patch("aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)),
             patch("aj_crew.app_lifecycle_client.read_local_secret", return_value="local-secret"),
             patch("aj_crew.app_lifecycle_client.unix_socket_urlopen", side_effect=error),
             patch("aj_crew.cli_commands.disable_app") as local_disable,
@@ -767,9 +753,7 @@ class TestAppCli:
             )
 
         with (
-            patch(
-                "aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)
-            ),
+            patch("aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)),
             patch("aj_crew.app_lifecycle_client.read_local_secret", return_value="local-secret"),
             patch("aj_crew.app_lifecycle_client.unix_socket_urlopen", side_effect=_open),
             patch("aj_crew.cli_commands.install_app") as local_install,
@@ -850,9 +834,7 @@ class TestAppCli:
         self, capsys: pytest.CaptureFixture[str]
     ) -> None:
         with (
-            patch(
-                "aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)
-            ),
+            patch("aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)),
             patch("aj_crew.app_lifecycle_client.read_local_secret", return_value=""),
             patch("aj_crew.app_lifecycle_client.unix_socket_urlopen") as urlopen,
             patch(
@@ -875,9 +857,7 @@ class TestAppCli:
             400, json.dumps({"ok": False, "name": "", "error": "no app.json"}).encode()
         )
         with (
-            patch(
-                "aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)
-            ),
+            patch("aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)),
             patch("aj_crew.app_lifecycle_client.read_local_secret", return_value="local-secret"),
             patch(
                 "aj_crew.app_lifecycle_client.unix_socket_urlopen",
@@ -899,9 +879,7 @@ class TestAppCli:
     ) -> None:
         error = _http_error(403, json.dumps({"error": "local credential denied"}).encode())
         with (
-            patch(
-                "aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)
-            ),
+            patch("aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)),
             patch("aj_crew.app_lifecycle_client.read_local_secret", return_value="local-secret"),
             patch("aj_crew.app_lifecycle_client.unix_socket_urlopen", side_effect=error),
             patch("aj_crew.cli_commands.install_app") as local_install,
@@ -1030,9 +1008,7 @@ class TestAppCli:
         from aj_crew import app_lifecycle_client
 
         with (
-            patch(
-                "aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)
-            ),
+            patch("aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)),
             patch("aj_crew.app_lifecycle_client.read_local_secret", return_value="local-secret"),
             patch(
                 "aj_crew.app_lifecycle_client.unix_socket_urlopen",
@@ -1053,9 +1029,7 @@ class TestAppCli:
     ) -> None:
         failure = urllib.error.URLError(ConnectionRefusedError("gateway restarted"))
         with (
-            patch(
-                "aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)
-            ),
+            patch("aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)),
             patch("aj_crew.app_lifecycle_client.read_local_secret", return_value="local-secret"),
             patch(
                 "aj_crew.app_lifecycle_client.unix_socket_urlopen",
@@ -1106,9 +1080,7 @@ class TestAppCli:
                     "gateway stopped answering before the action completed; check the dashboard"
                 )
         with (
-            patch(
-                "aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)
-            ),
+            patch("aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)),
             patch("aj_crew.app_lifecycle_client.read_local_secret", return_value="local-secret"),
             patch("aj_crew.app_lifecycle_client.unix_socket_urlopen", side_effect=side_effect),
             pytest.raises(expected_type, match=expected) as raised,
@@ -1134,9 +1106,7 @@ class TestAppCli:
             else [_FakeResponse({"token": "dashboard-credential"}), bad_response]
         )
         with (
-            patch(
-                "aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)
-            ),
+            patch("aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)),
             patch("aj_crew.app_lifecycle_client.read_local_secret", return_value="local-secret"),
             patch("aj_crew.app_lifecycle_client.unix_socket_urlopen", side_effect=side_effect),
             pytest.raises(

@@ -382,14 +382,14 @@ for (const route of ROUTES) {
     const path = new URL(r.request().url()).pathname
     if (path === '/api/chat/slots') return json(r, slots)
     if (path.startsWith('/api/chat/slots/')) return json(r, detail)
-    if (path === '/api/theme/boot') return json(r, { mode: 'light', color: 'kiro', theme: '' })
+    if (path === '/api/theme/boot') return json(r, { mode: 'light', color: 'aj', theme: '' })
     if (APP_FIXTURES.has(path)) return json(r, APP_FIXTURES.get(path))
     return handleBootRoute(r, path, { project: PROJECT, theme: 'light', fixedApi })
   })
   await page.addInitScript(slot => {
     localStorage.clear()
     localStorage.setItem('mc-theme', 'light')
-    localStorage.setItem('mc-color-theme', 'kiro')
+    localStorage.setItem('mc-color-theme', 'aj')
     localStorage.setItem('mc-onboarded', '1')
     localStorage.setItem('mc-active-slot-chat', slot)
   }, SLOT)

@@ -11,7 +11,7 @@
  * therefore identical to the one users hit.
  *
  * Requires: the app launched with --remote-debugging-port=<port>, a local feed
- * serving a newer version (scripts/local-feed-server.js), and a `ajcrew`
+ * serving a newer version (scripts/local-feed-server.js), and an `ajcrew`
  * gateway resolvable on PATH (the app only reaches initAutoUpdate after the
  * gateway connects).
  *

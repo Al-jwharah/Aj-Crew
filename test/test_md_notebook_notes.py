@@ -16,9 +16,9 @@ from md_notebook_helpers import _seed_template  # noqa: F401 - fixture
 from md_notebook_helpers import fixtures_fixture  # noqa: F401 - fixture
 from md_notebook_helpers import _clone, _git, signed_client
 
-from conftest import requires_symlinks
 from aj_crew import platform_compat
 from aj_crew.apps.builtins.md_notebook import git_ops
+from conftest import requires_symlinks
 
 
 @pytest.mark.asyncio

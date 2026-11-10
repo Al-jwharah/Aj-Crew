@@ -61,16 +61,12 @@ def _install_conductor(monkeypatch: pytest.MonkeyPatch) -> dict:
         lambda: {
             "name": "ajcrew",
             "prompt": "file://x",
-            "mcpServers": {
-                "ajcrew-core": {"command": "/resolved/ajcrew", "args": ["mcp-core"]}
-            },
+            "mcpServers": {"ajcrew-core": {"command": "/resolved/ajcrew", "args": ["mcp-core"]}},
             "tools": ["execute_bash", "fs_read", "fs_write", "code", "@ajcrew-core"],
             "allowedTools": ["@ajcrew-core"],
         },
     )
-    monkeypatch.setattr(
-        agent, "_ajcrew_mcp_invocation", lambda sub: ("/resolved/ajcrew", [sub])
-    )
+    monkeypatch.setattr(agent, "_ajcrew_mcp_invocation", lambda sub: ("/resolved/ajcrew", [sub]))
     monkeypatch.setattr(agent, "_may_auto_approve", lambda ref: True)
     assert agent._install_conductor_agent() is True
     path = agent.kiro_agents_dir_path() / CONDUCTOR_AGENT_FILENAME

@@ -170,9 +170,7 @@ class _Probe:
         self._gc_total_ms = 0.0
         self._gc_max_ms = 0.0
         self._install_gc_hook()
-        self._thread = threading.Thread(
-            target=self._run, name="ajcrew-diag-gil-probe", daemon=True
-        )
+        self._thread = threading.Thread(target=self._run, name="ajcrew-diag-gil-probe", daemon=True)
         self._thread.start()
         logger.debug(
             "diag GIL probe started (sleep=%.0fms, stall_after=%.1fs)",

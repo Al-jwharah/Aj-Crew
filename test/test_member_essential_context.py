@@ -10,7 +10,6 @@ from unittest.mock import Mock
 import member_essential_context_helpers
 import pytest
 
-from conftest import make_dir_link, requires_symlinks
 from aj_crew import context as context_module
 from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
 from aj_crew.context import CONTEXT_GROUP_LESSONS
@@ -21,6 +20,7 @@ from aj_crew.memory_stores import (
     UnknownMemoryStore,
     provision_member_memory,
 )
+from conftest import make_dir_link, requires_symlinks
 
 # The shared fixtures, bound here by name so pytest registers them for this module.
 _close_skills_loaders = member_essential_context_helpers._close_skills_loaders

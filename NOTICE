@@ -1,3 +1,21 @@
+Aj Crew
+Modifications Copyright 2026 Al-jwharah (https://github.com/Al-jwharah).
+
+Aj Crew is a modified version of KiroCrew
+(https://github.com/kirodotdev/KiroCrew), used under the Apache License,
+Version 2.0. Changes made in this fork: the product, its package, its command
+and its identifiers were renamed from "Kiro Crew" to "Aj Crew" in every file
+(see scripts/rebrand/rebrand_aj.py), and later changes are recorded in the
+repository history. Aj Crew is not affiliated with, sponsored by or endorsed by
+Amazon. "Kiro" and "Amazon" are trademarks of their respective owners and are
+used here only to identify the original work and the third-party tools this
+software can connect to.
+
+The notice of the original work follows, unchanged except for the file paths it
+cites, which name the files as they are in this repository.
+
+--------------------------------------------------------------------------------
+
 KiroCrew
 Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 

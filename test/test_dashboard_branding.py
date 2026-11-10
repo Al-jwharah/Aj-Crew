@@ -13,7 +13,7 @@ from config_live_helpers import (  # noqa: F401 -- fixtures are used by name
     cfg_file_fixture,
 )
 
-from aj_crew.config.loader import DashboardConfig, AjCrewConfig
+from aj_crew.config.loader import AjCrewConfig, DashboardConfig
 from aj_crew.testing.wait import async_wait_until
 
 

@@ -92,7 +92,7 @@ class TestRendering:
         # Byte-pinned: the digest of the payload before the manifest became
         # toggle-aware. A change here changes every default install's deep link.
         digest = hashlib.sha256(text.encode("utf-8")).hexdigest()
-        assert digest == "bca5f538a73e541d77d4b00dbc5a39b48b499baa514358b3474010c36c984d11"
+        assert digest == "a5e0c5467861b8add3f5c63564e43e6be946ace6e5eb49d4335ebd1d25c057db"
 
     def test_unknown_feature_names_are_ignored(self) -> None:
         assert slack_manifest.render("x", features={"bogus"}) == slack_manifest.render("x")

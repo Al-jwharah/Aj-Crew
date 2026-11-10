@@ -1,4 +1,4 @@
-"""``ajcrew open``: hand the desktop app a ``ajcrew://`` deep link.
+"""``ajcrew open``: hand the desktop app an ``ajcrew://`` deep link.
 
 The desktop app registers the ``ajcrew`` URL scheme (``website/electron/
 deep-link.js`` owns the grammar and the allowlist; the Electron shell routes an

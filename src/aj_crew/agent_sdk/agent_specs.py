@@ -153,7 +153,7 @@ def sweep_kas_launch_snapshots(boot_time: float) -> bool:
 
     Skipped, and ``False`` returned, while ``kiro_session_pids.txt`` still names
     another owner process: every KAS runtime records itself there under the pid
-    of the process that started it (a gateway or a ``ajcrew chat`` CLI on the
+    of the process that started it (a gateway or an ``ajcrew chat`` CLI on the
     same data home), and ``cleanup_orphaned_sessions`` has already removed every
     entry it could confirm dead, so an owner left there may still run a session
     whose launcher reads a snapshot this sweep would delete. This process's own

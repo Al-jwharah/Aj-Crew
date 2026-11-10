@@ -15,9 +15,9 @@ import os
 
 import pytest
 
-from conftest import host_abs
 from aj_crew.config import loader as L
 from aj_crew.config.loader import AjCrewConfig, McpConfig
+from conftest import host_abs
 
 #: The published directory must survive ``augmented_path``'s ``os.path.isabs``
 #: filter, and from Python 3.13 ``ntpath.isabs("/opt/pixi/bin")`` is False (no

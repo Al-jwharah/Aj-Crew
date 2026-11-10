@@ -372,13 +372,13 @@ def build_refusal_recovery_prompt(
         return ""
     lines = [
         (
-            "One or more tool calls in your previous turn were blocked by a Kiro "
+            "One or more tool calls in your previous turn were blocked by an Aj "
             "Crew safety policy. This was NOT a user action — do not treat it as a "
             "cancellation or interruption by the user. That turn already put text "
             "on screen for the user, so this note is for awareness: carry on from "
             "there rather than starting over."
             if answered
-            else "One or more tool calls in your previous turn were blocked by a "
+            else "One or more tool calls in your previous turn were blocked by an "
             "Aj Crew safety policy, which ended the turn early. This was NOT a "
             "user action — do not treat it as a cancellation or interruption by "
             "the user."
@@ -524,7 +524,7 @@ def build_tool_stall_recovery_prompt(
     tool_label = tool_title or "a tool call"
     lines = [
         f"Your previous turn stalled: {tool_label} produced no response for "
-        f"~{idle_mins} minute(s) and the turn was ended by a Aj Crew watchdog. "
+        f"~{idle_mins} minute(s) and the turn was ended by an Aj Crew watchdog. "
         "This was NOT a user action — do not treat it as a cancellation or "
         "interruption by the user.",
     ]

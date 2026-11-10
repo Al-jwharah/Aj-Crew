@@ -293,7 +293,7 @@ def test_the_wiring_claims_pids_tracked_by_any_gateway_on_this_data_home(
     """MUTATION TARGET: membership read at the same scope as the kernel question.
 
     The agent slice is named from a hash of the data home, so a SECOND process on
-    that home -- a ``ajcrew chat`` doing agent work in-process, or this gateway's
+    that home -- an ``ajcrew chat`` doing agent work in-process, or this gateway's
     own namespace-sandbox children whose tracked pid is the launcher parent -- puts
     live runtimes in the very slice this reconciler reads. Their records are filed
     under a different gateway pid, or in the descendant pid file, and the lease

@@ -109,9 +109,7 @@ def test_template_selection_keeps_the_store_and_flips_only_the_namespace(members
 
     plain = execution.ExecutionContext(None, execution.MemoryStoreRef("default"), "template", "")
     renamed = plain.with_template("worker-template", "ajcrew-worker")
-    assert renamed == replace(
-        plain, template_id="worker-template", selection_name="ajcrew-worker"
-    )
+    assert renamed == replace(plain, template_id="worker-template", selection_name="ajcrew-worker")
 
 
 def test_corrupt_member_never_becomes_global(members, tmp_path):

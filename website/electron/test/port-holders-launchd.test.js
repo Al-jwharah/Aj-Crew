@@ -95,7 +95,7 @@ test("isLaunchdJob answers true for a job, false for any other pid, null when un
 });
 
 // The force-stop recovery runs: lsof names `pid` until it is signalled, ps
-// reports a Aj Crew gateway with launchd (PID 1) as its parent, and launchctl
+// reports an Aj Crew gateway with launchd (PID 1) as its parent, and launchctl
 // lists `jobs`.
 function forceStopHolders({ platform = "darwin", jobs = [] } = {}) {
   const signals = [];

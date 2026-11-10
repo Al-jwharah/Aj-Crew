@@ -127,7 +127,7 @@ class TestExempt:
 
     def test_hyphen_exemption_does_not_swallow_prose(self) -> None:
         # Only an *interior* hyphen segment is an identifier.
-        assert _hits("a AjCrew-specific workaround") == ["AjCrew"]
+        assert _hits("an AjCrew-specific workaround") == ["AjCrew"]
 
     def test_line_suppression(self) -> None:
         assert _hits("correct = 'AjCrew'  # brand-ok: transcript fixture") == []
@@ -280,7 +280,7 @@ class TestMarkdownCode:
             "Install AjCrew:",
             "```bash",
             "git clone https://github.com/Al-jwharah/Aj-Crew.git",
-            "cd AjCrew",
+            "cd Aj-Crew",
             "```",
             "Then start AjCrew.",
         ]
@@ -294,14 +294,14 @@ class TestMarkdownCode:
         assert flagged == [1, 6]
 
     def test_tilde_fences_and_reopened_blocks(self) -> None:
-        doc = ["a", "~~~", "cd AjCrew", "~~~", "b", "```", "cd AjCrew", "```"]
+        doc = ["a", "~~~", "cd Aj-Crew", "~~~", "b", "```", "cd Aj-Crew", "```"]
         assert gate.fenced_lines(doc) == {2, 3, 4, 6, 7, 8}
 
     def test_a_wider_fence_is_not_closed_by_a_narrower_run(self) -> None:
         # `builtin_skills/artifacts/SKILL.md` quotes fenced examples inside
         # four-backtick blocks. Closing the outer fence on the inner ``` would
         # expose the example's contents as prose and flag its identifiers.
-        doc = ["````markdown", "```bash", "cd AjCrew", "```", "````", "Then run AjCrew."]
+        doc = ["````markdown", "```bash", "cd Aj-Crew", "```", "````", "Then run AjCrew."]
         assert gate.fenced_lines(doc) == {1, 2, 3, 4, 5}
         flagged = [
             i

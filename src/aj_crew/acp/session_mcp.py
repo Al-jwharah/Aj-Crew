@@ -117,8 +117,8 @@ from aj_crew.agent_discovery import _read_agent_spec, project_agent_files, proje
 from aj_crew.agent_sdk.mcp_refs import parse_tools_refs
 from aj_crew.env import sanitize_spec_env
 from aj_crew.mcp_cleanup import (
-    CONTROL_PLANE_SERVERS,
     AJCREW_BIN_MCP_SERVERS,
+    CONTROL_PLANE_SERVERS,
     mcp_entry_is_muted,
 )
 from aj_crew.platform.governance import (

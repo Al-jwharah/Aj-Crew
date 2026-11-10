@@ -210,7 +210,7 @@ function createTokenSources({
       return refuse(`not minting a local token for :${mintPort}: the kernel does not name our gateway (pid ${child.pid}), or a direct child of it holding this home's gateway.lock, as its listener`);
     }
     lastRefusal = null;
-    // Re-resolve the home at call time so a AJCREW_HOME change after Electron
+    // Re-resolve the home at call time so an AJCREW_HOME change after Electron
     // starts is honored. The mint dials the configured loopback origin exactly
     // as written; `mintTokenFromHome` never rewrites it to a literal address.
     return mintTokenFromHome({

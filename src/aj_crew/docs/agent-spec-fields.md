@@ -964,7 +964,7 @@ the filtered result through the same version gate the other writers use
 spawn and has no early `return` by design: it re-derives a stale mirror and
 refuses the dispatch when it cannot, rather than starting a worker on grants the
 default agent no longer has. Both the write and that freshness check first
-attribute the file at the mirror path: a `ajcrew-worker.json` that lacks the
+attribute the file at the mirror path: an `ajcrew-worker.json` that lacks the
 derivation's provenance marks (the declared `name` `ajcrew-worker` and a
 reference to the `ajcrew-work` server) is refused with `ForeignAgentSpec`
 rather than re-derived, and the dispatch is declined; a file that does not parse

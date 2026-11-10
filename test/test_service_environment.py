@@ -206,9 +206,7 @@ class TestServiceEnvironment:
 
         monkeypatch.setenv("AJCREW_PORT", "5477")
         monkeypatch.setattr(svc_macos, "LIVE_PROGRAM", tmp_path / "live-gateway")
-        with patch(
-            "aj_crew.service.common.shutil.which", return_value="/opt/homebrew/bin/ajcrew"
-        ):
+        with patch("aj_crew.service.common.shutil.which", return_value="/opt/homebrew/bin/ajcrew"):
             plist = svc_macos.render_plist()
         envs = plist.split("<key>EnvironmentVariables</key>", 1)[1].split("</dict>", 1)[0]
         assert "<key>AJCREW_PORT</key>" in envs and "<string>5477</string>" in envs

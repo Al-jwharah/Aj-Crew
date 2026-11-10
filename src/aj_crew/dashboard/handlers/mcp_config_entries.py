@@ -18,11 +18,11 @@ from aj_crew.config.paths import kiro_agents_dir
 from aj_crew.dashboard.handlers.mcp_config_files import (
     _GLOBAL_MCP_JSON,
     AmbiguousServerKey,
+    _ajcrew_mcp_json,
     _atomic_write,
     _config_entry_for,
     _config_key_for,
     _extra_mcp_scopes,
-    _ajcrew_mcp_json,
     _load_config_for_update,
     _load_json_or_empty,
     _resolve_key_from_read,
@@ -307,7 +307,7 @@ def _remove_from_agent_file(path: Path, name: str, *, preferred: str | None = No
     as its merge base and reconciles only ``app:server`` keys under that lock.
 
     Order is transaction-lock-then-file-lock, the same order every other
-    settings-lock holder uses when it reaches a ajcrew.json writer, and no
+    settings-lock holder uses when it reaches an ajcrew.json writer, and no
     path in the tree takes the file lock first — so there is no ABBA cycle. The
     flock is blocking, which is legal here because every caller of
     :func:`_purge_server_config` runs it in a worker thread

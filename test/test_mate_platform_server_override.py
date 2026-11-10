@@ -67,9 +67,7 @@ async def test_creating_from_a_template_without_the_mate_server_writes_no_overri
 ):
     await asyncio.to_thread(_environment, monkeypatch, "linux", "kas", "auto", "namespace", False)
     async with TestClient(TestServer(_app(monkeypatch))) as client:
-        response = await client.post(
-            "/api/agents", json={"name": "briar", "kiro_agent": "ajcrew"}
-        )
+        response = await client.post("/api/agents", json={"name": "briar", "kiro_agent": "ajcrew"})
         assert response.status == 200, await response.text()
     # The minimal file copies NO servers from any template, so a bare
     # ``ajcrew-mate`` override cannot be written — and neither is ``notes``.

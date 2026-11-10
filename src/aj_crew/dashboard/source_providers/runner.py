@@ -33,9 +33,7 @@ from aj_crew.dashboard.source_providers.contract import SourceProviderError
 # handler is their long-standing import location (issue_radar's glab resolution
 # and the provider tests reach them there).
 from aj_crew.github_runner import GH_ENV_PASSTHROUGH as _GH_ENV_PASSTHROUGH
-from aj_crew.github_runner import (
-    PROVIDER_EXECUTABLE_CANDIDATES as _PROVIDER_EXECUTABLE_CANDIDATES,
-)
+from aj_crew.github_runner import PROVIDER_EXECUTABLE_CANDIDATES as _PROVIDER_EXECUTABLE_CANDIDATES
 from aj_crew.github_runner import PROVIDER_WINGET_ID as _PROVIDER_WINGET_ID
 from aj_crew.github_runner import STRICT_PROVIDER_BIN_ENV as _STRICT_PROVIDER_BIN_ENV
 from aj_crew.github_runner import (

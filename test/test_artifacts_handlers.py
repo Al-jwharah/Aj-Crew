@@ -24,7 +24,6 @@ from artifacts_handlers_helpers import (  # noqa: F401 -- fixtures are requested
     patch_restricted_fixture,
 )
 
-from conftest import cap_project_root_walk
 from aj_crew import artifacts as art_mod
 from aj_crew.dashboard.handlers.artifacts import (
     _MAX_BODY_BYTES,
@@ -33,6 +32,7 @@ from aj_crew.dashboard.handlers.artifacts import (
     api_artifacts_create,
     api_artifacts_list,
 )
+from conftest import cap_project_root_walk
 
 # ── Fixtures ────────────────────────────────────────────────────────────────
 

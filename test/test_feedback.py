@@ -197,6 +197,10 @@ class TestIdentityAndConsentHelpers:
                 self.ok = ok
 
         seen_audit_tools: list[str] = []
+        # The shipped build names no survey endpoint, which closes the gate
+        # before the ladder is read; give it one so the delegation is what runs.
+        monkeypatch.setattr(feedback, "_INGESTION_URL", "https://survey.example.test/form")
+        monkeypatch.setattr(feedback, "_PROMPT_URL", "https://survey.example.test/form/prompt")
         monkeypatch.setattr(feedback.AjCrewConfig, "load", staticmethod(lambda: _Cfg()))
 
         def _tp(*, enabled: bool, acked: bool, audit_tool: str = "") -> "_Verdict":

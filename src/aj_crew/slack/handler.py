@@ -59,8 +59,8 @@ from aj_crew.agent_switch_command import (  # noqa: F401 - read by the owners
 from aj_crew.config.loader import (  # noqa: F401 - read by the owners
     ACTIVATION_REVIEW,
     KIRO_CLI_BUILTIN_AGENTS,
-    ConfigReadError,
     AjCrewConfig,
+    ConfigReadError,
     config_local_path,
     config_path,
     read_config_text,

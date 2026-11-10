@@ -145,7 +145,7 @@ test.describe('Phone session rows keep their menu clear', () => {
       await page.addInitScript((theme) => {
         localStorage.setItem('mc-onboarded', '1')
         localStorage.setItem('mc-theme', theme)
-        localStorage.setItem('mc-color-theme', 'kiro')
+        localStorage.setItem('mc-color-theme', 'aj')
       }, theme)
       // The server's theme config overrides localStorage on boot, so set it
       // there too; afterEach restores it.
@@ -153,7 +153,7 @@ test.describe('Phone session rows keep their menu clear', () => {
       expect(current.ok(), 'GET /api/config/theme should succeed').toBe(true)
       const { mode, color } = await current.json() as { mode: string; color: string }
       savedTheme = { mode, color }
-      const themed = await request.put('/api/config/theme', { data: { mode: theme, color: 'kiro' } })
+      const themed = await request.put('/api/config/theme', { data: { mode: theme, color: 'aj' } })
       expect(themed.ok(), 'PUT /api/config/theme should succeed').toBe(true)
       // Unique per test; afterEach removes the folders, so reruns never collide.
       const uniq = test.info().testId.slice(0, 8)
@@ -171,7 +171,7 @@ test.describe('Phone session rows keep their menu clear', () => {
       // Open the long session from the list, then come back to the list with
       // it still selected: the path the report describes.
       await page.goto('/chat')
-      await expect(page.locator('html')).toHaveAttribute('data-theme', `kiro-${theme}`)
+      await expect(page.locator('html')).toHaveAttribute('data-theme', `aj-${theme}`)
       const toggle = page.getByTestId('mobile-topbar-sessions-toggle')
       await expect(toggle).toBeVisible({ timeout: 15000 })
       // A fresh phone load with no session open starts with the list closed.

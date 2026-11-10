@@ -21,7 +21,7 @@ SPINE vs PROFILE (08_safety §0.1, §2.1, §2.2): the spine owns the snapshot/bo
 block MACHINERY — it is target-agnostic and takes the path set + a boot callable as
 inputs. The profile supplies WHICH host paths to snapshot (its env footprint:
 ``isolation.do_not_pollute_paths()``) and the boot callable (how to boot+tear-down the
-measurement runtime). The spine never names a host path (``~/.kiro/agents`` et al. are a
+measurement runtime). The spine never names a host path (``~/.kiro/agents`` et al. are an
 Aj Crew property of the target, not the spine; 08_safety §2.1 generalization note).
 
 The snapshot is content-addressed (a hash of each path's tree), so a write that adds,

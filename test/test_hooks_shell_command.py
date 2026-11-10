@@ -15,7 +15,6 @@ from __future__ import annotations
 
 import pytest
 
-from conftest import requires_symlinks
 from aj_crew.hooks import (
     HOOK_PASSTHROUGH,
     HOOK_REPLY,
@@ -25,6 +24,7 @@ from aj_crew.hooks import (
     HooksConfig,
     safe_read_file,
 )
+from conftest import requires_symlinks
 
 
 class TestShellCommandProperty:

@@ -430,7 +430,11 @@ class TestAPackagePathIsOneClassOfSeparators:
         "payload",
         [
             "exec(open(r'src\\aj_crew\\cli.py').read())",
-            "exec(open('src\\\\aj_crew\\\\cli.py').read())",
+            # Doubled twice. `_rule_of` wraps the payload in a double-quoted
+            # `-c`, where the shell halves each backslash pair before Python
+            # reads it. One level of doubling would reach Python as `\aj...`,
+            # and `\a` is the BEL escape: that string names no file at all.
+            "exec(open('src\\\\\\\\aj_crew\\\\\\\\cli.py').read())",
             "import runpy; runpy.run_path(r'src\\aj_crew\\__main__.py')",
             "exec(open(r'src\\aj_crew\\dashboard\\token_auth.py').read())",
         ],
@@ -533,7 +537,7 @@ class TestTheFoldIsClosedOverConstantExpressions:
         and only the call is unclosed: a piece whose own quote is missing is not a
         string token to either fold, which is the tokenizer's limit, not a choice.
         """
-        truncated = "exec(b64decode('a2lyb2Ny' 'ZXcgdG9rZW4='"
+        truncated = "exec(b64decode('YWpjcmV3' 'IHRva2Vu'"
         assert ast_parse_fails(truncated)
         assert inline_payload._fold_inline_literals(truncated).count(_ENCODED_MINT[:-1]) == 1
 

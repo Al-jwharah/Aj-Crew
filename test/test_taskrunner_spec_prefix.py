@@ -29,7 +29,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from conftest import requires_symlinks
 from aj_crew import hooks
 from aj_crew.hooks import FileTooLargeError
 from aj_crew.taskrunner import (
@@ -38,6 +37,7 @@ from aj_crew.taskrunner import (
     _read_spec_prefix,
     _read_spec_text,
 )
+from conftest import requires_symlinks
 
 # A wait on state that MUST arrive but whose latency the host owns (a thread hop,
 # an fsync). It returns as soon as the state is observed.

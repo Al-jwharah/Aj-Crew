@@ -14,14 +14,13 @@ from pathlib import Path
 
 import pytest
 
-from conftest import requires_symlinks
-
 # ``main`` imports the mirrored facade lazily. Imported here, before any test
 # patches ``config_dir`` or ``sel``, so its owners bind the real objects: a
 # first import under those patches composes a family that disagrees with itself.
 from aj_crew import cli_commands  # noqa: F401
 from aj_crew import platform_compat
 from aj_crew.cli import main
+from conftest import requires_symlinks
 
 
 @pytest.fixture(autouse=True)

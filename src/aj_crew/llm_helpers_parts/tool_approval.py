@@ -472,7 +472,7 @@ async def _resolve_permission(
         )
         else None
     )
-    # A Aj Crew MCP tool listed in ``platform.tool_paths.
+    # An Aj Crew MCP tool listed in ``platform.tool_paths.
     # MCP_DOCUMENT_BODY_FIELDS`` (``knowledge_add_document``'s ``content``, a
     # spawn brief, a cron prompt, a message for a person, ...)
     # stores that field as document text, so the field skips the command-text

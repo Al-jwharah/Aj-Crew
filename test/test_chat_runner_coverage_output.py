@@ -367,9 +367,7 @@ class TestConnectionsManagedNames:
 
     def test_intersection_of_managed_and_carded(self):
         with (
-            patch.object(
-                chat_runner, "ajcrew_managed_names", return_value={"github", "handmade"}
-            ),
+            patch.object(chat_runner, "ajcrew_managed_names", return_value={"github", "handmade"}),
             patch.object(
                 chat_runner,
                 "get_visible_providers",

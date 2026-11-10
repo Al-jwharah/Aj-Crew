@@ -26,11 +26,11 @@ from urllib.parse import parse_qs, urlsplit
 import pytest
 import yaml
 
-from conftest import make_dir_link, requires_symlinks
 from aj_crew import agent_scratch, beacon, diagnostics, release_channel
 from aj_crew.dashboard import crash_dump_store
 from aj_crew.dashboard.handlers import diagnostics as dh
 from aj_crew.diagnostics import BundleResult
+from conftest import make_dir_link, requires_symlinks
 
 _GATEWAY = (
     "09:00 boot ok\n"

@@ -314,9 +314,7 @@ def main() -> None:
     args = parser.parse_args()
     if not args.model_path.is_file():
         parser.error("An existing local GGUF model is required; downloads are disabled")
-    previous = {
-        key: os.environ.get(key) for key in ("AJCREW_HOME", "AJCREW_SKIP_MODEL_DOWNLOAD")
-    }
+    previous = {key: os.environ.get(key) for key in ("AJCREW_HOME", "AJCREW_SKIP_MODEL_DOWNLOAD")}
     try:
         with tempfile.TemporaryDirectory(prefix="member-v2-hybrid-") as temporary:
             os.environ["AJCREW_HOME"] = temporary

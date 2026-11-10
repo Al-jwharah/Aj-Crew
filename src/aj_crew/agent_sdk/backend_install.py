@@ -87,7 +87,7 @@ COMPONENT_KIRO_CLI = ACP_BACKEND_PROCESS_NAMES[ACP_BACKEND_KIRO]
 #: Spelled here because this package may not import ``aj_crew.acp``; a test pins
 #: it to ``acp.kas_transport``'s flag and engine constants.
 COMPONENT_KAS_ENGINE = f"{COMPONENT_KIRO_CLI} acp --agent-engine v3"
-#: What the KAS row is missing on the BUNDLE route (``agent.kas_bundle`` on): Kiro
+#: What the KAS row is missing on the BUNDLE route (``agent.kas_bundle`` on): Aj
 #: Crew's own installed engine, laid down by ``ajcrew kas install`` or the
 #: Settings card's Install button -- never kiro-cli, which that route does not run.
 COMPONENT_KAS_BUNDLE = "KAS engine bundle"

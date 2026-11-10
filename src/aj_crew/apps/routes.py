@@ -193,8 +193,8 @@ from aj_crew.apps.update_notify import (
 from aj_crew.apps.update_status import attach_update, attach_updates
 from aj_crew.apps.version import check_min_version as _check_min_version_str
 from aj_crew.config.loader import (
-    ConfigReadError,
     AjCrewConfig,
+    ConfigReadError,
     config_path,
     update_config_locked,
 )

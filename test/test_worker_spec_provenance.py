@@ -1,4 +1,4 @@
-"""The derivation refuses to overwrite a ``ajcrew-worker.json`` it did not write.
+"""The derivation refuses to overwrite an ``ajcrew-worker.json`` it did not write.
 
 The mirror path is a NAME, and a name can be claimed. A crew shared through the
 Fargate runtime installs its own spec into ``~/.kiro/agents``, and the crew the first

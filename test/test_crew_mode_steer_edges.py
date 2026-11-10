@@ -363,9 +363,7 @@ async def test_K8_a_requeued_steer_is_left_to_its_hold_on_both_routes(monkeypatc
 
     monkeypatch.setattr(crew_workers, "person_steer", boom)
     monkeypatch.setattr(chat_delivery, "steer_into_running_turn", requeued)
-    monkeypatch.setattr(
-        "aj_crew.dashboard.session_control.containment_meta", lambda *_a, **_k: {}
-    )
+    monkeypatch.setattr("aj_crew.dashboard.session_control.containment_meta", lambda *_a, **_k: {})
 
     # The worker's own composer: the receipt says queued, with no queue_id. The
     # requeued entry is already gone (drained), and an older one has the same text.

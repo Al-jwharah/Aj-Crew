@@ -1,5 +1,5 @@
 // Helpers for Remote Tunnel mode: build the command executed on the remote
-// dev desktop over SSH to fetch a AjCrew dashboard token.
+// dev desktop over SSH to fetch an AjCrew dashboard token.
 //
 // Split out from main.js so the shell-construction logic can be unit-tested
 // without spinning up Electron.
@@ -98,7 +98,7 @@ function describeSshFailure(error, stderr, { sshBin, remoteHost, timeoutMs }) {
   return detail || error.message;
 }
 
-// Extract the JWT from a `ajcrew token` URL. The command prints:
+// Extract the JWT from an `ajcrew token` URL. The command prints:
 //   http://localhost:5476?token=eyJ...
 // or in some configurations `https://.../?token=...&foo=bar` — match either.
 function parseTokenFromStdout(stdout) {

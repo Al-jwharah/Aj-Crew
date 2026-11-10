@@ -253,9 +253,7 @@ async def _run_script_callback_behind_a_busy_worker(gw, job, script_result, hold
     with (
         patch.object(ex, "_MAX_CRON_WORKERS", 1),
         patch("aj_crew.slack.gateway.CronService") as mock_cron_cls,
-        patch(
-            "aj_crew.slack.gateway.run_script_sandboxed", return_value=script_result
-        ) as mock_run,
+        patch("aj_crew.slack.gateway.run_script_sandboxed", return_value=script_result) as mock_run,
         patch("aj_crew.slack.gateway.vet_job_at_fire_time", side_effect=_vet),
         patch("aj_crew.slack.gateway.sel"),
     ):

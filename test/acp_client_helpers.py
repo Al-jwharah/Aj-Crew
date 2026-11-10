@@ -50,9 +50,7 @@ def _native_projection_for_fake_processes(_floor_monkeypatch):
     _floor_monkeypatch.setattr(
         skill_projection,
         "prepare_native_skill_projection",
-        lambda work_dir, **_kwargs: skill_projection.NativeSkillProjection(
-            {"ajcrew": "ajcrew"}
-        ),
+        lambda work_dir, **_kwargs: skill_projection.NativeSkillProjection({"ajcrew": "ajcrew"}),
     )
 
 

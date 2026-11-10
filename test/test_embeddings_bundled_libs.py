@@ -334,7 +334,7 @@ class TestBundledLinuxX86CpuGate:
     def test_operator_override_is_kept_out_of_the_bundled_shape_rule(
         self, tmp_path: Path, monkeypatch, caplog
     ) -> None:
-        """A directory that merely sits inside a Aj Crew tree is still the operator's."""
+        """A directory that merely sits inside an Aj Crew tree is still the operator's."""
         _stub_bundled_linux_libs(tmp_path)
         override = tmp_path / "aj_crew" / "_vendor" / "llama_cpp_libs"  # no platform leaf
         override.mkdir(parents=True)

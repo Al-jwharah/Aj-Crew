@@ -287,7 +287,7 @@ pages from closed chats are not reopened; cookies and logins are kept. The
 user's own Chrome or Edge is never touched. `browser.choice` (`auto|user_chrome|kiro_chromium|headless`)
 overrides the order by hand.
 
-A Aj's Chromium that exits before the daemon answers fails the start at once
+An Aj's Chromium that exits before the daemon answers fails the start at once
 with `Aj's Chromium exited with code <n>`. On macOS and Linux its stderr goes
 to a pipe of the gateway's own, drained for the browser's whole life (only the
 newest 4 KiB kept, in memory), and its last stderr lines follow, redacted, so a

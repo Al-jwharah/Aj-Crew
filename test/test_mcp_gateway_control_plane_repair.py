@@ -389,16 +389,14 @@ def test_every_reserved_name_is_repaired_not_only_the_control_plane(
         lambda name, **_kw: {"command": "/opt/crew/bin/ajcrew", "args": [name]},
     )
     for name in AJCREW_BIN_MCP_SERVERS:
-        out = rewriter._repair_control_plane_entry(
-            name, {"command": "ajcrew", "args": [name]}, "a"
-        )
+        out = rewriter._repair_control_plane_entry(name, {"command": "ajcrew", "args": [name]}, "a")
         assert out["command"] == "/opt/crew/bin/ajcrew", name
 
 
 def test_the_fingerprint_sees_the_managed_launch_so_an_upgrade_regenerates_overlays(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """A ajcrew upgrade moves the managed binary while every spec file stays
+    """An ajcrew upgrade moves the managed binary while every spec file stays
     byte-identical. The kept-overlay path must not keep serving a stub that
     hashes last version's path, so the launch is a fingerprint input."""
     source = tmp_path / "agents"

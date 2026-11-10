@@ -13,6 +13,15 @@ Builds use plain `pip` + `npm`/Vite + `pytest`, driven by the repo-root
 > signal, file-lock and metrics calls route through `aj_crew.platform_compat`.
 > See [windows-install.md](windows-install.md) for the Windows walkthrough.
 
+> **What works in this repository today.** Aj Crew is a fork of Kiro Crew and
+> does not publish releases of its own yet: there is no release host, no
+> package index, no prebuilt desktop app and no container image. The two paths
+> that work are **[from source](#b-from-source-development)** and a
+> **[locally built Docker image](docker.md)**. Sections a, c ("published
+> wheel") and d describe the release layout the build produces, and apply once
+> you host a release feed. Wherever a command below shows
+> `<your-release-host>`, that is the base URL of the feed you publish.
+
 ---
 
 - [Prerequisites](#prerequisites)
@@ -126,8 +135,9 @@ failure.
 
 ### Which path on Linux
 
-**Start with the one-line install below.** It is the smoothest Linux path and
-the one that needs the fewest decisions: it puts `ajcrew` on your `PATH` at a
+**Install from source (b) until a release feed exists.** Once one does, the
+one-line install below is the smoothest Linux path and the one that needs the
+fewest decisions: it puts `ajcrew` on your `PATH` at a
 stable location, which is what makes `ajcrew service install` — and therefore
 the [AppArmor profile](#linux-the-agent-sandbox-and-unprivileged-user-namespaces)
 the agent sandbox needs on Ubuntu 23.10+ — reachable in the first place. You
@@ -159,11 +169,12 @@ that path binding. Prefer a package where you can.
 
 ### a. One-line install (fastest)
 
-Installs a prebuilt, sha256-verified wheel from the release CDN. No clone, no
-npm, no local build:
+Installs a prebuilt, sha256-verified wheel from a release feed. No npm, no
+local build. The installer has no built-in host, so name yours with `--cdn`
+(or `AJCREW_CDN_BASE`); without one it stops and points at the source install:
 
 ```bash
-curl -fsSL https://download.crew.kiro.dev/cli.sh | sh
+sh cli.sh --cdn https://<your-release-host>
 ```
 
 Once the wheel is in, the installer runs the new `ajcrew kas install` to
@@ -173,14 +184,14 @@ access to the CDN, the install still succeeds and the installer prints the
 command to retry. Pass `--no-kas` (or set `AJCREW_INSTALL_KAS=0`) to skip it:
 
 ```bash
-curl -fsSL https://download.crew.kiro.dev/cli.sh | sh -s -- --no-kas
+sh cli.sh --cdn https://<your-release-host> --no-kas
 ```
 
 `stable` is the default channel. Track a faster one, or pin an exact version:
 
 ```bash
-curl -fsSL https://download.crew.kiro.dev/cli.sh | sh -s -- --channel insider
-curl -fsSL https://download.crew.kiro.dev/cli.sh | sh -s -- --version 0.6.0
+sh cli.sh --cdn https://<your-release-host> --channel insider
+sh cli.sh --cdn https://<your-release-host> --version 0.6.0
 ```
 
 `stable` suits everyone, `insider` is for power users who want features days to
@@ -232,7 +243,7 @@ rebuilds the fixed `crew-venv` in place (and a pipx install reinstalls into its
 own venv), so a gateway that is running during the re-run keeps the old version
 loaded while it reads the new files. The installer never restarts it: when it
 finds one running (an active `ajcrew` systemd unit, the
-`dev.ajcrew.gateway` launchd agent, or a `ajcrew gateway` process holding
+`dev.ajcrew.gateway` launchd agent, or an `ajcrew gateway` process holding
 the data home's `gateway.lock`), it ends with a warning that names the restart
 command for that setup, such as `systemctl --user restart ajcrew`. Run it
 straight away. On a host that restricts unprivileged user
@@ -367,7 +378,7 @@ venv puts its executables in `.venv\Scripts\`, and the macOS-only
 3. **stage**: `.venv/bin/python -m aj_crew.frontend stage .` makes
    `website/dist` the served `src/aj_crew/static/dist`: a link to
    `website/dist`, or for an edition a link to a fresh private copy. It waits at
-   most 30 s for the staging lock a Aj Crew build holds. `make wheel` stages
+   most 30 s for the staging lock an Aj Crew build holds. `make wheel` stages
    the same way; `make backend-bin` does not, since its bundle copies
    `website/dist` itself, so it needs no Python for this. `make frontend` alone
    does not stage either: a checkout whose `static/dist` is still a real
@@ -406,7 +417,7 @@ The equivalent by hand:
 
 ```bash
 git clone https://github.com/Al-jwharah/Aj-Crew.git
-cd AjCrew
+cd Aj-Crew
 cd website && npm install && npm run build && cd ..
 pip install -e ".[dev]"      # contributor tooling, matching `make backend`
 ```
@@ -444,17 +455,17 @@ are published, and they serve different needs:
 #    stable line needs no --pre. Every insider and nightly version does carry
 #    one, so those channels need it — and --pre then applies to every package
 #    pip resolves, third-party dependencies included:
-#      pip install --pre ajcrew --extra-index-url https://updates.crew.kiro.dev/feed/insider/simple/
+#      pip install --pre ajcrew --extra-index-url https://<your-release-host>/feed/insider/simple/
 #    NOTE: --extra-index-url ADDS the channel index beside default PyPI, so pip
 #    pools `ajcrew` candidates across both and a higher-versioned public-PyPI
 #    package of the name would win. Prefer form 2 (or verify the installed
 #    artifact) where that exposure matters.
-pip install ajcrew --extra-index-url https://updates.crew.kiro.dev/feed/stable/simple/
+pip install ajcrew --extra-index-url https://<your-release-host>/feed/stable/simple/
 
 # 2. Pin one exact wheel by hash. Every version directory publishes a SHA256SUMS
 #    file beside the wheel; take your wheel's hash from there. pip verifies it and
 #    consults no index for Aj Crew itself — so there is no name to squat.
-pip install "https://download.crew.kiro.dev/cli/stable/<version>/ajcrew-<version>-py3-none-any.whl#sha256=<sha256>"
+pip install "https://<your-release-host>/cli/stable/<version>/ajcrew-<version>-py3-none-any.whl#sha256=<sha256>"
 ```
 
 Create the venv and run either form under `umask 022`. Under umask `002`,
@@ -463,12 +474,10 @@ install` then refuses to attach the
 [AppArmor profile](#linux-the-agent-sandbox-and-unprivileged-user-namespaces);
 `chmod -R g-w <venv>` repairs an existing install.
 
-Swap `stable` for `insider` or `nightly` in either URL. The two names split by
-class as a convention — `updates.crew.kiro.dev` for mutable pointers and indexes,
-`download.crew.kiro.dev` for the bytes — and today both alias the same
-distribution, which is why `AJCREW_CDN_BASE` (or `cli.sh --cdn`) overrides both
-at once. Use the documented name for each class rather than relying on the
-aliasing.
+Swap `stable` for `insider` or `nightly` in either URL. A feed has two classes
+of content, mutable pointers and indexes on one side and the immutable bytes on
+the other, and one host can serve both: `AJCREW_CDN_BASE` (or `cli.sh --cdn`)
+sets the base for both at once.
 
 Form 2 pins a byte-exact artifact and consults no index for the `ajcrew` name,
 so it is the one to use where a public-PyPI squat of the name is a concern, or
@@ -538,7 +547,7 @@ under Rosetta 2, so a universal build needs an Apple-Silicon host;
 `UNIVERSAL=0` forces a faster host-arch-only build. Linux is always host-arch,
 and the three Linux formats come from one backend tree packaged three times.
 
-The published, signed apps ([prebuilt downloads](../../README.md#app-downloads))
+The published, signed apps ([release channels](../../README.md#release-channels))
 update themselves, and the gateway bundled inside them, through the
 app's own updater. By default a new release downloads in the background and
 installs the next time you quit the app (by default closing the window only hides
@@ -604,8 +613,9 @@ Ubuntu 22.04+, Debian 12+, Fedora, CentOS Stream 9 and Amazon Linux 2023, and
 excludes Ubuntu 20.04, Debian 11 and Amazon Linux 2 — on those, use the
 [one-line install](#a-one-line-install-fastest) instead.
 
-Prebuilt downloads for the release channels are linked from the
-[README](../../README.md#app-downloads). The Windows NSIS installer is
+This fork publishes no prebuilt downloads yet; the
+[README](../../README.md#release-channels) describes the channels a feed
+carries. In the release layout, the Windows NSIS installer is
 published on nightly, insider, and stable when its build succeeds, is
 Authenticode-signed, and participates in auto-update; SmartScreen can still show
 a first-download reputation warning for a new file hash. See
@@ -618,8 +628,8 @@ locates and launches the bundled backend.
 
 ### e. Docker
 
-For always-on servers the gateway also ships as a public multi-arch image on
-GHCR. See [docker.md](docker.md).
+For always-on servers the gateway also runs as a container. No image is
+published yet, so build it locally. See [docker.md](docker.md).
 
 ## Build targets
 
@@ -944,7 +954,7 @@ The line is written only when the loaded policy says the unit still starts with
 it: PID 1 may switch into that context, and the context may start the ajcrew
 binary (and the interpreter its shebang names). Otherwise it is left out and the
 unit runs exactly as before (the reason is logged at INFO). On
-AL2023's targeted policy, for example, a ajcrew under
+AL2023's targeted policy, for example, an ajcrew under
 `/usr/local/bin` (`bin_t`) gets the line, while one under `~/.local/bin`
 (`home_bin_t`) does not and keeps the `system_u` caches; the per-user unit above
 avoids them there. The line is also left out when SELinux is off, when the
@@ -1439,7 +1449,7 @@ shortcuts but does not touch `~/.kiro/crew`.
 
 ```bash
 docker stop ajcrew && docker rm ajcrew   # graceful stop, then remove
-docker rmi ghcr.io/kirodotdev/kirocrew:stable # remove the image (match the tag you pulled)
+docker rmi ghcr.io/al-jwharah/ajcrew:stable # remove the image (match the tag you pulled)
 ```
 
 `docker stop` sends SIGTERM and gives the gateway time to run its shutdown
@@ -1535,8 +1545,9 @@ rm -rf ~/.kiro/crew-python ~/.kiro/crew-auth-staging
 cp -a "${KIRO_HOME:-$HOME/.kiro}/mates" ~/ajcrew-backup-mates \
   && rm -rf "${KIRO_HOME:-$HOME/.kiro}/mates"
 
-# 4. Reinstall
-curl -fsSL https://download.crew.kiro.dev/cli.sh | sh
+# 4. Reinstall (from the source checkout; with a release feed,
+#    `sh cli.sh --cdn https://<your-release-host>` instead)
+bash install.sh
 
 # 5. Run first-time setup
 ajcrew setup

@@ -20,8 +20,8 @@ import pytest
 from agent_helpers import _pinned_kiro_cli_version  # noqa: F401
 from windows_sim import replace_sharing_violation
 
-from conftest import requires_symlinks
 from aj_crew import atomic_write as aw
+from conftest import requires_symlinks
 
 
 @pytest.fixture
@@ -375,7 +375,7 @@ class TestResolveAjcrewBin:
         mock_mc = unittest.mock.MagicMock()
         mock_mc.__file__ = str(pkg_dir / "__init__.py")
 
-        # Keep the real validator but confine it to this tmp tree, so a
+        # Keep the real validator but confine it to this tmp tree, so an
         # ``ajcrew`` that happens to exist on the host cannot be selected.
         _real_works = agent_mod._launcher_works
 

@@ -527,7 +527,7 @@ async def api_portability_export(request: web.Request) -> web.StreamResponse:
 
 
 async def api_portability_import(request: web.Request) -> web.Response:
-    """POST /api/portability/import — upload and apply a Aj Crew export zip.
+    """POST /api/portability/import — upload and apply an Aj Crew export zip.
 
     Owner-only, like the export: an import rewrites the install's memory -- every named
     store's included -- and its config. Merge (the default) never overwrites a settings

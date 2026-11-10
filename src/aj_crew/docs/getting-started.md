@@ -28,25 +28,28 @@ keyword search and picks up semantic search automatically with no restart.
 
 ## Installation
 
-### Prebuilt wheel from the release CDN (fastest)
+### Prebuilt wheel from a release feed
+
+Aj Crew does not publish releases of its own yet, so there is no default
+release host and `pip install ajcrew` does **not** work: the name is not on
+PyPI. Install from a source checkout (next section). If you host a release feed
+yourself, the installer in the repository installs a signed, sha256-verified
+wheel from it:
 
 ```bash
-curl -fsSL https://download.crew.kiro.dev/cli.sh | sh
+sh cli.sh --cdn https://<your-release-host>
 ```
 
-This installs a signed, sha256-verified `ajcrew` wheel. `stable` is the
-default channel; pass `--channel insider` or `--channel nightly` to track a
-faster one, or `--version X.Y.Z` to pin an exact release. The installer uses
-`pipx` when available, otherwise it creates a managed venv and symlinks
-`ajcrew` into `~/.local/bin`.
-
-`pip install ajcrew` alone does **not** work: Aj Crew is not published to
-PyPI. To install with pip directly, point it at a release channel's index:
+`stable` is the default channel; pass `--channel insider` or `--channel
+nightly` to track a faster one, or `--version X.Y.Z` to pin an exact release.
+The installer uses `pipx` when available, otherwise it creates a managed venv
+and symlinks `ajcrew` into `~/.local/bin`. To install with pip directly, point
+it at the channel's index:
 
 ```bash
 umask 022
 pip install ajcrew \
-  --extra-index-url https://updates.crew.kiro.dev/feed/stable/simple/
+  --extra-index-url https://<your-release-host>/feed/stable/simple/
 ```
 
 Stable versions carry no prerelease suffix, so this needs no `--pre`. The
@@ -68,7 +71,7 @@ AppArmor profile the agent sandbox needs on hosts that restrict user namespaces.
 ```bash
 umask 022                       # see the umask note above
 git clone https://github.com/Al-jwharah/Aj-Crew.git
-cd AjCrew
+cd Aj-Crew
 cd website && npm install && npm run build && cd ..
 pip install -e ".[voice]"       # [voice] adds the optional speech-to-text extras
 ```

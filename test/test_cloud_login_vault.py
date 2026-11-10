@@ -537,7 +537,7 @@ def test_a_kiro_cli_logout_still_ends_zero_and_reprobes(box, monkeypatch):
 # A box with NO sign-in program: kiro-cli absent and the route probe not kas-bundle.
 # ---------------------------------------------------------------------------
 
-#: A ``ajcrew`` whose ``kas route`` fails the way the real verb does on an
+#: An ``ajcrew`` whose ``kas route`` fails the way the real verb does on an
 #: unreadable config: a plain message on stderr and exit 1.
 _STUB_AJCREW_ROUTE_FAILS = _STUB_AJCREW.replace(
     _STUB_ROUTE_LINE,
@@ -547,7 +547,7 @@ _STUB_AJCREW_ROUTE_FAILS = _STUB_AJCREW.replace(
 )
 assert _STUB_AJCREW_ROUTE_FAILS != _STUB_AJCREW
 
-#: A Aj Crew too old to have the verb: argparse's exit 2, not the unknown exit.
+#: An Aj Crew too old to have the verb: argparse's exit 2, not the unknown exit.
 _STUB_AJCREW_NO_VERB = _STUB_AJCREW.replace(
     _STUB_ROUTE_LINE,
     "  route) echo \"ajcrew kas: error: argument kas_action: invalid choice: 'route'\" >&2; exit 2;;",

@@ -21,8 +21,8 @@ from aj_crew.dashboard.chat_utils import _broadcast_expired_oauth_banners
 
 if TYPE_CHECKING:
     from aj_crew.dashboard.chat_runner import (
-        DashboardState,
         AjCrewConfig,
+        DashboardState,
         _ChatSlot,
         logger,
         subagents_attached_async,

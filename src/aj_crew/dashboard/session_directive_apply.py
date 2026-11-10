@@ -478,9 +478,7 @@ if TYPE_CHECKING:  # names it serves from outside the family, from their homes
     from aj_crew.directive_origin import (  # noqa: F401
         USER_ORIGIN_DIRECTIVES as _USER_ORIGIN_DIRECTIVES,
     )
-    from aj_crew.directive_origin import (  # noqa: F401
-        has_user_surface as _shared_has_user_surface,
-    )
+    from aj_crew.directive_origin import has_user_surface as _shared_has_user_surface  # noqa: F401
     from aj_crew.messaging.link import (  # noqa: F401
         is_channel_session_key,
     )

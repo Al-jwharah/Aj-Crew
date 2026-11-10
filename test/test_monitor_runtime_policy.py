@@ -366,9 +366,7 @@ async def test_resume_without_a_budget_is_not_rechecked_but_a_supplied_one_is(
             "aj_crew.dashboard.handlers.autonudge._require_monitor_owner",
             AsyncMock(return_value=None),
         )
-        monkeypatch.setattr(
-            "aj_crew.dashboard.handlers.autonudge._autonudge_get", lambda: service
-        )
+        monkeypatch.setattr("aj_crew.dashboard.handlers.autonudge._autonudge_get", lambda: service)
         monkeypatch.setattr("aj_crew.autonudge_authz.sel", MagicMock())
 
         def _request(body):
@@ -457,9 +455,7 @@ async def test_monitor_slot_read_advertises_the_live_operator_ceiling(monkeypatc
 
     from aj_crew.dashboard.handlers.autonudge import api_monitor_slot_get
 
-    monkeypatch.setattr(
-        "aj_crew.dashboard.handlers.autonudge.runtime_ceiling_secs", lambda: MONTH
-    )
+    monkeypatch.setattr("aj_crew.dashboard.handlers.autonudge.runtime_ceiling_secs", lambda: MONTH)
     monkeypatch.setattr(
         "aj_crew.dashboard.handlers.autonudge._require_monitor_owner",
         AsyncMock(return_value=None),

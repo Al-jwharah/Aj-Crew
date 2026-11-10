@@ -19,7 +19,7 @@ AjCrew's configuration (`~/.ajcrew/config.json`) is defined implicitly by Python
 
 ### Requirement 1: Field Metadata on Dataclasses
 
-**User Story:** As a AjCrew developer, I want each dataclass config field to carry structured metadata, so that schema information has a single source of truth in Python.
+**User Story:** As an AjCrew developer, I want each dataclass config field to carry structured metadata, so that schema information has a single source of truth in Python.
 
 #### Acceptance Criteria
 
@@ -31,7 +31,7 @@ AjCrew's configuration (`~/.ajcrew/config.json`) is defined implicitly by Python
 
 ### Requirement 2: Eliminate Ad-Hoc Keys
 
-**User Story:** As a AjCrew developer, I want all config keys to live inside the dataclass hierarchy, so that the dataclasses are the complete source of truth and no ad-hoc parsing exists.
+**User Story:** As an AjCrew developer, I want all config keys to live inside the dataclass hierarchy, so that the dataclasses are the complete source of truth and no ad-hoc parsing exists.
 
 #### Acceptance Criteria
 
@@ -44,7 +44,7 @@ AjCrew's configuration (`~/.ajcrew/config.json`) is defined implicitly by Python
 
 ### Requirement 3: Schema Registry Construction
 
-**User Story:** As a AjCrew developer, I want a single in-memory registry of all config entries, so that the API endpoint and the baseline generator share one canonical representation.
+**User Story:** As an AjCrew developer, I want a single in-memory registry of all config entries, so that the API endpoint and the baseline generator share one canonical representation.
 
 #### Acceptance Criteria
 
@@ -55,7 +55,7 @@ AjCrew's configuration (`~/.ajcrew/config.json`) is defined implicitly by Python
 
 ### Requirement 4: Baseline Generator Script
 
-**User Story:** As a AjCrew developer, I want a build-time script that emits `config-baseline.json`, so that the schema is available for offline tooling and documentation.
+**User Story:** As an AjCrew developer, I want a build-time script that emits `config-baseline.json`, so that the schema is available for offline tooling and documentation.
 
 #### Acceptance Criteria
 
@@ -78,7 +78,7 @@ AjCrew's configuration (`~/.ajcrew/config.json`) is defined implicitly by Python
 
 ### Requirement 6: Runtime Validation in Config Loader
 
-**User Story:** As a AjCrew user, I want config loading to validate my `config.json` against the schema and warn about problems, so that I can fix typos and type errors without AjCrew crashing.
+**User Story:** As an AjCrew user, I want config loading to validate my `config.json` against the schema and warn about problems, so that I can fix typos and type errors without AjCrew crashing.
 
 #### Acceptance Criteria
 
@@ -91,7 +91,7 @@ AjCrew's configuration (`~/.ajcrew/config.json`) is defined implicitly by Python
 
 ### Requirement 7: Sensitive Field Handling
 
-**User Story:** As a AjCrew user, I want sensitive config values to be masked in logs and API responses, so that credentials are not accidentally exposed.
+**User Story:** As an AjCrew user, I want sensitive config values to be masked in logs and API responses, so that credentials are not accidentally exposed.
 
 #### Acceptance Criteria
 
@@ -100,7 +100,7 @@ AjCrew's configuration (`~/.ajcrew/config.json`) is defined implicitly by Python
 
 ### Requirement 8: Deprecated Field Handling
 
-**User Story:** As a AjCrew developer, I want deprecated config fields to produce clear warnings, so that users migrate to replacement fields before removal.
+**User Story:** As an AjCrew developer, I want deprecated config fields to produce clear warnings, so that users migrate to replacement fields before removal.
 
 #### Acceptance Criteria
 
@@ -109,7 +109,7 @@ AjCrew's configuration (`~/.ajcrew/config.json`) is defined implicitly by Python
 
 ### Requirement 9: Documented Config Structure
 
-**User Story:** As a AjCrew user, I want a clear, well-organized config.json structure, so that I can understand and edit my configuration without guessing at key names or nesting.
+**User Story:** As an AjCrew user, I want a clear, well-organized config.json structure, so that I can understand and edit my configuration without guessing at key names or nesting.
 
 #### Acceptance Criteria
 

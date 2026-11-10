@@ -224,9 +224,7 @@ def test_a_default_whose_spec_was_removed_runs_the_managed_template(
         "aj_crew.config.loader_snapshots._removal_evidence",
         lambda: (frozenset({"ajcrew"}), frozenset({"gone"}), True),
     )
-    monkeypatch.setattr(
-        "aj_crew.config.loader_snapshots._edition_agent_names", lambda: frozenset()
-    )
+    monkeypatch.setattr("aj_crew.config.loader_snapshots._edition_agent_names", lambda: frozenset())
     prime_live("agent", default_agent="gone")
     d = case.make_dispatcher()
     d.cfg.agent.default_agent = "gone"

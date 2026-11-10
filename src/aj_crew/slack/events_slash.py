@@ -827,9 +827,7 @@ async def _handle_slash(orch: GatewayOrchestrator, payload: dict) -> None:
     user_match = re.search(r"<@([A-Z0-9]+)(?:\|([^>]+))?>", cmd_text)
     if user_match:
         _spawn(
-            _respond(
-                "⛔ Multi-user access is disabled. Only the owner can use Aj Crew via Slack."
-            )
+            _respond("⛔ Multi-user access is disabled. Only the owner can use Aj Crew via Slack.")
         )
         return
 

@@ -14,10 +14,10 @@ from pathlib import Path
 
 import pytest
 
-from conftest import requires_symlinks
 from aj_crew import platform_compat
 from aj_crew.config import loader
 from aj_crew.config.loader import WorkspaceDirUnusable, materialize_workspace_dir
+from conftest import requires_symlinks
 
 
 def _by_name(monkeypatch: pytest.MonkeyPatch) -> None:

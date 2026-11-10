@@ -16,9 +16,9 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from aj_crew.slack.gateway import (
         AdaptiveController,
+        AjCrewConfig,
         Any,
         GatewayOrchestrator,
-        AjCrewConfig,
         logger,
     )
 
@@ -85,9 +85,7 @@ def _register_child_liveness(self: GatewayOrchestrator) -> None:
     crew_log_emit.set_child_liveness(_child_still_running)
 
 
-def _start_adaptive_controller(
-    self: GatewayOrchestrator, cfg: AjCrewConfig | None = None
-) -> None:
+def _start_adaptive_controller(self: GatewayOrchestrator, cfg: AjCrewConfig | None = None) -> None:
     """Run the adaptive concurrency controller beside the subagent manager.
 
     It bounds the manager's live cap beneath the user's ceiling and moves

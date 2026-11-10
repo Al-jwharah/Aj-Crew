@@ -26,8 +26,8 @@ from collections.abc import Iterator
 import pytest
 
 import xdist_budget as ct
-from conftest import absent_sysconf
 from aj_crew.testing.wait import default_timeout
+from conftest import absent_sysconf
 
 needs_symlinks = pytest.mark.skipif(
     os.name != "posix", reason="symlink creation needs privileges on Windows"

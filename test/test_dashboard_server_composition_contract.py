@@ -184,7 +184,7 @@ _BASE_NAMES = frozenset("""
 #: ``_BASE_OWNERS``, captured from the one-module file before the split: each moved
 #: name keeps the kind and signature it had there, except ``_apply_startup_yolo``,
 #: which also takes the gateway's ``approval_mode``.
-_BASE_SHAPE_DIGEST = "8177a15dcf3115ecb5fbe803a7f343b86cca6a8bb28555e72ed57bbe2852b33f"
+_BASE_SHAPE_DIGEST = "e1e50326687c24dd5c58cff03e7515aa40e921d2a56e73b27306a44f1cb95bfb"
 
 #: The definitions of the one-module file that ``_BASE_OWNERS`` does not name: the two
 #: entrypoints, and the helpers repository guards read by path or that own module
@@ -661,9 +661,7 @@ def test_only_the_facade_imports_a_data_module() -> None:
 def test_the_data_module_importer_scan_sees_every_spelling() -> None:
     planted = {
         "aj_crew/dashboard/a.py": "from aj_crew.dashboard import server_internal_paths\n",
-        "aj_crew/dashboard/b.py": (
-            "import aj_crew.dashboard.server_response_headers as headers\n"
-        ),
+        "aj_crew/dashboard/b.py": ("import aj_crew.dashboard.server_response_headers as headers\n"),
         "aj_crew/dashboard/c.py": (
             "from aj_crew.dashboard.server_internal_paths import _STRICT_INTERNAL_API_PATHS\n"
         ),

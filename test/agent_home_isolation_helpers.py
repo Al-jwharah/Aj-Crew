@@ -88,8 +88,6 @@ def _spec_pinned_to(home) -> str:
     return json.dumps(
         {
             "name": "ajcrew",
-            "mcpServers": {
-                "ajcrew-core": {"command": "ajcrew", "env": {"AJCREW_HOME": str(home)}}
-            },
+            "mcpServers": {"ajcrew-core": {"command": "ajcrew", "env": {"AJCREW_HOME": str(home)}}},
         }
     )

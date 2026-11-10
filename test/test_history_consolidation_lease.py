@@ -210,9 +210,7 @@ class TestTheHeartbeatKeepsALiveHolder:
 
     @pytest.mark.asyncio
     async def test_the_heartbeat_renews_until_cancelled(self, tmp_path, monkeypatch) -> None:
-        monkeypatch.setattr(
-            "aj_crew.history_consolidation._CONSOLIDATION_LEASE_RENEW_SECS", 0.001
-        )
+        monkeypatch.setattr("aj_crew.history_consolidation._CONSOLIDATION_LEASE_RENEW_SECS", 0.001)
         log = _seed_log(tmp_path)
         c = _make_consolidator(log)
         token = c._acquire_consolidation_lease(KEY)
@@ -252,9 +250,7 @@ class TestTheHeartbeatKeepsALiveHolder:
         self, tmp_path, monkeypatch, caplog
     ) -> None:
         """A lost lease stops renewal rather than spinning."""
-        monkeypatch.setattr(
-            "aj_crew.history_consolidation._CONSOLIDATION_LEASE_RENEW_SECS", 0.001
-        )
+        monkeypatch.setattr("aj_crew.history_consolidation._CONSOLIDATION_LEASE_RENEW_SECS", 0.001)
         log = _seed_log(tmp_path)
         c = _make_consolidator(log)
 
@@ -272,9 +268,7 @@ class TestTheHeartbeatKeepsALiveHolder:
         self, tmp_path, monkeypatch
     ) -> None:
         """The renewal has to land during the one await the pass spends."""
-        monkeypatch.setattr(
-            "aj_crew.history_consolidation._CONSOLIDATION_LEASE_RENEW_SECS", 0.001
-        )
+        monkeypatch.setattr("aj_crew.history_consolidation._CONSOLIDATION_LEASE_RENEW_SECS", 0.001)
         log = _seed_log(tmp_path)
         c = _make_consolidator(log)
         renewed: list[str] = []

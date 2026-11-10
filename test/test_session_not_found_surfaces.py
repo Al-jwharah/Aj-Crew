@@ -349,9 +349,7 @@ def _run_cron(gw, get_cb, capture_cron, job, *, stream=None, resume=None):
 
     with (
         patch(target, side_effect=fake),
-        patch(
-            "aj_crew.slack.gateway.CronService.create", new=AsyncMock(side_effect=capture_cron)
-        ),
+        patch("aj_crew.slack.gateway.CronService.create", new=AsyncMock(side_effect=capture_cron)),
     ):
         return asyncio.run(go())
 

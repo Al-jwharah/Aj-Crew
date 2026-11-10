@@ -153,7 +153,7 @@ the sync enrols no `source == "ajcrew"` spec, no other managed spec
 generated internal spec (`is_internal_agent_spec`: a derived `<agent>--readonly`
 side-turn spec, a skill-view alias), because each is a template the runtime spawns,
 not a Bot: a row written for one would sit on the shared `default` memory store as a
-Bot nobody created, and the startup prune never removes a `ajcrew_owned` row. In
+Bot nobody created, and the startup prune never removes an `ajcrew_owned` row. In
 the catalog those shipped specs are ordinary template rows.
 Lineage is read strictly in addition to discovery's optional display enrichment:
 an unreadable lineage file cannot make a private copy appear shared. Discovery,
@@ -3349,7 +3349,7 @@ sync-shaped record the row was judged as. The pass itself:
   own agents (ajcrew-owned specs, and rows stamped `ajcrew`) are never
   removed. Both config layers are
   read: a name that `config.local.json` mentions in its own `agents` section —
-  a `ajcrew config set --local agents.<name>.…` leaf, the capability writer's
+  an `ajcrew config set --local agents.<name>.…` leaf, the capability writer's
   overlay binding — is never a candidate, whatever the leaf says, because
   deleting the base row would leave the overlay leaf as a Bot bound to
   nothing. Nor is a Bot any team lists (`crew_teams.read_teams`, the
@@ -4801,7 +4801,7 @@ a blocked step that names no tool, or a tool named with no blocked step, adds
 nothing. The conductor also learns what
 its worker can use when it hands work off: the result of its own
 `session_create` and `session_send` to a worker of the same Bot (both
-attested execution records: the caller a conductor, the target a
+attested execution records: the caller a conductor, the target an
 `ajcrew-mate-worker` record with the same `member_id`) carries
 `worker_capabilities`, the worker's MCP servers and the servers this gateway has
 loaded that it lacks and the user has not switched off (one switched off cannot be

@@ -17,8 +17,10 @@ logger = logging.getLogger("aj_crew.config.loader")
 
 # Default endpoint for the anonymous usage beacon (see aj_crew/beacon.py).
 # Lives here with the other config defaults so beacon.py adds no import edge
-# into the config package. Setting the field to "" disables the beacon outright.
-_DEFAULT_BEACON_ENDPOINT = "https://d175o3ylxqum0e.cloudfront.net"
+# into the config package. EMPTY on purpose: this build runs no collector, so
+# no heartbeat leaves the machine unless an operator names an endpoint of their
+# own. Setting the field to "" disables the beacon outright.
+_DEFAULT_BEACON_ENDPOINT = ""
 
 
 @dataclass
@@ -114,12 +116,14 @@ class TelemetryConfig:
         ),
     )
     beacon_enabled: bool = field(
-        default=True,
+        default=False,
         metadata=_meta(
             "Anonymous Usage Beacon",
-            "Anonymous daily heartbeat so maintainers can see how many "
-            "copies are actively running, which versions are in use, and "
-            "which distribution channels they came from. Sends "
+            "Anonymous daily heartbeat so whoever runs the Beacon Endpoint "
+            "below can see how many copies are actively running, which "
+            "versions are in use, and which distribution channels they came "
+            "from. Off by default, and nothing is sent while that endpoint "
+            "is empty. Sends "
             "EXACTLY five fields, at most once per day: a random installation "
             "id, app release (major.minor.patch only — build stamps are "
             "stripped), Python minor version, distribution channel, and a "

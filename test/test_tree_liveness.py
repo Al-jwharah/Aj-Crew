@@ -217,9 +217,7 @@ class TestEntryPointLiveness:
         hold = holds[0]
         ready = source.index('print(f"AJCREW_READY:')
         approval = source.index("approval_ready.set()")
-        imported = source.index(
-            "from aj_crew.platform.tree_liveness import hold_running_tree_lock"
-        )
+        imported = source.index("from aj_crew.platform.tree_liveness import hold_running_tree_lock")
         held = source.index("await asyncio.to_thread(hold_running_tree_lock)")
         signals = source.index("self._install_shutdown_signal_handlers()")
         updates = source.index("asyncio.create_task(self._run_update_checks())")

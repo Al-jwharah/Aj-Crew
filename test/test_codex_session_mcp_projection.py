@@ -175,9 +175,9 @@ class TestIdentityEnvCarriage:
 
     def test_the_channel_id_rides_along_when_there_is_one(self):
         """``mcp_cron`` reads ``AJCREW_CHANNEL_ID`` to place a cron's output."""
-        el = codex_elements(
-            [_element("ajcrew-cron")], session_key="chat-7-123", channel_id="C123"
-        )[0]
+        el = codex_elements([_element("ajcrew-cron")], session_key="chat-7-123", channel_id="C123")[
+            0
+        ]
         assert _env(el)["AJCREW_CHANNEL_ID"] == "C123"
 
     def test_a_THIRD_PARTY_server_gets_no_crew_identity(self):
@@ -194,9 +194,9 @@ class TestIdentityEnvCarriage:
         ``codex_withheld_servers`` drops them upstream; this pins that one which still
         arrives gets no key.
         """
-        el = codex_elements(
-            [_element("ajcrew-work", args=["mcp-work"])], session_key="chat-7-123"
-        )[0]
+        el = codex_elements([_element("ajcrew-work", args=["mcp-work"])], session_key="chat-7-123")[
+            0
+        ]
         assert _env(el) == {}
 
     def test_a_stale_spec_value_is_replaced_not_duplicated(self):
@@ -462,7 +462,7 @@ class TestTheSessionArraySeam:
         assert {"empty", "bogus"} <= names
 
     def test_an_identity_bound_crew_server_is_not_mounted_at_all(self, agents_dir):
-        """A ``ajcrew-work`` with no session identity answers ``not_bound``, so it is withheld.
+        """An ``ajcrew-work`` with no session identity answers ``not_bound``, so it is withheld.
 
         The control plane is re-derived, so it keeps its identity and stays.
         """

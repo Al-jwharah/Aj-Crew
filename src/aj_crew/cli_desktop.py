@@ -321,7 +321,7 @@ def _desktop_tunnel(args: argparse.Namespace) -> int:
 
 
 def desktop_cmd(args: argparse.Namespace) -> int:
-    """Dispatch a ``ajcrew desktop`` subcommand."""
+    """Dispatch an ``ajcrew desktop`` subcommand."""
     if args.desktop_cmd == "metrics":
         return _desktop_metrics(args)
     if args.desktop_cmd == "tunnel":

@@ -265,7 +265,7 @@ _PENDING_WAIT_POLL_SECS = 0.01
 def wait_for_pending_receipt_writes(timeout: float = _PENDING_WAIT_BOUND_SECS) -> None:
     """Block until every ``dispatch()`` worker thread has finished, or raise.
 
-    Test-only: call this before undoing a ``AJCREW_HOME`` monkeypatch (or
+    Test-only: call this before undoing an ``AJCREW_HOME`` monkeypatch (or
     any other per-test env override) so no receipt worker is still alive to
     resolve paths against a different value once the patch is gone. Raises
     ``RuntimeError`` if a worker is still running past ``timeout`` — a test

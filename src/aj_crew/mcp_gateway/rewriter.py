@@ -213,7 +213,7 @@ def _rewrite_inputs_fingerprint(
         "approval_mode": approval_mode,
         "stub_servers": sorted(stub_set),
         "pooling_enabled": bool(pooling_enabled),
-        # The launch a stubbed reserved name is rewritten TO (schema 9). A
+        # The launch a stubbed reserved name is rewritten TO (schema 9). An
         # ajcrew upgrade moves it while every spec file stays byte-identical;
         # ``package`` catches the version bump, this catches a same-version
         # relocation (a reinstall to another prefix, a payload moved) as well.

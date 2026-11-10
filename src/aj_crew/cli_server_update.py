@@ -551,9 +551,7 @@ def _update(force: bool = False) -> None:
     from aj_crew.agent_sdk import kas_bundle
 
     if kas_bundle.kas_bundle_route():
-        print(
-            "  ℹ️  kiro-cli update skipped: KAS runs Aj Crew's own engine bundle, not kiro-cli."
-        )
+        print("  ℹ️  kiro-cli update skipped: KAS runs Aj Crew's own engine bundle, not kiro-cli.")
         kiro_cli_bin, unpinned_kiro_cli = None, False
     else:
         kiro_cli_bin, unpinned_kiro_cli = pin_kiro_cli()
@@ -748,11 +746,19 @@ def _update_wheel(layout) -> None:
     from aj_crew import __version__ as local_version
     from aj_crew.platform import wheel_apply
     from aj_crew.platform.update_layout import (
+        NO_RELEASE_FEED_NOTE,
         non_managed_pip_update_hint,
         release_channel,
+        release_feed_configured,
         wheel_update_command,
     )
     from aj_crew.platform.wheel_engine import running_from_managed_venv, running_from_pipx
+
+    if not release_feed_configured():
+        # Nothing to check and nothing to install from: say so rather than
+        # report an unreachable feed or a malformed CDN base.
+        print(f"  ℹ️  {NO_RELEASE_FEED_NOTE}")
+        sys.exit(1)
 
     channel = release_channel()
     # The one preflight every apply route runs, in its one order: the policy

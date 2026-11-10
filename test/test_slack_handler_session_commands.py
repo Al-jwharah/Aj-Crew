@@ -8,10 +8,10 @@ import pytest
 from slack_handler_helpers import _clean_approval_state  # noqa: F401
 from slack_handler_helpers import FakeProvider, FakeSessionManager
 
-from conftest import MockSlackClient
 from aj_crew.messaging import auto_title
 from aj_crew.providers.base import LLMEvent
 from aj_crew.slack.handler import handle_message, set_allowed_users, set_owner_id
+from conftest import MockSlackClient
 
 #: These tests start background helper turns, which are skipped while the host's
 #: memory posture is critical (see ``ample_host_free_memory``).

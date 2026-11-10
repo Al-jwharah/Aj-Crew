@@ -476,9 +476,7 @@ class TestBuildSeatbeltProfile:
         assert str(workspace) in message
         assert str(runtime) in message
         assert "contains" in message
-        assert (
-            "Pick a project subdirectory that does not contain the Aj Crew data home." in message
-        )
+        assert "Pick a project subdirectory that does not contain the Aj Crew data home." in message
 
     def test_voice_guard_refusal_names_both_paths_when_workspace_is_inside_runtime(
         self, monkeypatch, tmp_path
@@ -501,9 +499,7 @@ class TestBuildSeatbeltProfile:
         assert str(workspace) in message
         assert str(runtime) in message
         assert "lives inside it" in message
-        assert (
-            "Pick a project subdirectory that does not contain the Aj Crew data home." in message
-        )
+        assert "Pick a project subdirectory that does not contain the Aj Crew data home." in message
 
     def test_voice_guard_alias_refusal_names_both_paths(self, monkeypatch, tmp_path):
         """Filesystem-identity variant: both absolute paths plus the remedy."""
@@ -534,9 +530,7 @@ class TestBuildSeatbeltProfile:
         assert str(workspace) in message
         assert str(runtime) in message
         assert "aliases" in message
-        assert (
-            "Pick a project subdirectory that does not contain the Aj Crew data home." in message
-        )
+        assert "Pick a project subdirectory that does not contain the Aj Crew data home." in message
 
     def test_voice_guard_cannot_verify_refusal_names_the_failed_stat(self, monkeypatch, tmp_path):
         """OSError variant: workspace, runtime, the failed path, and the remedy."""
@@ -569,9 +563,7 @@ class TestBuildSeatbeltProfile:
         assert "a filesystem check failed on" in message
         assert "Permission denied" in message
         assert "fails closed" in message
-        assert (
-            "Pick a project subdirectory that does not contain the Aj Crew data home." in message
-        )
+        assert "Pick a project subdirectory that does not contain the Aj Crew data home." in message
         assert isinstance(excinfo.value.__cause__, OSError)
 
     def test_voice_guard_bind_cannot_verify_refusal_names_the_failed_open(self, monkeypatch):
@@ -597,9 +589,7 @@ class TestBuildSeatbeltProfile:
         assert "/protected/voice-runtime" in message
         assert "a filesystem check failed on" in message
         assert "Permission denied" in message
-        assert (
-            "Pick a project subdirectory that does not contain the Aj Crew data home." in message
-        )
+        assert "Pick a project subdirectory that does not contain the Aj Crew data home." in message
         assert isinstance(excinfo.value.__cause__, OSError)
 
     @staticmethod
@@ -821,9 +811,7 @@ class TestBuildSeatbeltProfile:
         message = str(excinfo.value)
         assert "/mutable/workspace" in message
         assert "/protected/voice-runtime" in message
-        assert (
-            "Pick a project subdirectory that does not contain the Aj Crew data home." in message
-        )
+        assert "Pick a project subdirectory that does not contain the Aj Crew data home." in message
         assert closed == [51, 52]
 
     @pytest.mark.asyncio

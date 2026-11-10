@@ -288,9 +288,7 @@ def test_the_session_starts_on_the_slot_level() -> None:
 
 def test_a_provider_model_switch_carries_the_level_in_one_relaunch(relaunch) -> None:
     provider = _provider(override="high")
-    with patch(
-        "aj_crew.providers.acp_model_effort.switch_launch_model", new=AsyncMock()
-    ) as switch:
+    with patch("aj_crew.providers.acp_model_effort.switch_launch_model", new=AsyncMock()) as switch:
         asyncio.run(provider.set_model("anthropic/claude-b"))
     switch.assert_awaited_once_with(provider._client, "anthropic/claude-b", effort="high")
     relaunch.assert_not_awaited()
@@ -304,9 +302,7 @@ def test_a_provider_model_switch_carries_the_level_in_one_relaunch(relaunch) -> 
 
 def test_a_strands_provider_id_another_harness_also_lists_is_strands_own() -> None:
     """pi and opencode advertise ``provider/model`` ids of the same shape."""
-    with patch(
-        "aj_crew.model_scope.foreign_namespaces", return_value=frozenset({"pi"})
-    ) as foreign:
+    with patch("aj_crew.model_scope.foreign_namespaces", return_value=frozenset({"pi"})) as foreign:
         assert strands_mod.strands_model_is_foreign("anthropic/claude-b") is False
         assert strands_mod.strands_model_args("anthropic/claude-b") == [
             "--model",

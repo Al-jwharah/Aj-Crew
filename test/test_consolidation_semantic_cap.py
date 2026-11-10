@@ -346,9 +346,7 @@ async def test_the_member_store_is_handed_no_delete_of_a_key_below_the_cut(
         "ajcrew",
         "persistent",
     )
-    monkeypatch.setattr(
-        "aj_crew.execution_context.read_session_execution", lambda _key: execution
-    )
+    monkeypatch.setattr("aj_crew.execution_context.read_session_execution", lambda _key: execution)
     monkeypatch.setattr("aj_crew.memory_stores.memory_store_version", lambda _store: 2)
     monkeypatch.setattr(ContextBuilder, "ensure_store", AsyncMock(return_value=vector_store))
     c = _consolidator(vector_store)

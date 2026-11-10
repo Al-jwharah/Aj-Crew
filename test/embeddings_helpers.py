@@ -17,8 +17,8 @@ from pathlib import Path
 import pytest
 
 import aj_crew.embeddings as embeddings_mod
-from conftest import forget_env_at_teardown
 from aj_crew.embeddings import reset_download_manager, reset_shared_embedder
+from conftest import forget_env_at_teardown
 
 # Captured at import so the lru_cache can always be cleared even while a test
 # has monkeypatched the module attribute ``_load_llama_class``.

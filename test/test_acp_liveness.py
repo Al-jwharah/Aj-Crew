@@ -15,7 +15,6 @@ from pathlib import Path
 
 import pytest
 
-from conftest import requires_symlinks
 from aj_crew.acp import liveness
 from aj_crew.acp._dispatch import _dumps_degraded, _redact
 from aj_crew.acp.liveness import (
@@ -32,6 +31,7 @@ from aj_crew.acp.liveness import (
     consult_offloaded,
     match_fragment,
 )
+from conftest import requires_symlinks
 
 
 class _Clock:

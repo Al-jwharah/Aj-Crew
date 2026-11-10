@@ -31,13 +31,7 @@ from ai_review_workflows_helpers import (
 )
 
 PREPARE_PR_SKILL = (
-    ROOT
-    / "src"
-    / "aj_crew"
-    / "builtin_skills"
-    / "ajcrew-dev"
-    / "ajcrew-prepare-pr"
-    / "SKILL.md"
+    ROOT / "src" / "aj_crew" / "builtin_skills" / "ajcrew-dev" / "ajcrew-prepare-pr" / "SKILL.md"
 )
 PREPARE_PR_FINDINGS = (
     ROOT

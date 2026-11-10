@@ -8,7 +8,6 @@ from pathlib import Path
 
 import pytest
 
-from conftest import make_dir_link, requires_symlinks
 from aj_crew import platform_compat
 from aj_crew.apps.manifest import AppManifest
 from aj_crew.apps.scaffold import (
@@ -17,6 +16,7 @@ from aj_crew.apps.scaffold import (
     _write_sites,
     scaffold_app,
 )
+from conftest import make_dir_link, requires_symlinks
 
 
 class TestPlaceholderIcon:

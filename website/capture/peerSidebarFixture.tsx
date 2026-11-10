@@ -61,7 +61,7 @@ export const stripParent = (rows: PeerRow[]): PeerRow[] => rows.map(({ parent: _
 export function prepareSidebarPreferences(params: URLSearchParams): void {
   const theme = params.get('theme') || 'dark'
   localStorage.setItem('mc-theme', theme === 'light' ? 'light' : 'dark')
-  localStorage.setItem('mc-color-theme', 'kiro')
+  localStorage.setItem('mc-color-theme', 'aj')
   document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
   localStorage.setItem('mc-sidebar-lane', 'conductor')
   localStorage.setItem('mc-session-stale-collapse-ms', '0')

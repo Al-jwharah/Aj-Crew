@@ -71,7 +71,7 @@ def prompt_unread_notice(agent: str, paths: list[Path]) -> str:
 #: ``""`` and this text, which tells the model it has no tools, never reaches an
 #: agent that has them.
 _KAS_FALLBACK_PROMPT = """\
-You are a Aj Crew lightweight background worker. You are dispatched by the
+You are an Aj Crew lightweight background worker. You are dispatched by the
 system — never by a human in a chat — to perform one small, self-contained text
 task per request: naming or summarizing a conversation, classifying or tagging
 content, rephrasing a line, suggesting a short label, and similar. The specific

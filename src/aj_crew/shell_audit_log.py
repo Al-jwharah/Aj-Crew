@@ -13,7 +13,7 @@ The bound lives HERE rather than in the hook because the hook is the wrong
 place for it in both of its possible shapes. Rotating from inside the shell
 command needs a portable size check (``stat`` flags differ between the Linux
 and macOS shells the hook runs under) and a roll that is racy under concurrent
-appends; routing the hook through a ``ajcrew`` helper instead costs a Python
+appends; routing the hook through an ``ajcrew`` helper instead costs a Python
 interpreter start on every shell tool call, through an entry point the hook
 has to find on PATH. Either shape changes the shipped command, which the agent
 spec rebuild copies into every install. A gateway-side sweep changes nothing

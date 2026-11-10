@@ -136,7 +136,7 @@ async def _session_refusal(prepared, tree, entries=()) -> str:
 
 
 def _mount(prepared, tree, entries=()) -> session_mcp.NativeControlPlaneMount:
-    """What the mount yields for a ``ajcrew`` session over the view, as the runtime asks it."""
+    """What the mount yields for an ``ajcrew`` session over the view, as the runtime asks it."""
     return session_mcp.kiro_control_plane_servers(
         "ajcrew",
         work_dir=tree.project,
@@ -635,9 +635,7 @@ async def test_a_stub_ahead_of_the_element_does_not_carry_a_session_started_afte
     with pytest.raises(AcpRuntimeError) as refused:
         await runtime._unpooled_control_planes([dict(STUB)], "ajcrew", tree.project)
     message = str(refused.value)
-    assert message.startswith(
-        "Agent 'ajcrew': ajcrew-core is withheld by the global MCP settings"
-    )
+    assert message.startswith("Agent 'ajcrew': ajcrew-core is withheld by the global MCP settings")
     assert "disabledTools lists learn_add" in message
     # Undoing the toggle restores the next session without a respawn.
     _write(tree.settings, MANAGED)
@@ -1318,9 +1316,7 @@ async def test_a_toggle_undone_between_two_reads_cannot_send_the_session_to_the_
     with pytest.raises(AcpRuntimeError) as refused:
         await runtime._unpooled_control_planes(list(entries), "ajcrew", tree.project)
     message = str(refused.value)
-    assert message.startswith(
-        "Agent 'ajcrew': ajcrew-core is withheld by the global MCP settings"
-    )
+    assert message.startswith("Agent 'ajcrew': ajcrew-core is withheld by the global MCP settings")
     assert "disabledTools lists learn_add" in message
     assert "Cannot bind skill_search" not in message and "server configuration" not in message
     assert len(answers) == 1

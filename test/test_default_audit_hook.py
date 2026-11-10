@@ -25,9 +25,7 @@ from pathlib import Path
 
 import pytest
 
-DEFAULTS_JSON = (
-    Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "config" / "defaults.json"
-)
+DEFAULTS_JSON = Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "config" / "defaults.json"
 SH = shutil.which("sh")
 
 pytestmark = [

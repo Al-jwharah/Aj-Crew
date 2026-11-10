@@ -20,9 +20,7 @@ from external_logout_detection_helpers import (
 from source_corpus import parsed_candidates, src_root
 
 from aj_crew import kiro_prerequisite as kp
-from aj_crew.session_allocation import (
-    FOREGROUND_COLD_START_RESERVE as _COLD_START_RESERVE_FOR_TEST,
-)
+from aj_crew.session_allocation import FOREGROUND_COLD_START_RESERVE as _COLD_START_RESERVE_FOR_TEST
 from aj_crew.session_allocation import MAX_CONCURRENT_COLD_STARTS as _MAX_COLD_STARTS_FOR_TEST
 from aj_crew.testing.wait import async_wait_until, await_until, until_parked
 

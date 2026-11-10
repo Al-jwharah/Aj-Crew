@@ -942,9 +942,7 @@ def test_the_contract_ceiling_matches_the_wait_tool_schema():
 @pytest.mark.parametrize(
     "meta",
     [
-        pytest.param(
-            {"kiro": {"toolName": "wait", "mcpServerName": "ajcrew-core"}}, id="kiro-cli"
-        ),
+        pytest.param({"kiro": {"toolName": "wait", "mcpServerName": "ajcrew-core"}}, id="kiro-cli"),
         pytest.param(
             {"kiro": {"toolName": "ajcrew-core___wait", "mcpServerName": "ajcrew-core"}},
             id="kiro-cli-server-qualified",

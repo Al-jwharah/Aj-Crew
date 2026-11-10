@@ -68,9 +68,7 @@ from aj_crew.task_planner import (  # noqa: F401
     normalize_cross_group_deps,
     parse_tasks,
 )
-from aj_crew.task_planner import (  # noqa: F401
-    plan_to_chat_context as _planner_plan_to_chat_context,
-)
+from aj_crew.task_planner import plan_to_chat_context as _planner_plan_to_chat_context  # noqa: F401
 from aj_crew.task_planner import (  # noqa: F401
     plan_to_yaml,
     update_plan_tasks,

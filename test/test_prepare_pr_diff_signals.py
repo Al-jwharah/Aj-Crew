@@ -143,9 +143,7 @@ def test_a_shared_prefix_or_suffix_is_not_a_name() -> None:
     assert ds.unaccounted_areas(paths, "see test/test_send.py") == []
     # A unique basename is not named by a longer name that merely contains it.
     paths = ["src/aj_crew/chat/send.py"]
-    assert ds.unaccounted_areas(paths, "resend.py and send.py.bak") == [
-        ("src/aj_crew/chat", paths)
-    ]
+    assert ds.unaccounted_areas(paths, "resend.py and send.py.bak") == [("src/aj_crew/chat", paths)]
     assert ds.unaccounted_areas(paths, "`send.py` now waits") == []
     # A sentence may end right after the name.
     assert ds.unaccounted_areas(paths, "Debounced send.py.") == []

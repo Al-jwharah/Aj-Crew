@@ -25,7 +25,7 @@ dashboard. Keeping them apart removes the seam.
 same shape ``artifacts.get_default_store`` uses for the artifact store and for
 the same reason: the first caller may be a request handler or a test, and neither
 is a natural owner of construction. It is rooted per call through
-``data_home()`` so a pod or a test with a ``AJCREW_HOME`` override never
+``data_home()`` so a pod or a test with an ``AJCREW_HOME`` override never
 reaches the real install.
 """
 
@@ -67,7 +67,7 @@ def _library_lock() -> LoopBoundLock:
 def library_dir() -> Path:
     """Where the crew library lives.
 
-    Resolved per call, never bound at import: ``data_home()`` honours a
+    Resolved per call, never bound at import: ``data_home()`` honours an
     ``AJCREW_HOME`` override set after this module was imported, which is what
     keeps a pod, a dev backend and a test from reaching into the real install.
     """

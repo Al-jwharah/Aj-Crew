@@ -10,12 +10,12 @@ from pathlib import Path
 
 import pytest
 
-from conftest import requires_git
 from aj_crew import git_coord
 from aj_crew.taskrunner import (
     Step,
     TaskRun,
 )
+from conftest import requires_git
 
 pytestmark = requires_git
 

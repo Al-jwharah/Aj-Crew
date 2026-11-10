@@ -31,7 +31,7 @@ both.
 
 Which version runs is not a file on disk: it is the Aj Crew release's pin
 (:mod:`aj_crew.acp.kas_pin`), and :func:`installed_bundle` looks up exactly
-that version's directory. A Aj Crew update therefore switches engines by
+that version's directory. An Aj Crew update therefore switches engines by
 switching which directory is asked for -- the old version's directory stays,
 so a process of the previous release still running keeps its engine, and a
 rollback finds its engine still installed.

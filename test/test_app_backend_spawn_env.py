@@ -18,8 +18,8 @@ import pytest
 from app_backend_helpers import app_env_fixture  # noqa: F401
 from app_backend_helpers import _make_app_with_backend
 
-from conftest import requires_symlinks
 from aj_crew.apps.manager import APP_MANIFEST_FILENAME, install_app
+from conftest import requires_symlinks
 
 
 class TestBootAdmissionRevet:

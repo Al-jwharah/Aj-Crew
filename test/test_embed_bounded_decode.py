@@ -237,9 +237,7 @@ def _vendored_embed(runtime: _CausalRuntime):
     """Compile the shipped ``Llama.embed`` and its batch-offset helper against fakes."""
     tree = ast.parse(_VENDORED_LLAMA.read_text(encoding="utf-8"))
     helper = next(
-        n
-        for n in tree.body
-        if isinstance(n, ast.FunctionDef) and n.name == "_aj_crew_batch_offset"
+        n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "_aj_crew_batch_offset"
     )
     cls = next(n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == "Llama")
     embed = next(n for n in cls.body if isinstance(n, ast.FunctionDef) and n.name == "embed")

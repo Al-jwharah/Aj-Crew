@@ -294,7 +294,7 @@ async def test_a_session_gets_a_sprite_and_its_worker_is_dialled_through_the_pro
         envs, seen = _envs(tmp_path, url, fake)
         prepared = await envs.prepare("dashboard:chat-1", "fly-dev")
         row = envs.registry.get("dashboard:chat-1")
-        assert row is not None and row.name.startswith("ajcrew-") and len(row.name) == 25
+        assert row is not None and row.name.startswith("ajcrew-") and len(row.name) == 23
         assert prepared.workspace == row.name and prepared.profile_id == "fly-dev"
         assert (fake.home / "work").is_dir()  # the workdir is created in the sprite
         assert seen and set(seen) == {"SPRITES_TOKEN"}  # the vault entry the profile names

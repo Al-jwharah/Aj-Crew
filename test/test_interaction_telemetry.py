@@ -14,12 +14,12 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from chat_test_helpers import _make_state
 
-from conftest import MockSlackClient
 from aj_crew.acp.types import STOP_REASON_CANCELLED
 from aj_crew.config.loader import AjCrewConfig
 from aj_crew.platform import build_default_context
 from aj_crew.platform.context import reset_context, set_context
 from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+from conftest import MockSlackClient
 
 
 def _provider_mock() -> AsyncMock:

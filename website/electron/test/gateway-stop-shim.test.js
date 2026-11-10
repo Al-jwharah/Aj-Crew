@@ -314,7 +314,7 @@ test("shim: a hung identity read settles the stop and signals nothing", async ()
   assert.ok(Date.now() - started < 4000, "the hung read is bounded on the JS side");
 });
 
-test("shim: a `ajcrew mcp-core` descendant is left alone while the `ajcrew gateway` one is stopped", async () => {
+test("shim: an `ajcrew mcp-core` descendant is left alone while the `ajcrew gateway` one is stopped", async () => {
   const w = world({
     101: { cmd: CONSOLE_GATEWAY_CMD, onSignal: () => "die" },
     102: { cmd: MCP_CORE_CMD, onSignal: () => "die" },

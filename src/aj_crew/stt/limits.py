@@ -5,7 +5,7 @@ nothing. ``vad``, ``session`` and ``engine`` all import numpy, and
 ``config.loader`` needs these numbers at class-definition time to build
 ``SttConfig``'s field defaults. Reaching them through those modules would put
 numpy on the import path of ``aj_crew.cli``, which ``test_cli_lazy_imports``
-correctly refuses: a ``ajcrew --help`` has no business loading an array
+correctly refuses: an ``ajcrew --help`` has no business loading an array
 library.
 
 So the values live here and the enforcing modules import them, rather than the

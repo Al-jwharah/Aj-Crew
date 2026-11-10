@@ -17,7 +17,7 @@ reviewed in this repository, never a manifest field an installed or registry app
 claim. A row may grant only its OWN app: ``app`` must equal the package's installed
 name, and every path it contributes must sit under that app's own
 ``/api/apps/<app>/`` or ``/apps/<app>/`` namespace, so one built-in cannot widen
-another's surface or a core route. A forwarded environment variable must be a
+another's surface or a core route. A forwarded environment variable must be an
 ``AJCREW_`` name, so the seam cannot hand an app backend an arbitrary
 host credential. A malformed row raises at load rather than being skipped: a shipped
 grant that silently stopped applying would fail toward a weaker or broken app with no

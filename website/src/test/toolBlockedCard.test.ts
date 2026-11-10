@@ -5,7 +5,7 @@ import type { ChatMessage } from '../types'
 
 const PREFIX = '[Tool blocked — reason sent to the agent]'
 const BODY =
-  '[Aj Crew host notice] The tool call you just made was blocked by a Aj Crew ' +
+  '[Aj Crew host notice] The tool call you just made was blocked by an Aj Crew ' +
   'safety policy.\n\nBlocked: Running: bash -c x: Blocked by security policy: deny-rule\n'
 
 const msg = (role: string, content: string, meta?: Record<string, unknown>): ChatMessage =>

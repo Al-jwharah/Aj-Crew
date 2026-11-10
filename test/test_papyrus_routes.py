@@ -1266,7 +1266,7 @@ class TestNoBlockingCallsOnTheLoop:
 
     **The path-validation gate was the reported instance.** ``_project`` /
     ``_project_for_create`` / ``_safe_relative`` look like cheap string checks but
-    each calls ``Path.resolve()`` plus a ``stat``-family probe, so a
+    each calls ``Path.resolve()`` plus a ``stat``-family probe, so an
     ``AJCREW_HOME`` on a stalled network mount wedges the gateway inside the
     authorization check — before the handler has done any of its own work. Twenty-two
     call sites across the handlers had that shape.

@@ -1,4 +1,4 @@
-"""Which session is calling a ajcrew-core tool.
+"""Which session is calling an ajcrew-core tool.
 
 The lenient resolver (the per-call caller block, then this process's own identity),
 the strict, HMAC-verified one and its fail-closed gate ``require_strict_session_key``

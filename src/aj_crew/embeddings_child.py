@@ -198,7 +198,7 @@ class _ChildState:
         """Start a child, send the load request, and wait until it is ready."""
         from aj_crew import platform_compat
 
-        # -P: never put the working directory on the child's sys.path, so a
+        # -P: never put the working directory on the child's sys.path, so an
         # aj_crew/ directory in the gateway's cwd cannot shadow the package;
         # isolated_python_argv adds the bundle's user-site policy on top.
         argv = platform_compat.isolated_python_argv("-P", "-m", _CHILD_MODULE)

@@ -283,7 +283,7 @@ function describeGatewayFailure(failure) {
       // loopback origin and a tunnel's local end is one.
       //
       // Worded as what this app knows rather than as what the holder is: it may
-      // well BE a Aj Crew gateway, reached over a tunnel from another machine.
+      // well BE an Aj Crew gateway, reached over a tunnel from another machine.
       // That is why recording it as a crew is the first remedy -- doing so makes
       // the same port adoptable on the next launch -- and quitting the program is
       // the other. Both controls are in this dialog.

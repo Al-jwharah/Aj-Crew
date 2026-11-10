@@ -22,9 +22,9 @@ from apps_registry_helpers import _install_script_runs_on_this_host  # noqa: F40
 from apps_registry_helpers import unsandboxed_spawn  # noqa: F401 - fixture
 from apps_registry_helpers import _identity_harness
 
-from conftest import requires_symlinks
 from aj_crew.apps import registry
 from aj_crew.apps.manifest import AppManifest
+from conftest import requires_symlinks
 
 #: The install's refusal for a root `data` the data directory cannot stand beside,
 #: as `manager.gateway_data_dir_obstruction` spells it -- the transaction must carry it

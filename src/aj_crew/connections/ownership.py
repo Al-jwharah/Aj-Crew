@@ -113,7 +113,7 @@ def _census_source_name(label: str) -> str:
     Only the ``agent:`` prefix comes off: what remains is a spec filename or, for a
     project source, its full path -- a place the user can go and look. Scope names
     (``ajcrew``, the edition's extra scopes) and ``mirror:`` labels are left
-    verbatim, because they name a Aj Crew-managed source rather than a file the
+    verbatim, because they name an Aj Crew-managed source rather than a file the
     user wrote, and stripping their prefix would make them read like one.
     """
     return label[len("agent:") :] if label.startswith("agent:") else label

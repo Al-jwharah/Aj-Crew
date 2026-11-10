@@ -149,7 +149,7 @@ _SYNC_LOCK = LoopBoundLock()
 def _find_cli() -> list[str]:
     """Invoke the ajcrew CLI as a module of OUR interpreter.
 
-    Never resolved through the filesystem: a `ajcrew` shim planted in an
+    Never resolved through the filesystem: an `ajcrew` shim planted in an
     agent-writable PATH entry (or venv bin) would become an absolute path
     that bypasses the trusted-binary gate. `sys.executable -m` pins the CLI
     to the exact code identity this backend is already running.

@@ -24,7 +24,7 @@
  *    so they re-resolve under every theme instead of being frozen literals.
  *
  * Custom/installed themes apply their variables via JS in the dashboard
- * window only; here they fall back to the base kiro palette. FALLBACK_PALETTE
+ * window only; here they fall back to the base aj palette. FALLBACK_PALETTE
  * remains as the no-stylesheet escape hatch (jsdom, future standalone use).
  */
 import coreCss from '../../../../index.css?inline'
@@ -88,10 +88,10 @@ const ALIAS_VARS: Record<string, string> = {
  * there — do not let these drift). Reimplemented because importing the hook
  * would drag the SPA's api client into every Mochi window bundle. */
 function computeDatasetTheme(): { theme: string; mode: string } {
-  let colorTheme = 'kiro'
+  let colorTheme = 'aj'
   let modePref = 'system'
   try {
-    colorTheme = localStorage.getItem('mc-color-theme') || 'kiro'
+    colorTheme = localStorage.getItem('mc-color-theme') || 'aj'
     modePref = localStorage.getItem('mc-theme') || 'system'
   } catch {
     /* storage unavailable: defaults stand */

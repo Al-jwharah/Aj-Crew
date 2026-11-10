@@ -431,9 +431,7 @@ def test_both_effective_agents_run_the_ledger_and_goal_conductor(specs) -> None:
     mate = _view(_effective("ajcrew-mate-conductor", mate_spec, member=True))
     for view in (root, mate):
         assert {"ajcrew-work", "ajcrew-dashboard"} <= view["servers"]
-        assert {"ajcrew-work/work_ledger_read", "ajcrew-work/work_ledger_record"} <= (
-            view["allow"]
-        )
+        assert {"ajcrew-work/work_ledger_read", "ajcrew-work/work_ledger_record"} <= (view["allow"])
         assert "goal-conductor" in view["skills"]
 
 

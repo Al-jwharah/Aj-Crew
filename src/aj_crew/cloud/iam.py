@@ -46,7 +46,7 @@ LEGACY_ROLE_ARN = f"arn:aws:iam::*:role/{ROLE_NAME_PREFIX}*"
 # NOT per-launch CloudFormation, and the launcher policy grants only
 # CreatePolicy/GetPolicy on this exact name (never CreatePolicyVersion/Delete*),
 # so once the correct boundary exists a leaked launcher credential cannot make it
-# permissive. iam:CreateRole is gated on this name so a ajcrew-ec2-* role MUST
+# permissive. iam:CreateRole is gated on this name so an ajcrew-ec2-* role MUST
 # carry it. NB: this is a superset match of ROLE_NAME_PREFIX + "boundary", kept
 # distinct so the PermissionsBoundary condition can't be satisfied by a role.
 BOUNDARY_NAME = "ajcrew-ec2-boundary"
@@ -612,7 +612,7 @@ def policy_document() -> dict[str, Any]:
         },
         {
             # Role create MUST carry our SHARED, PRE-CREATED permissions boundary.
-            # iam:CreateRole is the enforcement point: a ajcrew-ec2-* role can
+            # iam:CreateRole is the enforcement point: an ajcrew-ec2-* role can
             # ONLY be created WITH our permissions boundary (iam:PermissionsBoundary
             # must ArnLike-match arn:...:policy/ajcrew-ec2-boundary). Because the
             # boundary is a single content-fixed policy the launcher creates ONCE
@@ -803,7 +803,7 @@ def policy_document() -> dict[str, Any]:
             # SINGLE AWS-managed policy the template attaches
             # (AmazonSSMManagedInstanceCore). Without this condition, a holder of
             # the launcher policy could AttachRolePolicy AdministratorAccess onto
-            # a ajcrew-ec2-* role and pass it to EC2 — a full escalation. The
+            # an ajcrew-ec2-* role and pass it to EC2 — a full escalation. The
             # allowlist is a hard cap: no other managed policy can be attached.
             # An edition's host policies are granted by host_policy_document, a
             # separate addendum, never here.

@@ -87,9 +87,7 @@ class TestChannelReplyLink:
     @pytest.mark.parametrize(
         ("stored", "key"),
         [
-            pytest.param(
-                "", "discord:ajcrew:direct:U9", id="test_no_stored_channel_returns_none"
-            ),
+            pytest.param("", "discord:ajcrew:direct:U9", id="test_no_stored_channel_returns_none"),
             # A group key's stored value is the sender, so it must not become a DM.
             pytest.param(
                 "discord:U9",

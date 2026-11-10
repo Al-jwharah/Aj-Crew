@@ -30,7 +30,6 @@ from prompts_helpers import (
     _write_request,
 )
 
-from conftest import requires_symlinks
 from aj_crew.dashboard.chat import _expand_prompt_mention, _run_chat
 from aj_crew.dashboard.handlers import (
     MAX_PROMPT_BYTES,
@@ -41,6 +40,7 @@ from aj_crew.dashboard.handlers import (
 )
 from aj_crew.dashboard.handlers import prompts as _prompts_mod
 from aj_crew.platform_compat import IS_POSIX
+from conftest import requires_symlinks
 
 # ── _extract_sop_description ──
 

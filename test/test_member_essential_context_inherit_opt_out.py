@@ -21,12 +21,12 @@ from member_essential_context_helpers import (
     _write_kiro_settings,
 )
 
-from conftest import make_dir_link, requires_symlinks
 from aj_crew import context as context_module
 from aj_crew import member_essential_context as _mec
 from aj_crew import pinned_fs
 from aj_crew.agent_sdk.provider_identity import PROVIDER_ACP, PROVIDER_CLAUDE_CODE
 from aj_crew.member_essential_context import MemberEssentialContextError
+from conftest import make_dir_link, requires_symlinks
 
 # Fixtures shared with the sibling modules, bound by assignment so pytest registers
 # them for the tests in this module.

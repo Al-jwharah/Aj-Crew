@@ -45,7 +45,7 @@ const theme = params.get('theme') || 'dark'
 // same ?theme=dark). Both keys are pinned because the colour theme alone drifted
 // between runs — one pass rendered aj-dark and the next monokai-dark.
 localStorage.setItem('mc-theme', theme === 'light' ? 'light' : 'dark')
-localStorage.setItem('mc-color-theme', 'kiro')
+localStorage.setItem('mc-color-theme', 'aj')
 document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 // Rows must stay in the one list rather than folding into the stale section —

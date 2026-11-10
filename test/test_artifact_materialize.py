@@ -12,10 +12,10 @@ from pathlib import Path
 
 import pytest
 
-from conftest import requires_symlinks
 from aj_crew import artifacts as art_mod
 from aj_crew.artifacts import ArtifactStore, ArtifactValidationError
 from aj_crew.dashboard.handlers import artifacts as h
+from conftest import requires_symlinks
 
 
 class _FakeLog:

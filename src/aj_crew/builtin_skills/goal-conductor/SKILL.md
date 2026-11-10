@@ -435,7 +435,7 @@ Each cycle:
 
    **Resolve `<this skill's dir>` from where this SKILL.md was actually loaded
    from** — the skill index names its absolute path. Do NOT hardcode a path under
-   the default skills root: a `AJCREW_HOME` override moves it, so on such an
+   the default skills root: an `AJCREW_HOME` override moves it, so on such an
    install that path does not exist and every evaluator call would fail before
    patrol ever ran.
 

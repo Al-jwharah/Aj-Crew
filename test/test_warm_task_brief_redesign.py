@@ -332,9 +332,7 @@ def test_the_quiet_line_claims_only_nothing_new_and_dates_an_older_time(monkeypa
 
     # A frozen "now", in UTC, so the same-day test never straddles midnight.
     monkeypatch.setattr(inputs, "datetime", _Frozen)
-    monkeypatch.setattr(
-        "aj_crew.cron_service.schedule.get_local_tz", lambda: ("UTC", timezone.utc)
-    )
+    monkeypatch.setattr("aj_crew.cron_service.schedule.get_local_tz", lambda: ("UTC", timezone.utc))
     assert all("waiting" not in text for text in warm_task_brief._QUIET_TEXT.values())
     assert inputs.clock(noon.timestamp() - 3600) == "11:00"
     assert inputs.clock(noon.timestamp() - 26 * 3600) == "2026-10-30 10:00"

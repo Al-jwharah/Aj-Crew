@@ -291,7 +291,7 @@ def _handle_update(self: AcpSessionHandle, msg: JsonRpcMessage) -> list[AcpEvent
         # No HostBudget charge: a native child lives INSIDE the parent's
         # runtime process, whose residency is already charged.
         self._note_native_child(frame_sid)
-        # A ``ajcrew/status`` riding a CHILD-routed frame is not this
+        # An ``ajcrew/status`` riding a CHILD-routed frame is not this
         # session's status: the native sub-agent has no task row of its own
         # (its recovery boundary is the parent session), so its wait must
         # not be read as the parent's. Rejected, never re-attributed.
@@ -555,7 +555,7 @@ def _handle_update(self: AcpSessionHandle, msg: JsonRpcMessage) -> list[AcpEvent
                 dispatch_parked_secs=self._parked_total,
                 is_shell=ev.is_shell,
                 # Only a provenance-verified identity, or KAS's half-identity
-                # for a ajcrew-core call, names the server, so an unverified
+                # for an ajcrew-core call, names the server, so an unverified
                 # frame cannot select the wait contract.
                 mcp_server_name=_server,
                 tool_name=_tool_name,

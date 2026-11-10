@@ -71,9 +71,7 @@ async def _spawn_env(client: AcpClient, *, claude: bool = False) -> dict[str, st
         )
         argv = ["/usr/bin/node", "/x/acp.js"]
     else:
-        bin_patch = patch(
-            "aj_crew.acp.client._resolve_kiro_bin", return_value="/usr/bin/kiro-cli"
-        )
+        bin_patch = patch("aj_crew.acp.client._resolve_kiro_bin", return_value="/usr/bin/kiro-cli")
         argv = ["/usr/bin/kiro-cli", "acp"]
     with (
         bin_patch,

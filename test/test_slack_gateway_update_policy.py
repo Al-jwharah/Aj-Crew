@@ -201,9 +201,7 @@ class TestMandatoryUpdateOnWheelInstall:
         monkeypatch.setattr(gov, "min_version", lambda: "9.9.9")
         # Only the managed venv may self-update automatically. Runtime
         # ownership covers both stamped and older unstamped managed installs.
-        monkeypatch.setattr(
-            "aj_crew.platform.wheel_engine.running_from_managed_venv", lambda: True
-        )
+        monkeypatch.setattr("aj_crew.platform.wheel_engine.running_from_managed_venv", lambda: True)
 
         apply_called = AsyncMock()
         monkeypatch.setattr(orch, "_auto_apply_update", apply_called)
@@ -249,9 +247,7 @@ class TestMandatoryUpdateOnWheelInstall:
         monkeypatch.setattr(handlers, "_do_update_check", _noop_check)
         monkeypatch.setattr(gov, "update_required", lambda _v: True)
         monkeypatch.setattr(gov, "min_version", lambda: "9.9.9")
-        monkeypatch.setattr(
-            "aj_crew.platform.wheel_engine.running_from_managed_venv", lambda: True
-        )
+        monkeypatch.setattr("aj_crew.platform.wheel_engine.running_from_managed_venv", lambda: True)
 
         wheel_apply_called = AsyncMock()
         monkeypatch.setattr(orch, "_auto_apply_update", AsyncMock())

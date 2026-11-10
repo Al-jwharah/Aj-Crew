@@ -944,8 +944,7 @@ class TestPlacement(
             aliases = {
                 alias.asname or alias.name: alias.name
                 for node in tree.body
-                if isinstance(node, ast.ImportFrom)
-                and node.module in (RUNTIME_PACKAGE, "aj_crew")
+                if isinstance(node, ast.ImportFrom) and node.module in (RUNTIME_PACKAGE, "aj_crew")
                 for alias in node.names
                 if node.module == RUNTIME_PACKAGE or alias.name in OUT_OWNER_MODULES
             }

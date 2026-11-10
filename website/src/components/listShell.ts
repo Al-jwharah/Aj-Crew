@@ -25,7 +25,7 @@ export const LIST_SHELL_CLS = 'sidebar sidebar-inner bg-bg-elevated border borde
 export const LIST_HEADER_CLS = 'flex justify-between items-center px-2 mt-0.5 h-10'
 
 /** The panel title inside that header. `sessions-panel-title` is the class the
- *  kiro themes retint (index.css). */
+ *  aj themes retint (index.css). */
 export const LIST_TITLE_CLS = 'sessions-panel-title text-sm font-semibold text-text-strong tracking-[.04em] truncate'
 
 /** The scrolling list body. Its top padding is the floating search dock's live

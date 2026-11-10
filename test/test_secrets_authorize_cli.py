@@ -17,7 +17,6 @@ import stat
 
 import pytest
 
-from conftest import requires_symlinks
 from aj_crew import cli_commands_secrets
 from aj_crew.secrets_mediation.policy import (
     POLICY_LOCK_FILENAME,
@@ -25,6 +24,7 @@ from aj_crew.secrets_mediation.policy import (
     policy_path,
 )
 from aj_crew.secrets_mediation.provenance import SIGNATURE_FIELD, verify_secret_authorizations
+from conftest import requires_symlinks
 
 #: Captured before the autouse fixture pins it, for the tests of the predicate itself.
 _REAL_PREDICATE = cli_commands_secrets._spawn_precreates_policy_directory

@@ -55,7 +55,7 @@ ROUTE_KAS_BUNDLE = "kas-bundle"
 ROUTE_KIRO_CLI = "kiro-cli"
 #: ``kas route``'s exit status when the config could not be read, so the owner is
 #: UNKNOWN. Distinct from the shell's 127 (no ``ajcrew`` on the box) and argparse's
-#: 2 (a ``ajcrew`` too old to have the verb), which the cloud scripts read as "no
+#: 2 (an ``ajcrew`` too old to have the verb), which the cloud scripts read as "no
 #: route answer, kiro-cli as always"; this one they read as "do not touch either
 #: program" (``cloud/login_vault.route_prelude``). A Python crash exits 1 too, and
 #: is rightly read the same way: an answer that cannot be trusted is not kiro-cli.
@@ -290,9 +290,7 @@ async def _run_device_login(
             if status == "pending":
                 continue
             if status == "authorized":
-                print(
-                    f"Signed in to Aj Crew as {result.get('provider') or provider}.", flush=True
-                )
+                print(f"Signed in to Aj Crew as {result.get('provider') or provider}.", flush=True)
                 if result.get("code") == "previous_identity_not_removed":
                     print(
                         "⚠ an earlier identity could not be removed from the vault; "

@@ -16,8 +16,8 @@ if TYPE_CHECKING:
     from aj_crew.dashboard.server import (
         _PREVENT_SLEEP_POLL_INTERVAL_SECS,
         _TAILNET_AWAKE_TTL_SECS,
-        DashboardState,
         AjCrewConfig,
+        DashboardState,
         SleepInhibitor,
         logger,
         register_pre_exec_stop,

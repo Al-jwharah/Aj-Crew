@@ -14,9 +14,9 @@ from slack_handler_helpers import _clean_approval_state  # noqa: F401
 from slack_handler_helpers import FakeProvider, FakeSessionManager
 from test_slack_handler_turn_outcomes import _abandoned, _SequencedProvider
 
-from conftest import MockSlackClient
 from aj_crew.providers.base import LLMEvent
 from aj_crew.slack.handler import handle_message
+from conftest import MockSlackClient
 
 
 class TestWorkingIndicatorCleanup:

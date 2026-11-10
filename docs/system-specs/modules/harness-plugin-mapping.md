@@ -20,7 +20,7 @@ architecture cards and are marked `[card]` where a claim rests only on the card.
 
 Every foreign contribution kind lands in exactly one:
 
-- **(a) existing extension point** — an `app.json` field a Aj Crew app already
+- **(a) existing extension point** — an `app.json` field an Aj Crew app already
   declares today, consumed by `aj_crew.apps.bridges`. Named per row.
 - **(b) out-of-process contributor** — needs a mechanism this repo does not have: a
   live foreign process reading and writing a unit's state through a published surface.

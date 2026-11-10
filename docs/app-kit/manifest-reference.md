@@ -131,7 +131,7 @@ installed against:
   interpreter (`.venv/bin/python3`, or `.venv\Scripts\python.exe` on Windows)
   when it exists as a runnable file created by the same Python minor version
   as the gateway, else again to the gateway's own interpreter - never a PATH
-  lookup. Exception: a server whose `args` launch a `aj_crew` module
+  lookup. Exception: a server whose `args` launch an `aj_crew` module
   (`-m aj_crew...`) always gets the gateway's interpreter and never the
   app deps on `PYTHONPATH`, so an app cannot shadow the gateway's own code.
 - **Any other bare name** (no path separator, no drive qualifier) is rewritten

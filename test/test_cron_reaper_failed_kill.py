@@ -375,9 +375,7 @@ class TestReaperRecordsAFailedSigkill:
             patch("aj_crew.platform_compat.kill_pid_async", AsyncMock(return_value=True)),
             patch("aj_crew.platform_compat.pgroup_exists", return_value=True) as group,
             patch("aj_crew.platform_compat.windows_tree_cleanup_pending", return_value=False),
-            patch(
-                "aj_crew.platform_compat.kill_process_tree_pinned", return_value=False
-            ) as drain,
+            patch("aj_crew.platform_compat.kill_process_tree_pinned", return_value=False) as drain,
         ):
             assert (
                 await svc._sigkill_session("cron:win-gone", _handle_of(svc, "cron:win-gone"))
@@ -639,9 +637,7 @@ class TestReaperRecordsAFailedSigkill:
 
         with (
             patch("aj_crew.acp.client._get_child_pids", return_value=[7272]) as probe,
-            patch(
-                "aj_crew.acp.client._capture_child_records", return_value={7272: ("333", b"sh")}
-            ),
+            patch("aj_crew.acp.client._capture_child_records", return_value={7272: ("333", b"sh")}),
             patch("aj_crew.acp.client._kill_escaped_children") as sweep,
             # The root's two reads, then the post-sweep read of the recorded
             # child: gone (its start id does not read back).
@@ -1014,9 +1010,7 @@ class TestReaperRecordsAFailedSigkill:
             start_id,
             sweep,
             patch("aj_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
-            patch(
-                "aj_crew.platform_compat.kill_process_tree_async", AsyncMock(return_value=True)
-            ),
+            patch("aj_crew.platform_compat.kill_process_tree_async", AsyncMock(return_value=True)),
             patch("aj_crew.platform_compat.kill_pid_async", AsyncMock(return_value=True)),
         ):
             # The run's own finally reset pops its session and hangs; then a late

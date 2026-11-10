@@ -13,7 +13,7 @@ each call so it can:
 * Scope per-session state (memory keys, file paths, audit records).
 * Enforce per-session authorization policies.
 
-A ``AJCREW_SESSION_KEY`` environment variable baked in at spawn time cannot
+An ``AJCREW_SESSION_KEY`` environment variable baked in at spawn time cannot
 carry this identity under pooling: one backend serves many sessions but sees
 only the first session's env var.
 

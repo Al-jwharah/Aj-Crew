@@ -380,7 +380,7 @@ def agent_dir_for_display(agent_id: str) -> Path:
 
     Hence: validate on the resolved form, hand out the declared one. Callers
     doing file I/O keep using :func:`_agent_dir`; this is for a path that a
-    human or an agent will read and then act on. ``data_home()`` resolves a
+    human or an agent will read and then act on. ``data_home()`` resolves an
     ``AJCREW_HOME`` override too; while the variable's absolute value still
     resolves to the active home, the path is built on that value instead.
 

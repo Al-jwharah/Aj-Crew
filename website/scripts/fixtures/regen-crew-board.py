@@ -29,7 +29,7 @@ from aj_crew.config import paths as _paths  # noqa: E402
 # writes would then seed fixture conductors into the operator's real work
 # ledger, with no recovery path. So resolve the EFFECTIVE home and require two
 # things: (1) a genuinely selected override (``data_home()`` != the default),
-# and (2) an explicit ``AJCREW_FIXTURE_SCRATCH=1`` opt-in, so a ``AJCREW_HOME``
+# and (2) an explicit ``AJCREW_FIXTURE_SCRATCH=1`` opt-in, so an ``AJCREW_HOME``
 # left exported to a live custom instance cannot be contaminated by accident.
 _effective_home = _paths.data_home().resolve()
 _default_home = _paths._default_home().resolve()
@@ -44,7 +44,7 @@ if os.environ.get("AJCREW_FIXTURE_SCRATCH") != "1":
         "refusing to run: set AJCREW_FIXTURE_SCRATCH=1 to confirm "
         f"{_effective_home} is a THROWAWAY home. This script writes fixture "
         "conductors into that home's work ledger; the confirmation prevents "
-        "seeding them into a AJCREW_HOME left exported to a live instance."
+        "seeding them into an AJCREW_HOME left exported to a live instance."
     )
 
 

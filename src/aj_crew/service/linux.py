@@ -93,7 +93,7 @@ from aj_crew.service.linux_uninstall import _first_line
 
 
 def user_unit_installed() -> bool:
-    """Whether the calling account's own manager has a ``ajcrew.service`` installed:
+    """Whether the calling account's own manager has an ``ajcrew.service`` installed:
     the manager answers a load state other than ``not-found`` for a unit whose
     canonical ``Id`` is ours (``loaded``, ``masked``, ``bad-setting`` and
     ``error`` all count; only ``not-found`` does not).
@@ -211,7 +211,7 @@ class AliasHolder:
 
     ``scope`` is ``system`` or ``user``; ``unit_id`` is the canonical ``Id`` the
     manager resolved our name to — the unit an operator pointed at our name with
-    ``Alias=ajcrew.service`` in their own unit's ``[Install]`` section, or a
+    ``Alias=ajcrew.service`` in their own unit's ``[Install]`` section, or an
     ``ajcrew.service -> other.service`` symlink in a unit directory.
     """
 

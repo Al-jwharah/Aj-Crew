@@ -1109,7 +1109,7 @@ def _probe_sandbox_exec() -> bool:
 
 
 def _inside_ajcrew_sandbox() -> bool:
-    """True when this process already runs inside a Aj Crew OS sandbox.
+    """True when this process already runs inside an Aj Crew OS sandbox.
 
     Nested sandboxing is impossible on both backends: the Linux launcher's
     seccomp filter denies ``unshare``/``setns`` precisely so the sandboxed tree

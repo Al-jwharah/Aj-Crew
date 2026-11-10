@@ -465,9 +465,10 @@ class TestAccessorsFollowTheLiveHome:
             resolved = Path(getattr(mod, attr)())
             if not resolved.resolve().is_relative_to(home.resolve()):
                 stranded.append(f"{mod_path}.{attr}() -> {resolved}")
-        assert not stranded, (
-            "accessor did not follow AJCREW_HOME set after import (issue #874):\n  "
-            + "\n  ".join(stranded)
+        assert (
+            not stranded
+        ), "accessor did not follow AJCREW_HOME set after import (issue #874):\n  " + "\n  ".join(
+            stranded
         )
 
     def test_accessor_tracks_a_second_change(self, tmp_path, monkeypatch):
@@ -551,7 +552,7 @@ class TestResolutionDoesNotRepeatStartupMaintenance:
         assert calls, "the first resolution in a process must still perform maintenance"
 
     def test_override_is_never_cached(self, tmp_path, monkeypatch):
-        """A AJCREW_HOME set after import must still be honoured.
+        """An AJCREW_HOME set after import must still be honoured.
 
         Caching would be cheaper but would freeze the home again, so the override
         branch deliberately delegates on every call.

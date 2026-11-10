@@ -100,9 +100,7 @@ async def test_dashboard_create_refuses_unavailable_member_without_mutation(
     from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
 
     config = AjCrewConfig()
-    config.agents["broken"] = AjCrewAgentConfig(
-        kiro_agent="ajcrew", memory_store="missing-store"
-    )
+    config.agents["broken"] = AjCrewAgentConfig(kiro_agent="ajcrew", memory_store="missing-store")
     monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: config))
     svc = await CronService.create(base_dir=tmp_path)
     keep = await svc.add_job_async("keep", "existing task", every_secs=300)

@@ -21,7 +21,6 @@ from aiohttp.test_utils import TestClient, TestServer
 from git_maintenance_helpers import git_maintenance_off_entries
 
 import aj_crew.dashboard.handlers.files as files_mod
-from conftest import requires_symlinks
 from aj_crew import platform_compat
 from aj_crew.dashboard.handlers import api_project_git
 from aj_crew.dashboard.handlers.files import (
@@ -37,6 +36,7 @@ from aj_crew.dashboard.handlers.files import (
 )
 from aj_crew.security import _looks_like_secret_key, redact
 from aj_crew.security.redaction import _SECRET_MAX_SLASHES
+from conftest import requires_symlinks
 
 
 @pytest.fixture

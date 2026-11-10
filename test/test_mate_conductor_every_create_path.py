@@ -64,9 +64,7 @@ async def test_a_crewmate_created_through_the_create_route_chats_on_the_conducto
 ):
     await asyncio.to_thread(_environment, monkeypatch, "linux", "kas", "auto", "namespace", False)
     async with TestClient(TestServer(_app(monkeypatch))) as client:
-        response = await client.post(
-            "/api/agents", json={"name": "atlas", "kiro_agent": "ajcrew"}
-        )
+        response = await client.post("/api/agents", json={"name": "atlas", "kiro_agent": "ajcrew"})
         assert response.status == 200, await response.text()
     assert (home / "mates" / "agents" / "atlas.json").is_file()
     assert await asyncio.to_thread(_chats_on, "atlas") == MATE_CONDUCTOR_AGENT

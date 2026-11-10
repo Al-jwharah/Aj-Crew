@@ -25,9 +25,7 @@ from git_maintenance_helpers import git_maintenance_off_entries
 from skill_script_helpers import load_skill_script
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SKILL_DIR = (
-    REPO_ROOT / "src" / "aj_crew" / "builtin_skills" / "ajcrew-dev" / "ajcrew-prepare-pr"
-)
+SKILL_DIR = REPO_ROOT / "src" / "aj_crew" / "builtin_skills" / "ajcrew-dev" / "ajcrew-prepare-pr"
 SCRIPTS_DIR = SKILL_DIR / "scripts"
 PROFILES_DIR = SKILL_DIR / "profiles"
 

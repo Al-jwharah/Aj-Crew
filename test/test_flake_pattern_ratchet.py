@@ -631,7 +631,7 @@ def _aj_crew_module_names(module: _Module) -> frozenset[str]:
     """Lowercase names imported from ``aj_crew.*`` at module scope.
 
     Covers both ``from aj_crew.X import mod`` (ImportFrom) and
-    ``import aj_crew.X.mod as mod`` (Import with alias).  A aj_crew module
+    ``import aj_crew.X.mod as mod`` (Import with alias).  An aj_crew module
     import binds a persistent object: assigning a live asyncio Task or TimerHandle
     to one of its attributes creates state that survives the test's event loop.
     """
@@ -645,9 +645,7 @@ def _aj_crew_module_names(module: _Module) -> frozenset[str]:
                         names.add(name)
         elif isinstance(node, ast.Import):
             for alias in node.names:
-                if alias.asname and (
-                    alias.name == "aj_crew" or alias.name.startswith("aj_crew.")
-                ):
+                if alias.asname and (alias.name == "aj_crew" or alias.name.startswith("aj_crew.")):
                     if alias.asname[0].islower():
                         names.add(alias.asname)
     return frozenset(names)
@@ -668,7 +666,7 @@ def _is_task_creating_value(node: ast.AST) -> bool:
 
 
 def _k16_module_async_state(module: _Module) -> Iterable[ast.AST]:
-    """Writes a Task or TimerHandle into a aj_crew module attribute from a test
+    """Writes a Task or TimerHandle into an aj_crew module attribute from a test
     function, when no autouse fixture or self-cleanup guards the state.
 
     The module object outlives the test's event loop; a stale Task in module state

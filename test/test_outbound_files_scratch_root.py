@@ -15,7 +15,6 @@ from pathlib import Path
 
 import pytest
 
-from conftest import requires_symlinks
 from aj_crew import agent_scratch
 from aj_crew.messaging.outbound_files import (
     REASON_SENSITIVE,
@@ -26,6 +25,7 @@ from aj_crew.messaging.outbound_files import (
     extract_local_refs,
     extract_local_refs_off_loop,
 )
+from conftest import requires_symlinks
 
 _PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 32
 

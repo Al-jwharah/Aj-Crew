@@ -63,7 +63,7 @@ The skill already says "in exactly this order". A prompt cannot enforce ordering
 
 ### Placement
 
-`work_dispatch` is a `ajcrew-dashboard` tool, defined in [`mcp_dashboard_session_tools.py`](../../src/aj_crew/mcp_dashboard_session_tools.py) with its runner beside `_run_session_create` in [`mcp_dashboard_session_runs.py`](../../src/aj_crew/mcp_dashboard_session_runs.py). It cannot live on `ajcrew-work`, for two reasons:
+`work_dispatch` is an `ajcrew-dashboard` tool, defined in [`mcp_dashboard_session_tools.py`](../../src/aj_crew/mcp_dashboard_session_tools.py) with its runner beside `_run_session_create` in [`mcp_dashboard_session_runs.py`](../../src/aj_crew/mcp_dashboard_session_runs.py). It cannot live on `ajcrew-work`, for two reasons:
 
 - `ajcrew-work`'s charter is that nothing on it reaches `enqueue_or_run_prompt` ([`mcp_work.py`](../../src/aj_crew/mcp_work.py) lines 8 to 15; parent RFC §Non-goals "Not delivery"). A seed is a prompt.
 - Every `ajcrew-worker` mounts `@ajcrew-work` ([`worker_agent.py`](../../src/aj_crew/agent_materialization/worker_agent.py) line 821), and `ajcrew-dashboard` is kept off workers so that a worker cannot reach `session_send` by construction (same file, lines 412 to 418). On `ajcrew-work`, a worker would gain a verb that opens and seeds sessions.

@@ -48,7 +48,7 @@ const CHANNEL = {
 api.channelsList = async () => ({ channels: [CHANNEL] }) as Awaited<ReturnType<typeof api.channelsList>>
 api.channelGet = async () => CHANNEL as Awaited<ReturnType<typeof api.channelGet>>
 api.channelPresets = async () => ({ presets: [] }) as Awaited<ReturnType<typeof api.channelPresets>>
-api.themeBoot = async () => ({ mode: theme, color: 'kiro' }) as Awaited<ReturnType<typeof api.themeBoot>>
+api.themeBoot = async () => ({ mode: theme, color: 'aj' }) as Awaited<ReturnType<typeof api.themeBoot>>
 
 const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
 

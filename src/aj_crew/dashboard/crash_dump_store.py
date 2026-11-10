@@ -684,9 +684,7 @@ def open_dump_file(dumps_dir: Path | None = None) -> DumpFile:
     # plain PID liveness).
     start_id = _pid_start_id(os.getpid())
     start_tok = f" start={start_id}" if start_id is not None else ""
-    f.write(
-        f"# AjCrew loop-stall crash dump — opened {ts} {_CLEAN_EXIT_AWARE_TOKEN}\n"  # brand-ok
-    )
+    f.write(f"# AjCrew loop-stall crash dump — opened {ts} {_CLEAN_EXIT_AWARE_TOKEN}\n")  # brand-ok
     f.write(f"# PID: {os.getpid()} @ {_pid_domain()}{start_tok}\n")
     f.write("# If thread stacks appear below, the event loop wedged and faulthandler fired.\n")
     f.write("\n")

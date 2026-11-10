@@ -28,14 +28,14 @@ HEX_HEAD_KEY = "3f9c0a7b1d4e7c2b9a0f5d3e8c1b/RWG27KFEB2V"
 COMMIT = "cc504736836c7c1905f86f8cd4e0c9b46b37347c"
 TAG = "[REDACTED: credential]"
 GATEWAY_LINK = (
-    "https://github.com/Al-jwharah/Aj-Crew/blob/{}/src/aj_crew/slack/gateway.py#L6257-L6274"
+    "https://github.com/kirodotdev/KiroCrew/blob/{}/src/kiro_crew/slack/gateway.py#L6257-L6274"
 )
 
 # Each fires the bare-secret heuristic when the commit ceiling is absent: the window
 # straddling the repository name and the start of the commit reads as a key.
 FIRING_LINK_TEMPLATES = [
     GATEWAY_LINK,
-    "https://github.com/Al-jwharah/Aj-Crew/tree/{}/src/aj_crew",
+    "https://github.com/kirodotdev/KiroCrew/tree/{}/src/kiro_crew",
     "https://github.com/microsoft/TypeScript/blame/{}/src/compiler/checker.ts#L10",
     "https://github.com/microsoft/TypeScript/raw/{}/README.md",
     "https://bitbucket.org/atlassian/Docker-Builds/src/{}/README.md",

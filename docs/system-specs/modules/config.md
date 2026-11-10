@@ -365,7 +365,7 @@ platform can check safely (on POSIX the prior content is read via `O_NOFOLLOW`
 and rewritten only when the recorded path changes; where that flag is missing —
 Windows — the check is skipped and the file is atomically rewritten once per
 process), best-effort (never blocks startup), and
-written only on the default path (a `AJCREW_HOME` override carries no `~/.kiro/`
+written only on the default path (an `AJCREW_HOME` override carries no `~/.kiro/`
 wipe risk). It is **not a backup** — just a durable signpost that survives a
 `~/.kiro/`-wide uninstaller wipe so a user or support script can find any
 surviving data or understand what was removed. This narrows, but does not
@@ -475,7 +475,7 @@ Each session/task gets an isolated subdirectory under this root via `_session_wo
   (`cli_server.py` and the gateway boot) pass `_session_work_dir("taskrunner:main")`,
   and `_safe_dir_name` turns the colon into an underscore, so the folder on disk is
   ajcrew-workspace/taskrunner_main. It holds `runs.json` (`runs-<data_home_id>.json`
-  for a `AJCREW_HOME` override; see [taskrunner](taskrunner.md#runs-persistence))
+  for an `AJCREW_HOME` override; see [taskrunner](taskrunner.md#runs-persistence))
   and one subdirectory per run:
   `<spec stem>` for a spec run, `plan_<task_id>` for a planned one. Setting
   `taskrunner.workspace_dir` moves all of it into that folder, and a run started
@@ -1531,7 +1531,7 @@ Contract:
 **Module layout.** `portability.py` is the import path for every `portability` name
 this section cites, and it keeps the import itself: `apply_import_zip` and the settings
 and session merges it runs (`_vet_archive_settings`, `_merge_settings`,
-`_merge_sessions`). It is a `aj_crew._facade_mirror` facade over four owners, and new
+`_merge_sessions`). It is an `aj_crew._facade_mirror` facade over four owners, and new
 work goes to the one that owns it: `portability_archive.py` (what an archive holds,
 member names and limits both ways), `portability_templates.py` (agent templates, bundled
 on export and installed on import), `portability_export.py` (what an export reads: the
@@ -2727,7 +2727,7 @@ Code model). kiro-cli validates `~/.kiro/agents/*.json` with serde
 `deny_unknown_fields` and rejects the *entire* spec on any unknown key, then
 silently falls back to the default agent (`--agent <name>` resolves to default
 with only a stderr "no agent with name X found" line). To keep every spec
-schema-valid, this state lives in a Aj Crew-owned sidecar
+schema-valid, this state lives in an Aj Crew-owned sidecar
 `~/.kiro/crew/agent_model_state.json` (honoring `AJCREW_HOME`), keyed by agent
 name:
 
@@ -3558,7 +3558,7 @@ class ChannelConfig:
 class SttConfig:
     enabled: bool = True           # on by default: the default provider needs no account
     provider: str = "local"        # "local" | "apple" | "transcribe" | "off"; a retired value degrades to "local", any other unknown value to "off" (see stt-streaming.md)
-    model: str = "base"            # a aj_crew.stt.models CATALOG name; a superseded name resolves via its alias table
+    model: str = "base"            # an aj_crew.stt.models CATALOG name; a superseded name resolves via its alias table
     language_code: str = "auto"    # stored preference; effective_language_code resolves auto to en-US for Apple/Transcribe
     streaming: bool = True         # live partials; every provider produces them
     silence_ms: int = 700          # end-of-phrase pause; clamped to _STT_INTERVAL_MS_MIN.._MAX
@@ -3626,7 +3626,7 @@ class DashboardConfig:
     verbosity: str = "answer_only" # "default" | "concise" | "answer_only" (retired "ultra" is read as "answer_only"); anything but "default" injects a [RESPONSE PREFERENCES] block into SESSION CONTEXT for every agent (see "Response verbosity reaches every agent" below). Read/written via GET/PUT /api/dashboard/config (rejects values outside the enum). A fresh install starts at "answer_only"; an existing config keeps the level it already stores, since every full save writes the key. An unrecognized value injects nothing.
     preferred_language: str = ""  # "" (auto: reply in the user's language) | one of PREFERRED_LANGUAGES' codes, the dashboard's UI languages ("en", "zh-CN", "hi", "es", "fr", "bn", "pt", "ru", "de", "ja", "ko", "it"). A set code adds a "## Reply language" section to the same [RESPONSE PREFERENCES] block, at every verbosity level including "default". The language name in that section comes from the fixed PREFERRED_LANGUAGES table, never from the stored value, so an unrecognized value injects nothing. Read/written via GET/PUT /api/dashboard/config (rejects values outside the enum). Independent of `language`, which sets only the dashboard UI.
     theme_mode: str = ""           # "dark" | "light" | "system"; empty = unset (frontend falls back to localStorage or "system")
-    theme_color: str = ""          # color-theme slug (e.g. "kiro", "emerald", "monokai"); empty = unset
+    theme_color: str = ""          # color-theme slug (e.g. "aj", "emerald", "monokai"); empty = unset
     translucent_panels: str = ""   # the Translucent panels (Liquid Glass) switch: "on" | "off"; empty = never chosen on this workspace (the browser's own stored choice holds). See "Dashboard theme persistence" below.
     language: str = ""             # dashboard UI language, BCP-47 (e.g. "en", "zh-CN"); empty = auto-detect from the browser. See "Dashboard UI language" below.
     show_unread_dot: bool = True   # the per-row unread dot on sidebar session cards (Settings → Display → Sidebar); only a literal false hides it. Folder and aggregate unread counts are unaffected. PATCH-able via /api/config/ajcrew

@@ -175,7 +175,7 @@ named-shape screen, and this RFC says plainly what that does and does not bound:
 sloppy PoC -- an auditor that reaches for `curl`, names a credential path, or writes outside the
 worktree -- and it does not catch an adversarially crafted one, because a `cmd::` proof is an
 arbitrary program and `python -c` with `urllib` names none of the screened words. What bounds that
-case is not this script. It is the two layers the RFC already places around it: the auditor is a
+case is not this script. It is the two layers the RFC already places around it: the auditor is an
 Aj Crew session and its PoC is written under the session's own tool gate and, where the host
 provides one, its sandbox; and the verifier runs as the operator's session, inheriting the same
 containment the operator granted that session. A `cmd::` proof therefore executes with exactly the

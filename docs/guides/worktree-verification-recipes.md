@@ -1,6 +1,6 @@
 # Worktree verification recipes
 
-These traces prove a Aj Crew change against an isolated gateway running the
+These traces prove an Aj Crew change against an isolated gateway running the
 changed worktree. They do not touch the live gateway or its data home. Run them
 from the worktree root after the normal build and test gates pass.
 

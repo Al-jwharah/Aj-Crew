@@ -277,9 +277,7 @@ def test_every_name_the_runner_imports_is_read() -> None:
     # pre-filtering avoids parsing ~3,900 irrelevant files that would never match.
     importers = [
         text
-        for path in sorted(
-            (Path(__file__).resolve().parents[1] / "src" / "aj_crew").rglob("*.py")
-        )
+        for path in sorted((Path(__file__).resolve().parents[1] / "src" / "aj_crew").rglob("*.py"))
         if path.name != "chat_runner.py" and "chat_turn" not in path.parts
         for text in (path.read_text(encoding="utf-8"),)
         if "chat_runner" in text

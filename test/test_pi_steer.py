@@ -507,7 +507,5 @@ async def test_the_live_capture_reports_the_steer_consumed_and_shows_no_envelope
     consumed_at = kinds.index(EVENT_STEER_CONSUMED)
     texts_after = [e.text for e in events[consumed_at:] if e.kind == EVENT_TEXT_CHUNK]
     assert "".join(texts_after) == "Steer received: PINEAPPLE."
-    assert not any(
-        "aj-crew-steer" in (e.text or "") for e in events if e.kind == EVENT_TEXT_CHUNK
-    )
+    assert not any("aj-crew-steer" in (e.text or "") for e in events if e.kind == EVENT_TEXT_CHUNK)
     assert events[-1].stop_reason == "end_turn"

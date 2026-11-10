@@ -6,7 +6,7 @@ A single asyncio background loop, started from ``register_routes(app)`` via
 
   1. **new-item notification** — each repo that has opted in (per-repo setting
      ``notify_on_new_issue``) is checked for tracked items (GitHub/GitLab issues,
-     Azure DevOps work items) created since the last check, and a Aj Crew
+     Azure DevOps work items) created since the last check, and an Aj Crew
      dashboard notification is pushed (``state.notify`` — the bell, persisted to
      the notification history) when new ones appear;
   2. **crew sweep** (:func:`crew_runtime.sweep_repo`) — every repo with a live crew

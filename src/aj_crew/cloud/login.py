@@ -1087,8 +1087,7 @@ def _start_callback_login(
             # port). Reap the tunnel here and leave out.port_forward unset.
             _close_process(proc)
             out.error = out.error or (
-                "Kiro social sign-in did not return a callback URL — retry "
-                "`ajcrew cloud login`."
+                "Kiro social sign-in did not return a callback URL — retry " "`ajcrew cloud login`."
             )
             return out
         out.port_forward = proc

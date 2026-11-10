@@ -31,7 +31,6 @@ from apps_routes_coverage_helpers import (
 from test_update_provider import _UNALLOCATABLE_PID
 
 import aj_crew.apps.routes as routes_mod
-from conftest import requires_symlinks
 from aj_crew import platform_compat
 from aj_crew.apps.manager import enable_app
 from aj_crew.apps.routes import (
@@ -40,6 +39,7 @@ from aj_crew.apps.routes import (
     invalidate_app_secret_cache,
 )
 from aj_crew.testing.ids import UNALLOCATABLE_PID
+from conftest import requires_symlinks
 
 # POST /api/apps/{name}/open
 

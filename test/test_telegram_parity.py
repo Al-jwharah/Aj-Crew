@@ -36,7 +36,6 @@ from telegram_parity_helpers import (  # noqa: F401 -- the autouse fixture regis
 )
 from test_telegram import _dispatcher
 
-from conftest import host_abs
 from aj_crew.messaging.outbound_files import OutboundFile
 from aj_crew.telegram.client import (
     REACTION_EMOJI,
@@ -45,6 +44,7 @@ from aj_crew.telegram.client import (
     normalize_reaction_emoji,
 )
 from aj_crew.telegram.renderer import _display_safe, _utf16_chunks, _utf16_cut, _utf16_len
+from conftest import host_abs
 
 #: The authorized upload root. ``authorize_upload_root`` keeps only an ABSOLUTE
 #: root (a string gate; extraction is faked below), and from Python 3.13

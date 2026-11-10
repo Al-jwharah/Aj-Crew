@@ -883,7 +883,7 @@ class TestRegisterRoutes:
         assert paths_by_method["HEAD"] == paths_by_method["GET"]
 
     def test_registration_creates_nothing_on_disk(self, tmp_path):
-        # This runs during start_dashboard ON THE EVENT LOOP, so a AJCREW_HOME on
+        # This runs during start_dashboard ON THE EVENT LOOP, so an AJCREW_HOME on
         # stalled network storage would freeze gateway startup on a directory the
         # app may never need.
         r.register_routes(web.Application())

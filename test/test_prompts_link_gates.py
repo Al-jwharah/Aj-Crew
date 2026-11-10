@@ -33,7 +33,6 @@ from prompts_helpers import (
     _write_request,
 )
 
-from conftest import requires_symlinks
 from aj_crew.dashboard.chat import _expand_prompt_mention
 from aj_crew.dashboard.handlers import (
     _list_aim_prompts,
@@ -42,6 +41,7 @@ from aj_crew.dashboard.handlers import (
     api_prompts_create,
 )
 from aj_crew.dashboard.handlers import prompts as _prompts_mod
+from conftest import requires_symlinks
 
 
 class TestEveryPromptReaderUsesTheNoLinkGate:

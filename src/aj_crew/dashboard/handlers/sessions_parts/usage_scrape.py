@@ -416,7 +416,7 @@ def _wrap_argv_at_configured_tier(argv: list[str]) -> tuple[list[str], str | Non
 
     ``is_kiro_cli=True`` is explicit because ``_spawns_kiro_cli``'s basename test
     only matches a literal ``kiro-cli``: a Windows ``kiro-cli.exe``, a wrapper
-    shim, or a ``AJCREW_KIRO_BIN`` pointing at a nonstandard launch path all
+    shim, or an ``AJCREW_KIRO_BIN`` pointing at a nonstandard launch path all
     read as "not kiro-cli". The positive classification is also the security gate
     for default Windows delegation to Kiro's internal sandbox; basename inference
     cannot grant it. Both callers here spawn kiro-cli by construction, and both ACP

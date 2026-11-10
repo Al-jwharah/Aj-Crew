@@ -316,7 +316,7 @@ class TestForumDispatchRouting:
 class TestForumConfig:
     @staticmethod
     def _load(data: dict) -> Any:
-        """Load a AjCrewConfig from an in-memory dict via a temp config file
+        """Load an AjCrewConfig from an in-memory dict via a temp config file
         (mirrors the canonical loader entrypoint used across the config tests)."""
         import json
         import tempfile

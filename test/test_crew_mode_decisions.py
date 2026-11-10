@@ -86,9 +86,7 @@ def test_a_crew_mode_root_refuses_another_agent_with_crew_mode_locked(_sel):
 
 def test_crew_mode_turns_off_before_the_first_user_message_and_locks_after(_sel):
     # No user message yet (the switch notice is not one): back to a plain agent passes.
-    fresh = _slot(
-        "r", "ajcrew-conductor", messages=[{"role": "assistant", "content": "Switched"}]
-    )
+    fresh = _slot("r", "ajcrew-conductor", messages=[{"role": "assistant", "content": "Switched"}])
     assert _refusal(fresh, "ajcrew") is None
     # Not onto another conductor, and not onto a crewmate.
     assert _refusal(fresh, "ajcrew-security-conductor").status == 409

@@ -70,7 +70,7 @@ class TestRestart:
         # The denied-service branch consults ``is_service_active()`` after a
         # refused ``restart_service()``. The real implementation shells out to
         # systemctl/launchctl, so an unmocked call would make these tests
-        # depend on whether the BUILD HOST runs a ajcrew service. Pin it
+        # depend on whether the BUILD HOST runs an ajcrew service. Pin it
         # False; the denied-branch tests override it per-test.
         with patch(
             "aj_crew.cli_server.service_controller.is_service_active",
@@ -868,7 +868,7 @@ class TestRestart:
         assert "reason=lock_holder_ajcrew" in audit["resources"]
 
     def test_lock_holder_alive_but_foreign_refuses_without_stopping_it(self, capsys):
-        """A live holder that is not a Aj Crew process must never be signaled
+        """A live holder that is not an Aj Crew process must never be signaled
         -- refuse with the same wording ``ajcrew gateway`` would give for this
         holder, audited as denied, rather than silently spawning a competitor
         the lock refuses."""
@@ -886,7 +886,7 @@ class TestRestart:
         mocks["tree"].assert_not_called()
         mocks["spawn"].assert_not_called()
         out = capsys.readouterr().out
-        assert "does not look like a Aj Crew gateway" in out
+        assert "does not look like an Aj Crew gateway" in out
         assert "kill -TERM 99" in out
         mock_sel.log_api_access.assert_called_once()
         audit = mock_sel.log_api_access.call_args.kwargs
@@ -1008,7 +1008,7 @@ class TestRestart:
         mock_tree.assert_not_called()
         mock_wait.assert_not_called()
         mock_spawn.assert_not_called()
-        assert "does not look like a Aj Crew gateway" in capsys.readouterr().out
+        assert "does not look like an Aj Crew gateway" in capsys.readouterr().out
 
     def test_tool_absent_unacked_shutdown_live_holder_refuses_to_restart(self, capsys):
         """Port tool absent, no gateway answers the API, yet the lock is held by
@@ -1343,7 +1343,7 @@ class TestRestart:
         ):
             cli_server._restart(None)
 
-        # _stop still runs (it owns the "not a Aj Crew gateway" diagnostic)...
+        # _stop still runs (it owns the "not an Aj Crew gateway" diagnostic)...
         mock_stop.assert_called_once_with(None)
         # ...but nothing is waited on, and the spawn proceeds.
         mock_exited.assert_not_called()
@@ -1634,7 +1634,7 @@ class TestRestart:
         mock_kill.assert_not_called()
         assert mock_wait.call_args.args[0] == [50519]
         mock_spawn.assert_called_once()
-        assert "does not look like a Aj Crew gateway" not in capsys.readouterr().out
+        assert "does not look like an Aj Crew gateway" not in capsys.readouterr().out
 
     def test_an_alias_holding_the_name_is_refused_before_the_foreground_path(self, capsys):
         """When ``ajcrew.service`` is an alias of another unit, ``restart_service()``

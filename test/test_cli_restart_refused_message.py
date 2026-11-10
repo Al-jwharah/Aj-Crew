@@ -119,9 +119,7 @@ class TestConfigDirOwner:
         with (
             lock,
             patch("aj_crew.cli_server.platform_compat.process_executable_path", return_value=exe),
-            patch(
-                "aj_crew.cli_server.platform_compat.process_command_line", return_value=cmdline
-            ),
+            patch("aj_crew.cli_server.platform_compat.process_command_line", return_value=cmdline),
         ):
             return cli_server._config_dir_owner()
 

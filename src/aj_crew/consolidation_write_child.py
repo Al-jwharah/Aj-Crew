@@ -223,7 +223,7 @@ class WriteChild:
     def _spawn(self) -> _Conn:
         from aj_crew import platform_compat
 
-        # -P: never put the working directory on the child's sys.path, so a
+        # -P: never put the working directory on the child's sys.path, so an
         # aj_crew/ directory in the gateway's cwd cannot shadow the package.
         argv = self._argv or platform_compat.isolated_python_argv("-P", "-m", _CHILD_MODULE)
         proc = subprocess.Popen(  # noqa: S603 - fixed argv, this interpreter

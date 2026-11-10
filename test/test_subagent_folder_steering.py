@@ -128,9 +128,7 @@ def _slot(key: str, folder_id: str) -> SimpleNamespace:
 @pytest.fixture
 def _no_execution(monkeypatch):
     """The parent has no member execution: a person's chat, principal ``""``."""
-    monkeypatch.setattr(
-        "aj_crew.execution_context.read_session_execution", lambda *_a, **_k: None
-    )
+    monkeypatch.setattr("aj_crew.execution_context.read_session_execution", lambda *_a, **_k: None)
 
 
 @pytest.mark.usefixtures("_no_execution")

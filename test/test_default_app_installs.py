@@ -59,9 +59,7 @@ MARKED = [_row(defaultInstall=True)]
 @pytest.fixture
 def home(tmp_path, monkeypatch):
     monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
-    monkeypatch.setattr(
-        AjCrewConfig, "load", classmethod(lambda cls, *a, **k: _load_isolated(cls))
-    )
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls, *a, **k: _load_isolated(cls)))
     _invalidate_config_cache()
     yield tmp_path
     _invalidate_config_cache()

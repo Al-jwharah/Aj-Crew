@@ -806,7 +806,7 @@ Question text is kept as asked; the decision below it is final for this PR.
 - **Q6.** SQLite on network home directories (`AJCREW_HOME` on NFS/SMB): WAL is
   unsafe there — fall back or refuse?
   **Decision:** detect (statfs / mount-type heuristics via `platform_compat`),
-  switch to `journal_mode=DELETE`, and emit a `ajcrew doctor` warning; never
+  switch to `journal_mode=DELETE`, and emit an `ajcrew doctor` warning; never
   refuse. Reversal: `agent.task_store_journal_mode="wal"|"delete"|"auto"`
   (default `auto`) forces either mode.
 - **Q7 (integration).** Four keys the §12 table first proposed have no consumer
@@ -1148,7 +1148,7 @@ notification "ajcrew/status" (version 1) params:
 
 Carried on ACP as a `session/update` extension frame and on MCP as a
 `notifications/progress` sibling under `_meta.ajcrew_status`. Origin
-validation: the runtime accepts a `ajcrew/status` frame only from the
+validation: the runtime accepts an `ajcrew/status` frame only from the
 execution layer of the session it names (the ACP connection or the gatewayd
 backend bound to that `tool_call_id`); a frame arriving as model text, or naming
 a `generation` other than the task's current one, is logged as
@@ -1236,6 +1236,6 @@ never marks the child failed.
 | socket / LLM wait | `/proc/net` established-flat | absent | absent | a flat model wait is `UNKNOWN`, never `DEAD` |
 | business progress | stream events, `ajcrew/status` progress | same | same | platform-independent; outranks all of the above |
 
-Every degradation above is a declared row in the wave M spec update, a
+Every degradation above is a declared row in the wave M spec update, an
 `ajcrew doctor` line, and a `liveness_evidence{platform,kind}` metric — not a
 silent `UNKNOWN`.

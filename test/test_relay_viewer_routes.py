@@ -96,9 +96,7 @@ def viewer(monkeypatch):
     )
     monkeypatch.setattr("aj_crew.sel.sel", lambda: MagicMock())
     # Never the host's real vault.
-    monkeypatch.setattr(
-        "aj_crew.auth.bridge.vault_identity_fingerprint", lambda: state.fingerprint
-    )
+    monkeypatch.setattr("aj_crew.auth.bridge.vault_identity_fingerprint", lambda: state.fingerprint)
     return state
 
 

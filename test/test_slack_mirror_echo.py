@@ -646,8 +646,8 @@ class TestTheDrainCarriesOrigin:
     @staticmethod
     async def _route_busy(state: Any, slot: Any, monkeypatch: pytest.MonkeyPatch) -> None:
         """Queue "what's up?" from thread t1 through the router's real busy arm."""
-        from conftest import MockSlackClient
         from aj_crew.slack import handler as h
+        from conftest import MockSlackClient
 
         monkeypatch.setattr(h, "_owner_id", "U1")
         monkeypatch.setattr(state, "get_linked_slot", lambda ts: slot, raising=False)

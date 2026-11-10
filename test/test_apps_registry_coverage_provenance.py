@@ -18,8 +18,8 @@ from apps_registry_coverage_helpers import _explicit_registry_execution_admissio
 from apps_registry_coverage_helpers import cache_dir_fixture  # noqa: F401
 from apps_registry_coverage_helpers import _config_with, _fake_sandbox, _FakeProc, _reg
 
-from conftest import requires_symlinks
 from aj_crew.apps import registry
+from conftest import requires_symlinks
 
 # Candidate resolution / provenance pinning
 

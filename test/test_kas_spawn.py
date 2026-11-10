@@ -421,9 +421,7 @@ class TestSandboxClassification:
         )
         with (
             patch("aj_crew.acp.harness.kas._kiro_cli_sandbox_owns_relay", return_value=True),
-            patch(
-                "aj_crew.sandbox.delegated_workspace_exposes_sealed_target", side_effect=sealed
-            ),
+            patch("aj_crew.sandbox.delegated_workspace_exposes_sealed_target", side_effect=sealed),
             patch("aj_crew.acp.runtime.wrap_argv", side_effect=fake_wrap),
         ):
             with pytest.raises(sh.AcpRuntimeError, match="kiro agents directory"):
@@ -855,9 +853,7 @@ class TestKasInvocation:
             acp_backend=ACP_BACKEND_KAS,
         )
         with (
-            patch(
-                "aj_crew.acp.harness.kas.vault_holds_identity_off_loop", side_effect=no_identity
-            ),
+            patch("aj_crew.acp.harness.kas.vault_holds_identity_off_loop", side_effect=no_identity),
             patch("aj_crew.acp.harness.kas.answer_get_access_token", side_effect=must_not_run),
         ):
             try:

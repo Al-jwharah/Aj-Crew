@@ -19,7 +19,7 @@ from aj_crew.agent_files import AGENT_FILENAME
 
 @pytest.fixture
 def steering_home(tmp_path, monkeypatch):
-    """A home whose agents dir holds a ``ajcrew`` spec globbing ``steer/*.md``.
+    """A home whose agents dir holds an ``ajcrew`` spec globbing ``steer/*.md``.
 
     ``Path.home`` is redirected rather than ``HOME``: Windows ``expanduser``
     reads ``USERPROFILE``.

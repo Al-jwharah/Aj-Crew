@@ -1,5 +1,6 @@
 {
  "base_public_names": [
+  "AjCrewConfig",
   "CANCELLED_IDS_MAX",
   "CallerContext",
   "DEFERRED_PARKED_MAX",
@@ -17,7 +18,6 @@
   "JSONRPC_METHOD_NOT_FOUND",
   "JSONRPC_PARSE_ERROR",
   "JsonRpcEnvelopeError",
-  "AjCrewConfig",
   "MAX_CONTENT_LENGTH_BYTES",
   "NO_FRAME",
   "PENDING_CALLS_MAX",
@@ -67,6 +67,7 @@
  ],
  "note": "mcp_shared.py keeps run_mcp_stdio_loop, the process identity it declares and its hard-exit handlers; the wire, the tool-call model, the tool policy and the dispatch loop live in mcp_shared_wire, mcp_shared_calls, mcp_shared_policy and mcp_shared_dispatch, owners served through aj_crew._facade_mirror.",
  "rebound": {
+  "AjCrewConfig": "aj_crew.config.loader",
   "CallerContext": "aj_crew.mcp_caller",
   "ID_PROBE_BYTES": "aj_crew.json_line",
   "INFLIGHT_CAPABILITY_KEY": "aj_crew.mcp_caller",
@@ -77,7 +78,6 @@
   "JSONRPC_INVALID_REQUEST": "aj_crew.validation",
   "JSONRPC_PARSE_ERROR": "aj_crew.validation",
   "JsonRpcEnvelopeError": "aj_crew.validation",
-  "AjCrewConfig": "aj_crew.config.loader",
   "STALE_MANAGED_MCP_SERVERS": "aj_crew.mcp_cleanup",
   "ValidationError": "aj_crew.validation",
   "build_tool_response": "aj_crew.validation",

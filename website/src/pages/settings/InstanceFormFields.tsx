@@ -101,7 +101,7 @@ export function instanceFormFromView(inst: InstanceView): InstanceFormValues {
 }
 
 /**
- * Seed the add form from a `ajcrew://remote-crew/add` link: an SSH crew at the
+ * Seed the add form from an `ajcrew://remote-crew/add` link: an SSH crew at the
  * link's host, with its port and label when the link carries them. A port the
  * link names stops following the transport default, as one typed by hand does.
  */

@@ -34,7 +34,6 @@ from file_change_snapshots_helpers import short_tmp_dir_fixture  # noqa: F401
 from file_change_snapshots_helpers import _make_slot_with_assistant_message
 from turn_harness import SlotSpec, TurnScript, run_turn
 
-from conftest import requires_symlinks
 from aj_crew.acp.types import (
     EVENT_CLEAR_STATUS,
     EVENT_COMPLETE,
@@ -54,6 +53,7 @@ from aj_crew.dashboard.chat_runner import (
     _truncate_snapshot,
 )
 from aj_crew.dashboard.state import _ChatSlot, row_mid
+from conftest import requires_symlinks
 
 # ── _truncate_snapshot ──────────────────────────────────────────────────────
 

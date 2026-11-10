@@ -871,9 +871,7 @@ async def test_the_optional_post_bind_work_never_fails_the_gateway(
     state = MagicMock()
     state._background_tasks = set()
     resume = AsyncMock(side_effect=["qwen-small", RuntimeError("no model")])
-    monkeypatch.setattr(
-        "aj_crew.dashboard.handlers.decisions.resume_local_decision_model", resume
-    )
+    monkeypatch.setattr("aj_crew.dashboard.handlers.decisions.resume_local_decision_model", resume)
     with caplog.at_level(logging.INFO, logger=_FACADE):
         await shutdown(app)
         for _ in range(2):

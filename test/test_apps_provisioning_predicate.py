@@ -14,7 +14,6 @@ from types import SimpleNamespace
 
 import pytest
 
-from conftest import requires_symlinks
 from aj_crew.apps import backend, bridges
 from aj_crew.apps import manifest as manifest_mod
 from aj_crew.apps import registry
@@ -27,6 +26,7 @@ from aj_crew.apps.manifest import (
     runtime_provisions_requirements,
     spawn_launches_entry_point_as_python,
 )
+from conftest import requires_symlinks
 
 
 def _manifest(**fields) -> AppManifest:

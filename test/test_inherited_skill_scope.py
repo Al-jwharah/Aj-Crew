@@ -414,9 +414,7 @@ def test_mapped_agent_is_still_refused_when_search_cannot_be_wired(native_custom
 
 def test_one_spelling_of_the_search_refusal():
     assert agent_discovery.skill_search_refusal({}) is None
-    assert "excluded" in agent_discovery.skill_search_refusal(
-        {"excludedTools": ["@ajcrew-core/*"]}
-    )
+    assert "excluded" in agent_discovery.skill_search_refusal({"excludedTools": ["@ajcrew-core/*"]})
     assert "disabled" in agent_discovery.skill_search_refusal(
         {"mcpServers": {"ajcrew-core": {"disabledTools": ["skill_search"]}}}
     )

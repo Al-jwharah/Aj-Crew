@@ -13,7 +13,6 @@ import pytest
 from slack_handler_helpers import _clean_approval_state  # noqa: F401
 from slack_handler_helpers import FakeProvider, FakeSessionManager, _visible_texts, _within_lost_run
 
-from conftest import MockSlackClient
 from aj_crew.acp.client import AcpError
 from aj_crew.hooks import HOOK_REPLY
 from aj_crew.messaging.display_safety import canonicalize_display
@@ -25,6 +24,7 @@ from aj_crew.slack.handler import (
     set_allowed_users,
     set_owner_id,
 )
+from conftest import MockSlackClient
 
 
 class TestStopReasonCompactionFailed:

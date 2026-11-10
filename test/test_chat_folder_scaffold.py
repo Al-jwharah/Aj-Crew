@@ -61,9 +61,7 @@ def state(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Any:
     # The endpoints are gated on the app being enabled (it ships off by
     # default); every test here is about what an ENABLED app does, so the gate
     # is opened once for the suite and closed again only by the disabled-app test.
-    monkeypatch.setattr(
-        "aj_crew.dashboard.chat_folder_scaffold.is_app_enabled", lambda name: True
-    )
+    monkeypatch.setattr("aj_crew.dashboard.chat_folder_scaffold.is_app_enabled", lambda name: True)
     return _make_state(tmp_path)
 
 
@@ -887,9 +885,7 @@ class TestScaffoldPartialFailure:
         async def _refuse(state_arg: Any, **kwargs: Any) -> dict[str, Any]:
             raise FolderCreateError("name required")
 
-        monkeypatch.setattr(
-            "aj_crew.dashboard.chat_folder_scaffold.create_folder_record", _refuse
-        )
+        monkeypatch.setattr("aj_crew.dashboard.chat_folder_scaffold.create_folder_record", _refuse)
         async with TestClient(TestServer(_make_scaffold_app(state))) as client:
             status, body = await _scaffold(client, root, [root / "api", root / "web"])
 
@@ -1050,9 +1046,7 @@ class TestAdditiveScaffold:
             mock.patch("aj_crew.dashboard.state.config_dir", lambda: home),
             # This test builds its own state rather than using the `state`
             # fixture, so the enablement gate is opened here the same way.
-            mock.patch(
-                "aj_crew.dashboard.chat_folder_scaffold.is_app_enabled", lambda name: True
-            ),
+            mock.patch("aj_crew.dashboard.chat_folder_scaffold.is_app_enabled", lambda name: True),
         ):
             state = _make_state(base)
             state._folders = copy.deepcopy(before)

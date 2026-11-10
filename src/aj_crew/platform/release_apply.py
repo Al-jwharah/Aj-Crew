@@ -1,6 +1,6 @@
 """Applying a release: its code, then the KAS engine it pins, as one step.
 
-A Aj Crew release is more than its Python code. Each release pins exactly one KAS
+An Aj Crew release is more than its Python code. Each release pins exactly one KAS
 engine version (``acp/kas_pin.py``), and an install that runs KAS needs that engine
 on disk the moment it starts the new code: ``installed_bundle()`` looks for the
 pinned version only, so a release whose pin moved finds nothing and every KAS

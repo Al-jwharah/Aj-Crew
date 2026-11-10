@@ -852,9 +852,7 @@ class TestEnqueueDurability:
                 "slot rebound mid-persist", evidence=NoteEvidence(durable=True, committed=False)
             )
 
-        monkeypatch.setattr(
-            "aj_crew.dashboard.chat_handlers.persist_deferred_notes_sync", _rebound
-        )
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.persist_deferred_notes_sync", _rebound)
         resp = await _persist_deferred_note_hold(state, slot, note, key)
         assert resp is None, "a sibling-durable note keeps its 200 across a rebind refusal"
         assert slot._deferred_notes[-1] is note, "no rollback of the held note"

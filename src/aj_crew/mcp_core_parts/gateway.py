@@ -1,4 +1,4 @@
-"""Where a ajcrew-core tool's gateway call goes.
+"""Where an ajcrew-core tool's gateway call goes.
 
 The gateway's port, base URL and unix socket and the caches that pin them, one
 request's target resolution, the refused-target replay and re-verification, the

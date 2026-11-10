@@ -104,7 +104,7 @@ def _migrate_scope_entry(slug: str, retired: tuple[str, ...], current: str) -> b
     is not written: a broken file read as empty and written back would drop every
     configured server.
     """
-    from aj_crew.dashboard.handlers.mcp import _atomic_write, _ajcrew_mcp_json
+    from aj_crew.dashboard.handlers.mcp import _ajcrew_mcp_json, _atomic_write
     from aj_crew.dashboard.handlers.mcp_custom import _load_ajcrew_config_strict
 
     data = _load_ajcrew_config_strict()

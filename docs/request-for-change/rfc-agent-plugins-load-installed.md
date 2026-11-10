@@ -428,7 +428,7 @@ open credential/consent question for a Power's _remote_ server remains below.
 
 - A Power installed once is discoverable in Aj Crew; after explicit enable it
   contributes servers and skills without re-declaring them in
-  `~/.kiro/settings/mcp.json` or a Aj Crew skill root — so the duplicate-config
+  `~/.kiro/settings/mcp.json` or an Aj Crew skill root — so the duplicate-config
   drift between Kiro IDE and Aj Crew can go away for that Power without
   auto-activating every install.
 - Nothing changes for a user who has no installed Powers, or who has installed

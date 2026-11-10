@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-#: Env name of the one-time pickup on a Aj Crew server's own ``mcpServers``
+#: Env name of the one-time pickup on an Aj Crew server's own ``mcpServers``
 #: element. It never goes into a harness process environment or onto disk.
 PICKUP_ENV = "AJCREW_IPC_PICKUP"
 

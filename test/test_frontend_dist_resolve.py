@@ -29,8 +29,8 @@ from unittest.mock import patch
 
 import pytest
 
-from conftest import make_dir_link
 from aj_crew import atomic_write, frontend, platform_compat
+from conftest import make_dir_link
 
 
 def _fake_aj_crew_package(root: Path) -> Path:
@@ -687,7 +687,7 @@ def test_incomplete_bundle_reason_ignores_route_served_references(tmp_path):
 
 
 def test_incomplete_bundle_reason_checks_sub_path_build_refs(tmp_path):
-    """A AJCREW_BASE_PATH build writes /<base>/assets/...; its chunks still count.
+    """An AJCREW_BASE_PATH build writes /<base>/assets/...; its chunks still count.
 
     Without matching the base, such an index has no refs at all and a tree with
     every chunk missing would pass as complete.
@@ -1435,7 +1435,7 @@ def test_the_stage_command_refuses_a_directory_that_is_not_a_checkout(tmp_path, 
 
     assert frontend.main(["stage", str(website)]) == 1
 
-    assert "is not a Aj Crew checkout" in capsys.readouterr().out
+    assert "is not an Aj Crew checkout" in capsys.readouterr().out
     assert sorted(p.relative_to(website) for p in website.rglob("*")) == before
 
 

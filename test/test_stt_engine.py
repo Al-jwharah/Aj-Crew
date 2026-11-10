@@ -39,11 +39,11 @@ from stt_engine_helpers import (  # noqa: F401 -- the fixture is requested by na
     fake_engine_fixture,
 )
 
-from conftest import requires_symlinks
 from aj_crew.stt import engine as engine_mod
 from aj_crew.stt import limits as stt_limits
 from aj_crew.stt import models
 from aj_crew.testing.wait import async_wait_until, await_until
+from conftest import requires_symlinks
 
 # ── Catalog ──
 
@@ -799,7 +799,7 @@ def test_a_planted_link_at_a_predictable_staging_path_is_not_followed(
 def test_each_staging_file_gets_its_own_name(monkeypatch, tmp_path):
     """Nothing serialises across processes, so two transfers must not share a file.
 
-    A gateway, an MCP server and a `ajcrew` CLI each run their own store over one
+    A gateway, an MCP server and an `ajcrew` CLI each run their own store over one
     data home. With a shared staging name their writes interleaved and the sha256 pin
     then failed BOTH, so a model that downloaded fine twice completed zero times.
     """

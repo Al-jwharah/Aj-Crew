@@ -88,7 +88,7 @@ def test_the_read_returns_only_unleased_non_terminal_rows_long_past_due(
 def _seed_home(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, *, gateway: bool | None = True
 ) -> Path:
-    """A ``AJCREW_HOME`` under *tmp_path*, with the gateway probe answering *gateway*.
+    """An ``AJCREW_HOME`` under *tmp_path*, with the gateway probe answering *gateway*.
 
     True is a running gateway, the case the warning is for, False a stopped one and
     None a lock probe that cannot tell. The pair doctor reads is pinned, so the

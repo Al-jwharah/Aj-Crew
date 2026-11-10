@@ -3,7 +3,7 @@
 The row follows the service definition's own program -- the systemd unit's
 ``ExecStart`` or the launcher the launchd plist runs -- to the file it finally
 executes, and warns when a host with the managed wheel install runs its service
-out of a Aj Crew source checkout. Service definitions are POSIX-only, so the
+out of an Aj Crew source checkout. Service definitions are POSIX-only, so the
 module is too.
 """
 
@@ -33,7 +33,7 @@ def _executable(path: Path) -> Path:
 
 
 def _checkout(root: Path) -> Path:
-    """A Aj Crew source clone with its own ``.venv`` console script."""
+    """An Aj Crew source clone with its own ``.venv`` console script."""
     (root / ".git").mkdir(parents=True)
     (root / "src" / "aj_crew").mkdir(parents=True)
     return _executable(root / ".venv" / "bin" / "ajcrew")

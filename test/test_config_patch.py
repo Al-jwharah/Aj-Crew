@@ -863,8 +863,7 @@ class TestTitleRefreshEveryTurns:
         stored = json.loads(tmp_config.read_text(encoding="utf-8"))
         assert stored["dashboard"]["title_refresh_every_turns"] == low
         assert (
-            AjCrewConfig.load().dashboard.title_refresh_every_turns
-            == TITLE_REFRESH_EVERY_TURNS_MIN
+            AjCrewConfig.load().dashboard.title_refresh_every_turns == TITLE_REFRESH_EVERY_TURNS_MIN
         )
 
     @pytest.mark.asyncio

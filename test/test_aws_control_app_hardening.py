@@ -561,9 +561,7 @@ class TestRound21Partition:
         payload = json.dumps(
             {
                 "ResourceTagMappingList": [
-                    {
-                        "ResourceARN": "arn:aws:dynamodb:us-west-2:1:table/ajcrew-drive-abc123def456"
-                    }
+                    {"ResourceARN": "arn:aws:dynamodb:us-west-2:1:table/ajcrew-drive-abc123def456"}
                 ]
             }
         )

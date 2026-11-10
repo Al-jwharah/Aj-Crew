@@ -277,9 +277,7 @@ class TestListAutoSkills:
             triggers="",
             procedure_md="body",
             provenance=(
-                __import__(
-                    "aj_crew.skills", fromlist=["AutoSkillProvenance"]
-                ).AutoSkillProvenance(
+                __import__("aj_crew.skills", fromlist=["AutoSkillProvenance"]).AutoSkillProvenance(
                     session_key="x",
                     created_at="2026-05-05T11:30:00+00:00",
                 )

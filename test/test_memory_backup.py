@@ -24,11 +24,11 @@ from unittest import mock
 
 import pytest
 
-from conftest import make_dir_link
 from aj_crew import memory_backup as mb
 from aj_crew.memory_stores import DEFAULT_MEMORY_STORE, resolve_store_path
 from aj_crew.testing.wait import wait_until
 from aj_crew.vector_memory import VectorMemoryStore
+from conftest import make_dir_link
 
 pytestmark = pytest.mark.xdist_group("memory_backup")
 

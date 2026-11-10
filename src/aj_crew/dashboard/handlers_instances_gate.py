@@ -87,7 +87,7 @@ _ADDRESSING_FIELDS = {"connection_method", "ssm_target", "aws_profile", "aws_reg
 
 
 def _is_correlated_cloud_instance(ssm_target: str) -> bool:
-    """True if *ssm_target* was provisioned by a Aj Crew cloud launch.
+    """True if *ssm_target* was provisioned by an Aj Crew cloud launch.
 
     Deferred import: this is the one place the instances feature reaches into
     the cloud module, kept lazy so instances stays usable with the cloud

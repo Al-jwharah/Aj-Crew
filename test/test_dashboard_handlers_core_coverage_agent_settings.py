@@ -322,9 +322,7 @@ class TestPatchGuards:
         app["state"] = SimpleNamespace(owner_id="")
         app.router.add_patch("/api/config/ajcrew", core_mod.api_ajcrew_config_patch)
         async with TestClient(TestServer(app)) as client:
-            resp = await client.patch(
-                "/api/config/ajcrew", json={"path": "agent.nope", "value": 1}
-            )
+            resp = await client.patch("/api/config/ajcrew", json={"path": "agent.nope", "value": 1})
             assert resp.status == 400
             assert (await resp.json())["error"] == "field not editable: agent.nope"
 

@@ -60,9 +60,7 @@ def rebuildable(agents_dir: Path, monkeypatch: pytest.MonkeyPatch, tmp_path: Pat
     monkeypatch.setattr(agent, "_AJCREW_BIN", str(launcher))
     monkeypatch.setattr(agent, "_KIRO_MCP_JSON", tmp_path / "kiro-global-mcp.json")
     monkeypatch.setattr(agent, "_DEFAULT_KIRO_HOOKS_DIR", tmp_path / "hooks")
-    monkeypatch.setattr(
-        "aj_crew.apps.bridges._mcp_json_path", lambda: agents_dir / AGENT_FILENAME
-    )
+    monkeypatch.setattr("aj_crew.apps.bridges._mcp_json_path", lambda: agents_dir / AGENT_FILENAME)
     return agents_dir
 
 

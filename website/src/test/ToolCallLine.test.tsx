@@ -892,7 +892,7 @@ describe('ToolCallLine auto-denied detection', () => {
       role: 'tool',
       content:
         '🚫 Running: ls — Blocked: the safety check crashed while judging this call ' +
-        '(SystemError), so the call was refused and nothing ran. This is a Aj Crew ' +
+        '(SystemError), so the call was refused and nothing ran. This is an Aj Crew ' +
         'bug, not a policy rule and not a user action.',
       cls: 'msg msg-tool',
       meta: { tool_call_id: 'tc_crash' },

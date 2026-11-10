@@ -4,9 +4,9 @@ import os
 
 import pytest
 
-from conftest import make_dir_link, requires_symlinks
 from aj_crew import hooks, platform_compat, portability
 from aj_crew.testing.wait import await_until
+from conftest import make_dir_link, requires_symlinks
 
 
 def _assert_closed(descriptors):

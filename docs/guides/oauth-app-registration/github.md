@@ -1,6 +1,6 @@
 # Register a GitHub OAuth app for Aj Crew Connections
 
-*Who this is for: the person who operates a Aj Crew install and wants agents to reach GitHub through GitHub's hosted MCP server. Expected time: 15 minutes, plus any wait for an organization owner's approval.*
+*Who this is for: the person who operates an Aj Crew install and wants agents to reach GitHub through GitHub's hosted MCP server. Expected time: 15 minutes, plus any wait for an organization owner's approval.*
 
 Aj Crew connects to the remote GitHub MCP server at `https://api.githubcopilot.com/mcp/`. That server does not issue credentials itself and does not support Dynamic Client Registration, so every MCP client needs its own GitHub app registration. GitHub's host-integration guide states it directly: "Dynamic Client Registration is NOT supported by Remote GitHub MCP Server at this time" and "Each MCP host application needs to configure a GitHub App or OAuth App to support remote access via OAuth." This runbook registers a plain **OAuth App** (not a GitHub App), because that is the registration type whose credentials are exactly a client ID and a client secret, which is what the Aj Crew Connections card asks for.
 

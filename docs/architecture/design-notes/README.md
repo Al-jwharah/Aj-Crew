@@ -8,7 +8,7 @@ grows into a subsystem should become a spec under
 | Note | Covers |
 |---|---|
 | [soft-stop.md](soft-stop.md) | Cooperative cancel: acknowledging a stop before a hard kill so session state survives. |
-| [session-slack-linking.md](session-slack-linking.md) | How a Slack thread maps onto a Aj Crew session, and how thread state stays in sync. |
+| [session-slack-linking.md](session-slack-linking.md) | How a Slack thread maps onto an Aj Crew session, and how thread state stays in sync. |
 | [mcp-oauth-ownership.md](mcp-oauth-ownership.md) | The kiro-cli credential boundary for an OAuth MCP server: which path establishes a grant, the paired token and registration artifacts it leaves, and the stat-only surface Aj Crew observes them through. |
 | [mcp-entry-provenance.md](mcp-entry-provenance.md) | Which entries in a shared MCP config file a sync may rewrite: the write-authorship marker and its three write actions (create, rewrite, decline). |
 | [mcp-gateway-claim-push.md](mcp-gateway-claim-push.md) | Event-driven caller identity for pooled MCP stubs. |

@@ -24,10 +24,11 @@ Two main pages, one set of data:
 | Updates | `/apps/-/updates` | Every pending update in one worklist, with **Update All**. |
 | Migration | `/apps/migrate/:name` | Guidance for an app that used to ship inside the package and no longer does. |
 
-Discover's shelf comes from the published catalog at `apps.crew.kiro.dev`, cached for
-an hour. When that fetch fails the store falls back to the small seed list bundled in
-your install, so the page still renders — but it is a short shelf, and an app the
-catalog alone carries is not on it until the fetch succeeds again. Library is
+Discover's shelf comes from the small seed list bundled in your install. This build
+does not fetch a published catalog on its own: the only one that exists,
+`apps.crew.kiro.dev`, belongs to the upstream project. Setting
+`AJCREW_SKIP_APP_STORE_FETCH=0` opts in to reading it (cached for an hour); when that
+fetch fails the store falls back to the seed list, so the page still renders. Library is
 unaffected: it reads your own machine, so everything installed is still listed.
 **Sources** (the gear in the Discover header) is where you add an organization's own
 registry, or install a local directory from a path.
@@ -174,7 +175,7 @@ Some built-in apps move to their own repository. When one of yours does, there i
 nothing to do: Aj Crew fetches the repository version in the background and
 switches the app over the next time it starts, keeping your data, your settings,
 its permissions and whether it is enabled. Until then the built-in keeps running.
-Only a Aj Crew release that supports the switch makes it; on an earlier one the
+Only an Aj Crew release that supports the switch makes it; on an earlier one the
 built-in keeps running unchanged. If the switch cannot happen yet (for example an
 app admission policy on this machine refuses it), the app's page says why, and the
 built-in keeps running. Once the cause is fixed, the next start prepares the switch

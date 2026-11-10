@@ -20,9 +20,9 @@ from pathlib import Path
 
 import pytest
 
-from conftest import host_abs
 from aj_crew import doctor_deadpath as dp
 from aj_crew.agent_files import AGENT_FILENAME
+from conftest import host_abs
 
 
 @pytest.fixture

@@ -567,9 +567,7 @@ class TestKillProcess:
     async def test_noop_when_no_process(self):
         client = AcpClient()
         client._process = None
-        with patch(
-            "aj_crew.platform_compat.kill_process_tree_async", new=AsyncMock()
-        ) as tree_kill:
+        with patch("aj_crew.platform_compat.kill_process_tree_async", new=AsyncMock()) as tree_kill:
             await client._kill_process()
         tree_kill.assert_not_awaited()
         assert client._kill_sent is None
@@ -580,9 +578,7 @@ class TestKillProcess:
         proc = MagicMock()
         proc.returncode = 0
         client._process = proc
-        with patch(
-            "aj_crew.platform_compat.kill_process_tree_async", new=AsyncMock()
-        ) as tree_kill:
+        with patch("aj_crew.platform_compat.kill_process_tree_async", new=AsyncMock()) as tree_kill:
             await client._kill_process()
         tree_kill.assert_not_awaited()
         assert client._kill_sent is None

@@ -66,7 +66,7 @@ const escapeCssValue = sanitizeCssValue
  * The syntax/diff colours an omitted-token pack falls back to, per polarity:
  * `token: [light-palette value, dark-palette value]`.
  *
- * These are a SECOND spelling of the built-in kiro palette — the first is
+ * These are a SECOND spelling of the built-in aj palette — the first is
  * `src/index.css`, whose default dark block and `[data-theme="light"]` block
  * carry the same eleven pairs. This module cannot read a stylesheet (nothing
  * here touches the DOM, see the file header), so the copy is unavoidable; what

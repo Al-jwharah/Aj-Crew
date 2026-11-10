@@ -22,7 +22,7 @@ Overload never enters the ladder: pressure lowers caps and pauses admission
 (the adaptive controller); only a unit that stopped making progress AND failed
 an independent probe is torn down. L5 is deliberately not automatic -- a
 gateway restart is the user's decision -- so the ladder's top rung is a
-notification, emitted once per escalation, never a ``ajcrew restart``.
+notification, emitted once per escalation, never an ``ajcrew restart``.
 
 Every layer reads its schedule from one :class:`RecoveryPolicy`, so a change to
 the base or the cap moves every layer together and the layers stay

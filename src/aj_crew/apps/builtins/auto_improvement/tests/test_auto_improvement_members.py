@@ -124,9 +124,7 @@ def test_foreign_member_is_not_adopted():
     update_config_locked(mutate=add_foreign)
     with pytest.raises(ValueError, match="another purpose"):
         crew.ensure_team()
-    assert (
-        AjCrewConfig.load().agents[crew.ROLES["discovery"].name].kiro_agent == "another-template"
-    )
+    assert AjCrewConfig.load().agents[crew.ROLES["discovery"].name].kiro_agent == "another-template"
     assert not crew._team_path().exists()
 
 

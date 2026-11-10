@@ -14,8 +14,8 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from conftest import _find_posix_test_shell
 from aj_crew.deploy import webapp_types
+from conftest import _find_posix_test_shell
 
 
 def _bash():

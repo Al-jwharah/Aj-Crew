@@ -7,10 +7,12 @@ can reach from the dashboard, the CLI, or a connected messaging channel.
 
 ## Quick Start
 
-Install the prebuilt, signed wheel:
+Install from a source checkout (Aj Crew publishes no prebuilt wheel yet):
 
 ```bash
-curl -fsSL https://download.crew.kiro.dev/cli.sh | sh
+git clone https://github.com/Al-jwharah/Aj-Crew.git
+cd Aj-Crew
+bash install.sh
 ```
 
 Then start the gateway and open the dashboard:

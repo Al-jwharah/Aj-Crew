@@ -4062,7 +4062,7 @@ when the parent's own call already returned every member it carries:
   `SubagentInfo._collected_inline` on each named record whose
   `parent_session_key` is the authorised claim; an unknown id, another parent's
   child and a parentless claim mark nothing. Only a mark carrying
-  `written: true` changes anything: a `ajcrew-core` that marks without it
+  `written: true` changes anything: an `ajcrew-core` that marks without it
   (one from before the mark moved behind the write) flags no record and touches
   no tab slot, so its members keep their completion events, a queued one
   included. A mark touches no tab slot itself: a tab that shows the parent
@@ -4277,7 +4277,7 @@ Folder-per-agent persistence at `~/.kiro/crew/subagents/{id}/`:
 
 `subagent_persistence.py` is the import path for this layer. It keeps two of the readers
 that sweep every run folder -- the panel records (`read_panel_records`) and
-`prune_stale_tombstones` with its session-file cleanup -- and is a
+`prune_stale_tombstones` with its session-file cleanup -- and is an
 `aj_crew._facade_mirror` facade over four owners: `subagent_persistence_layout.py`
 (run-folder paths, the registry root, the cleanup identities, the owner-only record
 write), `subagent_persistence_dismissals.py` (panel dismissals and the record-key
@@ -5061,7 +5061,7 @@ reclaims it. The exec-time environment of the sweeping process and of each exec
 supervisor above it (`platform_compat.is_exec_supervisor_of_this_process`, such
 as the `toolbox-exec` launcher that runs the gateway as its child) is not read:
 a gateway started from an agent shell keeps that shell's exports there after it
-dropped them (`drop_own_inherited_scratch_env`), a `ajcrew server restart`
+dropped them (`drop_own_inherited_scratch_env`), an `ajcrew server restart`
 run from an agent shell starts the launcher with them, and reading them would
 keep that shell's tree for the gateway's whole life. Their working directories
 and descriptors still count. On macOS and Windows nothing here lists every
@@ -5113,7 +5113,7 @@ sub-agent, read the file back from it):
 So on all three hosts a dedicated sub-agent reached the parent's staged file.
 Only on Linux is the sandbox layer known. On macOS and Windows the runs do not
 show the sub-agent was sandboxed at all, so they say the path works, not that
-it works inside a Aj Crew sandbox; that question is tracked in #19601.
+it works inside an Aj Crew sandbox; that question is tracked in #19601.
 
 ### Parent end ends the children, on every backend
 

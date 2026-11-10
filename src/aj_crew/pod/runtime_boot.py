@@ -191,7 +191,7 @@ def pod_context(cfg: PodConfig, name: str) -> tuple[Path, dict[str, str]]:
     if not checkout_str:
         raise PodError(
             f"pod {name!r} has no pinned checkout — run `ajcrew pod up {name}` "
-            f"from inside a ajcrew checkout first"
+            f"from inside an ajcrew checkout first"
         )
     checkout = Path(checkout_str).expanduser()
     bin_path = prov.venv_bin(checkout)
@@ -561,7 +561,7 @@ def _boot_unguarded(cfg: PodConfig, name: str) -> int:
             name,
             3,
             f"pod {name!r} has no pinned checkout — run "
-            f"`ajcrew pod up {name}` from inside a ajcrew checkout first",
+            f"`ajcrew pod up {name}` from inside an ajcrew checkout first",
         )
     checkout = Path(checkout_str).expanduser()
     home_dir = cfg.home_dir(name)

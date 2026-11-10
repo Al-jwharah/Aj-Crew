@@ -24,7 +24,7 @@ from aj_crew.skill_scope_pin import (
 )
 
 # A spec that may take its inherited skill trees: an explicit tool list without
-# "*", and a ajcrew-core entry that keeps skill_search.
+# "*", and an ajcrew-core entry that keeps skill_search.
 _INHERITING_SPEC = {
     "name": "pinned",
     "tools": ["@ajcrew-core/skill_search"],

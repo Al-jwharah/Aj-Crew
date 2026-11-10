@@ -27,7 +27,7 @@ from test_cli_manifest_signature import (  # noqa: F401  (fixtures are looked up
 )
 from test_installer_binary_only import _existing_managed_venv, _prepare_installer
 
-WARNING = "WARNING: a Aj Crew gateway is running and still has the previous version loaded."
+WARNING = "WARNING: an Aj Crew gateway is running and still has the previous version loaded."
 
 # Each stub records its argv and answers from the environment.
 # FAKE_SYSTEM_ACTIVE / FAKE_USER_ACTIVE: 1 = our unit is active; "alias" =

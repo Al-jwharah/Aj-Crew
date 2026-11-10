@@ -10,7 +10,7 @@
  *
  * The pose assets carry a baked black vector stroke rather than a CSS filter, so
  * the same art is supposed to read on every palette — a dark surface hides the
- * stroke, a pale one needs it. Shooting one dark and one light non-Kiro theme is
+ * stroke, a pale one needs it. Shooting one dark and one light non-Aj theme is
  * what makes that claim checkable instead of asserted.
  *
  * Nothing in CI runs this file; it is a manual capture for PR evidence. The
@@ -63,11 +63,11 @@ const detail = {
   ],
 }
 
-/** One shot per palette: two non-Kiro themes (dark + light) plus Kiro itself. */
+/** One shot per palette: two non-Aj themes (dark + light) plus Kiro itself. */
 const CASES = [
   { name: 'emerald-dark', colorTheme: 'emerald', mode: 'dark' },
   { name: 'solarized-light', colorTheme: 'solarized', mode: 'light' },
-  { name: 'aj-dark', colorTheme: 'kiro', mode: 'dark' },
+  { name: 'aj-dark', colorTheme: 'aj', mode: 'dark' },
 ]
 
 async function main() {

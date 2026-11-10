@@ -43,9 +43,7 @@ def crew_cfg(monkeypatch, tmp_path):
     tree = tmp_path / "web-frontend"
     tree.mkdir()
     cfg.workspaces["web-frontend"] = WorkspaceConfig(dir=str(tree))
-    cfg.agents["web-frontend"] = AjCrewAgentConfig(
-        kiro_agent="ajcrew", workspace="web-frontend"
-    )
+    cfg.agents["web-frontend"] = AjCrewAgentConfig(kiro_agent="ajcrew", workspace="web-frontend")
     monkeypatch.setattr(live, "snapshot", lambda: cfg)
     return cfg, tree
 

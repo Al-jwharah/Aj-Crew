@@ -500,9 +500,7 @@ class TestADismissalHoldsOnBothReaders:
         import ast
 
         root = pathlib.Path(__file__).resolve().parents[1]
-        tree = ast.parse(
-            (root / "src/aj_crew/subagent_persistence.py").read_text(encoding="utf-8")
-        )
+        tree = ast.parse((root / "src/aj_crew/subagent_persistence.py").read_text(encoding="utf-8"))
         reader = next(
             node
             for node in ast.walk(tree)

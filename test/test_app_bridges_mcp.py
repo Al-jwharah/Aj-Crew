@@ -17,10 +17,10 @@ from app_bridges_helpers import _make_app_source
 from hypothesis import HealthCheck, assume, given, settings
 from hypothesis import strategies as st
 
-from conftest import host_abs
 from aj_crew.apps.bridges import _deregister_mcp_servers, _register_mcp_servers, register_app
 from aj_crew.apps.manager import APP_MANIFEST_FILENAME, install_app
 from aj_crew.apps.manifest import AppManifest
+from conftest import host_abs
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
 

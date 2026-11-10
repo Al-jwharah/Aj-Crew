@@ -19,9 +19,9 @@ from typing import Any
 
 import pytest
 
-from conftest import MockSlackClient
 from aj_crew.providers.base import LLMEvent
 from aj_crew.slack import handler
+from conftest import MockSlackClient
 
 # ── recording doubles ─────────────────────────────────────────────────────────
 

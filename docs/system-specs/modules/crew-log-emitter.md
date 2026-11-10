@@ -14,7 +14,7 @@ The emitter is three parts, and the line between them is where new work goes:
 | `crew_log/writer.py` | `CrewLogWriter`: the per-unit buffer and its order, retention and backoff, the refusal rule, the memory ceilings, the `write/dropped` loss marker, the inline path, stall reporting and the shutdown drain, all paced by one frozen `WriterLimits`; `WriteJob`, whose named constructors (`append`, `opening`, `follow_on`) select a row of the writer's policy table; the writer lanes that drain different units side by side, one unit per lane at a time; and `WarningBudget`, the one rate-limited failure report the writer and the emitter share, defined in `crew_log/writer_warnings.py` and re-exported here | how an append reaches the file |
 | `crew_log/turn_tracker.py` | `TurnTracker`: each live turn's record (its step and call ordinals, whether its closer is owed), the settle-once tool registry, the attempt counts, the supersede repair's debt, and the never-evict-a-live-turn rule the emitter's own caches are trimmed by | per-turn bookkeeping |
 
-`crew_log/emit.py` is the emitter's import path and patch surface: a `aj_crew._facade_mirror`
+`crew_log/emit.py` is the emitter's import path and patch surface: an `aj_crew._facade_mirror`
 facade over the owners below, lowest layer first. It binds every name they define and serves the
 nine module globals they rebind with `global`, so `aj_crew.crew_log.emit.<name>` is the object
 the code reads and a patch through it reaches every owner holding the name

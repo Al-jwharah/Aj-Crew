@@ -79,7 +79,7 @@
   "work_item_path",
   "write_settings"
  ],
- "note": "A aj_crew._facade_mirror facade over the crew_store_* owners beside it.",
+ "note": "An aj_crew._facade_mirror facade over the crew_store_* owners beside it.",
  "rebound": {
   "MODEL_PICKER_HIDDEN_MODEL_ID_RE": "aj_crew.validation",
   "RADAR_CLEARABLE_FIELDS": "aj_crew.crew_log.entry_types",

@@ -29,7 +29,6 @@ from pod_helpers import (  # noqa: F401 -- the fixtures register by import
     requires_posix_pod_lifecycle,
 )
 
-from conftest import requires_symlinks
 from aj_crew import platform_compat
 from aj_crew.pod import runtime as rt
 from aj_crew.pod import unit as unit_mod
@@ -40,6 +39,7 @@ from aj_crew.pod.config import (
     PodConfig,
     _canonical_override,
 )
+from conftest import requires_symlinks
 
 
 class TestConfig:

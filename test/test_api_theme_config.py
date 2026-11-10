@@ -129,7 +129,7 @@ async def test_theme_boot_returns_configured_values() -> None:
     """GET /api/theme/boot returns workspace config values."""
     cfg = _make_cfg(
         theme_mode="dark",
-        theme_color="kiro",
+        theme_color="aj",
         onboarded=True,
         import_onboarded=True,
         translucent_panels="on",
@@ -141,7 +141,7 @@ async def test_theme_boot_returns_configured_values() -> None:
     body = json.loads(resp.body)
     assert body == {
         "mode": "dark",
-        "color": "kiro",
+        "color": "aj",
         "language": "",
         "translucent_panels": "on",
         "onboarded": True,
@@ -432,10 +432,10 @@ async def test_theme_config_put_no_change_no_write(cfg_file: Path) -> None:
     default-agent migration to write back, which would mask the assertion.
     """
     doc = json.loads(json.dumps(_POPULATED))
-    doc["dashboard"].update({"theme_mode": "dark", "theme_color": "kiro", "onboarded": True})
+    doc["dashboard"].update({"theme_mode": "dark", "theme_color": "aj", "onboarded": True})
     _write(cfg_file, doc)
     before = cfg_file.read_bytes()
-    resp = await _put({"mode": "dark", "color": "kiro", "onboarded": True})
+    resp = await _put({"mode": "dark", "color": "aj", "onboarded": True})
     assert resp.status == 200
     assert cfg_file.read_bytes() == before
 

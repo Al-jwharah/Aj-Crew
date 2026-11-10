@@ -26,7 +26,7 @@
   "runtime",
   "subprocess_executor"
  ],
- "note": "A aj_crew._facade_mirror facade over the live_leases, live_service and live_plan owners beside it; it keeps the state the cutover shares and its BASE __all__ (server.py's re-export table).",
+ "note": "An aj_crew._facade_mirror facade over the live_leases, live_service and live_plan owners beside it; it keeps the state the cutover shares and its BASE __all__ (server.py's re-export table).",
  "rebound": {
   "LoopBoundLock": "aj_crew.loop_lock",
   "gateway_service": "aj_crew.apps.builtins.dev_fleet",

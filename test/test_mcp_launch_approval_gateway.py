@@ -76,9 +76,7 @@ def test_gateway_spawn_and_env_tests_choose_launch_approval_fixture():
                 module_aliases.update(
                     alias.asname or alias.name for alias in node.names if alias.name == "gatewayd"
                 )
-            elif (
-                isinstance(node, ast.ImportFrom) and node.module == "aj_crew.mcp_gateway.gatewayd"
-            ):
+            elif isinstance(node, ast.ImportFrom) and node.module == "aj_crew.mcp_gateway.gatewayd":
                 imported_symbols.update(alias.name for alias in node.names if sensitive(alias.name))
             elif isinstance(node, ast.Assign):
                 enforced = enforced or any(

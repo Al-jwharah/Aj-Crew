@@ -15,7 +15,6 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from conftest import MockSlackClient
 from aj_crew.config.sections_shared_crew import effective_limits, shared_crew_config_from
 from aj_crew.shared_crew import admission_entry as entry
 from aj_crew.shared_crew import admission_gate as ag
@@ -37,6 +36,7 @@ from aj_crew.taskq import lanes
 from aj_crew.taskq.store import TaskStore
 from aj_crew.testing.clock import ManualClock
 from aj_crew.testing.wait import async_wait_until, await_until
+from conftest import MockSlackClient
 
 ALICE = tailnet_principal("alice@example.com", "laptop.tail.ts.net", Provenance.TAILSCALE_SERVE)
 BOB = tailnet_principal("bob@example.com", "phone.tail.ts.net", Provenance.TAILSCALE_SERVE)

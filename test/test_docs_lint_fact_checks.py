@@ -274,7 +274,7 @@ class TestFencedPath:
         assert not _tokens(tree, gate.CHECK_FENCED_PATH)
 
     def test_one_pasted_command_is_one_finding(self, tree: Path) -> None:
-        # Both patterns match a `ajcrew run docs/task-specs/...` line.
+        # Both patterns match an `ajcrew run docs/task-specs/...` line.
         _write(
             tree,
             "docs/ok.md",
@@ -543,9 +543,7 @@ class TestAnchorExists:
             "# Ok\n\n[a](../src/aj_crew/docs/README.md#setup) "
             "[b](../src/aj_crew/docs/README.md#install)\n",
         )
-        assert _tokens(tree, gate.CHECK_ANCHOR_EXISTS) == {
-            "../src/aj_crew/docs/README.md#install"
-        }
+        assert _tokens(tree, gate.CHECK_ANCHOR_EXISTS) == {"../src/aj_crew/docs/README.md#install"}
 
 
 class TestBaseline:
@@ -591,9 +589,7 @@ class TestBaseline:
         # The line number is deliberately outside the identity: a citation that
         # merely moved down the page is the same unfixed finding.
         triple = self._one_triple(tree)
-        _write(
-            tree, "docs/ok.md", "# Ok\n\nExtra prose.\n\nMore.\n\nSee `src/aj_crew/ghost.py`.\n"
-        )
+        _write(tree, "docs/ok.md", "# Ok\n\nExtra prose.\n\nMore.\n\nSee `src/aj_crew/ghost.py`.\n")
         findings = gate.run(tree)
         gate.apply_baseline(findings, {triple})
         assert not findings.facts_for(gate.CHECK_PATH_EXISTS)

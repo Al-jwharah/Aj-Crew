@@ -972,7 +972,7 @@ test("classifyPortOwner and forceStopPort share one AjCrew matcher", async () =>
   assert.ok(!isAjcrewCommand("ssh -NL 5476:localhost:5476 host"));
   assert.ok(!isAjcrewCommand("ssh -NL 5476:localhost:5476 ajcrew"));
   // The matcher keys on the executable/module TOKEN, not a path substring:
-  // an unrelated process merely living under a `ajcrew` home dir is foreign.
+  // an unrelated process merely living under an `ajcrew` home dir is foreign.
   assert.ok(!isAjcrewCommand("C:\\Users\\ajcrew\\OtherApp\\server.exe --port 5476"));
   assert.ok(!isAjcrewCommand("/home/ajcrew/some-other-server --port 5476"));
   assert.ok(!isAjcrewCommand("C:\\Users\\ajcrew\\python.exe -m http.server 5476"));
@@ -1035,7 +1035,7 @@ test("isAjcrewCommand: a composed edition's `-m ajcrew_<edition>` gateway is our
   assert.ok(!isAjcrewCommand("python -m"));
   // The module alone never authorizes a kill: the first positional after it
   // must be a server subcommand, mirroring `_AJCREW_SERVER_SUBCOMMANDS`. A
-  // process that merely imports a `ajcrew_*` module on our port stays foreign.
+  // process that merely imports an `ajcrew_*` module on our port stays foreign.
   assert.ok(isAjcrewCommand("python -m ajcrew_enterprise dashboard --port 5476"));
   assert.ok(isAjcrewCommand("python -m ajcrew_enterprise start"));
   assert.ok(!isAjcrewCommand("python -m ajcrew_backup"));

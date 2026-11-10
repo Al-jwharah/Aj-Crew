@@ -58,7 +58,7 @@ SHARED_REBIND = REPO_ROOT / "src" / "aj_crew" / "_facade_compose.py"
 PR_STATUS = PUSH_GUARD_DIR / "pr_status.py"
 #: The loader units push_guard.py carries as a byte-identical twin of pr_status.py's.
 LOADER_TWIN = ("_NoBytecodeSourceLoader", "_load_sibling", "_load_owner")
-#: A dotted load name OUTSIDE ``aj_crew``: a ``aj_crew.`` prefix would make a
+#: A dotted load name OUTSIDE ``aj_crew``: an ``aj_crew.`` prefix would make a
 #: coverage run start measuring these files from this module's partial use of them.
 DOTTED = "s56_probe.push_guard"
 

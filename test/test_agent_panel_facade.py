@@ -59,8 +59,7 @@ def test_the_owners_are_every_agent_panel_sibling_in_layer_order() -> None:
     """An ``agent_panel_*.py`` module the facade does not list would hold names a patch
     through the facade never reaches, so the sibling set and the owner tuple agree."""
     siblings = {
-        f"aj_crew.dashboard.handlers.{path.stem}"
-        for path in HANDLERS_DIR.glob("agent_panel_*.py")
+        f"aj_crew.dashboard.handlers.{path.stem}" for path in HANDLERS_DIR.glob("agent_panel_*.py")
     }
     assert set(_OWNERS) == siblings
     assert _index().owners == _OWNERS

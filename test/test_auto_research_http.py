@@ -838,9 +838,7 @@ class TestHTTPHandlers:
                 "aj_crew.apps.builtins.auto_research.handlers.LLMPool",
                 lambda *a, **k: _RaisingPool(),
             ),
-            patch(
-                "aj_crew.apps.builtins.auto_research.handlers.ArtifactStore", return_value=store
-            ),
+            patch("aj_crew.apps.builtins.auto_research.handlers.ArtifactStore", return_value=store),
         ):
             async with TestClient(TestServer(app)) as c:
                 cr = await c.post(
@@ -889,9 +887,7 @@ class TestHTTPHandlers:
                 "aj_crew.apps.builtins.auto_research.handlers.LLMPool",
                 lambda *a, **k: _RaisingPool(),
             ),
-            patch(
-                "aj_crew.apps.builtins.auto_research.handlers.ArtifactStore", return_value=store
-            ),
+            patch("aj_crew.apps.builtins.auto_research.handlers.ArtifactStore", return_value=store),
         ):
             async with TestClient(TestServer(app)) as c:
                 cr = await c.post(

@@ -393,7 +393,7 @@ class TestModelLoaderPaths:
 
         return configure
 
-    # The branches that apply a Aj Crew seal, and those that apply none (a delegated
+    # The branches that apply an Aj Crew seal, and those that apply none (a delegated
     # Kiro hand-off or an unconfined spawn), where nothing of Aj Crew's seals models.
     _SEALED_BRANCHES = ("namespace", "seatbelt")
     _DELEGATED_BRANCHES = ("darwin-delegated", "windows-delegated", "darwin-off-delegated")

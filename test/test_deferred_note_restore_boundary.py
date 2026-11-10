@@ -719,9 +719,7 @@ class TestRestoreTrustBoundary:
         def _no_line(conversation_log, s, ensure, authorized_history_key):
             return DeferredHoldOutcome(written=False, evidence=NoteEvidence(False, False))
 
-        monkeypatch.setattr(
-            "aj_crew.dashboard.chat_handlers.persist_deferred_notes_sync", _no_line
-        )
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.persist_deferred_notes_sync", _no_line)
         resp = await _persist_deferred_note_hold(state, slot, note, key)
         assert resp is not None and resp.status == 404
         assert note not in slot._deferred_notes

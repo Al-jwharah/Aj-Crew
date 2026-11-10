@@ -124,13 +124,9 @@ def _run_shared_cron_deaths(*, limit: int, deaths: int):
                 await callback(job)
 
     with (
-        patch(
-            "aj_crew.slack.gateway.CronService.create", new=AsyncMock(side_effect=capture_cron)
-        ),
+        patch("aj_crew.slack.gateway.CronService.create", new=AsyncMock(side_effect=capture_cron)),
         patch("aj_crew.slack.gateway.stream_and_collect", side_effect=fail),
-        patch(
-            "aj_crew.slack.gateway.build_cron_session_context", return_value=("cron:run", "run")
-        ),
+        patch("aj_crew.slack.gateway.build_cron_session_context", return_value=("cron:run", "run")),
         patch("aj_crew.slack.gateway.runtime_death.caused_by_this_session", return_value=False),
     ):
         asyncio.run(run())

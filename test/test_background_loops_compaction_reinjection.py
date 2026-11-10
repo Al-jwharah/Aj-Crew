@@ -85,9 +85,7 @@ def _run(gw: Any, get_cb: Callable[[], Any], capture_cron: Any, job: CronJob, st
         patch("aj_crew.slack.gateway.stream_and_collect", side_effect=stream),
         patch("aj_crew.slack.gateway.redact_exfiltration_urls", return_value=("", False)),
         patch("aj_crew.slack.gateway.redact_credentials", return_value=("", False)),
-        patch(
-            "aj_crew.slack.gateway.CronService.create", new=AsyncMock(side_effect=capture_cron)
-        ),
+        patch("aj_crew.slack.gateway.CronService.create", new=AsyncMock(side_effect=capture_cron)),
     ):
 
         async def _init_and_run() -> Any:

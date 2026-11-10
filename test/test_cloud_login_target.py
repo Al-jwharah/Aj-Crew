@@ -58,9 +58,7 @@ class TestLoginTargetValidation:
         """The logout-then-login line a mismatch points at signs in AS THE
         TARGET: Identity Center flags for a pinned target, the bare command for
         the Builder ID default."""
-        assert (
-            KiroLoginTarget().recovery_command() == "ajcrew cloud logout && ajcrew cloud login"
-        )
+        assert KiroLoginTarget().recovery_command() == "ajcrew cloud logout && ajcrew cloud login"
         assert IDC.recovery_command() == (
             "ajcrew cloud logout && ajcrew cloud login "
             f"--identity-provider {IDC.start_url} --license pro --idp-region us-east-1"

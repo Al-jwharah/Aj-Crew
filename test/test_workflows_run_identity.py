@@ -159,8 +159,8 @@ def test_reservation_accepts_resolve_prefix_during_creation(monkeypatch, compone
 
 
 def test_workflow_allocator_refuses_real_directory_redirect(tmp_path):
-    from conftest import make_dir_link
     from aj_crew.workflow_memory import WorkflowMemoryError
+    from conftest import make_dir_link
 
     path = _allocator_root()
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -489,8 +489,8 @@ def linked_default_home(tmp_path, monkeypatch, request):
     Returns ``(lexical_root, real_root)`` -- the workflows directory as named
     through the link, and where it really lives.
     """
-    from conftest import make_dir_link
     from aj_crew.config import paths as config_paths
+    from conftest import make_dir_link
 
     real_home = tmp_path / "home-real"
     real_home.mkdir()
@@ -551,8 +551,8 @@ def test_linked_data_home_still_refuses_a_planted_file_link(linked_default_home,
 
 @pytest.mark.parametrize("linked_default_home", ["home"], indirect=True)
 def test_linked_data_home_still_refuses_a_redirected_workflows_dir(linked_default_home, tmp_path):
-    from conftest import make_dir_link
     from aj_crew.workflow_memory import WorkflowMemoryError
+    from conftest import make_dir_link
 
     lexical, real = linked_default_home
     real.parent.mkdir(parents=True, exist_ok=True)

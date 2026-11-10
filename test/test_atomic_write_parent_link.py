@@ -33,7 +33,7 @@ requires_symlinks = pytest.mark.skipif(
 
 @pytest.fixture
 def owned_home(tmp_path, monkeypatch):
-    """A Aj Crew data home under *tmp_path*, so the walk has a trust anchor."""
+    """An Aj Crew data home under *tmp_path*, so the walk has a trust anchor."""
     home = tmp_path / "datahome"
     home.mkdir()
     monkeypatch.setenv("AJCREW_HOME", str(home))

@@ -3,7 +3,7 @@
 These subparsers are not `required` (no CLI subparser is), so a bare
 `ajcrew app` leaves the action unset and the handler's `else` branch runs.
 It printed a Usage line to stdout and returned None, and the dispatcher
-discards the return -- so the process exited 0 after a usage error, and a
+discards the return -- so the process exited 0 after a usage error, and an
 `ajcrew app && …` chain proceeded past a typo. The branch now prints to
 stderr and exits 2, the argparse convention.
 """

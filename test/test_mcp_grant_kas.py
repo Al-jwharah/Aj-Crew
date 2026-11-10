@@ -319,9 +319,7 @@ async def test_the_probe_passes_whether_the_row_has_headers(monkeypatch, headers
 
     _patch_lookups(monkeypatch, False, True)
     server = McpServerInfo(name="figma", url=_FIGMA, headers=headers)
-    with patch(
-        "aj_crew.mcp_discovery.aiohttp.ClientSession", return_value=_challenging_session()
-    ):
+    with patch("aj_crew.mcp_discovery.aiohttp.ClientSession", return_value=_challenging_session()):
         result = await _probe_remote(server)
 
     assert result.status == "needs_auth"

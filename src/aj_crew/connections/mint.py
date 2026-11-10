@@ -1052,7 +1052,7 @@ async def start_oauth_mint(
     # Accumulates what this flow owns, so every exit path releases all of it.
     holdings: MintState = {}
     try:
-        # Off the loop: resolving the data home creates it when a AJCREW_HOME
+        # Off the loop: resolving the data home creates it when an AJCREW_HOME
         # override is in play, so this is a write and not merely a path join.
         mint_work_dir = await asyncio.to_thread(data_home)
         oauth_url = ""

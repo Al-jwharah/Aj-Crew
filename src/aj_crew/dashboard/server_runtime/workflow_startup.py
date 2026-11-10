@@ -15,8 +15,8 @@ from aiohttp import web
 
 if TYPE_CHECKING:
     from aj_crew.dashboard.server import (
-        DashboardState,
         AjCrewConfig,
+        DashboardState,
         _autonudge_get,
         authorize_and_add_nudge,
         logger,

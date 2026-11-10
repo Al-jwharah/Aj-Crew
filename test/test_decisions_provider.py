@@ -374,9 +374,7 @@ class TestPolicyDenial:
         """The local provider is denied too, attested or not."""
         endpoint = local_models.endpoint_for(preset.default_port)
         keystone({"enabled": True, "endpoint": endpoint})
-        monkeypatch.setattr(
-            "aj_crew.decisions.capability.is_local_preset", lambda *_a, **_k: True
-        )
+        monkeypatch.setattr("aj_crew.decisions.capability.is_local_preset", lambda *_a, **_k: True)
         cfg = SimpleNamespace(
             decisions=DecisionsConfig(
                 bucket=100,
@@ -573,8 +571,7 @@ def test_the_browser_hooks_reach_the_seam_only_through_the_gate():
     modules = {
         node.module
         for node in ast.walk(tree)
-        if isinstance(node, ast.ImportFrom)
-        and (node.module or "").startswith("aj_crew.decisions")
+        if isinstance(node, ast.ImportFrom) and (node.module or "").startswith("aj_crew.decisions")
     }
     assert modules == {"aj_crew.decisions.types"} | (modules & {"aj_crew.decisions"})
     names = {

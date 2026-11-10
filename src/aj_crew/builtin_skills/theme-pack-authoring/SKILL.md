@@ -212,7 +212,7 @@ what to change; re-install overwrites, which is the update path. Iterate by
 editing the pack source and re-installing — do not hand-edit the installed copy
 under the data directory, which bypasses validation.
 
-In a Aj Crew dev checkout, `_validate_theme_dir(pack_dir, installing=True)`
+In an Aj Crew dev checkout, `_validate_theme_dir(pack_dir, installing=True)`
 from `aj_crew.dashboard.theme_validate` runs the same check programmatically.
 
 ## Verify like you mean it

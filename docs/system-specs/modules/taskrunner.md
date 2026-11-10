@@ -772,7 +772,7 @@ privacy exclusions, failure handling, and ordering contract.
 
 The default workspace root is one folder per OS user (see
 [config](config.md#workspace-root)), so every data home with no workspace of its
-own shares one work dir. There a `AJCREW_HOME` override names its registry
+own shares one work dir. There an `AJCREW_HOME` override names its registry
 `runs-<data_home_id>.json` (the `session_work_dir.data_home_id()` a run-dir marker
 records), so a gateway lists and rewrites only its own home's runs. The name
 depends only on the data home and the folder: a configured

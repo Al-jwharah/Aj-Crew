@@ -810,12 +810,8 @@ class TestLinkedSlotSessionKey:
         # pre-switch project.
         mock_cfg = MagicMock()
         mock_cfg.agents = {}
-        monkeypatch.setattr(
-            "aj_crew.dashboard.chat_handlers.AjCrewConfig.load", lambda: mock_cfg
-        )
-        monkeypatch.setattr(
-            "aj_crew.dashboard.chat_handlers.warm_project_agent_names", AsyncMock()
-        )
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.AjCrewConfig.load", lambda: mock_cfg)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.warm_project_agent_names", AsyncMock())
         monkeypatch.setattr(
             "aj_crew.dashboard.chat_handlers.resolve_agent_bindings",
             lambda cfg, name, project_dir=None, **kwargs: MagicMock(

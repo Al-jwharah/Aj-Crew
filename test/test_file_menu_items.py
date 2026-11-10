@@ -414,9 +414,7 @@ def test_proxy_namespace_is_opt_in_per_caller():
 
 def test_publish_provider_registry_does_not_admit_the_proxy_namespace():
     """Pinned at the CALL, because the default is what protects that surface."""
-    src = (Path(aj_crew.__file__).parent / "apps" / "routes_listing.py").read_text(
-        encoding="utf-8"
-    )
+    src = (Path(aj_crew.__file__).parent / "apps" / "routes_listing.py").read_text(encoding="utf-8")
     call = src[src.index("if not app_endpoint_allowed(app_name, endpoint)") :][:120]
     assert "allow_proxy_namespace" not in call
 

@@ -159,7 +159,7 @@ def _report(agent: str, removed: frozenset[tuple[str, str]]) -> None:
         for where, entry in sorted(removed)
     )
     message = (
-        f"agent {agent!r}: kiro-cli runs a Aj Crew copy of its spec without these "
+        f"agent {agent!r}: kiro-cli runs an Aj Crew copy of its spec without these "
         f"auto-approvals, which the governance ceiling denies: {entries}. The spec file "
         "itself is unchanged; the tools stay mounted and their calls ask for approval."
     )

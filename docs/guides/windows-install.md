@@ -23,7 +23,7 @@ Current status:
 
 - **Published on every channel — nightly, insider and stable.** The `latest/`
   alias is the human download:
-  `https://download.crew.kiro.dev/desktop/<channel>/latest/AjCrew-Setup.exe`.
+  `https://<your-release-host>/desktop/<channel>/latest/AjCrew-Setup.exe`.
   A stable release republishes the already-signed installer it verified at
   insider time rather than rebuilding it. If a Windows build fails, that release
   simply ships without an installer instead of holding up the other platforms.
@@ -220,7 +220,7 @@ From a clone, in PowerShell:
 
 ```powershell
 git clone https://github.com/Al-jwharah/Aj-Crew.git
-cd ajcrew
+cd Aj-Crew
 .\make.ps1 build
 ```
 
@@ -905,7 +905,7 @@ supervision is a separate piece of work, proposed in
 - **Desktop gateway recovery refuses to force-stop the port** - the Electron
   launcher uses `netstat -ano` to identify the listener, PowerShell
   (`Get-CimInstance`) with a WMIC fallback to read its command line, and
-  `taskkill /F /PID` only after confirming a Aj Crew executable or
+  `taskkill /F /PID` only after confirming an Aj Crew executable or
   `python -m aj_crew` process. Localized listener-state text is ignored.
   SSH forwards and unrelated processes are never terminated, and a failed or
   timed-out `netstat` probe is treated as unknown rather than as a free port.

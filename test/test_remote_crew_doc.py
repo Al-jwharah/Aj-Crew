@@ -188,9 +188,7 @@ def test_the_diagnosis_codes_the_troubleshooting_table_quotes_still_exist(doc_fl
 
 def test_the_registry_file_the_page_names_is_where_the_code_writes_it(doc_flat: str) -> None:
     """The page tells the reader coordinates live in instances.json, credentials never."""
-    registry = (ROOT / "src" / "aj_crew" / "instances" / "registry.py").read_text(
-        encoding="utf-8"
-    )
+    registry = (ROOT / "src" / "aj_crew" / "instances" / "registry.py").read_text(encoding="utf-8")
     assert '"instances.json"' in registry
     assert "`~/.kiro/crew/instances.json`" in doc_flat
 

@@ -26,10 +26,10 @@ from native_skill_projection_helpers import (
     _metadata_file,
 )
 
-from conftest import requires_symlinks
 from aj_crew.acp import skill_projection as projection
 from aj_crew.hooks import FileTooLargeError
 from aj_crew.testing.wait import wait_until
+from conftest import requires_symlinks
 
 # The shared fixtures, bound here by name so pytest registers them for this module.
 _no_eager_prune = native_skill_projection_helpers._no_eager_prune

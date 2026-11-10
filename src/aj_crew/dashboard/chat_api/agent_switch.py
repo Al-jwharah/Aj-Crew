@@ -16,8 +16,8 @@ if TYPE_CHECKING:
     from aj_crew.dashboard.chat_handlers import (
         _TEARDOWN_INCOMPLETE_WARNING,
         SESSION_SWITCH_KIND,
-        DashboardState,
         AjCrewConfig,
+        DashboardState,
         LLMProvider,
         _app_cancel_denied,
         _ChatSlot,
@@ -950,9 +950,7 @@ async def switch_slot_agent(
             committed_memory_store = slot.memory_store
 
         # Reset session so the next message uses the new agent.
-        logger.info(
-            "Slot %s agent switched to %r, resetting session", name, agent_name or "ajcrew"
-        )
+        logger.info("Slot %s agent switched to %r, resetting session", name, agent_name or "ajcrew")
 
         def _rollback_switch() -> None:
             """Unwind this request's commit — only the values still OURS.

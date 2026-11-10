@@ -346,7 +346,7 @@ SLACK_THREAD_TS_RE = re.compile(r"^[0-9]{10,}\.[0-9]{6,}$")
 
 
 def infer_use_case(session_key: str) -> str:
-    """Map a Aj Crew session_key to a categorical useCase label.
+    """Map an Aj Crew session_key to a categorical useCase label.
 
     Returns ``"unknown"`` for unrecognized shapes — never raises. Pure string
     matching on the session key; lives here next to ``SLACK_THREAD_TS_RE`` so

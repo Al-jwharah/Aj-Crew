@@ -43,9 +43,9 @@ from push_guard_helpers import (
     _spy_popen,
 )
 
-from conftest import requires_symlinks
 from aj_crew import platform_compat
 from aj_crew.testing.wait import default_timeout
+from conftest import requires_symlinks
 
 # pytest resolves a fixture in the requesting test's module, so each shared
 # fixture this module uses is bound here by name.

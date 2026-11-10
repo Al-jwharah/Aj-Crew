@@ -44,7 +44,7 @@ class TestPullRequestRef(unittest.TestCase):
             "https://github.com/kirodotdev/KiroCrew/pull/777")
         assert ref is not None
         self.assertEqual(ref["owner"], "kirodotdev")
-        self.assertEqual(ref["repo"], "AjCrew")  # brand-ok: repo name
+        self.assertEqual(ref["repo"], "KiroCrew")  # brand-ok: repo name
         self.assertEqual(ref["number"], 777)
         # The change id has to match the one the review path writes, or the opened
         # PR would not line up with its own review.

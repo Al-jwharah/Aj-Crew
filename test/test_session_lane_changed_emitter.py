@@ -46,9 +46,7 @@ def _reset_global_store(_floor_monkeypatch):
     calling ``monkeypatch.undo()`` lifts wholesale.
     """
     set_global_hook_store(None)  # type: ignore[arg-type]
-    _floor_monkeypatch.setattr(
-        "aj_crew.hooks._script_hooks_capability_denied", lambda sk="": None
-    )
+    _floor_monkeypatch.setattr("aj_crew.hooks._script_hooks_capability_denied", lambda sk="": None)
     yield
     set_global_hook_store(None)  # type: ignore[arg-type]
 

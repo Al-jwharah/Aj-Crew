@@ -937,9 +937,7 @@ async def _unpooled_control_planes(
             search_agent = is_search_launch_copy(name)
         else:
             search_agent = projection is not None and name in projection.search_agents
-        if search_agent and not any(
-            entry.get("name") == "ajcrew-core" for entry in mount.elements
-        ):
+        if search_agent and not any(entry.get("name") == "ajcrew-core" for entry in mount.elements):
             # The mount did not produce the element itself: a settings file
             # withheld it, or a broker stub already in ``entries`` pre-empted
             # it (the mount emits no element for a name the array carries),

@@ -21,13 +21,13 @@ AjCrew currently treats agent selection as a thin pass-through to kiro-cli's `se
 
 ### Requirement 1: AjCrew Agent Definitions in Config
 
-**User Story:** As a AjCrew user, I want to define named AjCrew agents in my config.json, so that I can have multiple operational profiles (e.g. coding, oncall) each with their own workspace and memory store bindings.
+**User Story:** As an AjCrew user, I want to define named AjCrew agents in my config.json, so that I can have multiple operational profiles (e.g. coding, oncall) each with their own workspace and memory store bindings.
 
 #### Acceptance Criteria
 
-1. THE Config_Loader SHALL define a `AjCrewAgentConfig` dataclass with fields `kiro_agent` (str), `workspace` (str), and `memory_store` (str), each with appropriate field metadata.
+1. THE Config_Loader SHALL define an `AjCrewAgentConfig` dataclass with fields `kiro_agent` (str), `workspace` (str), and `memory_store` (str), each with appropriate field metadata.
 2. THE `AjCrewConfig` dataclass SHALL include an `agents` field of type `dict[str, AjCrewAgentConfig]` representing the named AjCrew_Agent definitions.
-3. WHEN `config.json` contains an `agents` section, THE Config_Loader SHALL parse each entry into a `AjCrewAgentConfig` instance keyed by the agent name.
+3. WHEN `config.json` contains an `agents` section, THE Config_Loader SHALL parse each entry into an `AjCrewAgentConfig` instance keyed by the agent name.
 4. THE `AjCrewAgentConfig.kiro_agent` field SHALL reference the name of a Kiro_Agent (the `modeId` used for `session/set_mode`), defaulting to an empty string.
 5. THE `AjCrewAgentConfig.workspace` field SHALL reference a named workspace from the `workspaces` section, defaulting to `"default"`.
 6. THE `AjCrewAgentConfig.memory_store` field SHALL reference a named memory store from the `memory_stores` section, defaulting to `"default"`.
@@ -35,7 +35,7 @@ AjCrew currently treats agent selection as a thin pass-through to kiro-cli's `se
 
 ### Requirement 2: Default Agent Selection
 
-**User Story:** As a AjCrew user, I want to designate a default AjCrew agent, so that new sessions automatically use the correct workspace and memory store without manual selection.
+**User Story:** As an AjCrew user, I want to designate a default AjCrew agent, so that new sessions automatically use the correct workspace and memory store without manual selection.
 
 #### Acceptance Criteria
 
@@ -46,7 +46,7 @@ AjCrew currently treats agent selection as a thin pass-through to kiro-cli's `se
 
 ### Requirement 3: Structured Workspace Definitions
 
-**User Story:** As a AjCrew user, I want workspaces to be structured objects with a directory path, so that the config system can support richer workspace metadata in the future.
+**User Story:** As an AjCrew user, I want workspaces to be structured objects with a directory path, so that the config system can support richer workspace metadata in the future.
 
 #### Acceptance Criteria
 
@@ -69,7 +69,7 @@ AjCrew currently treats agent selection as a thin pass-through to kiro-cli's `se
 
 ### Requirement 5: Named Memory Store Definitions
 
-**User Story:** As a AjCrew user, I want to define named memory stores in my config, so that different agents or tasks can use isolated knowledge containers with their own settings.
+**User Story:** As an AjCrew user, I want to define named memory stores in my config, so that different agents or tasks can use isolated knowledge containers with their own settings.
 
 #### Acceptance Criteria
 
@@ -82,7 +82,7 @@ AjCrew currently treats agent selection as a thin pass-through to kiro-cli's `se
 
 ### Requirement 6: Memory Store Settings Resolution
 
-**User Story:** As a AjCrew developer, I want memory store settings to merge with global defaults at the dict level, so that a store that only overrides `embedding_provider` inherits all other memory settings from the top-level config.
+**User Story:** As an AjCrew developer, I want memory store settings to merge with global defaults at the dict level, so that a store that only overrides `embedding_provider` inherits all other memory settings from the top-level config.
 
 #### Acceptance Criteria
 
@@ -93,19 +93,19 @@ AjCrew currently treats agent selection as a thin pass-through to kiro-cli's `se
 
 ### Requirement 7: Agent Resolver — Session Binding
 
-**User Story:** As a AjCrew user, I want switching agents to automatically switch my workspace and memory store, so that each agent profile provides a complete operational context.
+**User Story:** As an AjCrew user, I want switching agents to automatically switch my workspace and memory store, so that each agent profile provides a complete operational context.
 
 #### Acceptance Criteria
 
 1. WHEN a session starts with a named AjCrew_Agent, THE Agent_Resolver SHALL resolve the workspace directory from the agent's `workspace` field by looking up the named workspace in the `workspaces` section.
 2. WHEN a session starts with a named AjCrew_Agent, THE Agent_Resolver SHALL resolve the memory store from the agent's `memory_store` field by looking up the named store in the `memory_stores` section.
-3. WHEN a AjCrew_Agent's `workspace` field references a workspace name not present in the `workspaces` section, THE Agent_Resolver SHALL log a warning and fall back to the `default_workspace`.
-4. WHEN a AjCrew_Agent's `memory_store` field references a store name not present in the `memory_stores` section, THE Agent_Resolver SHALL log a warning and fall back to the `default_memory_store`.
-5. WHEN a AjCrew_Agent specifies a `kiro_agent` value, THE Agent_Resolver SHALL pass that value as the `modeId` to `session/set_mode` for kiro-cli agent switching.
+3. WHEN an AjCrew_Agent's `workspace` field references a workspace name not present in the `workspaces` section, THE Agent_Resolver SHALL log a warning and fall back to the `default_workspace`.
+4. WHEN an AjCrew_Agent's `memory_store` field references a store name not present in the `memory_stores` section, THE Agent_Resolver SHALL log a warning and fall back to the `default_memory_store`.
+5. WHEN an AjCrew_Agent specifies a `kiro_agent` value, THE Agent_Resolver SHALL pass that value as the `modeId` to `session/set_mode` for kiro-cli agent switching.
 
 ### Requirement 8: Kiro Agent Validation
 
-**User Story:** As a AjCrew user, I want to be warned when my AjCrew agent references a kiro agent that is not installed, so that I can fix the configuration before encountering runtime errors.
+**User Story:** As an AjCrew user, I want to be warned when my AjCrew agent references a kiro agent that is not installed, so that I can fix the configuration before encountering runtime errors.
 
 #### Acceptance Criteria
 
@@ -123,11 +123,11 @@ AjCrew currently treats agent selection as a thin pass-through to kiro-cli's `se
 2. WHEN `config.json` contains the legacy flat `workspaces` format (`dict[str, str]`), THE Config_Loader SHALL auto-migrate to the structured format as specified in Requirement 4.
 3. WHEN `config.json` contains no `memory_stores` section, THE Config_Loader SHALL synthesize a `"default"` memory store from the top-level `memory` section as specified in Requirement 5.
 4. THE `AjCrewConfig.load()` followed by `to_dict()` followed by `load()` SHALL produce an equivalent `AjCrewConfig` instance (round-trip property).
-5. WHEN `config.json` uses the legacy `agent.default_agent` field and no top-level `default_agent` is present, THE Config_Loader SHALL treat `agent.default_agent` as the kiro agent name for backward compatibility, not as a AjCrew_Agent name.
+5. WHEN `config.json` uses the legacy `agent.default_agent` field and no top-level `default_agent` is present, THE Config_Loader SHALL treat `agent.default_agent` as the kiro agent name for backward compatibility, not as an AjCrew_Agent name.
 
 ### Requirement 10: Schema Registry Extension
 
-**User Story:** As a AjCrew developer, I want the new agent, workspace, and memory store config sections to appear in the schema registry, so that the dashboard and baseline generator reflect the full config surface.
+**User Story:** As an AjCrew developer, I want the new agent, workspace, and memory store config sections to appear in the schema registry, so that the dashboard and baseline generator reflect the full config surface.
 
 #### Acceptance Criteria
 
@@ -139,7 +139,7 @@ AjCrew currently treats agent selection as a thin pass-through to kiro-cli's `se
 
 ### Requirement 11: Config Serialization
 
-**User Story:** As a AjCrew developer, I want `to_dict()` to serialize the new config sections correctly, so that saving config preserves all agent, workspace, and memory store definitions.
+**User Story:** As an AjCrew developer, I want `to_dict()` to serialize the new config sections correctly, so that saving config preserves all agent, workspace, and memory store definitions.
 
 #### Acceptance Criteria
 

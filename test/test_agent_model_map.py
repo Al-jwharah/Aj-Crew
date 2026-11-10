@@ -5,8 +5,8 @@ from __future__ import annotations
 import json
 from unittest.mock import MagicMock
 
-from conftest import requires_symlinks
 from aj_crew.agent_discovery import agent_model_map
+from conftest import requires_symlinks
 
 
 def _scan(agents_dir):

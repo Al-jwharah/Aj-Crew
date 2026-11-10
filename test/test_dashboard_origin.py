@@ -143,9 +143,7 @@ class TestBuildAllowedOrigins:
     @pytest.mark.parametrize(
         "origin, port",
         [
-            pytest.param(
-                "https://ajcrew.local", 443, id="dashboard_url_strips_default_https_port"
-            ),
+            pytest.param("https://ajcrew.local", 443, id="dashboard_url_strips_default_https_port"),
             pytest.param("http://ajcrew.local", 80, id="dashboard_url_strips_default_http_port"),
         ],
     )

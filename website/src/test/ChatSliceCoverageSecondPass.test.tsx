@@ -1270,7 +1270,7 @@ describe('chatSlice message patching', () => {
     expect(chat(store).messages[1].meta?.output).toBeUndefined()
   })
 
-  it('copies answered output onto a ajcrew-core ask_question row', () => {
+  it('copies answered output onto an ajcrew-core ask_question row', () => {
     const store = makeStore()
     store.dispatch(setActiveSlot('A'))
     store.dispatch(replaceMessages([

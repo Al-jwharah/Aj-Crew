@@ -454,7 +454,7 @@ def test_spawn_agent_keeps_the_authored_name_when_no_view_is_prepared():
 def test_spawn_agent_still_raises_an_authored_restriction():
     """An authored refusal is a user-facing spawn refusal, not a silent skip.
 
-    A ``ajcrew-core`` exclusion or a disabled ``skill_search`` records an
+    An ``ajcrew-core`` exclusion or a disabled ``skill_search`` records an
     ``errors`` entry naming the spec and the remedy; ``spawn_agent`` raises it so
     the runtime can wrap it as ``AcpRuntimeError`` and the startup paths can
     translate the sentence, exactly as the strict ``agent`` does.

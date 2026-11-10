@@ -1244,7 +1244,7 @@ class TestRemediationNamesOnlyRealCliSubcommands:
             if not self._verb_is_registered(verb, monkeypatch, tmp_path, capsys)
         }
         assert not dead, (
-            "shipped remediation text tells the operator to run a `ajcrew secrets` "
+            "shipped remediation text tells the operator to run an `ajcrew secrets` "
             f"subcommand the CLI does not register: {dead}. Point the message at a real "
             "surface (Settings > Secrets in the dashboard, or `ajcrew secrets import`)."
         )

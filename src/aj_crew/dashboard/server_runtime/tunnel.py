@@ -15,8 +15,8 @@ from aiohttp import web
 if TYPE_CHECKING:
     from aj_crew.dashboard.server import (
         _TUNNEL_STOP_TIMEOUT_SECS,
-        DashboardState,
         AjCrewConfig,
+        DashboardState,
         current_context,
         logger,
         sel,

@@ -65,9 +65,7 @@ def env(request, tmp_path: Path):
             "aj_crew.dashboard.handlers.mcp._GLOBAL_MCP_JSON",
             _unreadable_global(request.param, tmp_path),
         ),
-        patch(
-            "aj_crew.dashboard.handlers.agents._installed_agent_config", return_value=agent_cfg
-        ),
+        patch("aj_crew.dashboard.handlers.agents._installed_agent_config", return_value=agent_cfg),
         patch("aj_crew.dashboard.handlers.mcp.may_skip_gate_now", lambda ref: True),
     ):
         yield agent_cfg

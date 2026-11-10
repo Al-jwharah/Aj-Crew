@@ -414,7 +414,7 @@ def execution_from_record(
 def _same_agent(name: str, template_id: str) -> bool:
     """Whether *name* and *template_id* name one agent, a skill view mapped back.
 
-    A record written while the native skill projection was on can carry a
+    A record written while the native skill projection was on can carry an
     ``ajcrew-skill-view-<digest>`` template; the projection's own record says
     which agent it was built from, even once the view file is gone.
     """
@@ -720,7 +720,7 @@ def revouch_at_verified_admission(
     from a copy of its own earlier vouch that no session can write, so a forger's
     ordinary ``chat-`` slot with no such copy gets nothing.
 
-    ``config`` is a ``AjCrewConfig`` the caller has already loaded OFF the event
+    ``config`` is an ``AjCrewConfig`` the caller has already loaded OFF the event
     loop and threads in, so this helper performs no blocking config read of its
     own; the caller runs it off the loop too, since the store resolution it does
     is filesystem-backed.

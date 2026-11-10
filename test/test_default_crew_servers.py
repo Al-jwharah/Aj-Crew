@@ -435,9 +435,7 @@ def test_single_tool_deny_drops_covering_approvals(derive, per_tool_ceiling):
     assert not governance.gate_decision(
         per_tool_ceiling, None, "mcp__ajcrew-cron__cron_remove_all"
     ).permitted
-    assert governance.gate_decision(
-        per_tool_ceiling, None, "mcp__ajcrew-cron__cron_add"
-    ).permitted
+    assert governance.gate_decision(per_tool_ceiling, None, "mcp__ajcrew-cron__cron_add").permitted
     assert governance.may_skip_gate_now("@ajcrew-cron") is False
     assert governance.may_skip_gate_now("*") is True
     assert governance.may_skip_gate_now("@ajcrew-*") is True

@@ -86,9 +86,7 @@ def test_kas_relaunches_a_reserved_entry_its_timeout_keeps_in_the_agent_block(in
 def test_kas_leaves_a_block_entry_whose_managed_invocation_does_not_resolve(installed):
     installed.resolves = False
     entry = {"command": installed.reaped, "timeout": 5}
-    projected = to_client_custom_agent(
-        "mtp-inputs", _spec(mcpServers={"ajcrew-guide": entry}), "p"
-    )
+    projected = to_client_custom_agent("mtp-inputs", _spec(mcpServers={"ajcrew-guide": entry}), "p")
     agents, _ = hoist_servers_for_session([projected], "mtp-inputs", [], managed_entries={})
     assert agents[0] is projected
     assert agents[0]["mcpServers"]["ajcrew-guide"] == entry

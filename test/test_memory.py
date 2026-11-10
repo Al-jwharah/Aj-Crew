@@ -10,8 +10,8 @@ from pathlib import Path
 import pytest
 from source_corpus import iter_source_texts
 
-from conftest import make_dir_link, plant_day_link
 from aj_crew.memory import MemoryStore
+from conftest import make_dir_link, plant_day_link
 
 
 class TestMemoryStore:

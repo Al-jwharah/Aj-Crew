@@ -300,9 +300,7 @@ class TestTheRefusalClassifier:
         from aj_crew.dashboard.handlers.debug import _classify_refusal
 
         row = {
-            "error": (
-                "Blocked: modification of write-protected config path: " "ajcrew/policy.toml"
-            )
+            "error": ("Blocked: modification of write-protected config path: " "ajcrew/policy.toml")
         }
         assert _classify_refusal(row) == "sensitive_path_match"
 

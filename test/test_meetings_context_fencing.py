@@ -6,9 +6,9 @@ from unittest import mock
 
 import pytest
 
-from conftest import assert_rejected_without_backtracking
 from aj_crew import security
 from aj_crew.apps.builtins.meetings.backend.domain import session as sess
+from conftest import assert_rejected_without_backtracking
 
 _OPEN = "<<<UNTRUSTED_CALENDAR_EVENT"
 _CLOSE = ">>>END_UNTRUSTED_CALENDAR_EVENT"

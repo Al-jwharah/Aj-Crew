@@ -42,7 +42,7 @@ logger = logging.getLogger("aj_crew.dashboard.handlers.crew_log")
 # the sub-sessions it dispatched is the ordinary shape of the work rather than a
 # special case.
 #
-# It is a DISPATCH fence, not an operator fence. The premise "sessions on a Aj
+# It is a DISPATCH fence, not an operator fence. The premise "sessions on an Aj
 # Crew gateway belong to one operator, so any of them may read any other" was
 # considered and is not the rule here, for a reason that is about surfaces rather
 # than about trust: a channel-linked session's conversation is a Slack or Telegram
@@ -125,7 +125,7 @@ def _disabled() -> web.Response:
     422 rather than 404: the route exists and the request is well formed, and what
     blocks it is the state of the subsystem. The agent learns the flag state from
     THIS, which is why the MCP server registers its tools whether or not the flag
-    is on -- a missing tool would read as a Aj Crew that cannot do this at all.
+    is on -- a missing tool would read as an Aj Crew that cannot do this at all.
     """
     return web.json_response(
         {

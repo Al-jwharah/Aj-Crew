@@ -1,4 +1,4 @@
-"""Resolving what a ``ajcrew-dashboard`` tool call names into the ids its endpoints take.
+"""Resolving what an ``ajcrew-dashboard`` tool call names into the ids its endpoints take.
 
 A folder (an id, or a human path walked segment by segment and created where the tool may
 create), a live session (its slot key, a ``dashboard:`` key or a unique title), a tag and a

@@ -8,9 +8,9 @@ from typing import Any
 
 import pytest
 
-from conftest import MockSlackClient
 from aj_crew.slack import client as slack_client
 from aj_crew.slack.client import RealSlackClient
+from conftest import MockSlackClient
 
 
 class _RecordingBody:

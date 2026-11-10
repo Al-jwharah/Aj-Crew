@@ -96,7 +96,7 @@ def member_with_distinct_template(tmp_path, monkeypatch):
 def member_also_a_materialized_template(tmp_path, monkeypatch):
     """A crew member whose NAME also has a materialized ``~/.kiro/agents`` spec.
 
-    A member like ``ajcrew-conductor`` ships both a ``config.agents`` entry and a
+    A member like ``ajcrew-conductor`` ships both a ``config.agents`` entry and an
     ``ajcrew-conductor.json`` spec; the member alias must win. The snapshot is
     seeded warm so the test is deterministic regardless of process.
     """
@@ -105,9 +105,7 @@ def member_also_a_materialized_template(tmp_path, monkeypatch):
     monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     (config_dir() / "crons").mkdir(parents=True)
     cfg = AjCrewConfig.load()
-    cfg.agents["ajcrew-conductor"] = AjCrewAgentConfig(
-        kiro_agent="ajcrew", triggers="conduct"
-    )
+    cfg.agents["ajcrew-conductor"] = AjCrewAgentConfig(kiro_agent="ajcrew", triggers="conduct")
     provision_member_memory(cfg, "ajcrew-conductor")
     cfg.save()
     # Materialize a kiro agent spec of the SAME name (warm snapshot). Under the

@@ -60,7 +60,7 @@ _MEMBERS: dict[str, tuple[str, bool, str, str]] = {
     "_build_task_prompt": ("function", True, "4c406dd14756", "run_steps"),
     "_call_llm_for_lesson": ("function", True, "402a11554e2b", "run_reporting"),
     "_capture_execution": ("function", False, "d1b2657e6a4e", "run_scope"),
-    "_clamp_parallel_steps": ("staticmethod", False, "2edea9f8215c", "run_inputs"),
+    "_clamp_parallel_steps": ("staticmethod", False, "b45bc5fb478e", "run_inputs"),
     "_cleanup_run_sessions": ("function", True, "859f30be3e40", "run_scope"),
     "_commit_snapshot": ("function", False, "04bd86086d4a", "run_registry"),
     "_decompose": ("function", True, "16cd35538179", "plan_mode"),

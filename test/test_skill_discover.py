@@ -23,8 +23,8 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-from conftest import make_dir_link
 from aj_crew import platform_compat
+from conftest import make_dir_link
 
 
 @pytest.fixture

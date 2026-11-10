@@ -1,6 +1,8 @@
 {
  "base_public_names": [
+  "AJCREW_BIN_MCP_SERVERS",
   "Admission",
+  "AjCrewConfig",
   "Backend",
   "BackendGone",
   "BackendPool",
@@ -21,8 +23,6 @@
   "HotKeyStore",
   "INTERNAL_STUB_PREFIXES",
   "IS_WINDOWS",
-  "AJCREW_BIN_MCP_SERVERS",
-  "AjCrewConfig",
   "OUTCOME_FAILURE",
   "OUTCOME_NEUTRAL",
   "OnQueued",
@@ -42,6 +42,7 @@
   "SpawnGateClosed",
   "SpawnGateTimeout",
   "TargetResolver",
+  "aj_crew",
   "apps_sweep_spool",
   "classify_declared_temp_env",
   "cleanup_old_spill_files",
@@ -60,7 +61,6 @@
   "hash_effective_env",
   "hazards",
   "is_credential_env_key",
-  "aj_crew",
   "launch_approval",
   "logger",
   "main",
@@ -92,12 +92,12 @@
   "warm_code_fingerprint"
  ],
  "rebound": {
+  "AJCREW_BIN_MCP_SERVERS": "aj_crew.mcp_cleanup",
   "BackendGone": "aj_crew.mcp_gateway.backend",
   "BackendUnavailable": "aj_crew.mcp_gateway.pool",
   "CallerContext": "aj_crew.mcp_caller",
   "DRAIN_DEADLINE_SECS": "aj_crew.mcp_gateway.pool",
   "HostBudgetExhausted": "aj_crew.mcp_gateway.host_budget",
-  "AJCREW_BIN_MCP_SERVERS": "aj_crew.mcp_cleanup",
   "PoolAtCapacity": "aj_crew.mcp_gateway.pool",
   "SpawnGateClosed": "aj_crew.mcp_gateway.admission",
   "SpawnGateTimeout": "aj_crew.mcp_gateway.admission",

@@ -170,9 +170,7 @@ class TestRefParsing:
 class TestResolution:
     def test_a_wire_served_ref_resolves(self):
         spec = {"tools": ["@ajcrew-core"], "mcpServers": {"ajcrew-core": _CORE}}
-        assert (
-            unresolved_server_refs(spec, _wire("ajcrew-core"), backend=ACP_BACKEND_CLAUDE) == []
-        )
+        assert unresolved_server_refs(spec, _wire("ajcrew-core"), backend=ACP_BACKEND_CLAUDE) == []
 
     def test_an_empty_array_on_a_mirrored_backend_reports_every_ref(self):
         """The shape that made the guard necessary, held as a pure-function case.
@@ -1096,9 +1094,7 @@ class TestTheSpawnHopCarriesTheSnapshot:
         """
         blocker = tmp_path / "blocked"
         blocker.write_text("not a directory", encoding="utf-8")
-        client = AcpClient(
-            work_dir=blocker / "work", agent="ajcrew", acp_backend=ACP_BACKEND_CODEX
-        )
+        client = AcpClient(work_dir=blocker / "work", agent="ajcrew", acp_backend=ACP_BACKEND_CODEX)
         with pytest.raises(OSError):
             client._prepare_spawn_workspace()
         assert client._mcp_ref_spec is None

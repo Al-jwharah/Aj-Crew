@@ -46,7 +46,7 @@ def _configure_registry(monkeypatch, repo: str = REGISTRY_URL) -> None:
 
     ``_owner_designated_repo_target`` reads them through ``AjCrewConfig.load``.
     """
-    from aj_crew.config.loader import ExternalRegistryConfig, AjCrewConfig
+    from aj_crew.config.loader import AjCrewConfig, ExternalRegistryConfig
 
     cfg = AjCrewConfig()
     cfg.registries = [ExternalRegistryConfig(name=REGISTRY, repo=repo, branch="main")]

@@ -7,12 +7,12 @@ from types import SimpleNamespace
 
 import pytest
 
-from conftest import CREDENTIAL_STRADDLE_SHAPES, assert_rejected_without_backtracking
 from aj_crew.messaging.display_safety import canonicalize_display
 from aj_crew.messaging.renderer import _default_redactor
 from aj_crew.wecom.client import WECOM_MAX_REPLY_BYTES, WECOM_SAFE_REPLY_CHARS
 from aj_crew.wecom.renderer import WeComRenderer, _render_options_as_text
 from aj_crew.wecom.transport import WECOM_CAPABILITIES, WeComTransport
+from conftest import CREDENTIAL_STRADDLE_SHAPES, assert_rejected_without_backtracking
 
 # The PEM markers are ASSEMBLED from fragments, never written as one literal, so
 # the internal content scan (rule ``credential-private-key``, which matches a

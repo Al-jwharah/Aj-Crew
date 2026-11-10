@@ -56,7 +56,7 @@ FORBIDDEN_WHEN_BRIDGING = (
 )
 
 #: Additionally absent after a bare ``import``: building the Register payload
-#: hashes the target binary, which reaches ``code_fingerprint`` for one of Kiro
+#: hashes the target binary, which reaches ``code_fingerprint`` for one of Aj
 #: Crew's own servers. ``mcp_caller`` and ``mcp_cleanup`` are NOT here: every
 #: run builds a Register payload, so importing them in the module body changes
 #: when rather than whether, and the eager spelling is the readable one.

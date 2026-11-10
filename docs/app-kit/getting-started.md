@@ -48,7 +48,7 @@ SDK rejects a path or event the manifest does not declare.
   "name": "my-dashboard",
   "version": "0.1.0",
   "displayName": "My Dashboard",
-  "description": "A Aj Crew app: My Dashboard",
+  "description": "An Aj Crew app: My Dashboard",
   "author": "yourname",
   "iconPath": "assets/icon.png",
   "agents": ["agents/sample-agent.json"],
@@ -426,7 +426,7 @@ undeclared paths throws an error.
 ## Python Client
 
 Python apps, CLI tools and services use the source-only `ajcrew-client`
-package from a Aj Crew checkout. Install steps, the constructor and the full
+package from an Aj Crew checkout. Install steps, the constructor and the full
 method table are in [API Reference](api-reference.md#python-client).
 
 ## Publishing Your App

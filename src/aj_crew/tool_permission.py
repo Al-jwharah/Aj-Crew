@@ -121,7 +121,7 @@ class Hit:
 class Refusal:
     """A decision to refuse, and who made it.
 
-    ``by="host"`` REQUIRES a *cause* (a ``aj_crew.constants.DENY_CAUSE_*``):
+    ``by="host"`` REQUIRES a *cause* (an ``aj_crew.constants.DENY_CAUSE_*``):
     it is what the deny notice tells the model, because kiro-cli otherwise
     reports every rejection as "User denied tool execution". ``by="person"`` (an
     approver said no, or raised where the surface counts that as a no) and

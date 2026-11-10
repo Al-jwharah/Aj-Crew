@@ -487,9 +487,7 @@ class TestUnreadableHostList:
 
     @pytest.mark.parametrize("flag", ["_base_unreadable", "_overlay_unreadable"])
     def test_a_partial_load_raises(self, monkeypatch, flag):
-        monkeypatch.setattr(
-            kh.AjCrewConfig, "load", staticmethod(lambda: _config(**{flag: True}))
-        )
+        monkeypatch.setattr(kh.AjCrewConfig, "load", staticmethod(lambda: _config(**{flag: True})))
         with pytest.raises(kh.DocIngestHostsUnavailable):
             kh._doc_ingest_hosts()
 

@@ -22,9 +22,7 @@ from aj_crew.apps import registry
 @pytest.fixture(autouse=True)
 def _explicit_registry_execution_admission(_floor_monkeypatch):
     """These tests must reach admitted registry subprocess paths."""
-    _floor_monkeypatch.setattr(
-        "aj_crew.apps.execution.third_party_execution_allowed", lambda: True
-    )
+    _floor_monkeypatch.setattr("aj_crew.apps.execution.third_party_execution_allowed", lambda: True)
 
 
 @pytest.fixture(autouse=True)

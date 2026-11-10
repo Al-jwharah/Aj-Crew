@@ -825,6 +825,12 @@ async def _check_release_feed(capability: UpdateCapability) -> None:
         "channel": channel,
         "can_arm": can_arm,
     }
+    if not feed_base:
+        # No release feed is configured for this build, so there is nothing to
+        # compare against. Reported as "no verdict" without touching the
+        # network; the capability's remediation says where updates come from.
+        _set_update_info(**base, check_status=CHECK_FAILED, error_code=ERR_FEED_UNREACHABLE)
+        return
     url = f"{feed_base}/feed/{channel}/latest-cli.json"
 
     try:

@@ -1,5 +1,9 @@
 {
  "base_public_names": [
+  "AJCREW_SANDBOX_TOOL_ENV",
+  "AJCREW_SANDBOX_TOOL_VALUE",
+  "AJCREW_SPAWNED_ENV",
+  "AJCREW_SPAWNED_VALUE",
   "AUTH_SQLITE_DB",
   "AUTH_SQLITE_SIDECAR_SUFFIXES",
   "BoundWorkspaceMismatch",
@@ -7,10 +11,6 @@
   "CRON_SCRIPT_CHILD_ENV",
   "DECLARED_TEMP_REFUSAL_REASONS",
   "DeclaredTempRefusal",
-  "AJCREW_SANDBOX_TOOL_ENV",
-  "AJCREW_SANDBOX_TOOL_VALUE",
-  "AJCREW_SPAWNED_ENV",
-  "AJCREW_SPAWNED_VALUE",
   "LAUNCHER_EXIT_PREFIXES",
   "LiveTargetUnfitness",
   "MD_NOTEBOOK_APP_NAME",
@@ -127,12 +127,12 @@
   "wrapped_by_crew_sandbox"
  ],
  "rebound": {
-  "AUTH_SQLITE_DB": "aj_crew.identity_stores",
-  "AUTH_SQLITE_SIDECAR_SUFFIXES": "aj_crew.identity_stores",
   "AJCREW_SANDBOX_TOOL_ENV": "aj_crew.constants",
   "AJCREW_SANDBOX_TOOL_VALUE": "aj_crew.constants",
   "AJCREW_SPAWNED_ENV": "aj_crew.constants",
   "AJCREW_SPAWNED_VALUE": "aj_crew.constants",
+  "AUTH_SQLITE_DB": "aj_crew.identity_stores",
+  "AUTH_SQLITE_SIDECAR_SUFFIXES": "aj_crew.identity_stores",
   "config_dir": "aj_crew.config.paths",
   "current_context": "aj_crew.platform",
   "fd_real_path": "aj_crew.pinned_fs",

@@ -546,7 +546,7 @@ def _skill_file_identity(row: dict[str, Any]) -> tuple[int, int] | None:
 def _row_is_editable(row: dict[str, Any]) -> bool:
     """Whether the dashboard's Edit/Delete can write this row's file.
 
-    Only a Aj Crew row under the skills dir the loader writes to: the write
+    Only an Aj Crew row under the skills dir the loader writes to: the write
     handlers join the key onto that dir, so a row reached through
     ``skills.extra_paths`` (``owned: False``) or any other source is read-only.
     """
@@ -558,7 +558,7 @@ def _row_rank(row: dict[str, Any]) -> int:
 
     The editable row first. Then a row from the source that owns the file's
     folder (``package``, ``kiro-user``): its key is the one the agent-skill
-    catalog keys that folder by, so a mapping saved from it resolves. A
+    catalog keys that folder by, so a mapping saved from it resolves. An
     ``ajcrew`` row reached through ``skills.extra_paths`` or an edition root
     (``owned: False``) is last: nothing can edit it and that catalog does not
     key it.
@@ -574,7 +574,7 @@ def _one_row_per_skill_file(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Collapse rows that list the same SKILL.md into one row.
 
     Two sources can reach one file -- ``skills.extra_paths`` naming
-    ``~/.kiro/skills`` lists it as a Aj Crew row AND ``list_kiro_skills``
+    ``~/.kiro/skills`` lists it as an Aj Crew row AND ``list_kiro_skills``
     lists it as ``kiro-user`` -- and the browser showed both. :func:`_row_rank`
     picks the row kept. ``loaded_by_agents`` is the union, so an agent-scoped listing
     still finds the skill through whichever spelling its glob matched, and the

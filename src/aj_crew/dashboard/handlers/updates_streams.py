@@ -48,7 +48,7 @@ def apply_log_level(level_name: str, *, source: str) -> bool:
     """Set the ``aj_crew`` logger to *level_name*; False when the name is unknown.
 
     The one place the runtime level changes, shared by the dashboard endpoint
-    and the ``agent.log_level`` config applier so a ``ajcrew config set`` or
+    and the ``agent.log_level`` config applier so an ``ajcrew config set`` or
     an ``$EDITOR`` edit takes effect exactly like the Logs page toggle. The
     logger is the single level gate for every sink, ``gateway.log`` included:
     the file handler and the queue handler ``cli._setup_cli_logging`` installs

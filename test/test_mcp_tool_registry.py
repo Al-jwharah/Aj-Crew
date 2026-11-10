@@ -1,6 +1,6 @@
 """The two halves of a tool must stay in sync: descriptor and handler.
 
-A ``ajcrew-core`` tool is declared twice in the same domain module under
+An ``ajcrew-core`` tool is declared twice in the same domain module under
 :mod:`aj_crew.mcp_tools` -- a descriptor in ``schemas()`` (what ``tools/list``
 advertises) and a function in ``HANDLERS`` (what runs). Nothing at runtime
 notices when only one half lands: a descriptor with no handler advertises a tool

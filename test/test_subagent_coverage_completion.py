@@ -34,9 +34,7 @@ class TestNotifyInjectionFailed:
         on_event = AsyncMock()
         mgr = _manager(on_event=on_event)
         info = _info(parent_session_key="cron:1")
-        with patch(
-            "aj_crew.dashboard.chat_utils.dashboard_slot_key", return_value=""
-        ) as slot_key:
+        with patch("aj_crew.dashboard.chat_utils.dashboard_slot_key", return_value="") as slot_key:
             mgr.notify_injection_failed(info)
         slot_key.assert_called_once_with("cron:1")
         # The record still learns its report was not delivered; only the notice is skipped.

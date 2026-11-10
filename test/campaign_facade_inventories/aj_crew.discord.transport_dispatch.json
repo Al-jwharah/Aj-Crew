@@ -2,6 +2,7 @@
  "base_public_names": [
   "APPROVAL_INTERACTIVE",
   "ATTACHMENT_PLACEHOLDER",
+  "AjCrewConfig",
   "Approvals",
   "Asker",
   "CHAT_TYPE_DIRECT",
@@ -20,7 +21,6 @@
   "InboundMessage",
   "InboundRoute",
   "IngestLimits",
-  "AjCrewConfig",
   "MonitorCompletionHook",
   "MonitorDispatchResult",
   "MonitorWake",
@@ -88,6 +88,7 @@
  "rebound": {
   "APPROVAL_INTERACTIVE": "aj_crew.messaging.driver",
   "ATTACHMENT_PLACEHOLDER": "aj_crew.messaging.queue_receipt",
+  "AjCrewConfig": "aj_crew.config.loader",
   "Approvals": "aj_crew.messaging.dispatch",
   "Asker": "aj_crew.messaging.dispatch",
   "CHAT_TYPE_DIRECT": "aj_crew.messaging.link",
@@ -105,7 +106,6 @@
   "InboundMessage": "aj_crew.messaging.transport",
   "InboundRoute": "aj_crew.messaging.inbound_spool",
   "IngestLimits": "aj_crew.messaging.attachments",
-  "AjCrewConfig": "aj_crew.config.loader",
   "MonitorCompletionHook": "aj_crew.monitoring.completion",
   "MonitorDispatchResult": "aj_crew.monitoring.models",
   "MonitorWake": "aj_crew.messaging.dispatch",

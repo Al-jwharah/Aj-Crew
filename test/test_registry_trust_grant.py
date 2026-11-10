@@ -35,7 +35,6 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-from conftest import requires_symlinks
 from aj_crew.apps.registry_pipeline import indexes, sources
 from aj_crew.config.loader import _invalidate_config_cache, registry_trust_path
 from aj_crew.dashboard.handlers import security
@@ -45,6 +44,7 @@ from aj_crew.dashboard.handlers.security import (
     api_trusted_registry_revoke,
     build_trusted_registries_snapshot,
 )
+from conftest import requires_symlinks
 
 _REPO = "https://git.example.test/team/apps-index.git"
 _REPO_PUBLIC = "https://git.example.test/team/apps-index"

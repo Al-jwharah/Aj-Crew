@@ -71,10 +71,10 @@ from aj_crew.agent_sdk.tool_search import (
 )
 from aj_crew.config.paths import data_home, kiro_agents_dir
 from aj_crew.constants import (
-    INITIALIZE_TIMEOUT_SECS,
     AJCREW_RUNTIME_AGENT_ENV,
     AJCREW_SPAWN_HOME_ENV,
     AJCREW_SPAWN_INSTANCE_ENV,
+    INITIALIZE_TIMEOUT_SECS,
 )
 from aj_crew.env import augmented_path, resolve_krb5_ccname
 from aj_crew.executors import subprocess_executor
@@ -560,7 +560,7 @@ async def _spawn_admitted(self: AcpRuntime) -> None:
                     # checkout's same-named spec.
                     launch_view_alias = self._launch_agent or projection.spawn_agent(self._agent)
                 except ValueError as exc:
-                    # The projection refused this agent's view -- a
+                    # The projection refused this agent's view -- an
                     # ``ajcrew-core`` restriction authored in its spec, a
                     # disabled ``skill_search`` -- and says so in a sentence
                     # that names the spec and the remedy. That sentence is
@@ -1290,7 +1290,7 @@ def _known_server_tool_names(server: str) -> list[str] | None:
 
     The last probe's ``tools/list``, expired or not, because a stale list only
     risks a tool staying deferred or an id that matches nothing. Nothing is
-    imported to answer: a Aj Crew server's declaration module lives in a
+    imported to answer: an Aj Crew server's declaration module lives in a
     package the agent's uid can write, so this read stays on the probe cache the
     sandboxed probe fills. ``None`` when the cache has no list -- the caller
     then leaves that server to KAS's own deferral.

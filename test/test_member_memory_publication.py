@@ -60,9 +60,7 @@ def _request(monkeypatch, action):
         app=web.Application(),
         match_info={} if create else {"name": "legacy"},
     )
-    body = (
-        {"name": "new-member", "kiro_agent": "ajcrew"} if create else {"provision_memory": True}
-    )
+    body = {"name": "new-member", "kiro_agent": "ajcrew"} if create else {"provision_memory": True}
     monkeypatch.setattr(request, "json", AsyncMock(return_value=body))
     return request
 

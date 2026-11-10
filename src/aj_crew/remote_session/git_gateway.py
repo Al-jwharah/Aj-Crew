@@ -289,9 +289,7 @@ class PushCommands:
         if nul and self.refs:  # capabilities ride on the first command only
             raise _unreadable_push()
         if command.startswith(b"push-cert"):
-            raise GitProxyRefusal(
-                403, "Aj Crew: signed pushes are not carried through the gateway"
-            )
+            raise GitProxyRefusal(403, "Aj Crew: signed pushes are not carried through the gateway")
         match = _PUSH_COMMAND.fullmatch(command)
         if match is None:
             raise _unreadable_push()

@@ -9,8 +9,8 @@ from aiohttp import web
 
 if TYPE_CHECKING:
     from aj_crew.dashboard.chat_handlers import (
-        DashboardState,
         AjCrewConfig,
+        DashboardState,
         count_user_turns_in_records,
         deny_app_slot_access,
         generate_session_summary,

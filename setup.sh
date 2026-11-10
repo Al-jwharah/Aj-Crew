@@ -3,8 +3,8 @@
 # Usage: source setup.sh   (bash or zsh), or: bash setup.sh
 #
 # Builds the clone it sits in, so the install follows the clone's branch (`main`
-# is the Nightly lane). For Stable on a laptop or server, use the signed wheel:
-#   curl -fsSL https://download.crew.kiro.dev/cli.sh | sh
+# is the Nightly lane). Aj Crew publishes no prebuilt wheels yet, so a source
+# install is the supported one; update it with `git pull`, then `ajcrew update`.
 #
 # Sets up AjCrew using only public tooling:
 #   1. Node.js (via ensure-node.sh)

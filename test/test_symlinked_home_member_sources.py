@@ -22,10 +22,10 @@ from pathlib import Path
 
 import pytest
 
-from conftest import requires_symlinks
 from aj_crew.member_essential_context import MemberEssentialContextError, documents_for_member
 from aj_crew.memory_files import LocalMemoryFiles
 from aj_crew.platform.interfaces import MemoryRoots
+from conftest import requires_symlinks
 
 pytestmark = [
     requires_symlinks,

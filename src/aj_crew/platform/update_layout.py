@@ -215,6 +215,8 @@ def non_managed_pip_upgrade_command(channel: str | None = None) -> PipUpgradeHin
     :func:`release_channel` and the base by :func:`cdn_bases_are_safe`, so the
     rendered strings carry no shell metacharacters.
     """
+    if not release_feed_configured():
+        return PipUpgradeHint(command=None, note=NO_RELEASE_FEED_NOTE)
     if channel is None:
         channel = release_channel()
     pip = _running_interpreter_pip_prefix()
@@ -372,15 +374,45 @@ def set_release_channel(channel: str) -> str:
     return normalized
 
 
+#: What a wheel install is told when no release feed is configured. This build
+#: publishes no signed wheels, so there is no installer to re-run; the supported
+#: update path is a source checkout, which ``ajcrew update`` fast-forwards from
+#: its own remote.
+NO_RELEASE_FEED_NOTE = (
+    "This build publishes no release feed, so it cannot update itself in place. "
+    "Update from a source checkout of https://github.com/Al-jwharah/Aj-Crew "
+    "(git pull, then make build)."
+)
+
+
+#: The release feed host and the artifact host this build updates from. EMPTY on
+#: purpose: this build publishes no signed wheels, and falling back to another
+#: project's feed would offer that project's builds as updates to this one. A
+#: release pipeline of this project's own fills both in (they may be one host).
+DEFAULT_FEED_BASE = ""
+DEFAULT_ARTIFACT_BASE = ""
+
+
 def cdn_bases() -> tuple[str, str]:
     """``(feed base, artifact base)`` — mirrors ``cli.sh``'s two URL classes.
 
-    Respects ``AJCREW_CDN_BASE`` override for alternate CDNs / testing.
+    ``AJCREW_CDN_BASE`` names one CDN both come from and wins when set. Without
+    it the pair is :data:`DEFAULT_FEED_BASE` and :data:`DEFAULT_ARTIFACT_BASE`,
+    which are empty in a build with no release feed. An empty base fails
+    :func:`cdn_bases_are_safe`, so every route that installs refuses on its own;
+    :func:`release_feed_configured` is the question to ask before building a
+    URL or a command.
     """
     override = (os.environ.get("AJCREW_CDN_BASE") or "").strip().rstrip("/")
     if override:
         return override, override
-    return "https://updates.crew.kiro.dev", "https://download.crew.kiro.dev"
+    return DEFAULT_FEED_BASE, DEFAULT_ARTIFACT_BASE
+
+
+def release_feed_configured() -> bool:
+    """Is there a release feed this install could check and install from?"""
+    feed_base, artifact_base = cdn_bases()
+    return bool(feed_base and artifact_base)
 
 
 #: Characters a CDN base may contain. ``AJCREW_CDN_BASE`` is operator-set and
@@ -434,6 +466,11 @@ def wheel_update_command(channel: str | None = None) -> str:
     if channel is None:
         channel = release_channel()
     _, artifact_base = cdn_bases()
+    if not artifact_base:
+        # No feed, so no installer to fetch. An empty command is what every
+        # caller already renders as "nothing to copy"; a ``curl`` line against an
+        # empty base would be a command that cannot work.
+        return ""
     return (
         "set -e; "
         f"_kc_body=\"$(curl -fsSL --proto '=https' {artifact_base}/cli.sh)\"; "
@@ -449,7 +486,9 @@ __all__ = [
     "detect_install_layout",
     "release_channel",
     "set_release_channel",
+    "NO_RELEASE_FEED_NOTE",
     "cdn_bases",
+    "release_feed_configured",
     "cdn_bases_are_safe",
     "wheel_update_command",
     "non_managed_pip_update_hint",

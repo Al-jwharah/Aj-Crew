@@ -14,8 +14,8 @@ from pathlib import Path
 
 import pytest
 
-from conftest import requires_symlinks
 from aj_crew.config import loader
+from conftest import requires_symlinks
 
 
 @requires_symlinks

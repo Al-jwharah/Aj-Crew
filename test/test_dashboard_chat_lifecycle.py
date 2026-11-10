@@ -218,9 +218,7 @@ class TestSaveDoesNotResurrectDeletedSession:
         state = _make_state(tmp_path)
         log = state.conversation_log
         key = "slack:thread-77"
-        monkeypatch.setattr(
-            "aj_crew.history.metadata_now_iso", lambda: "2026-10-01T12:00:00+00:00"
-        )
+        monkeypatch.setattr("aj_crew.history.metadata_now_iso", lambda: "2026-10-01T12:00:00+00:00")
         log.append(key, "user", "channel turn")
         meta = log.get_metadata(key)
         assert meta.get("created_at"), "fixture transcript must carry an identity"
@@ -240,9 +238,7 @@ class TestSaveDoesNotResurrectDeletedSession:
         # Delete, then a foreign append recreates the file with a new identity:
         # the surviving slot's pending save must skip, not merge.
         assert log.delete_session(key) is True
-        monkeypatch.setattr(
-            "aj_crew.history.metadata_now_iso", lambda: "2026-10-01T12:00:01+00:00"
-        )
+        monkeypatch.setattr("aj_crew.history.metadata_now_iso", lambda: "2026-10-01T12:00:01+00:00")
         log.append(key, "assistant", "new incarnation row")
         assert _save_slot_to_history(state, slot, force=True) is False
         content = log._path(key).read_text(encoding="utf-8")
@@ -1032,9 +1028,7 @@ class TestSaveDoesNotResurrectDeletedSession:
             created_at="2026-10-01T12:00:00+00:00",
         )
         assert log.delete_session("dashboard:reincarnated") is True
-        monkeypatch.setattr(
-            "aj_crew.history.metadata_now_iso", lambda: "2026-10-01T12:00:01+00:00"
-        )
+        monkeypatch.setattr("aj_crew.history.metadata_now_iso", lambda: "2026-10-01T12:00:01+00:00")
         log.append("dashboard:reincarnated", "assistant", "foreign row in the new file")
         assert log._path("dashboard:reincarnated").exists()
         assert session_delete_witness(state, slot) is DeleteWitness.DELETED

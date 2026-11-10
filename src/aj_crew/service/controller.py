@@ -335,7 +335,7 @@ def sandbox_profile_status(exec_path: str | None = None) -> int:
 
 
 def is_service_active() -> bool:
-    """Return True if a ajcrew service is installed and currently running."""
+    """Return True if an ajcrew service is installed and currently running."""
     plat = current_platform()
     if plat == Platform.SYSTEMD:
         return linux.is_active()

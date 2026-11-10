@@ -92,9 +92,7 @@ class TestChannelAgentMismatch:
     def test_config_error_fails_closed(self):
         from aj_crew.slack.handler import channel_agent_mismatch
 
-        with patch(
-            "aj_crew.slack.handler_runtime.access.slack_cfg", side_effect=RuntimeError("x")
-        ):
+        with patch("aj_crew.slack.handler_runtime.access.slack_cfg", side_effect=RuntimeError("x")):
             assert channel_agent_mismatch(PINNED, "restricted-agent") is not None
 
     def test_unpublished_alias_table_fails_closed(self):
@@ -307,9 +305,7 @@ class TestThreadImportRefusesMismatchedAgent:
         with (
             a,
             b,
-            patch(
-                "aj_crew.dashboard.chat_persistence.save_slot_off_loop", new_callable=AsyncMock
-            ),
+            patch("aj_crew.dashboard.chat_persistence.save_slot_off_loop", new_callable=AsyncMock),
         ):
             slot = await _import_thread_to_slot(slack, ds, OPEN, "t1")
         assert slot is ds.get_or_create_slot.return_value
@@ -751,9 +747,7 @@ class TestFirstSendAdoptionWhileLinked:
         with (
             a,
             b,
-            patch(
-                "aj_crew.dashboard.chat_persistence.save_slot_off_loop", new_callable=AsyncMock
-            ),
+            patch("aj_crew.dashboard.chat_persistence.save_slot_off_loop", new_callable=AsyncMock),
         ):
             slot = await _import_thread_to_slot(slack, ds, PINNED, "t1")
         assert slot is new_slot
@@ -1671,9 +1665,7 @@ class TestFileStemAndDeclaredNameAreOneAgent:
         with (
             a,
             b,
-            patch(
-                "aj_crew.dashboard.chat_persistence.save_slot_off_loop", new_callable=AsyncMock
-            ),
+            patch("aj_crew.dashboard.chat_persistence.save_slot_off_loop", new_callable=AsyncMock),
         ):
             slot = await _import_thread_to_slot(slack, ds, PINNED, "t1")
         assert slot is ds.get_or_create_slot.return_value

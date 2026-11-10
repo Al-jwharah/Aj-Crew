@@ -108,7 +108,7 @@ class TestPlantedLinkRefusedBeforeTheTreeIsBuilt(unittest.TestCase):
         self.assertTrue(target.is_dir())
 
     def test_every_runtime_import_in_store_has_a_standalone_fallback(self):
-        """A ``aj_crew`` import outside ``try/except ImportError`` breaks ``store.py --ensure``."""
+        """An ``aj_crew`` import outside ``try/except ImportError`` breaks ``store.py --ensure``."""
         import ast
 
         tree = ast.parse(Path(store.__file__).read_text(encoding="utf-8"))

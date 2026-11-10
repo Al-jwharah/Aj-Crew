@@ -347,7 +347,7 @@ def register_instance(
 
 
 def is_launched_instance(ssm_target: str) -> bool:
-    """True if *ssm_target* (an EC2 instance id) was provisioned by a Aj Crew
+    """True if *ssm_target* (an EC2 instance id) was provisioned by an Aj Crew
     cloud launch, per the launch job store — i.e. it is a *correlated* instance,
     not a hand-added SSM record that merely happens to use the same transport.
 

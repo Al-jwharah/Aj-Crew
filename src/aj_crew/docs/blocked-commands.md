@@ -123,7 +123,7 @@ The **Credentials** section reports:
   gateway's.
 
 Nothing in that section reads a secret value, and it never fails the overall
-`doctor` run — a missing AWS setup is not a Aj Crew fault.
+`doctor` run — a missing AWS setup is not an Aj Crew fault.
 
 ## Adjusting the rules
 

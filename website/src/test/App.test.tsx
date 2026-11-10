@@ -777,7 +777,7 @@ describe('App routing', () => {
 
   it('refetches the Apps nav when the gateway reconnects (post-update recovery)', async () => {
     // Regression for the empty-rail-after-update bug: the dashboard fetches
-    // /api/apps once on mount, and right after a `ajcrew update` restart that
+    // /api/apps once on mount, and right after an `ajcrew update` restart that
     // first fetch can come back empty while the gateway is still warming. When
     // the WebSocket reconnects, the Apps nav must refetch and self-heal —
     // previously it stayed empty until a manual reload (Browse, lazy-fetched,
@@ -795,7 +795,7 @@ describe('App routing', () => {
     // Let the (empty) mount fetch settle; the app is absent.
     await waitFor(() => expect(screen.getByText('Sessions')).toBeInTheDocument())
     expect(screen.queryByText('Late App')).not.toBeInTheDocument()
-    // Simulate a `ajcrew update` restart: the WS connects, drops, reconnects.
+    // Simulate an `ajcrew update` restart: the WS connects, drops, reconnects.
     // Only the reconnect (after a drop) refetches the Apps nav — the rail
     // self-heals without a manual reload.
     act(() => { store.dispatch(sseConnected()) })

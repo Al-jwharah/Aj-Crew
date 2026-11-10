@@ -912,7 +912,9 @@ def test_the_tool_has_a_registered_argument_schema():
 # 7. The verification block: an authored page is run once over a synthetic copy
 # --------------------------------------------------------------------------- #
 
-_PAGE = '<span data-dashboard-field="open_prs"></span>\n<script>window.ajcrew.fields.open_prs;</script>'
+_PAGE = (
+    '<span data-dashboard-field="open_prs"></span>\n<script>window.ajcrew.fields.open_prs;</script>'
+)
 
 #: The grammar the artifact store gives a slug (``artifact_store.rules._SLUG_RE``).
 _STORE_SLUG = re.compile(r"^[a-z0-9](?:[a-z0-9-]{0,78}[a-z0-9])?\Z")

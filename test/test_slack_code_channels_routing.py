@@ -332,9 +332,7 @@ async def test_an_explicit_default_agent_still_wins_over_the_code_channels_folde
     env: Env,
 ) -> None:
     env.api.responses["agents.conversations.create"] = {"ok": True, "channel_id": "C0CODE"}
-    env.defaults.update(
-        agent="ajcrew-team-lead", model="claude-opus-4.5", reasoning_effort="high"
-    )
+    env.defaults.update(agent="ajcrew-team-lead", model="claude-opus-4.5", reasoning_effort="high")
     assert await _open(env) is True
     spec = env.created_sessions[0]["spec"]
     assert spec.agent == "ajcrew-team-lead"

@@ -263,9 +263,7 @@ class TestThrottledTurnRetry:
         slot = state.get_or_create_slot("s1")
         slot._titled = True
         slot_ref.append(slot)
-        with patch(
-            "aj_crew.dashboard.chat_runner._recovery_delay", side_effect=_stop_during_wait
-        ):
+        with patch("aj_crew.dashboard.chat_runner._recovery_delay", side_effect=_stop_during_wait):
             await _run_chat(state, slot, "hello")
             await self._drain_bg(state)
 

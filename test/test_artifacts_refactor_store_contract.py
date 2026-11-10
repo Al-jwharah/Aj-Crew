@@ -970,9 +970,7 @@ _DOCUMENTED_SPLITS = {
 }
 
 #: Every spelling a test uses to name the facade module.
-_MENTIONS_THE_FACADE = re.compile(
-    r"aj_crew\.artifacts\b|from aj_crew import [^\n]*\bartifacts\b"
-)
+_MENTIONS_THE_FACADE = re.compile(r"aj_crew\.artifacts\b|from aj_crew import [^\n]*\bartifacts\b")
 
 
 def _facade_patched_names(text: str) -> set[str]:
@@ -983,9 +981,7 @@ def _facade_patched_names(text: str) -> set[str]:
         if isinstance(node, ast.ImportFrom) and node.module == "aj_crew":
             aliases |= {a.asname or a.name for a in node.names if a.name == "artifacts"}
         elif isinstance(node, ast.Import):
-            aliases |= {
-                a.asname for a in node.names if a.name == "aj_crew.artifacts" and a.asname
-            }
+            aliases |= {a.asname for a in node.names if a.name == "aj_crew.artifacts" and a.asname}
     found: set[str] = set()
     for node in ast.walk(tree):
         if not isinstance(node, ast.Call) or len(node.args) < 2:

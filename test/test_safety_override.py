@@ -10,7 +10,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from conftest import drain_breadcrumb_writes
 from aj_crew.safety_override import (
     ActivationResult,
     OverrideStatus,
@@ -19,6 +18,7 @@ from aj_crew.safety_override import (
     reset_singleton,
     safety_override,
 )
+from conftest import drain_breadcrumb_writes
 
 
 @pytest.fixture(autouse=True)

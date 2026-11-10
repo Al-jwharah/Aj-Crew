@@ -186,9 +186,7 @@ def test_restart_refuses_spawn_when_the_lock_is_still_held_after_the_incumbent_e
         patch("aj_crew.cli_server.service_controller.installed_unit_path", return_value=None),
         patch("aj_crew.cli_server.run_marker.read_pid", return_value=4242),
         patch("aj_crew.cli_server.platform_compat.find_listening_pids", return_value=[4242]),
-        patch(
-            "aj_crew.cli_server.platform_compat.listening_pid_tool_available", return_value=True
-        ),
+        patch("aj_crew.cli_server.platform_compat.listening_pid_tool_available", return_value=True),
         patch("aj_crew.cli_server._is_ajcrew_process", return_value=True),
         patch("aj_crew.cli_server._stop"),
         patch("aj_crew.cli_server._wait_for_pids_exit", return_value=[]),
@@ -226,9 +224,7 @@ def test_restart_refuses_spawn_when_the_lock_probe_is_indeterminate_after_the_wa
         patch("aj_crew.cli_server.service_controller.installed_unit_path", return_value=None),
         patch("aj_crew.cli_server.run_marker.read_pid", return_value=4242),
         patch("aj_crew.cli_server.platform_compat.find_listening_pids", return_value=[4242]),
-        patch(
-            "aj_crew.cli_server.platform_compat.listening_pid_tool_available", return_value=True
-        ),
+        patch("aj_crew.cli_server.platform_compat.listening_pid_tool_available", return_value=True),
         patch("aj_crew.cli_server._is_ajcrew_process", return_value=True),
         patch("aj_crew.cli_server._stop"),
         patch("aj_crew.cli_server._wait_for_pids_exit", return_value=[]),

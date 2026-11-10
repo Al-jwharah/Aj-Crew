@@ -13,7 +13,6 @@ from pathlib import Path
 
 import pytest
 
-from conftest import requires_symlinks
 from aj_crew.testing.channel_fixtures import (
     Provenance,
     ShapeMismatch,
@@ -25,6 +24,7 @@ from aj_crew.testing.channel_fixtures import (
     unverified,
     write_fixture,
 )
+from conftest import requires_symlinks
 
 # The fixtures root lives in the TEST tree, so the layout coupling lives here
 # too -- aj_crew.testing.channel_fixtures ships in the wheel and deliberately

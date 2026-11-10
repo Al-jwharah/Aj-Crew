@@ -17,8 +17,8 @@ from pathlib import Path
 
 import pytest
 
-from conftest import make_dir_link
 from aj_crew.config import paths
+from conftest import make_dir_link
 
 
 class TestConfigDir:

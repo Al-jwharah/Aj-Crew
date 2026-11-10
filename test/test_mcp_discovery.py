@@ -21,9 +21,9 @@ from mcp_discovery_helpers import (  # noqa: F401 -- the autouse fixture registe
 
 from aj_crew import mcp_cleanup
 from aj_crew.mcp_discovery import (
+    SCOPE_AJCREW,
     SCOPE_CC_GLOBAL,
     SCOPE_KIRO_GLOBAL,
-    SCOPE_AJCREW,
     McpServerInfo,
     _load_mcp_json_by_source,
     _scope_priority,
@@ -1275,9 +1275,7 @@ class TestExtraScopeSeam:
                 {"mcpServers": {"shared-srv": {"command": "x", "disabledTools": ["cc-tool"]}}}
             )
         )
-        monkeypatch.setattr(
-            "aj_crew.mcp_discovery._MCP_SOURCES", ((kiro_mcp, SCOPE_KIRO_GLOBAL),)
-        )
+        monkeypatch.setattr("aj_crew.mcp_discovery._MCP_SOURCES", ((kiro_mcp, SCOPE_KIRO_GLOBAL),))
         monkeypatch.setattr("aj_crew.mcp_discovery._MCP_JSON_PATHS", (kiro_mcp,))
         monkeypatch.setattr(
             "aj_crew.mcp_discovery._extra_scope_sources", lambda: [(cc_mcp, "ccGlobal")]

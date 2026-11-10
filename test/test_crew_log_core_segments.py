@@ -23,7 +23,6 @@ from crew_log_core_helpers import (
     _split_into_segments,
 )
 
-from conftest import requires_symlinks
 from aj_crew import crew_log as lg
 from aj_crew import sandbox
 from aj_crew.config import paths
@@ -31,6 +30,7 @@ from aj_crew.config.paths import data_home, ensure_data_home
 from aj_crew.crew_log import CrewLog, lease, store
 from aj_crew.security.paths import is_sensitive_path
 from aj_crew.session_ledger import _store_name
+from conftest import requires_symlinks
 
 # The shared autouse fixture, bound here by name so pytest registers it for this module.
 _isolated_home = crew_log_core_helpers._isolated_home

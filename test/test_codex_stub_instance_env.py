@@ -1,4 +1,4 @@
-"""A codex broker stub for a Aj Crew server carries the env that names its gateway.
+"""A codex broker stub for an Aj Crew server carries the env that names its gateway.
 
 codex starts every stdio MCP server from an allowlist plus the element's own
 ``env``, so a pooled broker stub for a Crew server reaches its process with only

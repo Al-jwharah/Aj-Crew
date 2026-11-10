@@ -69,9 +69,7 @@ def crew_autocompact_pct(config: "AjCrewConfig", crew_name: str) -> float | None
     return crew.autocompact_pct
 
 
-def resolve_crew_identity(
-    config: "AjCrewConfig", agent: str | None, crew_agent: str | None
-) -> str:
+def resolve_crew_identity(config: "AjCrewConfig", agent: str | None, crew_agent: str | None) -> str:
     """Canonical Aj Crew identity (a ``config.agents`` key) for a session.
 
     One rule shared by every session-granting path (provider factory, warm-pool

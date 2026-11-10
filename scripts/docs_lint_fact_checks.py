@@ -395,7 +395,7 @@ def check_fenced_paths(root: Path, docs: list[Path], findings: Findings) -> None
         for _lineno, line in _iter_fenced_lines(text):
             tokens = [m.group(0) for m in _FENCED_TASK_SPEC_RE.finditer(line)]
             tokens += [m.group(1) for m in _AJCREW_RUN_RE.finditer(line)]
-            # Both patterns match a `ajcrew run docs/task-specs/...` line, and one
+            # Both patterns match an `ajcrew run docs/task-specs/...` line, and one
             # pasted command is one finding.
             for token in dict.fromkeys(tokens):
                 if "/" not in token or (root / token).exists():

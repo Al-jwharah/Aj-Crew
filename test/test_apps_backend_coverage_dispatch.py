@@ -26,8 +26,8 @@ from apps_backend_coverage_helpers import (
 )
 
 import aj_crew.apps.backend as bmod
-from conftest import requires_symlinks
 from aj_crew.testing.wait import wait_until
+from conftest import requires_symlinks
 
 # Node / npm binary resolution
 

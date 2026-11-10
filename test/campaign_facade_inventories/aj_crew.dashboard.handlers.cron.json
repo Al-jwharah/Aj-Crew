@@ -1,6 +1,7 @@
 {
  "base_public_names": [
   "ALLOWED_LESSON_SCOPES",
+  "AjCrewConfig",
   "CHANNEL_ID_RE",
   "CHANNEL_MAX_LEN",
   "CRON_ADD_SCHEMA",
@@ -12,7 +13,6 @@
   "DashboardState",
   "FieldSpec",
   "FileTooLargeError",
-  "AjCrewConfig",
   "LEARN_ADD_SCHEMA",
   "LESSON_APPLIES_ON_TOPIC",
   "LESSON_APPLIES_UNSTATED",
@@ -97,6 +97,7 @@
  "note": "Frozen at the split of src/aj_crew/dashboard/handlers/cron.py (S22): every public name it defined, and every name it bound from the rest of aj_crew.",
  "rebound": {
   "ALLOWED_LESSON_SCOPES": "aj_crew.validation",
+  "AjCrewConfig": "aj_crew.config.loader",
   "CHANNEL_ID_RE": "aj_crew.validation",
   "CHANNEL_MAX_LEN": "aj_crew.validation",
   "CRON_ADD_SCHEMA": "aj_crew.validation",
@@ -108,7 +109,6 @@
   "DashboardState": "aj_crew.dashboard.state",
   "FieldSpec": "aj_crew.validation",
   "FileTooLargeError": "aj_crew.hooks",
-  "AjCrewConfig": "aj_crew.config.loader",
   "LEARN_ADD_SCHEMA": "aj_crew.validation",
   "LESSON_APPLIES_ON_TOPIC": "aj_crew.lesson_validation",
   "LESSON_APPLIES_UNSTATED": "aj_crew.lesson_validation",

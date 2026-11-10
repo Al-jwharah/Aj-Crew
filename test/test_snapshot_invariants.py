@@ -284,9 +284,7 @@ class TestUnreadableManifestRefuses:
         with tarfile.open(str(tarball)) as t:
             t.extractall(work, filter=lambda m, _d="": m)
         inner = next(
-            d
-            for d in work.iterdir()
-            if d.name.startswith(("ajcrew-snapshot-", "ajcrew-partial-"))
+            d for d in work.iterdir() if d.name.startswith(("ajcrew-snapshot-", "ajcrew-partial-"))
         )
         (inner / "MANIFEST.json").write_text("{corrupt")
         broken = tmp_path / "broken.tar.gz"

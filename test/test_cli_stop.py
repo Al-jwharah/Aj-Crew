@@ -1,4 +1,4 @@
-"""``ajcrew stop`` and how it recognises a Aj Crew gateway process.
+"""``ajcrew stop`` and how it recognises an Aj Crew gateway process.
 
 The command-line classifiers ``_is_ajcrew_process`` and ``_args_look_like_ajcrew`` (a composed
 edition's companion module included) and the desktop launcher's JavaScript copy of their two
@@ -26,9 +26,7 @@ class TestIsAjcrewProcess:
     """
 
     def _cmdline(self, value):
-        return patch(
-            "aj_crew.cli_server.platform_compat.process_command_line", return_value=value
-        )
+        return patch("aj_crew.cli_server.platform_compat.process_command_line", return_value=value)
 
     def test_returns_true_for_ajcrew(self):
         from aj_crew.cli_server import _is_ajcrew_process
@@ -80,7 +78,7 @@ class TestIsAjcrewProcess:
             assert _is_ajcrew_process(1234) is False
 
     def test_returns_false_for_broad_match(self):
-        """Editing a ajcrew file should NOT match — only gateway entry points."""
+        """Editing an ajcrew file should NOT match — only gateway entry points."""
         from aj_crew.cli_server import _is_ajcrew_process
 
         with self._cmdline("vim /tmp/ajcrew-notes.txt"):
@@ -141,7 +139,7 @@ class TestArgsLookLikeAjcrew:
             "",  # empty command line
             "nginx: worker process",  # unrelated daemon on the port
             "vim /tmp/ajcrew-notes.txt",  # editing a file named ajcrew*
-            "cat /var/log/aj_crew_gateway.log",  # reading a ajcrew log file
+            "cat /var/log/aj_crew_gateway.log",  # reading an ajcrew log file
             "python -m aj_crew",  # bare module, no server subcommand
             "python -m aj_crew run /tmp/spec.md",  # task runner — NOT a port-bound server
             "python -m aj_crew run gateway",  # "gateway" is a file arg to run, not the subcommand
@@ -353,9 +351,7 @@ class TestStop:
 
     def _cmdline(self, value):
         # Same cmdline for any PID queried.
-        return patch(
-            "aj_crew.cli_server.platform_compat.process_command_line", return_value=value
-        )
+        return patch("aj_crew.cli_server.platform_compat.process_command_line", return_value=value)
 
     def test_no_process_on_port(self, capsys):
         # No listener on the port (lsof empty / netstat no match) → nothing to stop.
@@ -432,7 +428,7 @@ class TestStop:
         assert "reason=lsof_not_found" in resources
 
     def test_no_ajcrew_process(self, capsys):
-        # A listener exists but its cmdline isn't a ajcrew gateway → refuse to kill,
+        # A listener exists but its cmdline isn't an ajcrew gateway → refuse to kill,
         # but name the pid so the operator can see what holds the port.
         from aj_crew.cli_server import _stop
 
@@ -614,9 +610,7 @@ class TestStop:
     def _kill_patch(self):
         """Patch the signal call the running OS takes, and return it."""
         if sys.platform == "win32":
-            return patch(
-                "aj_crew.cli_server.platform_compat.kill_process_tree", return_value=True
-            )
+            return patch("aj_crew.cli_server.platform_compat.kill_process_tree", return_value=True)
         return patch("os.kill")
 
     def _endpoint(self, answers):
@@ -828,7 +822,7 @@ class TestStop:
 
     def test_a_user_scope_alias_refusal_names_the_user_manager_and_the_stop_verb(self, capsys):
         """A user-scope alias must be managed with ``systemctl --user`` (plain
-        ``sudo systemctl`` reaches the system manager and misses it), and a
+        ``sudo systemctl`` reaches the system manager and misses it), and an
         ``ajcrew stop`` must point at ``stop``, not ``restart``."""
         from aj_crew.cli_server import _stop
         from aj_crew.service.linux import AliasHolder

@@ -606,7 +606,7 @@ def test_reveal_prefixes_unchanged_for_spaced_titles():
     """Revert guard on the animation: latin titles still step one word at a
     time, and the caller still owns the final push."""
     assert chat_title._title_reveal_prefixes("Aj Crew launch blog") == [
-        "Kiro",
+        "Aj",
         "Aj Crew",
         "Aj Crew launch",
     ]

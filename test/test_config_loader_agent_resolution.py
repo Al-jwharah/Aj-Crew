@@ -740,7 +740,7 @@ class TestAppAgentDispatch(unittest.TestCase):
     def test_app_agent_matched_by_name_field_dispatches_itself(self):
         # bridges._register_agents writes the NAMESPACED filename while the config
         # inside keeps the app's bare name, and app panels bind the slot to that
-        # bare name. Before this fix the bare name was not a Aj Crew alias, so it
+        # bare name. Before this fix the bare name was not an Aj Crew alias, so it
         # fell through to default_agent and the DEFAULT agent answered.
         import aj_crew.config.loader as loader
 
@@ -786,7 +786,7 @@ class TestAppAgentDispatch(unittest.TestCase):
         assert r.kiro_agent == "ajcrew"
 
     def test_alias_still_wins_over_materialized_file(self):
-        # A Aj Crew alias keeps full control of the binding (and the directory is
+        # An Aj Crew alias keeps full control of the binding (and the directory is
         # not even scanned for it).
         import aj_crew.config.loader as loader
         from aj_crew.config.loader import AjCrewAgentConfig
@@ -1228,7 +1228,7 @@ class TestAppAgentDispatch(unittest.TestCase):
 
     def test_project_agent_dispatches_itself(self):
         # A project-local agent is resolvable by kiro-cli (Aj Crew spawns it with
-        # the project dir as cwd) but is not a Aj Crew alias, so without the
+        # the project dir as cwd) but is not an Aj Crew alias, so without the
         # project scope it fell through to default_agent and the DEFAULT agent
         # answered a session the user bound to the repo's own agent.
         import aj_crew.config.loader as loader

@@ -973,7 +973,7 @@ def _account_id(profile: str, region: str) -> str:
 
 
 def _account_from_bucket(bucket: str) -> str:
-    """Extract the 12-digit account id embedded in a ``ajcrew-src-<account>-<region>`` name.
+    """Extract the 12-digit account id embedded in an ``ajcrew-src-<account>-<region>`` name.
 
     The launcher bucket name is the SINGLE source of truth for the account we
     pin ``--expected-bucket-owner`` to: it was resolved (fail-closed) by
@@ -1118,9 +1118,7 @@ def ensure_instance_boundary(profile: str = "", region: str = "") -> str:
         name=iam.BOUNDARY_NAME,
         arn=iam.boundary_arn(account),
         expected=iam.boundary_policy_document(account),
-        description=(
-            "Aj Crew EC2 instance permissions ceiling (SSM core + launcher source read)."
-        ),
+        description=("Aj Crew EC2 instance permissions ceiling (SSM core + launcher source read)."),
         profile=profile,
         region=region,
         previous=iam.previous_boundary_documents(account),

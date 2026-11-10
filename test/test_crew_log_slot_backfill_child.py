@@ -178,9 +178,7 @@ def test_a_staged_file_for_another_unit_list_is_refused():
     _slot()
     _stage_with_a_real_child()
     # The slot gains a unit: the staged identity block names the old list.
-    third = CrewLog.create(
-        lg.KIND_SESSION, "acp-backfill-3", owner="o", agent="ajcrew", slot=SLOT
-    )
+    third = CrewLog.create(lg.KIND_SESSION, "acp-backfill-3", owner="o", agent="ajcrew", slot=SLOT)
     _append(third, "new-unit")
     del third
     gc.collect()

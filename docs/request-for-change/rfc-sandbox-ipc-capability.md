@@ -23,7 +23,7 @@ superseded-by: []
 
 ## 1. Problem
 
-A Aj Crew MCP server such as `ajcrew-core` is launched by kiro-cli, so it
+An Aj Crew MCP server such as `ajcrew-core` is launched by kiro-cli, so it
 runs inside the agent sandbox, under the same uid and the same profile as the
 agent's own shell. It calls the gateway's internal API on every tool call. To
 do that it needs two things the shell can also reach today.
@@ -240,7 +240,7 @@ gateway IPC working.
 | 1 | Add the agent socket, `/api/ipc/redeem`, pickup issue and capability check. Aj Crew's in-sandbox servers redeem and prefer the agent socket, and fall back to today's path when there is no pickup or the route answers `404` | Additive. An older gateway or a missing pickup takes today's path |
 | 2 | Create the masked `ipc/` leaf (3.2), split the credential (3.1) and hide `.local_secret` | The desktop app reads the same `.local_secret`, and the CLI's owner-secret senders move to `read_owner_secret` in the same pull request. Every in-sandbox MCP reader sends the internal secret already. Agent shells lose owner authority (3.5) |
 | 3 | Move the dashboard socket and every authority-by-connection socket into `ipc/` (3.2). For one release the gateway also binds the old dashboard socket path, which still needs the internal secret | An in-sandbox server dials the agent socket since phase 1. The CLI resolves the new path through `dashboard_socket_path` |
-| 4 | Stop publishing the internal secret where the sandbox can read it (3.6). Enter this phase only when phase 0 shows no sandboxed secret-only grant from a Aj Crew component on nightly for 14 days | By then every Aj Crew in-sandbox caller authenticates by capability, and the telemetry gate shows it |
+| 4 | Stop publishing the internal secret where the sandbox can read it (3.6). Enter this phase only when phase 0 shows no sandboxed secret-only grant from an Aj Crew component on nightly for 14 days | By then every Aj Crew in-sandbox caller authenticates by capability, and the telemetry gate shows it |
 
 Rollback of any phase is a revert. No phase stores data that a revert would
 leave behind: pickups and capabilities live in memory, and the files the later
@@ -313,7 +313,7 @@ phases move are rewritten on every gateway start.
    `ps`, `pgrep` or a build tool the agent runs? Phase 1 measures it. If it
    can, known limit 1 closes on macOS too.
 2. Phase 4's gate uses telemetry. Is "14 days of nightly with no sandboxed
-   secret-only grant from a Aj Crew component" the right bar, and does a
+   secret-only grant from an Aj Crew component" the right bar, and does a
    user-written script cron that calls the API with the internal secret need
    a migration notice before phase 4?
 3. Should phase 3 keep the old dashboard socket path for one release, as

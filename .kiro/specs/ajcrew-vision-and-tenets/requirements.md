@@ -35,7 +35,7 @@ This is a strategic and product spec. It guides both UX and architecture decisio
 
 ### Requirement 1: Product Vision Statement
 
-**User Story:** As a AjCrew contributor, I want a clear product vision statement, so that all feature work aligns toward a single north star.
+**User Story:** As an AjCrew contributor, I want a clear product vision statement, so that all feature work aligns toward a single north star.
 
 #### Acceptance Criteria
 
@@ -45,7 +45,7 @@ This is a strategic and product spec. It guides both UX and architecture decisio
 
 ### Requirement 2: Design Tenets (Ordered by Priority)
 
-**User Story:** As a AjCrew contributor, I want an ordered set of design tenets, so that I can resolve trade-offs consistently when building features.
+**User Story:** As an AjCrew contributor, I want an ordered set of design tenets, so that I can resolve trade-offs consistently when building features.
 
 #### Acceptance Criteria
 
@@ -74,7 +74,7 @@ This is a strategic and product spec. It guides both UX and architecture decisio
 
 ### Requirement 4: Progressive Disclosure UX Model
 
-**User Story:** As a AjCrew user, I want advanced features to appear naturally as I grow, so that the interface stays simple when I need simple and powerful when I need power.
+**User Story:** As an AjCrew user, I want advanced features to appear naturally as I grow, so that the interface stays simple when I need simple and powerful when I need power.
 
 #### Acceptance Criteria
 
@@ -89,7 +89,7 @@ This is a strategic and product spec. It guides both UX and architecture decisio
 
 ### Requirement 5: AI Teammate Mental Model
 
-**User Story:** As a AjCrew user, I want each agent to feel like a real colleague on my team — one that works with multiple people, remembers everyone's context, and uses tools to stay organized.
+**User Story:** As an AjCrew user, I want each agent to feel like a real colleague on my team — one that works with multiple people, remembers everyone's context, and uses tools to stay organized.
 
 #### Acceptance Criteria
 
@@ -103,7 +103,7 @@ This is a strategic and product spec. It guides both UX and architecture decisio
 
 ### Requirement 6: Competitive Positioning — The Enterprise Middle Ground
 
-**User Story:** As a AjCrew product owner, I want clear competitive positioning in the AI workspace landscape, so that contributors understand where AjCrew sits relative to OpenClaw and Claude Cowork and what to prioritize.
+**User Story:** As an AjCrew product owner, I want clear competitive positioning in the AI workspace landscape, so that contributors understand where AjCrew sits relative to OpenClaw and Claude Cowork and what to prioritize.
 
 #### Acceptance Criteria
 
@@ -120,7 +120,7 @@ This is a strategic and product spec. It guides both UX and architecture decisio
 
 ### Requirement 7: Contributor Guidance — Architecture Decision Framework
 
-**User Story:** As a AjCrew contributor, I want clear guidance on how to make architecture decisions, so that the codebase evolves consistently toward the vision.
+**User Story:** As an AjCrew contributor, I want clear guidance on how to make architecture decisions, so that the codebase evolves consistently toward the vision.
 
 #### Acceptance Criteria
 
@@ -134,7 +134,7 @@ This is a strategic and product spec. It guides both UX and architecture decisio
 
 ### Requirement 8: Roadmap Milestones — From Current State to AI Team Vision
 
-**User Story:** As a AjCrew product owner, I want defined roadmap milestones, so that the team can plan and track progress toward the full AI team vision.
+**User Story:** As an AjCrew product owner, I want defined roadmap milestones, so that the team can plan and track progress toward the full AI team vision.
 
 #### Acceptance Criteria
 
@@ -152,7 +152,7 @@ This is a strategic and product spec. It guides both UX and architecture decisio
 
 ### Requirement 9: UX Principle — Simplicity at Every Layer
 
-**User Story:** As a AjCrew user, I want every interaction surface (dashboard, CLI, Slack, config) to feel simple and consistent, so that I never feel overwhelmed regardless of which interface I use.
+**User Story:** As an AjCrew user, I want every interaction surface (dashboard, CLI, Slack, config) to feel simple and consistent, so that I never feel overwhelmed regardless of which interface I use.
 
 #### Acceptance Criteria
 
@@ -164,7 +164,7 @@ This is a strategic and product spec. It guides both UX and architecture decisio
 
 ### Requirement 10: Quality Bar — What Ships and What Doesn't
 
-**User Story:** As a AjCrew contributor, I want a clear quality bar for shipping features, so that the product maintains its "it just works" reputation.
+**User Story:** As an AjCrew contributor, I want a clear quality bar for shipping features, so that the product maintains its "it just works" reputation.
 
 #### Acceptance Criteria
 

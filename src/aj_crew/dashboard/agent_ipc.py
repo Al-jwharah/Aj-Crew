@@ -1,6 +1,6 @@
 """The agent socket: connection-bound capabilities for Aj Crew's in-sandbox servers.
 
-Phase 1 of ``docs/request-for-change/rfc-sandbox-ipc-capability.md``. A Aj Crew
+Phase 1 of ``docs/request-for-change/rfc-sandbox-ipc-capability.md``. An Aj Crew
 MCP server such as ``ajcrew-core`` calls the gateway's internal routes on every
 tool call. Under an ENFORCED harness (codex, opencode, goose, pi) the OS credential
 mask hides ``run/`` and ``.local_secret`` from the harness's whole process tree
@@ -85,7 +85,7 @@ AGENT_SOCKET_HOLDER_KEY = "agent_ipc_socket_holder"
 #: session's server its agent-socket path and nothing else.
 _MAX_PICKUPS = 4096
 
-#: How far up the process tree a redemption looks for the runtime root. A Aj Crew
+#: How far up the process tree a redemption looks for the runtime root. An Aj Crew
 #: server sits a handful of levels under it (sandbox launcher, harness, adapter).
 _MAX_ANCESTRY = 64
 

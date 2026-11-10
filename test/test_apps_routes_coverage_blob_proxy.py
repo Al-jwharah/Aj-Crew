@@ -24,8 +24,8 @@ from apps_routes_coverage_helpers import (
 )
 
 import aj_crew.apps.routes as routes_mod
-from conftest import requires_symlinks
 from aj_crew.apps.routes import _is_safe_repo_identifier
+from conftest import requires_symlinks
 
 # ---------------------------------------------------------------------------
 # No-bundled-entry blob clone-URL resolution (inline URL-form check)

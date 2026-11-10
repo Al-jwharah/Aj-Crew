@@ -1,10 +1,10 @@
 {
  "base_public_names": [
+  "AjCrewConfig",
   "GhCliError",
   "GhInvalidInputError",
   "GhPermissionError",
   "GhSetupError",
-  "AjCrewConfig",
   "LIST_POLL_MAX_STALENESS_SEC",
   "LoopBoundLock",
   "MAX_ASSIGNEES",

@@ -239,7 +239,7 @@ _SERVER_LOG = "aj_crew.dashboard.server"
     [
         # Another program holds the port: never send the user to stop a gateway
         # that does not exist.
-        ("foreign_holder", "held by another program, not a Aj Crew gateway", False),
+        ("foreign_holder", "held by another program, not an Aj Crew gateway", False),
         ("healthy_peer", "another Aj Crew gateway holds it", True),
         ("booting_peer", "another Aj Crew gateway holds it", True),
         ("reclaim_failed", "another Aj Crew gateway holds it", True),
@@ -298,7 +298,7 @@ async def test_reserve_port_give_up_message_names_a_foreign_holder(
 
     errors = [r.getMessage() for r in caplog.records if r.levelno == logging.ERROR]
     assert len(errors) == 1
-    assert "held by another program, not a Aj Crew gateway" in errors[0]
+    assert "held by another program, not an Aj Crew gateway" in errors[0]
     # The top port has no +1, so the suggestion steps down instead.
     assert "ajcrew gateway --port 65534" in errors[0]
     assert "ajcrew stop" not in errors[0]

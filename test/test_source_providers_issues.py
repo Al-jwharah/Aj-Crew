@@ -23,7 +23,7 @@ def test_parse_github_issue_url() -> None:
     ref = source.parse_source_url("https://github.com/kirodotdev/KiroCrew/issues/58#issue-1")
     assert ref.provider == "github"
     assert ref.owner == "kirodotdev"
-    assert ref.repo == "AjCrew"  # brand-ok: the kirodotdev/KiroCrew repository name
+    assert ref.repo == "KiroCrew"  # brand-ok: the kirodotdev/KiroCrew repository name
     assert ref.number == 58
     assert ref.kind == "issue"
     assert ref.url == "https://github.com/kirodotdev/KiroCrew/issues/58"

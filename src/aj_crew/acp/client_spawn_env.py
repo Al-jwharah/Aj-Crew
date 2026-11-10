@@ -212,7 +212,7 @@ def kiro_cli_not_found_message(
       ``AJCREW_KIRO_BIN`` override, so "not found in PATH" sent a reader whose
       install was simply uncovered off to check the one thing that was not the
       question. It can send them further still: ``where kiro-cli`` finds nothing,
-      the app bundle DOES contain a ``ajcrew.exe`` — Aj Crew's OWN console
+      the app bundle DOES contain an ``ajcrew.exe`` — Aj Crew's OWN console
       script — and the conclusion invited is that the agent CLI has been renamed
       and this lookup left stale. Naming the searched directories and the
       override makes both wrong turns unavailable.
@@ -688,7 +688,7 @@ def apply_pod_bundle_spawn(
     The exception is stated POSITIVELY (pod condition true) and gated on exactly
     the conditions that make
     :func:`_apply_pod_home_remap` fire -- the pod marker compared exactly to
-    ``"1"``, membership in ``ACP_BACKENDS_POD_HOME_REMAP``, and a
+    ``"1"``, membership in ``ACP_BACKENDS_POD_HOME_REMAP``, and an
     ``AJCREW_OS_HOME`` to point at -- never on a backend negation, so a harness
     added to a set for some other reason cannot inherit this behaviour by
     accident (harness-parity H6/H7).

@@ -17,9 +17,9 @@ from apps_registry_coverage_helpers import cache_dir_fixture  # noqa: F401
 from apps_registry_coverage_helpers import _fake_sandbox, _FakeProc
 from stray_line_helpers import too_deep_to_decode
 
-from conftest import requires_symlinks
 from aj_crew.apps import registry
 from aj_crew.apps.registry_pipeline import manifests as manifests_mod
+from conftest import requires_symlinks
 
 # Manifest cache
 

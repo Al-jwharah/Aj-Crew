@@ -1014,9 +1014,7 @@ class TestLockHolder:
         # is alive (reused by a stranger), and nothing holds the lock. The
         # held-probe is what keeps the stranger from being named.
         (tmp_path / LOCK_FILENAME).write_text("4242\n")
-        monkeypatch.setattr(
-            "aj_crew.gateway_lock.platform_compat.flock_owner_pid", lambda _p: None
-        )
+        monkeypatch.setattr("aj_crew.gateway_lock.platform_compat.flock_owner_pid", lambda _p: None)
         monkeypatch.setattr("aj_crew.gateway_lock.platform_compat.pid_exists", lambda pid: True)
         assert lock_holder(tmp_path) == LockHolder(pid=None, alive=False, source="none")
 
@@ -1030,9 +1028,7 @@ class TestLockHolder:
             "aj_crew.gateway_lock.platform_compat.try_acquire_lock",
             lambda fd, **k: (_ for _ in ()).throw(OSError("flock unsupported")),
         )
-        monkeypatch.setattr(
-            "aj_crew.gateway_lock.platform_compat.flock_owner_pid", lambda _p: None
-        )
+        monkeypatch.setattr("aj_crew.gateway_lock.platform_compat.flock_owner_pid", lambda _p: None)
         monkeypatch.setattr(
             "aj_crew.gateway_lock.platform_compat.pid_exists", lambda pid: pid == 4242
         )
@@ -1053,9 +1049,7 @@ class TestLockHolder:
             "aj_crew.gateway_lock.platform_compat.try_acquire_lock",
             lambda fd, **k: (_ for _ in ()).throw(OSError("flock unsupported")),
         )
-        monkeypatch.setattr(
-            "aj_crew.gateway_lock.platform_compat.flock_owner_pid", lambda _p: 222
-        )
+        monkeypatch.setattr("aj_crew.gateway_lock.platform_compat.flock_owner_pid", lambda _p: 222)
         monkeypatch.setattr(
             "aj_crew.gateway_lock.platform_compat.pid_exists", lambda pid: pid == 222
         )
@@ -1069,9 +1063,7 @@ class TestLockHolder:
             "aj_crew.gateway_lock.platform_compat.try_acquire_lock",
             lambda fd, **k: (_ for _ in ()).throw(OSError("flock unsupported")),
         )
-        monkeypatch.setattr(
-            "aj_crew.gateway_lock.platform_compat.flock_owner_pid", lambda _p: 222
-        )
+        monkeypatch.setattr("aj_crew.gateway_lock.platform_compat.flock_owner_pid", lambda _p: 222)
         monkeypatch.setattr("aj_crew.gateway_lock.platform_compat.pid_exists", lambda pid: False)
         with pytest.raises(LockProbeError):
             lock_holder(tmp_path)
@@ -1087,9 +1079,7 @@ class TestLockHolder:
         monkeypatch.setattr(
             "aj_crew.gateway_lock.platform_compat.try_acquire_lock", lambda fd, **k: False
         )
-        monkeypatch.setattr(
-            "aj_crew.gateway_lock.platform_compat.flock_owner_pid", lambda _p: 222
-        )
+        monkeypatch.setattr("aj_crew.gateway_lock.platform_compat.flock_owner_pid", lambda _p: 222)
         monkeypatch.setattr("aj_crew.gateway_lock.platform_compat.pid_exists", lambda pid: False)
         with pytest.raises(LockProbeError, match="pid 222") as excinfo:
             lock_holder(tmp_path)
@@ -1104,9 +1094,7 @@ class TestLockHolder:
         # gateway` refuses to start on) nor a holder to act on.
         (tmp_path / LOCK_FILENAME).write_text("4242\n")
         monkeypatch.setattr("aj_crew.gateway_lock._lock_is_held", lambda *_a: True)
-        monkeypatch.setattr(
-            "aj_crew.gateway_lock.platform_compat.flock_owner_pid", lambda _p: None
-        )
+        monkeypatch.setattr("aj_crew.gateway_lock.platform_compat.flock_owner_pid", lambda _p: None)
         monkeypatch.setattr("aj_crew.gateway_lock.platform_compat.pid_exists", lambda pid: False)
         with pytest.raises(LockProbeError) as excinfo:
             lock_holder(tmp_path)
@@ -1139,9 +1127,7 @@ class TestLockHolder:
             raise OSError(errno.EACCES, "sharing violation")
 
         monkeypatch.setattr(os, "read", denied)
-        monkeypatch.setattr(
-            "aj_crew.gateway_lock.platform_compat.flock_owner_pid", lambda _p: None
-        )
+        monkeypatch.setattr("aj_crew.gateway_lock.platform_compat.flock_owner_pid", lambda _p: None)
         monkeypatch.setattr("aj_crew.gateway_lock.platform_compat.pid_exists", lambda _p: True)
         monkeypatch.setattr("aj_crew.gateway_lock._lock_is_held", lambda *_a: False)
         assert lock_holder(tmp_path) == LockHolder(pid=None, alive=False, source="none")
@@ -1162,9 +1148,7 @@ class TestLockHolder:
         # recorded: must not fabricate a pid from garbage content. A free lock
         # is nobody; a held one with garbage for a pid is indeterminate.
         (tmp_path / LOCK_FILENAME).write_text(content)
-        monkeypatch.setattr(
-            "aj_crew.gateway_lock.platform_compat.flock_owner_pid", lambda _p: None
-        )
+        monkeypatch.setattr("aj_crew.gateway_lock.platform_compat.flock_owner_pid", lambda _p: None)
         monkeypatch.setattr("aj_crew.gateway_lock._lock_is_held", lambda *_a: False)
         assert lock_holder(tmp_path).pid is None
         monkeypatch.setattr("aj_crew.gateway_lock._lock_is_held", lambda *_a: True)
@@ -1174,9 +1158,7 @@ class TestLockHolder:
     def test_recorded_pid_used_only_when_flock_owner_is_unavailable(self, tmp_path, monkeypatch):
         (tmp_path / LOCK_FILENAME).write_text("4242\n")
         monkeypatch.setattr("aj_crew.gateway_lock._lock_is_held", lambda *_a: True)
-        monkeypatch.setattr(
-            "aj_crew.gateway_lock.platform_compat.flock_owner_pid", lambda _p: None
-        )
+        monkeypatch.setattr("aj_crew.gateway_lock.platform_compat.flock_owner_pid", lambda _p: None)
         monkeypatch.setattr(
             "aj_crew.gateway_lock.platform_compat.pid_exists", lambda pid: pid == 4242
         )
@@ -1208,9 +1190,7 @@ class TestLockHolder:
         # the one last written to the file -- the authoritative source wins.
         (tmp_path / LOCK_FILENAME).write_text("111\n")
         monkeypatch.setattr("aj_crew.gateway_lock._lock_is_held", lambda *_a: True)
-        monkeypatch.setattr(
-            "aj_crew.gateway_lock.platform_compat.flock_owner_pid", lambda _p: 222
-        )
+        monkeypatch.setattr("aj_crew.gateway_lock.platform_compat.flock_owner_pid", lambda _p: 222)
         monkeypatch.setattr(
             "aj_crew.gateway_lock.platform_compat.pid_exists", lambda pid: pid == 222
         )
@@ -1448,9 +1428,7 @@ class TestTheLockFileIsARegularFile:
             opens.append(path)
             raise FileNotFoundError(errno.ENOENT, "gone", os.fspath(path))
 
-        monkeypatch.setattr(
-            "aj_crew.gateway_lock.platform_compat.open_create_no_reparse", vanished
-        )
+        monkeypatch.setattr("aj_crew.gateway_lock.platform_compat.open_create_no_reparse", vanished)
         monkeypatch.setattr("aj_crew.gateway_lock.time.sleep", lambda _s: None)
         with pytest.raises(GatewayLockError, match="replaced faster than it can be locked"):
             GatewayLock(tmp_path).acquire()
@@ -1495,9 +1473,7 @@ class TestTheLockFileIsARegularFile:
         os.link(lock_file, backup)
         # The non-Linux shape: no kernel owner surface, and the recorded number
         # belongs to some live process, as a reused pid would.
-        monkeypatch.setattr(
-            "aj_crew.gateway_lock.platform_compat.flock_owner_pid", lambda _p: None
-        )
+        monkeypatch.setattr("aj_crew.gateway_lock.platform_compat.flock_owner_pid", lambda _p: None)
         monkeypatch.setattr("aj_crew.gateway_lock.platform_compat.pid_exists", lambda _p: True)
 
         held = GatewayLock(tmp_path).acquire()
@@ -1530,9 +1506,7 @@ class TestTheLockFileIsARegularFile:
         lock_file.write_text("4242\n", encoding="utf-8")
         backup = tmp_path / "backup-of-the-lock"
         monkeypatch.setattr("aj_crew.gateway_lock._lock_is_held", lambda *_a: True)
-        monkeypatch.setattr(
-            "aj_crew.gateway_lock.platform_compat.flock_owner_pid", lambda _p: None
-        )
+        monkeypatch.setattr("aj_crew.gateway_lock.platform_compat.flock_owner_pid", lambda _p: None)
         monkeypatch.setattr(
             "aj_crew.gateway_lock.platform_compat.pid_exists", lambda pid: pid == 4242
         )

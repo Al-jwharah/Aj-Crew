@@ -268,7 +268,7 @@ serves it at `/vendor/ajcrew-app-sdk.d.ts` with the other vendor files. It is
 generated, never committed, so it always describes the SDK that host runs and no
 source change has a second file to keep in step. The generator emits declarations for the two barrels and, transitively, only the host
 modules those declarations name; each lands in a `declare module` block, the
-barrels under their public specifiers and the rest under a `ajcrew-host:` name
+barrels under their public specifiers and the rest under an `ajcrew-host:` name
 the import map does not resolve, which marks it as no entry point an app can load.
 `src/test/appSdkTypes.test.ts` runs the generator and compiles an app
 source against its output.
@@ -6617,7 +6617,7 @@ Writers: `apps/marketplace_install.py`, `apps/market_client.py`,
 ## 32. App Kit seam level 1: what a former built-in needs, offered to every app
 
 An installed app reaches the host only through its context and the dashboard SDK,
-never through a `aj_crew` import or a dashboard source path: such an import pins the
+never through an `aj_crew` import or a dashboard source path: such an import pins the
 app to one wheel's private layout and breaks silently on the next upgrade. Level 1 is
 the set of seams a built-in's code needed from core, published generically. Nothing in
 any of them names an app. `APP_SDK_LEVEL` is one integer on both sides
@@ -7283,7 +7283,7 @@ through one seam that is empty by default:
   the rows once per process. A row may grant only its own app (`app` must be the
   package's installed name), every path must sit under that app's own
   `/api/apps/<app>/` or `/apps/<app>/` namespace and not end in `/` (the strict tier
-  also admits an entry's children, so a row names leaf verbs), and a forwarded variable must be a
+  also admits an entry's children, so a row names leaf verbs), and a forwarded variable must be an
   `AJCREW_*` name; a malformed row raises at load, so a grant cannot silently stop
   applying. Only `BUILTIN_NAMES` is read: an installed or registry app can claim none
   of this, whatever its manifest says.

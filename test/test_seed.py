@@ -14,9 +14,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from conftest import make_dir_link, requires_symlinks
 from aj_crew import cli, pinned_fs, platform_compat
 from aj_crew import seed as seed_mod
+from conftest import make_dir_link, requires_symlinks
 
 
 def test_seed_empty_happy_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

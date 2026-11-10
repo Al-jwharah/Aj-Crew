@@ -638,9 +638,7 @@ def test_nothing_but_the_facade_imports_an_owner() -> None:
 def test_the_importer_scan_finds_a_planted_importer(tmp_path: Path) -> None:
     src = tmp_path / "aj_crew"
     (src / "agent_parts").mkdir(parents=True)
-    (src / "agent.py").write_text(
-        "from aj_crew.agent_parts import spec_files\n", encoding="utf-8"
-    )
+    (src / "agent.py").write_text("from aj_crew.agent_parts import spec_files\n", encoding="utf-8")
     (src / "agent_parts" / "spec_files.py").write_text("import os\n", encoding="utf-8")
     (src / "caller.py").write_text(
         "from aj_crew.agent_parts.spec_files import kiro_agents_dir_path\n", encoding="utf-8"

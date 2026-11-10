@@ -28,9 +28,9 @@ from sel_helpers import (  # noqa: F401 -- fixtures are requested by name
 )
 
 import aj_crew.sel as sel_mod
-from conftest import requires_symlinks
 from aj_crew import platform_compat
 from aj_crew.sel import SecurityEventLog
+from conftest import requires_symlinks
 
 
 class TestSegmentDirIsPinnedOnRead:

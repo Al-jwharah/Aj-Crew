@@ -136,7 +136,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
   onNavigate: (cb) => {
     const handler = (_e, path) => cb(path);
     ipcRenderer.on("navigate", handler);
-    // Tell the main process this document now has a `navigate` listener, so a
+    // Tell the main process this document now has a `navigate` listener, so an
     // ajcrew:// link it is holding goes to a listener instead of to nobody.
     // Once per document: the SPA re-subscribes whenever its router callbacks
     // change identity, and only the first subscription is news.

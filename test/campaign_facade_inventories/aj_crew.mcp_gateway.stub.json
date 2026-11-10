@@ -1,8 +1,8 @@
 {
  "base_public_names": [
+  "AJCREW_BIN_MCP_SERVERS",
   "CallerContext",
   "FallbackRequestedError",
-  "AJCREW_BIN_MCP_SERVERS",
   "READ_BUFFER_LIMIT_BYTES",
   "STUB_SESSION_TOKEN_ENV",
   "StaleGenerationError",
@@ -38,8 +38,8 @@
  ],
  "note": "The stub's machinery moved into the stub_* owner modules; this facade binds what its own code reads and serves every other name from the owner that defines it (aj_crew._facade_mirror).",
  "rebound": {
-  "CallerContext": "aj_crew.mcp_caller",
   "AJCREW_BIN_MCP_SERVERS": "aj_crew.mcp_cleanup",
+  "CallerContext": "aj_crew.mcp_caller",
   "STUB_SESSION_TOKEN_ENV": "aj_crew.mcp_gateway.claim",
   "TOTAL_SHUTDOWN_BUDGET_SECS": "aj_crew.mcp_gateway.shutdown_budget",
   "configure_default_executor": "aj_crew.executors",

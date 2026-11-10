@@ -711,9 +711,7 @@ def test_a_dashboard_turn_waits_for_its_workspace_and_is_refused_without_one(mon
     )
     links = {"chat-1": ("1.0", "C1"), "chat-2": ("", "")}
     state = SimpleNamespace(sessions=SimpleNamespace(get_slack_link=lambda key: links[key]))
-    monkeypatch.setattr(
-        "aj_crew.dashboard.chat_utils.effective_session_key", lambda slot: slot.key
-    )
+    monkeypatch.setattr("aj_crew.dashboard.chat_utils.effective_session_key", lambda slot: slot.key)
 
     def turn(key):
         return asyncio.run(binding_mod.notify_turn_prepare(state, SimpleNamespace(key=key)))

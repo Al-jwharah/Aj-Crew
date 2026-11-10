@@ -223,9 +223,7 @@ async def test_a_superseded_crew_member_prefetch_records_no_capability_failure(
     that stands down at its spawn door for the person's send did not fail: it leaves
     no record, so the status does not read ``failed`` after the send's session ends."""
     prepared = CapabilityPreparation("mate", "mate-template", "rev-1")
-    monkeypatch.setattr(
-        "aj_crew.session_capabilities.prepare_runtime", lambda *_a, **_k: prepared
-    )
+    monkeypatch.setattr("aj_crew.session_capabilities.prepare_runtime", lambda *_a, **_k: prepared)
     monkeypatch.setattr("aj_crew.session_capabilities.verify_saved", lambda *_a, **_k: None)
     monkeypatch.setattr("aj_crew.session_capabilities.loaded_stamp", lambda *_a, **_k: "s")
     sid = "prior-sid-member-prefetch"

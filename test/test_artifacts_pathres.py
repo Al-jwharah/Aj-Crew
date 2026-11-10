@@ -39,12 +39,12 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from conftest import make_dir_link, requires_symlinks
 from aj_crew import artifacts as art_mod
 from aj_crew import security
 from aj_crew.artifacts import ArtifactError, ArtifactStore
 from aj_crew.atomic_write import on_event_loop
 from aj_crew.dashboard.handlers import artifacts as art_handlers
+from conftest import make_dir_link, requires_symlinks
 
 
 @pytest.fixture

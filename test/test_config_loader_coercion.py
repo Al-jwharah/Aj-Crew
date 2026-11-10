@@ -30,8 +30,8 @@ import aj_crew.config.loader as loader_module
 from aj_crew.config.loader import (
     _HAS_JSONSCHEMA,
     AgentConfig,
-    DashboardConfig,
     AjCrewConfig,
+    DashboardConfig,
     MemoryConfig,
     SessionConfig,
     SlackConfig,
@@ -505,7 +505,7 @@ class TestConfigLoaderProperties:
         self,
         content: str,
     ) -> None:
-        """For any input content, load() must return a AjCrewConfig
+        """For any input content, load() must return an AjCrewConfig
         instance without raising an exception.
 
         **Validates: Requirements 6.6**

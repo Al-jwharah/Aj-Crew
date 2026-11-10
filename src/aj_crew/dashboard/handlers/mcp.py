@@ -56,8 +56,8 @@ from aj_crew.dashboard.handlers.mcp_agent_sync import (
     _sync_mcp_to_agent_batch,
 )
 from aj_crew.dashboard.handlers.mcp_config_entries import (
-    _find_server_spec_anywhere,
     _ajcrew_entry_is_muted,
+    _find_server_spec_anywhere,
     _remove_ajcrew_entry,
     _scope_has_entry,
     _set_ajcrew_entry,
@@ -70,10 +70,10 @@ from aj_crew.dashboard.handlers.mcp_config_files import (
     _MCP_LOCK_PATH,
     AmbiguousServerKey,
     McpConfigHasComments,
+    _ajcrew_mcp_json,
     _config_key_for,
     _extra_mcp_scopes,
     _is_valid_mcp_name,
-    _ajcrew_mcp_json,
     _load_config_or_refusal,
     _mcp_config_busy,
     _mcp_config_corrupt,
@@ -98,8 +98,8 @@ from aj_crew.env import emit_env
 from aj_crew.loop_lock import LoopBoundLock
 from aj_crew.mcp_cleanup import mcp_entry_is_muted
 from aj_crew.mcp_discovery import (
-    SCOPE_KIRO_GLOBAL,
     SCOPE_AJCREW,
+    SCOPE_KIRO_GLOBAL,
     McpServerInfo,
     cached_probe_is_current,
     managed_server_is_session_bound,
@@ -1151,6 +1151,7 @@ if TYPE_CHECKING:  # every owner-defined name in _EXPORTS, for type checkers and
     from aj_crew.dashboard.handlers.mcp_probe import (  # noqa: F401
         _MCP_PROBE_CACHE_SECS,
         _agent_mcp_server_names,
+        _ajcrew_mcp_servers,
         _annotate_agent_drops,
         _annotate_owner_sign_in,
         _annotate_quarantine,
@@ -1160,7 +1161,6 @@ if TYPE_CHECKING:  # every owner-defined name in _EXPORTS, for type checkers and
         _edited_since_probe,
         _evaluate_shareability,
         _invalid_flag_reason,
-        _ajcrew_mcp_servers,
         _mcp_probe_cache,
         _mcp_probe_in_progress,
         _mcp_probe_task,

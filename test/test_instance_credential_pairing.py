@@ -1151,9 +1151,7 @@ class TestTheSharedHelperOwnsThePairing:
 
         with (
             mock.patch.object(mcp_core, "_api_port", return_value=7811),
-            mock.patch(
-                "aj_crew.mcp_core.read_local_secret", return_value="from-helper"
-            ) as helper,
+            mock.patch("aj_crew.mcp_core.read_local_secret", return_value="from-helper") as helper,
         ):
             assert mcp_core._internal_secret() == "from-helper"
         # The dial host is named now, so the credential is paired to the listener

@@ -103,9 +103,7 @@ class TestAutoMigrateMemory:
         with (
             patch("aj_crew.slack.gateway.model_file_present", return_value=True),
             patch("aj_crew.slack.gateway.make_sync_embed_fn", return_value=(lambda t: [0.1])),
-            patch(
-                "aj_crew.slack.gateway.get_shared_embedder", return_value=self._ready_embedder()
-            ),
+            patch("aj_crew.slack.gateway.get_shared_embedder", return_value=self._ready_embedder()),
             patch("aj_crew.memory.legacy_memory_present", return_value=True),
             patch.object(orch, "_set_memory_migrated", set_migrated),
         ):
@@ -127,9 +125,7 @@ class TestAutoMigrateMemory:
         with (
             patch("aj_crew.slack.gateway.model_file_present", return_value=True),
             patch("aj_crew.slack.gateway.make_sync_embed_fn", return_value=(lambda t: [0.1])),
-            patch(
-                "aj_crew.slack.gateway.get_shared_embedder", return_value=self._ready_embedder()
-            ),
+            patch("aj_crew.slack.gateway.get_shared_embedder", return_value=self._ready_embedder()),
             patch("aj_crew.memory.legacy_memory_present", return_value=True),
             patch.object(orch, "_set_memory_migrated", set_migrated),
         ):
@@ -193,9 +189,7 @@ class TestAutoMigrateMemory:
                 side_effect=lambda: next(presence, True),
             ),
             patch("aj_crew.slack.gateway.make_sync_embed_fn", return_value=(lambda t: [0.1])),
-            patch(
-                "aj_crew.slack.gateway.get_shared_embedder", return_value=self._ready_embedder()
-            ),
+            patch("aj_crew.slack.gateway.get_shared_embedder", return_value=self._ready_embedder()),
             patch("aj_crew.memory.legacy_memory_present", return_value=True),
             patch.object(orch, "_set_memory_migrated", AsyncMock()),
         ):

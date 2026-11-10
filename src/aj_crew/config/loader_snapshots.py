@@ -1024,7 +1024,7 @@ def _materialized_kiro_agent(agent_name: str | None, project_dir: str | None = N
     ``apps.bridges._register_agents`` under a namespaced FILENAME
     (``<app>--<agent>.json``) while the config inside keeps the app's own bare
     ``name``. Nothing adds them to ``config.agents`` — that mapping is authored
-    by setup / the user — so an app agent is resolvable by kiro-cli but is NOT a
+    by setup / the user — so an app agent is resolvable by kiro-cli but is NOT an
     Aj Crew alias. Without this lookup :func:`resolve_agent_bindings` would fall
     all the way back to ``default_agent`` and silently dispatch the DEFAULT kiro
     agent for a session the user explicitly bound to an app's agent: the slot
@@ -1156,7 +1156,7 @@ def agent_alias_snapshot() -> tuple[frozenset[str], str, bool]:
 # What this specifically buys, beyond avoiding that I/O: a config write from ANY
 # writer reaches a running gateway. The dashboard PATCH handler and the CLI both
 # end at ``update_config_locked``, and only the handler could notify the manager
-# it had changed something -- so a ``ajcrew config set`` landed on disk while
+# it had changed something -- so an ``ajcrew config set`` landed on disk while
 # the live threshold kept its startup value until a restart. Publishing on load
 # closes that without either writer having to know which live object holds it.
 #
@@ -1376,7 +1376,7 @@ def resolve_effective_agent(agent_name: str | None, project_dir: str | None = No
     if not ready or not fallback_template:
         return ""
     if agent_name in aliases:
-        # A Aj Crew alias resolves to itself (step 1 of resolve_agent_bindings).
+        # An Aj Crew alias resolves to itself (step 1 of resolve_agent_bindings).
         return ""
     if not _MATERIALIZED_AGENTS_READY:
         # Cold snapshot: a materialized kiro agent may well declare this name and

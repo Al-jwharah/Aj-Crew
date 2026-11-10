@@ -288,7 +288,7 @@ def _publish_lib_path_for_import(libs_dir: Path | None) -> None:
     event loop keeps spawning children, and a child spawned in that window
     snapshots ``os.environ`` -- an MCP server, a session, the gateway an in-app
     restart execs into. One carrying its own llama-cpp bindings would dlopen
-    this install's native libs against them; a Aj Crew successor would read
+    this install's native libs against them; an Aj Crew successor would read
     the PREVIOUS install's directory as an operator override, skip the
     completeness and CPU gates, and load that install's libs -- or none, once
     an upgrade has removed it, which surfaces as the upstream loader's bare

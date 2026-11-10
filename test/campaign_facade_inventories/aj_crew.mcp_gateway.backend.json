@@ -1,5 +1,7 @@
 {
  "base_public_names": [
+  "AJCREW_SPAWNED_ENV",
+  "AJCREW_SPAWNED_VALUE",
   "Backend",
   "BackendGone",
   "CALLER_CAPABILITY_KEY",
@@ -13,8 +15,6 @@
   "INFLIGHT_CAPABILITY_KEY",
   "INFLIGHT_NOTIFICATION",
   "INTERNAL_STUB_PREFIXES",
-  "AJCREW_SPAWNED_ENV",
-  "AJCREW_SPAWNED_VALUE",
   "MCP_APPS_ENV_FALSE",
   "MCP_APPS_ENV_FLAG",
   "MCP_APPS_ENV_TRUE",
@@ -70,6 +70,8 @@
   "write_spool"
  ],
  "rebound": {
+  "AJCREW_SPAWNED_ENV": "aj_crew.constants",
+  "AJCREW_SPAWNED_VALUE": "aj_crew.constants",
   "CALLER_CAPABILITY_KEY": "aj_crew.mcp_caller",
   "CALLER_META_KEY": "aj_crew.mcp_caller",
   "CANONICAL_TEMP_KEYS": "aj_crew.sandbox",
@@ -77,8 +79,6 @@
   "ID_PROBE_BYTES": "aj_crew.json_line",
   "INFLIGHT_CAPABILITY_KEY": "aj_crew.mcp_caller",
   "INFLIGHT_NOTIFICATION": "aj_crew.mcp_caller",
-  "AJCREW_SPAWNED_ENV": "aj_crew.constants",
-  "AJCREW_SPAWNED_VALUE": "aj_crew.constants",
   "POOLED_BACKEND_ENV": "aj_crew.install_liveness",
   "POOLED_BACKEND_VALUE": "aj_crew.install_liveness",
   "POOLED_RESPAWN_COMMAND_ENV": "aj_crew.install_liveness",

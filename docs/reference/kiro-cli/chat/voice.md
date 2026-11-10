@@ -95,7 +95,7 @@ whole machine's.
 Why not use every core: Whisper decodes one output step at a time, and each step
 is a small matmul that ends in a thread barrier. Wide thread pools therefore cost
 latency per step instead of buying throughput, and on a host that is doing other
-work (a Aj Crew host runs the gateway and agent sessions alongside) the workers
+work (an Aj Crew host runs the gateway and agent sessions alongside) the workers
 get time-sliced, so each barrier waits on threads the scheduler has not run yet.
 
 Measured on a 32-vCPU Graviton3 host with an 11-second clip, 16 threads beat 31

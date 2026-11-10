@@ -41,7 +41,7 @@ import { json, makeFixedApi, handleBootRoute } from './lib/boot-api.mjs'
 
 const OUT = process.argv[2] || '../temp-screenshots/chrome-font'
 const SLOT = 'chat-chrome-font'
-// Basename is what the shelf shows, so the fixture ends in the folder a
+// Basename is what the shelf shows, so the fixture ends in the folder an
 // AjCrew user actually sees there.
 const PROJECT = '/home/user/.kiro/crew/workspace'
 const VIEW = { width: 1500, height: 1000 }

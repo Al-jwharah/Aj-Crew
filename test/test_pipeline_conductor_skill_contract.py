@@ -704,9 +704,7 @@ class TestSpecCheckRunsWhereTheGateIsImportable:
         bindir.mkdir(parents=True)
         (bindir / "ajcrew").write_text("", encoding="utf-8")
         (bindir / "python").write_text("", encoding="utf-8")
-        monkeypatch.setattr(
-            script.shutil, "which", lambda _name: str(tmp_path / "link" / "ajcrew")
-        )
+        monkeypatch.setattr(script.shutil, "which", lambda _name: str(tmp_path / "link" / "ajcrew"))
         monkeypatch.setattr(script.os.path, "realpath", lambda _p: str(bindir / "ajcrew"))
         monkeypatch.setattr(script.os, "name", "posix")
         assert script.bundled_python() == str(bindir / "python")
@@ -1385,9 +1383,7 @@ class TestWorkOrderBriefClauses:
         would make the mandatory gate raise ``ModuleNotFoundError`` on every push
         -- a fleet-wide push refusal. The clause carries the exception and its
         reason, because an unexplained omission gets 'fixed' back in."""
-        gate_scripts = (
-            REPO_ROOT / "src/aj_crew/builtin_skills/ajcrew-dev/ajcrew-prepare-pr/scripts"
-        )
+        gate_scripts = REPO_ROOT / "src/aj_crew/builtin_skills/ajcrew-dev/ajcrew-prepare-pr/scripts"
         preflight = (gate_scripts / "preflight.py").read_text(encoding="utf-8")
         assert "from push_guard import" in preflight, "the sibling import this guards is gone"
         brief = _flat(_skill_section(self.HEADING))

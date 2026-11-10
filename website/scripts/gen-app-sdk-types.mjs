@@ -10,7 +10,7 @@
  * would publish every host module. Only the two barrels are emitted, then each
  * host module their declarations name, transitively. Each becomes a
  * `declare module` block: a barrel under its public specifier, a host module
- * under a `ajcrew-host:` name that no import map resolves, so an app cannot
+ * under an `ajcrew-host:` name that no import map resolves, so an app cannot
  * mistake it for a public entry point.
  */
 import { writeFileSync } from 'node:fs'

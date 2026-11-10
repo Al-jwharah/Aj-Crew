@@ -679,7 +679,7 @@ async def test_discover_worktrees_refuses_a_configured_non_ajcrew_repo():
     with (
         patch.object(repository_mod, "MAIN_REPO", "/some/other/repo"),
         patch.object(
-            repository_mod, "_REPO_INVALID_MSG", "not a Aj Crew checkout: /some/other/repo ..."
+            repository_mod, "_REPO_INVALID_MSG", "not an Aj Crew checkout: /some/other/repo ..."
         ),
         patch.object(runtime_mod, "_run_cmd", new=run),
     ):
@@ -689,7 +689,7 @@ async def test_discover_worktrees_refuses_a_configured_non_ajcrew_repo():
     # happily, so the guard cannot rely on a non-zero exit.
     run.assert_not_awaited()
     assert "/some/other/repo" in str(exc.value)
-    assert "not a Aj Crew checkout" in str(exc.value)
+    assert "not an Aj Crew checkout" in str(exc.value)
 
 
 @pytest.mark.asyncio
@@ -706,7 +706,7 @@ async def test_auto_prune_reaper_idles_for_a_configured_non_ajcrew_repo():
     sel = MagicMock()
     with (
         patch.object(repository_mod, "MAIN_REPO", "/some/other/repo"),
-        patch.object(repository_mod, "_REPO_INVALID_MSG", "not a Aj Crew checkout: ..."),
+        patch.object(repository_mod, "_REPO_INVALID_MSG", "not an Aj Crew checkout: ..."),
         patch.object(worktree_ops_mod, "_auto_prune_cfg", return_value=(True, 0.01)),
         patch.object(worktree_ops_mod, "_auto_prune_once", new=prune),
         patch.object(runtime_mod, "_sel", return_value=sel),
@@ -727,12 +727,12 @@ async def test_sync_refuses_a_configured_non_ajcrew_repo():
     with (
         patch.object(repository_mod, "MAIN_REPO", "/some/other/repo"),
         patch.object(
-            repository_mod, "_REPO_INVALID_MSG", "not a Aj Crew checkout: /some/other/repo ..."
+            repository_mod, "_REPO_INVALID_MSG", "not an Aj Crew checkout: /some/other/repo ..."
         ),
     ):
         res = await mod._sync_start_locked()
     assert res["ok"] is False
-    assert "not a Aj Crew checkout" in res["error"]
+    assert "not an Aj Crew checkout" in res["error"]
 
 
 @pytest.mark.asyncio
@@ -742,7 +742,7 @@ async def test_status_refresher_idles_for_a_configured_non_ajcrew_repo(caplog):
     with (
         patch.object(repository_mod, "MAIN_REPO", "/some/other/repo"),
         patch.object(
-            repository_mod, "_REPO_INVALID_MSG", "not a Aj Crew checkout: /some/other/repo ..."
+            repository_mod, "_REPO_INVALID_MSG", "not an Aj Crew checkout: /some/other/repo ..."
         ),
         patch.object(runtime_mod, "_run_cmd", new=run),
     ):
@@ -755,7 +755,7 @@ async def test_status_refresher_idles_for_a_configured_non_ajcrew_repo(caplog):
         and "status refresher idle" in r.getMessage()
     ]
     assert idle == [
-        "dev-fleet: status refresher idle — not a Aj Crew checkout: /some/other/repo ..."
+        "dev-fleet: status refresher idle — not an Aj Crew checkout: /some/other/repo ..."
     ]
     # Returned without fetching: no git ran against the unrelated repository.
     run.assert_not_awaited()
@@ -793,9 +793,7 @@ async def test_discover_worktrees_proceeds_for_a_validated_checkout():
         patch.object(
             runtime_mod,
             "_run_cmd",
-            new=AsyncMock(
-                return_value=(0, "worktree /good/ajcrew\nbranch refs/heads/main\n", "")
-            ),
+            new=AsyncMock(return_value=(0, "worktree /good/ajcrew\nbranch refs/heads/main\n", "")),
         ),
     ):
         entries = await mod._discover_worktrees()

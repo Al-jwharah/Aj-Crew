@@ -14,10 +14,10 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from conftest import make_dir_link, requires_symlinks
 from aj_crew.dashboard import server as server_mod
 from aj_crew.dashboard.server import _register_dist_static_routes
 from aj_crew.platform_compat import unlink_link_or_junction
+from conftest import make_dir_link, requires_symlinks
 
 _PREFIXES = {"/assets", "/sprites", "/fonts", "/vendor", "/app-assets"}
 

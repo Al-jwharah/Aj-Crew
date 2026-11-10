@@ -58,7 +58,7 @@ from aj_crew.testing.wait import await_until
 _SRC = pathlib.Path(__file__).resolve().parents[1] / "src/aj_crew"
 _GENERIC = "User denied tool execution"
 _TAG = "[Aj Crew host notice]"
-_POLICY_CLAUSE = "blocked by a Aj Crew safety policy"
+_POLICY_CLAUSE = "blocked by an Aj Crew safety policy"
 _SURFACE_CLAUSE = "tool policy of the surface"
 _HOOK_ERROR_CLAUSE = "PreToolUse hook raised"
 _UNDELIVERABLE_CLAUSE = "approval prompt could not be delivered"

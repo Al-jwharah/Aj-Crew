@@ -34,10 +34,10 @@ from md_notebook_helpers import fixtures_fixture  # noqa: F401 - fixture
 from md_notebook_helpers import SECRET, _clone, _git, signed_client
 from windows_sim import replace_sharing_violation
 
-from conftest import requires_symlinks
 from aj_crew import atomic_write as atomic_write_mod
 from aj_crew import platform_compat
 from aj_crew.apps.builtins.md_notebook import git_ops
+from conftest import requires_symlinks
 
 
 def test_the_seed_template_keeps_auto_maintenance_off(

@@ -1,5 +1,6 @@
 {
  "base_public_names": [
+  "AjCrewConfig",
   "ContextBuilder",
   "ConversationLog",
   "DASHBOARD_HTML_NOT_FOUND_MARKER",
@@ -7,7 +8,6 @@
   "EXTERNALLY_MANAGED_MESSAGES",
   "HistoryConsolidator",
   "HookManager",
-  "AjCrewConfig",
   "LessonStore",
   "LockProbeError",
   "MANAGED_BY_GIT",
@@ -74,6 +74,7 @@
  ],
  "note": "cli_server.py keeps the status, gateway, run, service, sandbox and logs commands; the gateway peer proof lives in cli_server_peer, the token, logout and update-approve requests in cli_server_requests, and stop, restart and update in cli_server_stop, cli_server_restart and cli_server_update, owners served through aj_crew._facade_mirror.",
  "rebound": {
+  "AjCrewConfig": "aj_crew.config",
   "ContextBuilder": "aj_crew.context",
   "ConversationLog": "aj_crew.history",
   "DASHBOARD_HTML_NOT_FOUND_MARKER": "aj_crew.dashboard.handlers.core",
@@ -81,7 +82,6 @@
   "EXTERNALLY_MANAGED_MESSAGES": "aj_crew.platform.update_capability",
   "HistoryConsolidator": "aj_crew.history",
   "HookManager": "aj_crew.hooks",
-  "AjCrewConfig": "aj_crew.config",
   "LessonStore": "aj_crew.learn",
   "LockProbeError": "aj_crew.gateway_lock",
   "MANAGED_BY_GIT": "aj_crew.platform.update_capability",

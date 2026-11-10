@@ -53,7 +53,7 @@ LEGACY_CONFIG_DIR_NAME = ".ajcrew"
 # Recovery-pointer breadcrumb at ``~/.ajcrew.breadcrumb``, deliberately OUTSIDE
 # ``~/.kiro/``: an uninstaller that wipes ``~/.kiro/`` would take the data home
 # with it, and this non-secret pointer survives to say where the data was. Not a
-# backup. Written on the default path only; a ``AJCREW_HOME`` override is the
+# backup. Written on the default path only; an ``AJCREW_HOME`` override is the
 # user's own location and has no ``~/.kiro/`` wipe risk.
 RECOVERY_BREADCRUMB_NAME = ".ajcrew.breadcrumb"
 
@@ -692,7 +692,7 @@ def _validate_scratch_root_override() -> tuple[Path | None, str | None]:
 def shared_kiro_settings_writable() -> bool:
     """False when this process must not write the user's kiro-cli settings.
 
-    ``~/.kiro/settings/mcp.json`` belongs to the kiro-cli installation, not to a
+    ``~/.kiro/settings/mcp.json`` belongs to the kiro-cli installation, not to an
     Aj Crew data home, so it is resolved from the real home and a throwaway
     instance shares it with the operator's live one. A pod is throwaway by
     construction: its home is empty, so any decision it reaches about which MCP
@@ -1195,7 +1195,7 @@ def kiro_sessions_dir() -> Path:
 
 def kiro_oauth_cache_home() -> Path:
     """The OS-level home whose ``.aws/sso/cache`` kiro-cli's MCP OAuth grant pairs
-    resolve under, honoring a ``AJCREW_OS_HOME`` override.
+    resolve under, honoring an ``AJCREW_OS_HOME`` override.
 
     kiro-cli derives its MCP OAuth artifact directory from the process's real
     ``$HOME`` (``mcp_grant.kiro_oauth_cache_dir()`` calls :func:`Path.home` by
@@ -1366,7 +1366,7 @@ def project_kiro_dir(project_dir: str | Path) -> Path:
     """The ``<project>/.kiro`` directory itself, which also holds agent specs.
 
     Distinct from :func:`project_agents_dir` because Aj Crew additionally honors
-    ``<project>/.kiro/*.agent-spec.json`` — a Aj Crew-only convention that
+    ``<project>/.kiro/*.agent-spec.json`` — an Aj Crew-only convention that
     predates ``.kiro/agents/`` and remains in use by projects driven from Slack.
     """
     return Path(project_dir) / ".kiro"

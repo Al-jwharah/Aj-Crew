@@ -497,9 +497,7 @@ def test_the_kiro_channel_is_unchanged() -> None:
     """
     from aj_crew.acp._dispatch import _kiro_mcp_server_name, _kiro_tool_name
 
-    kiro_frame = {
-        "_meta": {"kiro": {"mcpServerName": "ajcrew-core", "toolName": "memory_recall"}}
-    }
+    kiro_frame = {"_meta": {"kiro": {"mcpServerName": "ajcrew-core", "toolName": "memory_recall"}}}
     assert _kiro_mcp_server_name(kiro_frame) == "ajcrew-core"
     assert _kiro_tool_name(kiro_frame) == "memory_recall"
     # No prefix stripping on this channel: kiro-cli already spells the bare tool.

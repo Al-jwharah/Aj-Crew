@@ -1,11 +1,11 @@
 {
  "base_public_names": [
+  "AjCrewConfig",
   "ArtifactValidationError",
   "BOARD_STALE_AFTER_SECONDS",
   "DASHBOARD_SAVE_SCHEMA",
   "DASHBOARD_WRITE_SCHEMA",
   "DashboardState",
-  "AjCrewConfig",
   "MemberSlugError",
   "PANEL_FOLD_NAME",
   "PANEL_PUBLISH_SCHEMA",
@@ -44,11 +44,11 @@
  ],
  "note": "A mirror facade (aj_crew._facade_mirror) over the agent_panel_read, agent_panel_publish and agent_panel_dashboard owners beside it: names an owner holds are served from that owner, and a write through the facade reaches every module holding the name.",
  "rebound": {
+  "AjCrewConfig": "aj_crew.config.loader",
   "ArtifactValidationError": "aj_crew.artifact_store.model",
   "DASHBOARD_SAVE_SCHEMA": "aj_crew.validation",
   "DASHBOARD_WRITE_SCHEMA": "aj_crew.validation",
   "DashboardState": "aj_crew.dashboard.state",
-  "AjCrewConfig": "aj_crew.config.loader",
   "MemberSlugError": "aj_crew.members",
   "PANEL_FOLD_NAME": "aj_crew.crew_log.entry_types",
   "PANEL_PUBLISH_SCHEMA": "aj_crew.validation",
