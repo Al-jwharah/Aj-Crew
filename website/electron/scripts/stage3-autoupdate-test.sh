@@ -85,7 +85,7 @@ fi
 # lane). The keychain is deleted on exit.
 OTA_KEYCHAIN="${TMPDIR:-/tmp}/ota-signing.keychain-db"
 OTA_KEYCHAIN_PASS="ota-test"
-OTA_IDENTITY="AjCrew OTA Test Signing"
+OTA_IDENTITY="Aj Crew OTA Test Signing"
 
 cleanup_keychain() {
   security delete-keychain "$OTA_KEYCHAIN" 2>/dev/null || true
@@ -108,7 +108,7 @@ distinguished_name = dn
 x509_extensions = v3
 prompt = no
 [dn]
-CN = AjCrew OTA Test Signing
+CN = Aj Crew OTA Test Signing
 [v3]
 basicConstraints = critical,CA:false
 keyUsage = critical,digitalSignature
