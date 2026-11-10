@@ -292,7 +292,7 @@ describe('shellEscape', () => {
 
 describe('commonPrefix', () => {
   it('returns the shared leading text', () => {
-    expect(commonPrefix(['AjCrew', 'KiroCli'])).toBe('KiroC')
+    expect(commonPrefix(['AjCrew', 'AjCli'])).toBe('AjC')
     expect(commonPrefix(['docs', 'doctor', 'dock'])).toBe('doc')
   })
 
@@ -425,13 +425,13 @@ describe('buildInsertion — escaped on-screen text', () => {
 
 describe('buildInsertion', () => {
   it('appends only the missing suffix in the common case', () => {
-    expect(buildInsertion('Kiro', 'AjCrew', '/')).toEqual({ erase: 0, text: 'Crew/' })
+    expect(buildInsertion('Aj', 'AjCrew', '/')).toEqual({ erase: 0, text: 'Crew/' })
   })
 
   it('rewrites the token when the typed case differs from disk', () => {
-    // Matching is case-insensitive, so `kiro` can select `AjCrew`; sending
+    // Matching is case-insensitive, so `aj` can select `AjCrew`; sending
     // only the suffix would leave a path that does not exist.
-    expect(buildInsertion('kiro', 'AjCrew', '/')).toEqual({ erase: 4, text: 'AjCrew/' })
+    expect(buildInsertion('aj', 'AjCrew', '/')).toEqual({ erase: 2, text: 'AjCrew/' })
   })
 
   it('inserts the whole name for an empty token', () => {

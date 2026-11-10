@@ -260,7 +260,7 @@ describe('TerminalCompletion', () => {
   // accepting it has to replace the typed fragment rather than extend it.
   it('emphasises a mid-name match and replaces the typed fragment', async () => {
     vi.stubGlobal('fetch', mockComplete(
-      [{ name: 'AjCrew-terminal-completion', dir: true, at: 9 }], 'termi', '/work',
+      [{ name: 'AjCrew-terminal-completion', dir: true, at: 7 }], 'termi', '/work',
     ))
     const line = `${PROMPT}cd termi`
     const h = makeTerm(line, line.length)
