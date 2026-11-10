@@ -28,6 +28,7 @@ import os
 import shutil
 import subprocess
 from pathlib import Path
+from typing import Any
 
 import pytest
 from git_maintenance_helpers import git_maintenance_off_entries
@@ -328,6 +329,34 @@ class TestWholeTreeOverride:
         )
 
 
+#: One pair past git's default rename limit (1000 sources x 1000 destinations).
+_PAST_THE_RENAME_LIMIT = 1001
+
+
+def _commit_a_directory(root: Path) -> None:
+    """Commit ``old/f<n>.txt``, one file past git's rename limit, each with its own text."""
+    (root / "old").mkdir()
+    for index in range(_PAST_THE_RENAME_LIMIT):
+        body = "".join(f"file {index} line {line}\n" for line in range(8))
+        (root / "old" / f"f{index}.txt").write_text(body, encoding="utf-8")
+    _git(root, "add", "-A")
+    _git(root, "commit", "-q", "-m", "a directory")
+
+
+def _move_and_edit_that_directory(root: Path) -> None:
+    """Move every file to ``new/g<n>.txt`` and append one line to it.
+
+    The new basename and the edit keep git's exact and by-basename pairing out of it:
+    each pair comes from the inexact search, which the rename limit switches off.
+    """
+    (root / "new").mkdir()
+    for index in range(_PAST_THE_RENAME_LIMIT):
+        moved = (root / "old" / f"f{index}.txt").rename(root / "new" / f"g{index}.txt")
+        with moved.open("a", encoding="utf-8") as handle:
+            handle.write("edited\n")
+    _git(root, "add", "-A")
+
+
 class TestDirtyTree:
     """``added_lines`` must describe the file state the consuming gates scan.
 
@@ -349,6 +378,19 @@ class TestDirtyTree:
 
         assert added is not None
         assert 2 in added["feature.py"]
+
+    def test_a_file_moved_past_gits_rename_limit_adds_only_what_it_changed(
+        self, repo: Path
+    ) -> None:
+        # Past its rename limit git prints a moved file as a new one, all of it added.
+        _git(repo, "checkout", "feature")
+        _commit_a_directory(repo)
+        _git(repo, "update-ref", "refs/remotes/origin/main", "HEAD")
+        _move_and_edit_that_directory(repo)
+
+        added = scope.added_lines("origin/main...HEAD")
+
+        assert added == {f"new/g{index}.txt": {9} for index in range(_PAST_THE_RENAME_LIMIT)}
 
     def test_a_shifted_preexisting_line_is_not_counted_as_added(self, repo: Path) -> None:
         # The reproduction from the comment-history gate: `victim.py` exists on
@@ -925,8 +967,84 @@ class TestChangeFilesAndShowAt:
         assert (None, "e.txt") in pairs
         assert (None, "untracked.txt") in pairs
 
+    def test_a_move_larger_than_gits_rename_limit_is_still_paired(self, repo: _RepoHelper) -> None:
+        # Past its rename limit git reports each moved file as a deletion plus a new file.
+        _commit_a_directory(repo.root)
+        repo.git("branch", "-f", "main")
+        _move_and_edit_that_directory(repo.root)
+        pairs = scope.change_files(self._base(repo), cwd=repo.root)
+        assert len(pairs) == _PAST_THE_RENAME_LIMIT
+        assert set(pairs) == {
+            (f"old/f{index}.txt", f"new/g{index}.txt") for index in range(_PAST_THE_RENAME_LIMIT)
+        }
+
     def test_show_at_reads_bytes_at_the_base_and_returns_none_for_absent(
         self, repo: _RepoHelper
     ) -> None:
         assert scope.show_at(self._base(repo), "a.txt", cwd=repo.root) == "one\n"
         assert scope.show_at(self._base(repo), "nope.txt", cwd=repo.root) is None
+
+    #: Every kind of path a caller can ask for, a repeat included.
+    _ASKED = (
+        "a.txt",
+        "crlf.txt",
+        "not-utf8.txt",
+        "empty.txt",
+        "no-final-newline.txt",
+        "with space.txt",
+        "sub",
+        "sub/inner.txt",
+        "nope.txt",
+        "nope missing",
+        "a\nb.txt",
+        "a.txt",
+    )
+
+    def _commit_every_kind_of_file(self, repo: _RepoHelper) -> str:
+        (repo / "crlf.txt").write_bytes(b"one\r\ntwo\rthree\n")
+        (repo / "not-utf8.txt").write_bytes(b"\xff\xfe not text\n")
+        (repo / "empty.txt").write_bytes(b"")
+        (repo / "no-final-newline.txt").write_bytes(b"no final newline")
+        (repo / "with space.txt").write_bytes(b"spaced\n")
+        (repo / "sub").mkdir()
+        (repo / "sub" / "inner.txt").write_bytes(b"inner\n")
+        repo.git("add", "-A")
+        repo.git("commit", "-q", "-m", "every kind of file")
+        return repo.git("rev-parse", "HEAD")
+
+    @pytest.mark.parametrize("batch", [1, 2, 256])
+    def test_show_each_at_answers_exactly_as_show_at_does(
+        self, repo: _RepoHelper, monkeypatch: pytest.MonkeyPatch, batch: int
+    ) -> None:
+        base = self._commit_every_kind_of_file(repo)
+        monkeypatch.setattr(scope, "_SHOW_BATCH", batch)
+
+        each = list(scope.show_each_at(base, self._ASKED, cwd=repo.root))
+
+        assert each == [scope.show_at(base, path, cwd=repo.root) for path in self._ASKED]
+        assert each[:4] == ["one\n", "one\ntwo\nthree\n", "\ufffd\ufffd not text\n", ""]
+        assert each[4] == "no final newline"
+        assert each[8:11] == [None, None, None]
+
+    def test_show_each_at_reads_many_files_in_one_process(
+        self, repo: _RepoHelper, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        base = self._commit_every_kind_of_file(repo)
+        files = [path for path in self._ASKED if path.endswith(".txt") and "\n" not in path]
+        started: list[list[str]] = []
+        real_run = subprocess.run
+
+        def counting_run(argv: list[str], **kwargs: Any) -> Any:
+            started.append(argv)
+            return real_run(argv, **kwargs)
+
+        monkeypatch.setattr(scope.subprocess, "run", counting_run)
+
+        each = list(scope.show_each_at(base, files, cwd=repo.root))
+
+        assert started == [["git", "cat-file", "--batch"]]
+        assert each.count(None) == 1  # nope.txt, answered "missing" by the same process
+
+    def test_show_each_at_of_an_unknown_base_is_all_absent(self, repo: _RepoHelper) -> None:
+        asked = ["a.txt", "b.txt"]
+        assert list(scope.show_each_at("no-such-ref", asked, cwd=repo.root)) == [None, None]

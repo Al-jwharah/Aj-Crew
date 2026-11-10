@@ -26,7 +26,7 @@ import subprocess
 import tokenize
 import warnings
 from collections import Counter
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Iterator
 from pathlib import Path
 
 import pytest
@@ -56,6 +56,13 @@ _FLAKE_OK = re.compile(r"(?:#|//)\s*flake-ok:\s*(?P<reason>\S.*?)\s*(?:\*/)?$")
 # ── which files are scanned ───────────────────────────────────────────
 
 
+#: Built-in apps keep their tests beside the app, inside the package. The package
+#: directory is matched by its place, not its name: a change that renames the package
+#: is compared with a base that holds the same test files under the old directory, and
+#: a base path this did not count would make every one of them a new file starting at 0.
+_BUILTIN_APPS_DIR = re.compile(r"src/[^/]+/apps/builtins/")
+
+
 def _is_python_test_file(rel: str) -> bool:
     if not rel.endswith(".py"):
         return False
@@ -64,7 +71,7 @@ def _is_python_test_file(rel: str) -> bool:
         return True
     if rel.startswith("test/"):
         return True
-    if rel.startswith("src/aj_crew/apps/builtins/"):
+    if _BUILTIN_APPS_DIR.match(rel):
         parts = rel.split("/")
         return any(part == "tests" or part.endswith("_tests") for part in parts[:-1])
     return False
@@ -1062,14 +1069,15 @@ def _counted(rel: str) -> bool:
     return _is_python_test_file(rel) or _is_js_test_file(rel)
 
 
-def _sites_at(root: Path, base: str | None, rel: str | None) -> tuple[_Sites, _Sites]:
+def _sites_at(source: Path | Iterator[str | None], rel: str | None) -> tuple[_Sites, _Sites]:
+    """Sites of *rel*: read under a root, or taken as the next text of files at the base."""
     if rel is None or not _counted(rel):
         return Counter(), Counter()
-    if base is not None:
-        text = ratchet_scope.show_at(base, rel, cwd=root)
+    if not isinstance(source, Path):
+        text = next(source)
     else:
         try:
-            text = (root / rel).read_text(encoding="utf-8")
+            text = (source / rel).read_text(encoding="utf-8")
         except (OSError, UnicodeDecodeError):
             text = None
     return sites(rel, text) if text is not None else (Counter(), Counter())
@@ -1145,9 +1153,12 @@ def change_risen(root: Path, base: str) -> dict[tuple[str, str], tuple[int, int]
     befores: list[_Sites] = []
     nows: list[_Sites] = []
     gones: list[_Sites] = []
-    for old, new in sorted(changed_files(root, base), key=lambda pair: str(pair[1] or pair[0])):
-        before, _before_present = _sites_at(root, base, old)
-        now, now_present = _sites_at(root, None, new)
+    pairs = sorted(changed_files(root, base), key=lambda pair: str(pair[1] or pair[0]))
+    olds = [old for old, _new in pairs if old is not None and _counted(old)]
+    base_texts = ratchet_scope.show_each_at(base, olds, cwd=root)  # in this loop's order
+    for old, new in pairs:
+        before, _before_present = _sites_at(base_texts, old)
+        now, now_present = _sites_at(root, new)
         paths.append(new)
         befores.append(before)
         nows.append(now)
@@ -1621,6 +1632,10 @@ def test_the_scan_covers_the_test_trees_and_nothing_else() -> None:
     )
     assert _is_python_test_file("conftest.py")
     assert not _is_python_test_file("src/aj_crew/session.py")
+    # The package directory counts by its place, so the base of a package rename does too.
+    assert _is_python_test_file("src/former_name/apps/builtins/x/tests/test_a.py")
+    assert not _is_python_test_file("src/former_name/session.py")
+    assert not _is_python_test_file("docs/src/aj_crew/apps/builtins/x/tests/test_a.py")
     assert _is_js_test_file("website/src/pages/a.test.tsx")
     assert _is_js_test_file("website/playwright/a.spec.ts")
     assert _is_js_test_file("website/electron/test/a.test.js")
@@ -1761,6 +1776,33 @@ def test_a_renamed_or_deleted_file_keeps_the_change_green(git_repo) -> None:
     assert change_risen(git_repo, merge_base(git_repo)[0]) == {}
     _run_git(git_repo, "rm", "-q", "-f", "test/test_c.py")
     assert change_risen(git_repo, merge_base(git_repo)[0]) == {}
+
+
+def test_a_renamed_package_holds_a_built_in_app_test_to_its_count_on_the_base(git_repo) -> None:
+    # A package rename moves every built-in app test AND rewrites the name inside it,
+    # so the site's function text differs from the base's: only the file's own count
+    # under its old directory keeps it from reading as a new file that starts at 0.
+    site = "import os\ndef test_x():\n    os.environ['{name}_HOME'] = '1'\n    assert done()\n"
+    # Enough untouched text that git still reads the edited file as the one that moved.
+    site += "".join(f"def test_plain_{n}():\n    assert done({n})\n" for n in range(12))
+    old = "src/former_name/apps/builtins/x/tests/test_x.py"
+    new = "src/aj_crew/apps/builtins/x/tests/test_x.py"
+    (git_repo / old).parent.mkdir(parents=True)
+    (git_repo / old).write_text(site.format(name="FORMER_NAME"), encoding="utf-8")
+    _run_git(git_repo, "add", "-A")
+    _run_git(git_repo, "commit", "-q", "-m", "a built-in app test")
+    _run_git(git_repo, "branch", "-f", "main")
+    (git_repo / new).parent.mkdir(parents=True)
+    _run_git(git_repo, "mv", old, new)
+    (git_repo / new).write_text(site.format(name="AJ_CREW"), encoding="utf-8")
+    assert changed_files(git_repo, merge_base(git_repo)[0]) == [(old, new)]
+    assert change_risen(git_repo, merge_base(git_repo)[0]) == {}
+    # The move forgives nothing the file did not hold: a site added on the way is named.
+    added = "def test_y():\n    os.environ['B'] = '1'\n    assert done()\n"
+    (git_repo / new).write_text(site.format(name="AJ_CREW") + added, encoding="utf-8")
+    assert change_risen(git_repo, merge_base(git_repo)[0]) == {
+        ("K6-raw-environ-write", new): (2, 1)
+    }
 
 
 def test_sites_moved_into_a_new_file_stay_green_up_to_what_left(git_repo) -> None:
