@@ -132,6 +132,14 @@ ARTIFACT_SUFFIX = re.compile(
     r"|\d+\.\d+)(?![A-Za-z0-9])"
 )
 
+# A templated handle: the joined name, a hyphen, then a placeholder —
+# `AjCrew-{{ALIAS}}` in the Slack manifest (the app and bot-user name Slack
+# shows), `AjCrew-{alias}` where the CLI echoes it, `AjCrew-{VERSION}-...` in an
+# artifact name. A placeholder cannot follow a word of prose, so this stays as
+# closed as the list above; and the catalog string that tells the user what the
+# Slack app will be called is JSON, where no `brand-ok` comment can sit.
+TEMPLATED_HANDLE = re.compile(r"-\{\{?[A-Za-z_][A-Za-z0-9_]*\}\}?")
+
 # The channel-qualified product name, which is a **space**-separated OS
 # identifier: ``PRODUCT_NAMES`` in ``cli_desktop.py`` spells the macOS log
 # directory ``~/Library/Logs/AjCrew Nightly``, and electron's
@@ -381,6 +389,8 @@ def scan_line(path: str, line_no: int, line: str, *, in_code: bool) -> Iterator[
             continue  # inside a URL
         if ARTIFACT_EXT.match(line, end) or ARTIFACT_SUFFIX.match(line, end):
             continue  # release artifact filename
+        if TEMPLATED_HANDLE.match(line, end):
+            continue  # templated handle, e.g. the Slack app name
         if CHANNEL_SUFFIX.match(line, end):
             continue  # channel-qualified OS identifier
         yield Violation(path, line_no, m.group(), line)
@@ -560,6 +570,8 @@ PROBES: tuple[tuple[str, str, bool], ...] = (
     ("artifact-ext", "signs AjCrew.exe and Update.exe", False),
     ("artifact-suffix", "publishes AjCrew-x86_64.AppImage", False),
     ("channel-identifier", 'home / "Library" / "Logs" / "AjCrew Nightly"', False),
+    ("templated-handle", "permissions included, named AjCrew-{{alias}}). Install it", False),
+    ("templated-handle-single", 'print(f"name: AjCrew-{alias}")', False),
     ("http-header", 'assert "X-AjCrew-Proxy" in headers', False),
     ("hyphen-prose", "every AjCrew-owned file", True),
     ("data-dir", "state lives under ~/.kiro/crew/workspace", False),
@@ -773,7 +785,7 @@ def report(violations: Iterable[Violation], *, enforcing: bool, base: str | None
 
     if enforcing:
         print(f"::error::brand gate: {len(violations)} line(s) added by this change "
-              f"spell the product name wrong. It is {CORRECT!r} — two words, capital K.")
+              f"spell the product name wrong. It is {CORRECT!r} — two words, capital A.")
     else:
         print(f"::notice::brand gate report: {len(violations)} pre-existing line(s) "
               f"spell the product name something other than {CORRECT!r}. Not enforced "
