@@ -576,7 +576,7 @@ body.mc-focus-mode.mc-focus-rail .focus-chrome-rail{
 /* Simple layout, chat pane. On an empty chat the composer dock is the home's
    centred composer: the SAME dock element the chat uses, anchored at the
    pane's middle instead of its bottom edge, in a capped column. The pane names
-   the state (`data-simple-dock`, shell/simple/simpleHome.ts) and hands over the
+   the state (`data-simple-dock`, lib/simpleHome.ts) and hands over the
    offset; the dock's own element carries nothing for it, so the Advanced
    layout, split panes and popouts are untouched. `bottom`, not a transform: a
    transformed dock would become the containing block of the composer's fixed

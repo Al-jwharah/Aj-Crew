@@ -21,7 +21,7 @@ import chatReducer from '../store/chatSlice'
 import dashboardReducer from '../store/dashboardSlice'
 import notificationsReducer from '../store/notificationsSlice'
 import { SHELL_LAYOUT_KEY, writeShellLayout } from '../hooks/useShellLayout'
-import { SIMPLE_DOCK_BOTTOM_VAR } from '../shell/simple/simpleHome'
+import { SIMPLE_DOCK_BOTTOM_VAR } from '../lib/simpleHome'
 
 vi.mock('react-virtuoso', () => ({
   Virtuoso: ({ data, itemContent }: { data?: unknown[]; itemContent: (index: number, item: unknown) => ReactNode }) => (

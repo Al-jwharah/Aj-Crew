@@ -99,7 +99,7 @@ import { useLanguageGeneration } from '../i18n/useLanguageGeneration'
 
 
 import { i18nT } from '../i18n/t'
-import { simpleDockProps, simpleHomeFits, usePaneHeight } from '../shell/simple/simpleHome'
+import { simpleDockProps, simpleHomeFits, usePaneHeight } from '../lib/simpleHome'
 
 /**
  * Horizontal room the chat pane reclaims (negative margin) while the desktop
