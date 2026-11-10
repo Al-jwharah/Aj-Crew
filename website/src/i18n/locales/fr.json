@@ -6232,7 +6232,7 @@
       "lib_retry": "Réessayer",
       "lib_selected": "Sélectionné",
       "mirror": "Inverser le sens",
-      "mode_face": "Visage fantôme",
+      "mode_face": "Visage gemme",
       "mode_icon": "Icône",
       "mode_library": "Bibliothèque",
       "mode_picture": "Image",
@@ -6289,12 +6289,12 @@
       "opt_wrench": "Clé",
       "pack_load_failed": "L’illustration du pack n’a pas pu être chargée — le visage par défaut est affiché.",
       "randomize": "Aléatoire",
-      "react_absent_note": "Les réactions appartiennent au visage fantôme, il n’y a donc pas d’onglet Réactions ici. Une image reste immobile et muette ; un pack de la Bibliothèque joue ses propres visuels et son propre son.",
+      "react_absent_note": "Les réactions appartiennent au visage gemme, il n’y a donc pas d’onglet Réactions ici. Une image reste immobile et muette ; un pack de la Bibliothèque joue ses propres visuels et son propre son.",
       "react_hint": "Choisissez un mouvement et un son pour la fin ou l’échec d’un tour, ainsi que le son émis au début du travail.",
       "react_motion": "Mouvement",
       "react_reset_state": "Réinitialiser {{state}}",
-      "react_retired_cue_note_pack": "Les sons enregistrés de cette équipe ({{states}}) ne jouent plus – ce pack joue ses propres sons. Passez au visage fantôme pour choisir de nouveau un son prédéfini.",
-      "react_retired_cue_note_picture": "Les sons enregistrés de cette équipe ({{states}}) ne jouent plus – une image est silencieuse. Passez au visage fantôme pour choisir de nouveau un son.",
+      "react_retired_cue_note_pack": "Les sons enregistrés de cette équipe ({{states}}) ne jouent plus – ce pack joue ses propres sons. Passez au visage gemme pour choisir de nouveau un son prédéfini.",
+      "react_retired_cue_note_picture": "Les sons enregistrés de cette équipe ({{states}}) ne jouent plus – une image est silencieuse. Passez au visage gemme pour choisir de nouveau un son.",
       "react_sound": "Son",
       "reset_default": "Rétablir l’avatar et les réactions par défaut",
       "use_original_look": "Revenir à l'apparence d'origine de {{name}}",
@@ -18243,14 +18243,14 @@
         "mission_desc": "Centre des opérations de la NASA",
         "serengeti_label": "Point d’eau",
         "serengeti_desc": "Savane du Serengeti avec girafes, phacochères et éléphants",
-        "ghost_label": "Repaire hanté de Kiro",
-        "ghost_desc": "Fantômes Kiro avec chapeaux, lunettes et capes"
+        "ghost_label": "Éclat des gemmes",
+        "ghost_desc": "Gemmes Aj avec chapeaux, lunettes et capes"
       },
       "ghostScene": {
-        "friendly_hauntings_only": "hantises amicales uniquement",
-        "kiro_ghost_haunt_animation": "Animation du fantôme Kiro",
-        "kiro_ghost_haunt_text_overlay": "Superposition de texte du fantôme Kiro",
-        "kiro_haunt": "Repaire hanté de Kiro"
+        "friendly_hauntings_only": "étincelles amicales uniquement",
+        "kiro_ghost_haunt_animation": "Animation de l’éclat des gemmes Aj",
+        "kiro_ghost_haunt_text_overlay": "Superposition de texte de l’éclat des gemmes Aj",
+        "kiro_haunt": "Éclat des gemmes"
       },
       "missionControl": {
         "missionControlScene": {

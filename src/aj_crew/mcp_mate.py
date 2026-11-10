@@ -4,7 +4,7 @@ The tools are the crewmate's own settings, each named for what it does, in two
 tiers that follow who owns the field:
 
 * **Direct** -- ``update_self``: the presentation the crewmate owns (its display
-  name, its description, its ghost face). The gateway writes the record at once
+  name, its description, its gem face). The gateway writes the record at once
   and draws one row in the crewmate's chat with an **Undo** the user can press;
   nothing waits on a card. Only when the user has just asked for the change:
   the tool description says so, and the gateway admits only a turn the user
@@ -69,7 +69,7 @@ logger = logging.getLogger(__name__)
 SERVER_NAME = "ajcrew-mate"
 SERVER_VERSION = "1.0.0"
 
-#: The trait axes of the ghost face and the values the shipped renderer draws.
+#: The trait axes of the gem face and the values the shipped renderer draws.
 #: Told to the model in the tool description so it names a real option; an
 #: unknown value is kept by the validator and renders as the axis's default.
 GHOST_TRAIT_VOCABULARY: dict[str, tuple[str, ...]] = {
@@ -128,7 +128,7 @@ def _tool_definitions() -> list[dict[str, Any]]:
             "name": "update_self",
             "description": (
                 "Change what the user sees of you: your display name, your description "
-                "(a short line about what you do), or your ghost face. A display name is "
+                "(a short line about what you do), or your gem face. A display name is "
                 "a label only: other Bots still reach you by your short name, which it "
                 "never changes. Applied at once, "
                 "shown in this chat as one line the user can undo. Pass only the fields "

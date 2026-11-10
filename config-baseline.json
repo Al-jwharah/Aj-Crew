@@ -12030,7 +12030,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Avatar",
-      "help": "Per-crew avatar override. Empty means the face is derived from the crew's name. {'kind': 'ghost', 'traits': {...}} pins explicit ghost traits chosen in the avatar builder; {'kind': 'image'} means an uploaded picture served from the per-crew avatar endpoint.",
+      "help": "Per-crew avatar override. Empty means the face is derived from the crew's name. {'kind': 'ghost', 'traits': {...}} pins explicit face traits chosen in the avatar builder; {'kind': 'image'} means an uploaded picture served from the per-crew avatar endpoint.",
       "hasChildren": true,
       "enumValues": null,
       "defaultValue": {}

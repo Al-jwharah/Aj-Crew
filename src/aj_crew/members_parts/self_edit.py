@@ -137,7 +137,7 @@ def clean_description(raw: object) -> str:
 
 
 def clean_self_avatar(raw: object, current: Mapping[str, object]) -> dict:
-    """The ghost face a crewmate asked for, merged onto its current record.
+    """The gem face a crewmate asked for, merged onto its current record.
 
     *raw* is ``{"traits": {...}}`` (``kind`` may be given and must be
     ``"ghost"``), naming one or more axes. The axes it leaves out keep the
@@ -160,7 +160,7 @@ def clean_self_avatar(raw: object, current: Mapping[str, object]) -> dict:
         raise SelfUpdateError("invalid_avatar", "avatar must be an object with traits")
     kind = raw.get("kind", "ghost")
     if kind != "ghost":
-        raise SelfUpdateError("invalid_avatar", "only a ghost face can be chosen here")
+        raise SelfUpdateError("invalid_avatar", "only a gem face can be chosen here")
     unknown = sorted(set(raw) - {"kind", "traits"})
     if unknown:
         raise SelfUpdateError("invalid_avatar", f"unknown avatar field '{unknown[0][:32]}'")

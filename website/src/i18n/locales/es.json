@@ -6232,7 +6232,7 @@
       "lib_retry": "Reintentar",
       "lib_selected": "Seleccionado",
       "mirror": "Voltear dirección",
-      "mode_face": "Cara fantasma",
+      "mode_face": "Cara de gema",
       "mode_icon": "Icono",
       "mode_library": "Biblioteca",
       "mode_picture": "Imagen",
@@ -6289,12 +6289,12 @@
       "opt_wrench": "Llave",
       "pack_load_failed": "No se pudo cargar la imagen del paquete; se muestra la cara predeterminada.",
       "randomize": "Aleatorio",
-      "react_absent_note": "Las reacciones son de la cara fantasma, por eso aquí no hay pestaña Reacciones. Una imagen se queda quieta y en silencio; un paquete de la Biblioteca usa su propia imagen y su propio sonido.",
+      "react_absent_note": "Las reacciones son de la cara de gema, por eso aquí no hay pestaña Reacciones. Una imagen se queda quieta y en silencio; un paquete de la Biblioteca usa su propia imagen y su propio sonido.",
       "react_hint": "Elige un movimiento y un sonido para cuando un turno termina o falla, y el sonido que hace cuando empieza a trabajar.",
       "react_motion": "Movimiento",
       "react_reset_state": "Restablecer {{state}}",
-      "react_retired_cue_note_pack": "Los sonidos guardados de este equipo ({{states}}) ya no suenan: este pack reproduce sus propios sonidos. Cambia a la cara fantasma para volver a elegir un sonido preestablecido.",
-      "react_retired_cue_note_picture": "Los sonidos guardados de este equipo ({{states}}) ya no suenan: una imagen es silenciosa. Cambia a la cara fantasma para volver a elegir un sonido.",
+      "react_retired_cue_note_pack": "Los sonidos guardados de este equipo ({{states}}) ya no suenan: este pack reproduce sus propios sonidos. Cambia a la cara de gema para volver a elegir un sonido preestablecido.",
+      "react_retired_cue_note_picture": "Los sonidos guardados de este equipo ({{states}}) ya no suenan: una imagen es silenciosa. Cambia a la cara de gema para volver a elegir un sonido.",
       "react_sound": "Sonido",
       "reset_default": "Restablecer el avatar y las reacciones a los valores predeterminados",
       "use_original_look": "Volver al aspecto original de {{name}}",
@@ -18243,14 +18243,14 @@
         "mission_desc": "Centro de operaciones de la NASA",
         "serengeti_label": "Abrevadero",
         "serengeti_desc": "Sabana del Serengueti con jirafas, facóqueros y elefantes",
-        "ghost_label": "Ronda de Kiro",
-        "ghost_desc": "Fantasmas de Kiro con sombreros, gafas y capas"
+        "ghost_label": "Brillo de gemas",
+        "ghost_desc": "Gemas de Aj con sombreros, gafas y capas"
       },
       "ghostScene": {
-        "friendly_hauntings_only": "solo apariciones amistosas",
-        "kiro_ghost_haunt_animation": "Animación del fantasma de Kiro rondando",
-        "kiro_ghost_haunt_text_overlay": "Superposición de texto del fantasma de Kiro",
-        "kiro_haunt": "Ronda de Kiro"
+        "friendly_hauntings_only": "solo destellos amistosos",
+        "kiro_ghost_haunt_animation": "Animación del brillo de las gemas de Aj",
+        "kiro_ghost_haunt_text_overlay": "Superposición de texto del brillo de las gemas de Aj",
+        "kiro_haunt": "Brillo de gemas"
       },
       "missionControl": {
         "missionControlScene": {

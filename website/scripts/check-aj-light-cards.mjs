@@ -87,7 +87,7 @@ const ROUTES = [
   // whose page reads a shape the generic `[]` / `{}` fallback cannot satisfy has
   // its answers in APP_FIXTURES below, so it renders its real page rather than
   // an error boundary or a "could not reach the backend" notice.
-  { path: '/worlds', name: 'app-agent-worlds', ready: 'Kiro Haunt' },
+  { path: '/worlds', name: 'app-agent-worlds', ready: 'Gem Glow' },
   { path: '/channels', name: 'app-channels', ready: 'No channels yet' },
   { path: '/auto-improvement', name: 'app-auto-improvement', ready: 'Measures a repository before it changes it' },
   { path: '/auto-research', name: 'app-auto-research', ready: 'Run autonomous research' },

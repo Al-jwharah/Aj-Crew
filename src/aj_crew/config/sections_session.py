@@ -522,7 +522,7 @@ class AjCrewAgentConfig:
             "Avatar",
             "Per-crew avatar override. Empty means the face is derived from "
             "the crew's name. {'kind': 'ghost', 'traits': {...}} pins explicit "
-            "ghost traits chosen in the avatar builder; {'kind': 'image'} "
+            "face traits chosen in the avatar builder; {'kind': 'image'} "
             "means an uploaded picture served from the per-crew avatar "
             "endpoint.",
         ),

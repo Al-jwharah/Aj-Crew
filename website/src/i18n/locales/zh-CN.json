@@ -5953,12 +5953,12 @@
       "opt_wrench": "扳手",
       "pack_load_failed": "外观包的图像无法加载，暂以默认面孔显示。",
       "randomize": "随机",
-      "react_absent_note": "反应属于幽灵脸，所以这里没有“反应”标签。图片保持静止且无声；库中的素材包播放自己的画面和声音。",
+      "react_absent_note": "反应属于宝石脸，所以这里没有“反应”标签。图片保持静止且无声；库中的素材包播放自己的画面和声音。",
       "react_hint": "选择一轮对话完成时和失败时的动作与声音，以及开始工作时发出的声音。",
       "react_motion": "动作",
       "react_reset_state": "重置{{state}}",
-      "react_retired_cue_note_pack": "这个小队保存的声音（{{states}}）不再播放 —— 改由这个外观包播放它自带的声音。 切换到幽灵脸即可重新选择预设声音。",
-      "react_retired_cue_note_picture": "这个小队保存的声音（{{states}}）不再播放 —— 图片是静音的。 切换到幽灵脸即可重新选择声音。",
+      "react_retired_cue_note_pack": "这个小队保存的声音（{{states}}）不再播放 —— 改由这个外观包播放它自带的声音。 切换到宝石脸即可重新选择预设声音。",
+      "react_retired_cue_note_picture": "这个小队保存的声音（{{states}}）不再播放 —— 图片是静音的。 切换到宝石脸即可重新选择声音。",
       "react_sound": "声音",
       "reset_default": "将头像和反应重置为默认",
       "use_original_look": "恢复 {{name}} 原来的样子",
@@ -17323,14 +17323,14 @@
         "mission_desc": "NASA 指挥中心",
         "serengeti_label": "水源地",
         "serengeti_desc": "塞伦盖蒂草原，有长颈鹿、疣猪和大象",
-        "ghost_label": "Kiro 出没",
-        "ghost_desc": "戴着帽子、眼镜和披风的 Kiro 幽灵"
+        "ghost_label": "宝石微光",
+        "ghost_desc": "戴着帽子、眼镜和披风的 Aj 宝石"
       },
       "ghostScene": {
-        "friendly_hauntings_only": "仅限友好出没",
-        "kiro_ghost_haunt_animation": "Kiro 幽灵出没动画",
-        "kiro_ghost_haunt_text_overlay": "Kiro 幽灵出没文字浮层",
-        "kiro_haunt": "Kiro 出没"
+        "friendly_hauntings_only": "只有友好的闪光",
+        "kiro_ghost_haunt_animation": "Aj 宝石微光动画",
+        "kiro_ghost_haunt_text_overlay": "Aj 宝石微光文字浮层",
+        "kiro_haunt": "宝石微光"
       },
       "missionControl": {
         "missionControlScene": {

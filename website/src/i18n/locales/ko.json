@@ -5896,7 +5896,7 @@
       "lib_retry": "다시 시도",
       "lib_selected": "선택됨",
       "mirror": "좌우 반전",
-      "mode_face": "고스트 꾸미기",
+      "mode_face": "젬 꾸미기",
       "mode_icon": "아이콘",
       "mode_library": "라이브러리",
       "mode_picture": "사진",
@@ -5953,12 +5953,12 @@
       "opt_wrench": "렌치",
       "pack_load_failed": "팩의 그림을 불러올 수 없어 기본 얼굴을 표시합니다.",
       "randomize": "랜덤",
-      "react_absent_note": "리액션은 고스트 얼굴의 것이므로 여기에는 리액션 탭이 없습니다. 사진은 움직이지 않고 소리도 없으며, 라이브러리의 팩은 자신의 그림과 소리를 재생합니다.",
+      "react_absent_note": "리액션은 젬 얼굴의 것이므로 여기에는 리액션 탭이 없습니다. 사진은 움직이지 않고 소리도 없으며, 라이브러리의 팩은 자신의 그림과 소리를 재생합니다.",
       "react_hint": "한 턴이 끝날 때와 실패할 때의 동작과 소리, 그리고 작업이 시작될 때 내는 소리를 고르십시오.",
       "react_motion": "움직임",
       "react_reset_state": "{{state}} 재설정",
-      "react_retired_cue_note_pack": "이 크루에 저장된 소리({{states}})는 더 이상 재생되지 않으며, 대신 이 팩이 자신의 소리를 재생합니다. 고스트 얼굴로 바꾸면 프리셋 소리를 다시 고를 수 있습니다.",
-      "react_retired_cue_note_picture": "이 크루에 저장된 소리({{states}})는 더 이상 재생되지 않으며 사진은 무음입니다. 고스트 얼굴로 바꾸면 소리를 다시 고를 수 있습니다.",
+      "react_retired_cue_note_pack": "이 크루에 저장된 소리({{states}})는 더 이상 재생되지 않으며, 대신 이 팩이 자신의 소리를 재생합니다. 젬 얼굴로 바꾸면 프리셋 소리를 다시 고를 수 있습니다.",
+      "react_retired_cue_note_picture": "이 크루에 저장된 소리({{states}})는 더 이상 재생되지 않으며 사진은 무음입니다. 젬 얼굴로 바꾸면 소리를 다시 고를 수 있습니다.",
       "react_sound": "소리",
       "reset_default": "아바타와 리액션을 기본값으로 재설정",
       "use_original_look": "{{name}}의 원래 모습으로 돌아가기",
@@ -17323,14 +17323,14 @@
         "mission_desc": "NASA 운영 센터",
         "serengeti_label": "물웅덩이",
         "serengeti_desc": "기린, 혹멧돼지, 코끼리가 있는 세렝게티 사바나",
-        "ghost_label": "Kiro 유령 출몰",
-        "ghost_desc": "모자, 안경, 망토를 걸친 Kiro 유령들"
+        "ghost_label": "젬의 반짝임",
+        "ghost_desc": "모자, 안경, 망토를 걸친 Aj 젬들"
       },
       "ghostScene": {
-        "friendly_hauntings_only": "친절한 유령만",
-        "kiro_ghost_haunt_animation": "Kiro 유령 출몰 애니메이션",
-        "kiro_ghost_haunt_text_overlay": "Kiro 유령 출몰 텍스트 오버레이",
-        "kiro_haunt": "Kiro 유령 출몰"
+        "friendly_hauntings_only": "다정한 반짝임만",
+        "kiro_ghost_haunt_animation": "Aj 젬 반짝임 애니메이션",
+        "kiro_ghost_haunt_text_overlay": "Aj 젬 반짝임 텍스트 오버레이",
+        "kiro_haunt": "젬의 반짝임"
       },
       "missionControl": {
         "missionControlScene": {

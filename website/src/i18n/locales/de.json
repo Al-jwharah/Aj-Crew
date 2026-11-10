@@ -6064,7 +6064,7 @@
       "lib_retry": "Erneut versuchen",
       "lib_selected": "Ausgewählt",
       "mirror": "Richtung spiegeln",
-      "mode_face": "Geistergesicht",
+      "mode_face": "Edelsteingesicht",
       "mode_icon": "Symbol",
       "mode_library": "Bibliothek",
       "mode_picture": "Bild",
@@ -6121,12 +6121,12 @@
       "opt_wrench": "Schraubenschlüssel",
       "pack_load_failed": "Die Grafik des Pakets konnte nicht geladen werden — stattdessen wird das Standardgesicht angezeigt.",
       "randomize": "Zufällig",
-      "react_absent_note": "Reaktionen gehören zum Geistergesicht, deshalb gibt es hier keinen Reaktionen-Tab. Ein Bild bleibt still und stumm; ein Pack aus der Bibliothek spielt seine eigene Grafik und seinen eigenen Ton.",
+      "react_absent_note": "Reaktionen gehören zum Edelsteingesicht, deshalb gibt es hier keinen Reaktionen-Tab. Ein Bild bleibt still und stumm; ein Pack aus der Bibliothek spielt seine eigene Grafik und seinen eigenen Ton.",
       "react_hint": "Wähle eine Bewegung und einen Ton für das Ende oder das Scheitern eines Durchgangs sowie den Ton beim Start der Arbeit.",
       "react_motion": "Bewegung",
       "react_reset_state": "{{state}} zurücksetzen",
-      "react_retired_cue_note_pack": "Gespeicherte Töne dieser Crew ({{states}}) werden nicht mehr abgespielt – dieses Pack spielt stattdessen seine eigenen Töne. Wechsle zum Geistergesicht, um wieder einen voreingestellten Ton zu wählen.",
-      "react_retired_cue_note_picture": "Gespeicherte Töne dieser Crew ({{states}}) werden nicht mehr abgespielt – ein Bild ist stumm. Wechsle zum Geistergesicht, um wieder einen Ton zu wählen.",
+      "react_retired_cue_note_pack": "Gespeicherte Töne dieser Crew ({{states}}) werden nicht mehr abgespielt – dieses Pack spielt stattdessen seine eigenen Töne. Wechsle zum Edelsteingesicht, um wieder einen voreingestellten Ton zu wählen.",
+      "react_retired_cue_note_picture": "Gespeicherte Töne dieser Crew ({{states}}) werden nicht mehr abgespielt – ein Bild ist stumm. Wechsle zum Edelsteingesicht, um wieder einen Ton zu wählen.",
       "react_sound": "Ton",
       "reset_default": "Avatar und Reaktionen auf Standard zurücksetzen",
       "use_original_look": "Zurück zum ursprünglichen Aussehen von {{name}}",
@@ -17783,14 +17783,14 @@
         "mission_desc": "NASA-Kontrollzentrum",
         "serengeti_label": "Wasserloch",
         "serengeti_desc": "Serengeti-Savanne mit Giraffen, Warzenschweinen und Elefanten",
-        "ghost_label": "Kiro-Spuk",
-        "ghost_desc": "Kiro-Geister mit Hüten, Brillen und Umhängen"
+        "ghost_label": "Edelsteinglanz",
+        "ghost_desc": "Aj-Edelsteine mit Hüten, Brillen und Umhängen"
       },
       "ghostScene": {
-        "friendly_hauntings_only": "nur freundliches Spuken",
-        "kiro_ghost_haunt_animation": "Animation des Kiro-Geisterspuks",
-        "kiro_ghost_haunt_text_overlay": "Text-Overlay des Kiro-Geisterspuks",
-        "kiro_haunt": "Kiro-Spuk"
+        "friendly_hauntings_only": "nur freundliches Funkeln",
+        "kiro_ghost_haunt_animation": "Animation des Aj-Edelsteinglanzes",
+        "kiro_ghost_haunt_text_overlay": "Text-Overlay des Aj-Edelsteinglanzes",
+        "kiro_haunt": "Edelsteinglanz"
       },
       "missionControl": {
         "missionControlScene": {

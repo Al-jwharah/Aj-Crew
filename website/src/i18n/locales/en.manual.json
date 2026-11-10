@@ -1773,7 +1773,7 @@
       "lib_retry": "Try again",
       "lib_selected": "Selected",
       "mirror": "Flip direction",
-      "mode_face": "Ghost face",
+      "mode_face": "Gem face",
       "mode_icon": "Icon",
       "mode_library": "Library",
       "mode_picture": "Picture",
@@ -1830,12 +1830,12 @@
       "opt_wrench": "Wrench",
       "pack_load_failed": "The pack’s art could not be loaded — showing the default face instead.",
       "randomize": "Randomize",
-      "react_absent_note": "Reactions belong to the ghost face, so there is no Reactions tab here. A picture stays still and silent; a pack from the Library plays its own art and sound.",
+      "react_absent_note": "Reactions belong to the gem face, so there is no Reactions tab here. A picture stays still and silent; a pack from the Library plays its own art and sound.",
       "react_hint": "Pick a motion and a sound for when a turn finishes or fails, and the sound it makes when work starts.",
       "react_motion": "Motion",
       "react_reset_state": "Reset {{state}}",
-      "react_retired_cue_note_pack": "Saved sounds on this crew ({{states}}) no longer play — this pack plays its own sounds instead. Switch to Ghost face to pick a preset sound again.",
-      "react_retired_cue_note_picture": "Saved sounds on this crew ({{states}}) no longer play — a picture is silent. Switch to Ghost face to pick a sound again.",
+      "react_retired_cue_note_pack": "Saved sounds on this crew ({{states}}) no longer play — this pack plays its own sounds instead. Switch to Gem face to pick a preset sound again.",
+      "react_retired_cue_note_picture": "Saved sounds on this crew ({{states}}) no longer play — a picture is silent. Switch to Gem face to pick a sound again.",
       "react_sound": "Sound",
       "reset_default": "Reset avatar and reactions to default",
       "use_original_look": "Back to {{name}}'s original look",
@@ -8379,14 +8379,14 @@
         "mission_desc": "NASA ops center",
         "serengeti_label": "Watering Hole",
         "serengeti_desc": "Serengeti savanna with giraffes, warthogs, and elephants",
-        "ghost_label": "Kiro Haunt",
-        "ghost_desc": "Kiro ghosts in hats, glasses, and capes"
+        "ghost_label": "Gem Glow",
+        "ghost_desc": "Aj gems in hats, glasses, and capes"
       },
       "ghostScene": {
-        "kiro_ghost_haunt_animation": "Kiro ghost haunt animation",
-        "kiro_ghost_haunt_text_overlay": "Kiro ghost haunt text overlay",
-        "friendly_hauntings_only": "friendly hauntings only",
-        "kiro_haunt": "Kiro Haunt"
+        "kiro_ghost_haunt_animation": "Aj gem glow animation",
+        "kiro_ghost_haunt_text_overlay": "Aj gem glow text overlay",
+        "friendly_hauntings_only": "friendly sparkles only",
+        "kiro_haunt": "Gem Glow"
       },
       "missionControl": {
         "missionControlScene": {

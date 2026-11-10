@@ -2332,7 +2332,7 @@ dashboard; an existing spec gains the ref and `agent._MATE_AUTO_GRANTS` once,
 `mate_platform_granted.json`). Its tools are named for what they do and act on
 the CALLING Bot only, never on a name passed in, in two tiers that follow
 who owns the field. `update_self` writes the presentation the Bot owns (its
-display name, description and ghost face, `members.SELF_EDITABLE_FIELDS`) at
+display name, description and gem face, `members.SELF_EDITABLE_FIELDS`) at
 once through `POST /api/member/self/update`: the gateway resolves the member from
 the caller's pinned-thread slot, cleans each value by its own rule
 (`members.update_member_self`), publishes the record, writes `member/config` to
