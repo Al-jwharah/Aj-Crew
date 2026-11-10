@@ -4,8 +4,8 @@ import {
   SUGGESTION_KIND_STYLE, WelcomeBrandMark, useWelcomeGreetingKey, useWelcomeSuggestions,
 } from './WelcomeView'
 import { reportForError } from '../utils/errorReport'
-import { simpleHomeGeometry, SIMPLE_HOME_COMPOSER_MAX_W } from '../shell/simple/simpleHome'
-import { SIMPLE_SUGGESTION_LIMIT } from '../shell/simple/simpleLayout'
+import { simpleHomeGeometry, SIMPLE_HOME_COMPOSER_MAX_W } from '../lib/simpleHome'
+import { SIMPLE_SUGGESTION_LIMIT } from '../lib/simpleLayout'
 import { i18nT } from '../i18n/t'
 
 interface SimpleWelcomeProps {

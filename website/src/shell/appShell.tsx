@@ -54,7 +54,7 @@ import { useDrawerSwipe, animateDrawer, registerDrawerTargets, takeOverDrawer, s
 import { useTopbarCollapse } from '../lib/useTopbarCollapse'
 import { usePersistedBool } from '../hooks/usePersistedBool'
 import { useShellLayout } from '../hooks/useShellLayout'
-import { readNavCollapsed, navCollapsedKey } from './simple/simpleLayout'
+import { readNavCollapsed, navCollapsedKey } from '../lib/simpleLayout'
 import { usePaletteShortcutsEnabled } from '../hooks/useCommandPalette'
 import { showNativeDevTools, subscribeNativeNavigate, useMacFullscreen } from './platform/electronBridge'
 import { REMOTE_CREW_SETTINGS_PATH, remoteCrewAddFromPath } from '../lib/remoteCrewAddLink'
@@ -851,7 +851,7 @@ export function useAppShell() {
   // The Simple layout is a DESKTOP form: the phone shell is already one bar
   // and a drawer, so it keeps the same rows in both layouts.
   const simpleLayout = simpleShell && !isMobile
-  const metrics = useMetricsReadout(isMobile, updateAvailable, topbarLevels.right, simpleLayout)
+  const metrics = useMetricsReadout(isMobile, updateAvailable, topbarLevels.right)
   const { capsuleCollapsed, setCapsuleCollapsed, capsuleLayoutPulse, pulseCapsuleLayout, sysMetrics, metricsProbeRef, metricsGroupRef } = metrics
 
   // Guide facts the shell knows: the gate a guide pauses on (it never flips

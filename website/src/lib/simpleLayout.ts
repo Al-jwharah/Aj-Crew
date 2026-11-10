@@ -7,7 +7,7 @@
  * caller decides (the shell reads `useShellLayout`; an embed or a popout, which
  * draws no shell, always passes `false`).
  */
-import { safeSetItem } from '../../utils/safeStorage'
+import { safeSetItem } from '../utils/safeStorage'
 
 function read(key: string): string | null {
   try {

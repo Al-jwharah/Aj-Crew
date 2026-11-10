@@ -5,6 +5,7 @@ import { AudioWaveform, Monitor } from 'lucide-react'
 import { api } from '../../api/client'
 import { useHoverIntent } from '../../hooks/useHoverIntent'
 import { usePersistedBool } from '../../hooks/usePersistedBool'
+import { useShellLayout } from '../../hooks/useShellLayout'
 import ErrorNotice from '../../components/ErrorNotice'
 import { safeSetItem } from '../../utils/safeStorage'
 import { metricColor } from '../../utils/metricColor'
@@ -72,7 +73,10 @@ export const SIMPLE_CAPSULE_KEY = 'mc-simple-topbar-capsule-collapsed'
  * the system-metrics control — the inline readings, the narrow-band popover, the
  * hover card and the metrics query they all read.
  */
-export function useMetricsReadout(isMobile: boolean, updateAvailable: boolean, actionsLevel: number, simpleLayout = false) {
+export function useMetricsReadout(isMobile: boolean, updateAvailable: boolean, actionsLevel: number) {
+  // Simple is a desktop form (appShell): the phone bar keeps the Advanced fold.
+  const [shellLayout] = useShellLayout()
+  const simpleLayout = shellLayout === 'simple' && !isMobile
   const [metricsOpen, setMetricsOpen] = useState(() => localStorage.getItem('mc-topbar-metrics') === '1')
   // The inline metric readings are dropped by a CSS container-query rung when
   // the actions group runs out of room (the ladder in index.css, whose rungs
