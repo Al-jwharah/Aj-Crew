@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef, useSyncExternalStore, createContext, lazy, Suspense, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, useCallback, useRef, useSyncExternalStore, createContext, lazy, Suspense, type ReactNode } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAppSelector, useAppDispatch } from './store'
 import { setUpdateProgress } from './store/dashboardSlice'
@@ -328,9 +328,20 @@ export default function App() {
     setShortcutsOpen, toggleShortcutsModal, commandPalette, agentSwitchNotice, kiroUsageOpen, setKiroUsageOpen,
     kiroUsageState, kiroAccountEntry, metrics, subscribeLogs, subscribeSubagents, forceReconnect,
     updateFlow, updating, setUpdating, showUpdateModal, setShowUpdateModal, showChangelog, updateError,
-    setUpdateError, reportProblemOpen, setReportProblemOpen, effectiveCollapsed, activePath,
+    setUpdateError, reportProblemOpen, setReportProblemOpen, effectiveCollapsed, simpleLayout, activePath,
+    toggleFocusMode, requestFeature,
     libraryNavActive, discoverNavActive, isChat, needsFixedHeight, navRowActive, membersRoute, mobileSingle,
   } = shell
+  // Shell commands the command palette offers as Actions. The Simple layout's
+  // top bar draws no control for them, so this is where they are reached there
+  // (Advanced keeps its own controls and gains the same entries). Only the
+  // dashboard shell owns the three surfaces; a popout or an embed passes none.
+  const framed = isPopout || isEmbed
+  const shellPaletteActions = useMemo(() => framed ? undefined : {
+    toggleFocusMode,
+    requestFeature: () => { void requestFeature() },
+    reportProblem: () => setReportProblemOpen(true),
+  }, [framed, toggleFocusMode, requestFeature, setReportProblemOpen])
   // "Run in terminal" from a code block outside every chat, on any route.
   const runInTerminal = useRunInTerminalShellBridge(activeSlotProject, !isPopout && !isEmbed)
   // The dock terminal fills the content area only while maximized, so <main>
@@ -643,8 +654,8 @@ export default function App() {
         gridTemplateAreas: isMobile ? '"topbar" "content"' : bottomDock ? '"topbar topbar" "nav content" "nav actbar"' : '"topbar topbar topbar" "nav content actbar"',
         ...(!isMobile && {
           gridTemplateColumns: bottomDock
-            ? `${focusActive ? 0 : railWidthFor({ isMobile, collapsed: effectiveCollapsed })}px minmax(0,1fr)`
-            : `${focusActive ? 0 : railWidthFor({ isMobile, collapsed: effectiveCollapsed })}px minmax(0,1fr) auto`,
+            ? `${focusActive ? 0 : railWidthFor({ isMobile, collapsed: effectiveCollapsed, simple: simpleLayout })}px minmax(0,1fr)`
+            : `${focusActive ? 0 : railWidthFor({ isMobile, collapsed: effectiveCollapsed, simple: simpleLayout })}px minmax(0,1fr) auto`,
           // Transition fires only when the template string itself changes (the
           // collapse toggle) — content-driven resizes of the auto track (e.g.
           // the Activity panel opening) don't alter the value, so keeping this
@@ -997,6 +1008,7 @@ export default function App() {
       onClose={commandPalette.close}
       opener={commandPalette.opener}
       openShortcuts={toggleShortcutsModal}
+      shellActions={shellPaletteActions}
     />
     {/* Theme decoration: decorative overlays (widgets, transitions)
         contributed by the active theme's branding. Absent unless a registered

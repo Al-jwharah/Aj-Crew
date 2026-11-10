@@ -53,6 +53,8 @@ import { useMotionValue, useTransform } from 'framer-motion'
 import { useDrawerSwipe, animateDrawer, registerDrawerTargets, takeOverDrawer, safeAreaLeft } from '../hooks/useDrawerSwipe'
 import { useTopbarCollapse } from '../lib/useTopbarCollapse'
 import { usePersistedBool } from '../hooks/usePersistedBool'
+import { useShellLayout } from '../hooks/useShellLayout'
+import { readNavCollapsed, navCollapsedKey } from './simple/simpleLayout'
 import { usePaletteShortcutsEnabled } from '../hooks/useCommandPalette'
 import { showNativeDevTools, subscribeNativeNavigate, useMacFullscreen } from './platform/electronBridge'
 import { REMOTE_CREW_SETTINGS_PATH, remoteCrewAddFromPath } from '../lib/remoteCrewAddLink'
@@ -415,9 +417,22 @@ export function useAppShell() {
   useNotificationSound()
   // The rail starts collapsed until the user expands it: only a stored '0'
   // (the user's own expand) opens it on load.
-  const [navCollapsed, setNavCollapsed] = useState(() => localStorage.getItem('mc-nav') !== '0')
+  //
+  // Each shell layout keeps its own collapse state (`navCollapsedKey`): the
+  // Simple sidebar carries the recent chats, so it starts open, and collapsing
+  // it must not collapse the Advanced rail a user goes back to (or the other
+  // way round). A layout switch re-reads the state for the layout now drawn.
+  const [shellLayout] = useShellLayout()
+  const simpleShell = shellLayout === 'simple'
+  const [navCollapsed, setNavCollapsed] = useState(() => readNavCollapsed(simpleShell))
   const navCollapsedRef = useRef(navCollapsed)
   navCollapsedRef.current = navCollapsed
+  const navLayoutRef = useRef(simpleShell)
+  useEffect(() => {
+    if (navLayoutRef.current === simpleShell) return
+    navLayoutRef.current = simpleShell
+    setNavCollapsed(readNavCollapsed(simpleShell))
+  }, [simpleShell])
   // Preview expand mode from the Web Preview tab collapses the left nav
   // as a STARTING layout, not a lock — the brand toggle keeps its standard
   // behavior while expand mode is on, so the rail can be brought back without
@@ -460,7 +475,7 @@ export function useAppShell() {
   const {
     focusMode, toggleFocusMode, focusActive, topPeek, railPeek, topPeekTrigger, topPeekSurface,
     railPeekTrigger, railPeekSurface, topChromeShown, localHeaderDragGaps,
-  } = useFocusChrome({ isMobile, navCollapsed, activeInstanceId, topReservePx })
+  } = useFocusChrome({ isMobile, navCollapsed, simpleShell, activeInstanceId, topReservePx })
   // Whether the shell's one-shot entrance animation has already played.
   //
   // The local pane is HIDDEN, not unmounted, while a remote instance tab is
@@ -808,7 +823,7 @@ export function useAppShell() {
 
   const { appBadges, discoverBadges, railAppBadges, railAppRunStates } = useRailBadges(approvalCount)
 
-  const { shortcutsOpen, setShortcutsOpen, toggleShortcutsModal, commandPalette, agentSwitchNotice } = useShellKeyboard({
+  const { shortcutsOpen, setShortcutsOpen, toggleShortcutsModal, commandPalette, agentSwitchNotice, startNewChat, newChatPending } = useShellKeyboard({
     toggleFocusMode, toggleNav: () => toggleNav(), terminalEnabled, isPopout, isEmbed, terminalPoppedOut, activeSlotProject,
   })
 
@@ -833,7 +848,10 @@ export function useAppShell() {
   const [topbarSearchSetting] = usePersistedBool('mc-topbar-search', true)
   const paletteChordLive = usePaletteShortcutsEnabled()
   const topbarSearch = topbarSearchSetting || !paletteChordLive
-  const metrics = useMetricsReadout(isMobile, updateAvailable, topbarLevels.right)
+  // The Simple layout is a DESKTOP form: the phone shell is already one bar
+  // and a drawer, so it keeps the same rows in both layouts.
+  const simpleLayout = simpleShell && !isMobile
+  const metrics = useMetricsReadout(isMobile, updateAvailable, topbarLevels.right, simpleLayout)
   const { capsuleCollapsed, setCapsuleCollapsed, capsuleLayoutPulse, pulseCapsuleLayout, sysMetrics, metricsProbeRef, metricsGroupRef } = metrics
 
   // Guide facts the shell knows: the gate a guide pauses on (it never flips
@@ -963,7 +981,7 @@ export function useAppShell() {
       // The user has taken ownership of the rail: leaving preview expand mode
       // must not overwrite this with the pre-expand state.
       navAutoCollapsed.current = null
-      setNavCollapsed(prev => { const next = !prev; safeSetItem('mc-nav', next ? '1' : '0'); return next })
+      setNavCollapsed(prev => { const next = !prev; safeSetItem(navCollapsedKey(simpleShell), next ? '1' : '0'); return next })
     }
   }
   // Close mobile nav on route change
@@ -988,8 +1006,8 @@ export function useAppShell() {
   // beside-vs-fill from it. Kept in sync with the gridTemplateColumns value
   // in App's shell grid; railWidthFor is the single source for both.
   useEffect(() => {
-    setRailWidth(focusActive ? 0 : railWidthFor({ isMobile, collapsed: effectiveCollapsed }))
-  }, [isMobile, effectiveCollapsed, focusActive])
+    setRailWidth(focusActive ? 0 : railWidthFor({ isMobile, collapsed: effectiveCollapsed, simple: simpleShell }))
+  }, [isMobile, effectiveCollapsed, focusActive, simpleShell])
   // The header's three grid tracks (see `.topbar` in index.css) size themselves:
   // the search width is a function of the window and the two side groups split
   // the remainder. Each group re-lays-out its own contents with container
@@ -1072,7 +1090,7 @@ export function useAppShell() {
     setShowUpdateModal, showChangelog, updateError, setUpdateError, reportProblemOpen,
     setReportProblemOpen, requestFeature, toggleNav, effectiveCollapsed, closeMobileNav, activePath,
     libraryNavActive, discoverNavActive, isChat, needsFixedHeight, navRowActive, membersRoute, mobileSingle,
-    membersBarPending, mobileNavOpen, topbarSearch,
+    membersBarPending, mobileNavOpen, topbarSearch, simpleLayout, startNewChat, newChatPending,
   }
 }
 

@@ -1,6 +1,7 @@
 import { Component, Suspense, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 
 import CommandPalette from './CommandPalette'
+import type { ShellPaletteActions } from './commandPalette/providers/actionsProvider'
 import { OverlayPortal } from './overlayRoot'
 import { getBuiltinOverlay } from '../apps/overlayRegistry'
 import type { SlotOwners } from '../apps/overlaySlots'
@@ -163,6 +164,7 @@ export default function QuickSearchSurface({
   onClose,
   opener,
   openShortcuts,
+  shellActions,
 }: {
   owners: SlotOwners
   open: boolean
@@ -170,6 +172,8 @@ export default function QuickSearchSurface({
   /** The control the gesture came from; see `OverlayProps.opener`. */
   opener?: HTMLElement | null
   openShortcuts?: () => void
+  /** Passed through to the command palette's Actions (see `CommandPaletteProps.shellActions`). */
+  shellActions?: ShellPaletteActions
 }) {
   const owner = owners['quick-search']
   const Overlay = owner ? getBuiltinOverlay(owner.overlayId) : undefined
@@ -182,7 +186,7 @@ export default function QuickSearchSurface({
   // The palette also renders when the overlay's chunk fails to load, and keys caught
   // before that failure belong to it just as they would to the overlay.
   const palette = (
-    <CommandPalette open={open} onClose={onClose} openShortcuts={openShortcuts} initialQuery={typeAhead} />
+    <CommandPalette open={open} onClose={onClose} openShortcuts={openShortcuts} shellActions={shellActions} initialQuery={typeAhead} />
   )
   if (!Overlay) return palette
   if (!open) return null
