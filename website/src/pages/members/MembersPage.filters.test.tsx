@@ -141,7 +141,7 @@ describe('matchesSource', () => {
 describe('MembersPage filters', () => {
   it('shows every member with no filter active', async () => {
     await renderPage()
-    expect(names()).toEqual(['conductor', 'ajcrew', 'legacy-aim', 'pkg-a', 'pkg-b'])
+    expect(names()).toEqual(['ajcrew', 'conductor', 'legacy-aim', 'pkg-a', 'pkg-b'])
   })
 
   it('shows per-bucket counts on the origin rows, as a separate node from the label', async () => {
@@ -231,7 +231,7 @@ describe('MembersPage filters', () => {
     fireEvent.click(screen.getByTestId('member-filter-source-mine'))
     expect(names()).toEqual(['conductor'])
     fireEvent.click(screen.getByTestId('member-filter-source-mine'))
-    expect(names()).toEqual(['conductor', 'ajcrew', 'legacy-aim', 'pkg-a', 'pkg-b'])
+    expect(names()).toEqual(['ajcrew', 'conductor', 'legacy-aim', 'pkg-a', 'pkg-b'])
     expect(localStorage.getItem('mc-members-source')).toBe('all')
   })
 

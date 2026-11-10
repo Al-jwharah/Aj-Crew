@@ -23,6 +23,7 @@ import {
 /** The real do-not-translate list is small and stable; these are enough of it. */
 const DNT = [
   'AWS', 'GitHub', 'Kiro', 'Python', 'Slack', 'JSON', 'MCP', 'npm', 'Git',
+  'Aj', // the assistant's name, the stem of the spaced product name
   'AjCrew', // brand-ok: the product name as `dnt` itself spells it
 ]
 

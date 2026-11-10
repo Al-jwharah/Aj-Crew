@@ -23,7 +23,7 @@ describe('codeBrowser URL helpers', () => {
 
   it('builds a commit URL from a short SHA', () => {
     expect(codeBrowserCommitUrl('9866ae7a')).toBe(
-      'https://github.com/kirodotdev/KiroCrew/commit/9866ae7a',
+      'https://github.com/Al-jwharah/Aj-Crew/commit/9866ae7a',
     )
   })
 })

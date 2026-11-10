@@ -41,7 +41,7 @@ describe('sortRoster', () => {
     expect(names(sortRoster(ROSTER, 'recent'))).toEqual(['conductor', 'ajcrew', 'pkg-a', 'pkg-b', 'legacy-aim'])
   })
   it('name: locale-aware alphabetical regardless of activity', () => {
-    expect(names(sortRoster(ROSTER, 'name'))).toEqual(['conductor', 'ajcrew', 'legacy-aim', 'pkg-a', 'pkg-b'])
+    expect(names(sortRoster(ROSTER, 'name'))).toEqual(['ajcrew', 'conductor', 'legacy-aim', 'pkg-a', 'pkg-b'])
   })
   it('does not mutate its input', () => {
     const before = names(ROSTER)

@@ -260,10 +260,10 @@ describe('pasting a pull request link', () => {
     // lands here whatever it points at.
     api.pinRepoUrl.mockResolvedValue({
       ok: true,
-      repos: [{ owner: 'kirodotdev', repo: 'AjCrew' }],  // brand-ok: literal repository name
-      added: { owner: 'kirodotdev', repo: 'AjCrew' },  // brand-ok: literal repository name
+      repos: [{ owner: 'kirodotdev', repo: 'KiroCrew' }],  // brand-ok: literal repository name
+      added: { owner: 'kirodotdev', repo: 'KiroCrew' },  // brand-ok: literal repository name
       pull_request: {
-        owner: 'kirodotdev', repo: 'AjCrew', number: 777,  // brand-ok: literal repository name
+        owner: 'kirodotdev', repo: 'KiroCrew', number: 777,  // brand-ok: literal repository name
         url: 'https://github.com/kirodotdev/KiroCrew/pull/777',
         change_id: 'GH-kirodotdev-KiroCrew-777',
       },
@@ -281,10 +281,10 @@ describe('pasting a pull request link', () => {
     // have to locate it in.
     api.pinRepoUrl.mockResolvedValue({
       ok: true,
-      repos: [{ owner: 'kirodotdev', repo: 'AjCrew' }],  // brand-ok: literal repository name
-      added: { owner: 'kirodotdev', repo: 'AjCrew' },  // brand-ok: literal repository name
+      repos: [{ owner: 'kirodotdev', repo: 'KiroCrew' }],  // brand-ok: literal repository name
+      added: { owner: 'kirodotdev', repo: 'KiroCrew' },  // brand-ok: literal repository name
       pull_request: {
-        owner: 'kirodotdev', repo: 'AjCrew', number: 777,  // brand-ok: literal repository name
+        owner: 'kirodotdev', repo: 'KiroCrew', number: 777,  // brand-ok: literal repository name
         url: 'https://github.com/kirodotdev/KiroCrew/pull/777',
         change_id: 'GH-kirodotdev-KiroCrew-777',
       },
@@ -299,7 +299,7 @@ describe('pasting a pull request link', () => {
     // After the add the server lists the repo as pinned; the provider drops an
     // active repo that is NOT pinned, so the fixture has to reflect that.
     api.pinnedRepos.mockResolvedValue({
-      repos: [{ owner: 'kirodotdev', repo: 'AjCrew' }],  // brand-ok: literal repository name
+      repos: [{ owner: 'kirodotdev', repo: 'KiroCrew' }],  // brand-ok: literal repository name
     })
     mount()
     const field = await screen.findByLabelText(/Repository or pull request URL/i)
