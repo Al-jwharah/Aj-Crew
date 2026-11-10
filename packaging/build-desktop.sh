@@ -1777,7 +1777,7 @@ log "Packaging desktop app (electron-builder, version: $KC_VERSION)…"
       # As on mac, this identity persists on user machines from first install:
       # changing it later orphans installed updaters, so it is pinned from the
       # first shipped build.
-      "-c.nsis.guid=0f417bf9-2759-51d6-acfb-f864805d1f41"
+      "-c.nsis.guid=cf774884-978d-5528-814f-8d616b5621fb"
       # WINDOWS-ONLY appId split. The shared appId above is required on macOS
       # (Squirrel.Mac validates against the host's designated requirement, which
       # pins the bundle id), but on Windows it reaches ${APP_ID}, which the NSIS
@@ -1820,7 +1820,7 @@ log "Packaging desktop app (electron-builder, version: $KC_VERSION)…"
       "-c.linux.executableName=ajcrew-desktop-lts"
       "-c.extraMetadata.desktopName=ajcrew-desktop-lts.desktop"
       "-c.extraMetadata.name=ajcrew-desktop-lts"
-      "-c.nsis.guid=fec201a5-e96c-5955-8d08-750be2d446a1"
+      "-c.nsis.guid=f65957e7-68d2-5d0f-9654-e3298a4efcee"
       "-c.win.appId=${BASE_APP_ID}.lts"
     )
   fi
