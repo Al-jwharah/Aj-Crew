@@ -7,7 +7,7 @@
  *  - `petName` defaults to `""`, meaning "use the active avatar's own name"
  *    (settings.py / soul_loader.BUILTIN_PET_NAMES). Every renderer read the raw
  *    field with `|| 'Mochi'`, so a ghost user was told to "Ask Mochi" to watch a
- *    page while the pet introduced itself as Kiro.
+ *    page while the pet introduced itself by its own name.
  *  - `/pet-state` answers `{state, mood}`, but the bridge returned only the
  *    state, so nothing could seed a mood on mount. Moods self-clear after a few
  *    seconds, so the chat title bar effectively never showed one.
@@ -22,9 +22,9 @@ describe('resolvePetName', () => {
   })
 
   it('falls back to the ACTIVE avatar, not to the cat', () => {
-    // The whole point: an unnamed ghost is Kiro, and mirrors
+    // The whole point: an unnamed gem is Aj, and mirrors
     // soul_loader.BUILTIN_PET_NAMES so chat and UI agree.
-    expect(resolvePetName({ petName: '', activeAppearance: 'kiro-ghost' })).toBe('Kiro')
+    expect(resolvePetName({ petName: '', activeAppearance: 'kiro-ghost' })).toBe('Aj')
     expect(resolvePetName({ petName: '', activeAppearance: 'default-mochi' })).toBe('Mochi')
   })
 
@@ -35,7 +35,7 @@ describe('resolvePetName', () => {
   })
 
   it('trims, so a pasted name with whitespace is not treated as custom', () => {
-    expect(resolvePetName({ petName: '   ', activeAppearance: 'kiro-ghost' })).toBe('Kiro')
+    expect(resolvePetName({ petName: '   ', activeAppearance: 'kiro-ghost' })).toBe('Aj')
     expect(resolvePetName({ petName: ' Tofu ' })).toBe('Tofu')
   })
 })

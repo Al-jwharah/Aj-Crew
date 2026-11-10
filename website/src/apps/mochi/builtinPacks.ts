@@ -92,11 +92,13 @@ const MOCHI_PACK: BuiltinPack = {
 }
 
 /**
- * The Kiro ghost, built from the four delivered idle/fly Lotties.
+ * The Aj gem, built from four Lottie clips the brand kit writes
+ * (`scripts/brand/petclips.py`). The pack id, the constant names and the clip
+ * file names predate the gem: stored settings point at the id, so it stays.
  *
  * There are four clips for six states, so several states share one — accepted
- * deliberately: a ghost that reuses a float for "working" reads fine, whereas
- * an unregistered avatar could not be chosen at all.
+ * deliberately: a gem that reuses its moving clip for "working" reads fine,
+ * whereas an unregistered avatar could not be chosen at all.
  *
  * `peeking` / `peekThinking` are OMITTED rather than filled with a float. They
  * are optional, and the resolver falls back to `idle` / `thinking` for them; a
@@ -105,20 +107,19 @@ const MOCHI_PACK: BuiltinPack = {
 const GHOST_PACK: BuiltinPack = {
   format: 'lottie',
   ext: 'json',
-  // The delivered clips are mirrored: the ghost's tail trails to the RIGHT, so it
-  // reads as drifting right-to-left while every other pack (and the pet's own
-  // walk logic) assumes art that faces right. Declared here rather than
-  // compensated for at each render site, and rather than un-mirroring the art:
-  // the eyes are parented into BODY's already-negated coordinate space, so
-  // flipping the layer scales would move them to the wrong side of the face.
+  // The clips are drawn mirrored: the gem looks LEFT and its twinkles trail to
+  // the RIGHT, so it reads as travelling right-to-left while every other pack
+  // (and the pet's own walk logic) assumes art that faces right. Declared here
+  // rather than compensated for at each render site; the brand kit draws to
+  // this flag, so the two change together or not at all.
   flipX: true,
   meta: {
     id: BUILTIN_GHOST_ID,
-    name: 'Kiro Ghost',
-    author: 'Kiro',
+    name: 'Aj Gem',
+    author: 'Aj Crew',
     description:
-      'A small friendly ghost that floats and blinks. Calm and attentive, ' +
-      'it drifts along while it works.',
+      'A small cut gem that bobs, blinks and twinkles. Calm and attentive, ' +
+      'it leaves a trail of sparkles while it works.',
     type: 'built-in',
     format: 'lottie',
     thumbnail: 'idle.json',
@@ -183,11 +184,11 @@ export function resolveActivePackId(
  * chat and another in its own title bar.
  *
  * Deliberately NOT `meta.name`: that names the character DESIGN in the picker
- * ("Kiro Ghost" / "Mochi Cat"), while this is how the pet refers to itself.
+ * ("Aj Gem" / "Mochi Cat"), while this is how the pet refers to itself.
  */
 const BUILTIN_PET_NAMES: Record<string, string> = {
   [BUILTIN_MOCHI_ID]: 'Mochi',
-  [BUILTIN_GHOST_ID]: 'Kiro',
+  [BUILTIN_GHOST_ID]: 'Aj',
 }
 
 /** Last-resort name, matching ``soul_loader.DEFAULT_PET_NAME``. */

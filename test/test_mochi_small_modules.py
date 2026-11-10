@@ -275,8 +275,10 @@ class TestAppearancePersona:
     def test_the_two_built_ins_read_differently(self) -> None:
         assert persona_for("kiro-ghost") != persona_for("default-mochi")
 
-    def test_ghost_is_kiro_and_cat_is_mochi(self) -> None:
-        assert "ghost" in persona_for("kiro-ghost").lower()
+    def test_gem_is_aj_and_cat_is_mochi(self) -> None:
+        # The pack id predates the gem; the character it names is the Aj gem.
+        assert "gem" in persona_for("kiro-ghost").lower()
+        assert "ghost" not in persona_for("kiro-ghost").lower()
         assert "cat" in persona_for("default-mochi").lower()
 
     def test_unset_pack_is_a_generic_companion(self) -> None:
@@ -313,7 +315,7 @@ class TestAppearancePersona:
         assert "paper crane" in loader.get()
 
     def test_switching_pack_switches_the_default_name(self) -> None:
-        """Picking the ghost must not leave it introducing itself as Mochi."""
+        """Picking the gem must not leave it introducing itself as Mochi."""
         loader = SoulLoader()
         loader.set_appearance("kiro-ghost")
         assert loader.pet_name == BUILTIN_PET_NAMES["kiro-ghost"]
