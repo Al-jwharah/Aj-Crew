@@ -36,8 +36,8 @@
   <rect x="140" y="168" width="36" height="42" rx="4" fill="#4a90d9"/>
   <rect x="144" y="174" width="12" height="8" rx="2" fill="#fff"/>
   <rect x="160" y="174" width="12" height="8" rx="2" fill="#fff"/>
-  <circle cx="148" cy="177" r="3" fill="#1a1a2e"/>
-  <circle cx="164" cy="177" r="3" fill="#1a1a2e"/>
+  <circle cx="148" cy="177" r="3" fill="#11201d"/>
+  <circle cx="164" cy="177" r="3" fill="#11201d"/>
   <rect x="152" y="188" width="12" height="4" rx="2" fill="#2c5f8a"/>
   <rect x="146" y="196" width="24" height="8" rx="2" fill="#3a7bc8"/>
   <rect x="144" y="210" width="10" height="12" rx="2" fill="#4a90d9"/>
@@ -49,8 +49,8 @@
   <rect x="230" y="178" width="28" height="32" rx="3" fill="#f4845f"/>
   <rect x="234" y="182" width="8" height="6" rx="1" fill="#fff"/>
   <rect x="246" y="182" width="8" height="6" rx="1" fill="#fff"/>
-  <circle cx="237" cy="184" r="2" fill="#1a1a2e"/>
-  <circle cx="249" cy="184" r="2" fill="#1a1a2e"/>
+  <circle cx="237" cy="184" r="2" fill="#11201d"/>
+  <circle cx="249" cy="184" r="2" fill="#11201d"/>
   <rect x="238" y="194" width="12" height="3" rx="1" fill="#d4644a"/>
   <rect x="234" y="210" width="8" height="10" rx="2" fill="#f4845f"/>
   <rect x="246" y="210" width="8" height="10" rx="2" fill="#f4845f"/>
@@ -61,8 +61,8 @@
   <rect x="310" y="186" width="22" height="24" rx="3" fill="#9b59b6"/>
   <rect x="313" y="190" width="6" height="5" rx="1" fill="#fff"/>
   <rect x="323" y="190" width="6" height="5" rx="1" fill="#fff"/>
-  <circle cx="316" cy="192" r="2" fill="#1a1a2e"/>
-  <circle cx="326" cy="192" r="2" fill="#1a1a2e"/>
+  <circle cx="316" cy="192" r="2" fill="#11201d"/>
+  <circle cx="326" cy="192" r="2" fill="#11201d"/>
   <rect x="316" y="200" width="10" height="2" rx="1" fill="#7d3c98"/>
   <rect x="313" y="210" width="6" height="8" rx="1" fill="#9b59b6"/>
   <rect x="323" y="210" width="6" height="8" rx="1" fill="#9b59b6"/>
@@ -73,8 +73,8 @@
   <rect x="140" y="168" width="36" height="42" rx="4" fill="#4a90d9"/>
   <rect x="144" y="174" width="12" height="8" rx="2" fill="#fff"/>
   <rect x="160" y="174" width="12" height="8" rx="2" fill="#fff"/>
-  <circle cx="148" cy="177" r="3" fill="#1a1a2e"/>
-  <circle cx="164" cy="177" r="3" fill="#1a1a2e"/>
+  <circle cx="148" cy="177" r="3" fill="#11201d"/>
+  <circle cx="164" cy="177" r="3" fill="#11201d"/>
   <rect x="152" y="188" width="12" height="4" rx="2" fill="#2c5f8a"/>
   <rect x="146" y="196" width="24" height="8" rx="2" fill="#3a7bc8"/>
   <rect x="144" y="210" width="10" height="12" rx="2" fill="#4a90d9"/>
@@ -86,8 +86,8 @@
   <rect x="230" y="178" width="28" height="32" rx="3" fill="#f4845f"/>
   <rect x="234" y="182" width="8" height="6" rx="1" fill="#fff"/>
   <rect x="246" y="182" width="8" height="6" rx="1" fill="#fff"/>
-  <circle cx="237" cy="184" r="2" fill="#1a1a2e"/>
-  <circle cx="249" cy="184" r="2" fill="#1a1a2e"/>
+  <circle cx="237" cy="184" r="2" fill="#11201d"/>
+  <circle cx="249" cy="184" r="2" fill="#11201d"/>
   <rect x="238" y="194" width="12" height="3" rx="1" fill="#d4644a"/>
   <rect x="234" y="210" width="8" height="10" rx="2" fill="#f4845f"/>
   <rect x="246" y="210" width="8" height="10" rx="2" fill="#f4845f"/>

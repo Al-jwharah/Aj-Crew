@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 270">
-  <rect width="480" height="270" fill="#1a1b26"/>
+  <rect width="480" height="270" fill="#161e1c"/>
   <!-- Glow -->
   <circle cx="240" cy="140" r="70" fill="#f97316" fill-opacity="0.06"/>
   <!-- Rocket body -->
