@@ -11701,5 +11701,20 @@
     "header_progress": "{{done}} of {{total}} features tried",
     "more_to_try": "Also worth a look",
     "video_failed": "Feature video could not be loaded"
+  },
+  "simpleLayout": {
+    "recent": "Recent",
+    "no_chats": "No chats yet",
+    "all_chats": "All chats",
+    "more": "More",
+    "suggestions_label": "Suggested tasks",
+    "layout_label": "Layout",
+    "layout_hint": "Simple is chat-first: one sidebar, a quiet top bar, and a centered message box on a new chat. Advanced is the full workspace shell. Both reach every feature.",
+    "layout_simple": "Simple",
+    "layout_advanced": "Advanced",
+    "switch_to_simple": "Switch to Simple layout",
+    "switch_to_advanced": "Switch to Advanced layout",
+    "switch_to_simple_hint": "Chat-first: one sidebar and a quiet top bar",
+    "switch_to_advanced_hint": "The full workspace shell"
   }
 }

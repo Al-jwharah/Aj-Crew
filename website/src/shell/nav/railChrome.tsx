@@ -44,7 +44,10 @@ export function RailHeaderGlyph({ avatar, boxClass, iconSize }: { avatar: string
 }
 
 /** The rail header: the brand mark that is also the collapse toggle. */
-export function RailBrandToggle({ effectiveCollapsed, toggleNav, avatar, branding, botName }: {
+export function RailBrandToggle({ effectiveCollapsed, toggleNav, avatar, branding, botName, arrow = true }: {
+  /** Draw the collapse arrow at the row's edge. The Simple layout leaves it
+   *  out: its top bar carries the sidebar toggle, and this row still toggles. */
+  arrow?: boolean
   effectiveCollapsed: boolean
   toggleNav: () => void
   avatar: string
@@ -139,7 +142,7 @@ export function RailBrandToggle({ effectiveCollapsed, toggleNav, avatar, brandin
             "blink"). Absolute-positioning removes that reserved space, so
             the logo stays put and the arrow just fades in at the edge. */}
         <AnimatePresence initial={false}>
-          {!effectiveCollapsed && (
+          {!effectiveCollapsed && arrow && (
             <motion.span
               key="collapse-arrow"
               initial={{ opacity: 0 }}

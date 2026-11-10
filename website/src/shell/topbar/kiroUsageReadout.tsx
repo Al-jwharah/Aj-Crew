@@ -126,6 +126,20 @@ export function useKiroUsageReadout() {
   return { kiroUsageOpen, setKiroUsageOpen, kiroUsageState, usageSegmentHidden, kiroAccountEntry }
 }
 
+/**
+ * Whether the credits reading asks for the person: sign-in is needed, the read
+ * failed, or the allowance (bonus grants included) is spent. The Simple layout
+ * keeps the readouts folded behind the connection glyph and shows this segment
+ * anyway while this holds, so a limit or a lost sign-in is never folded away.
+ */
+export function usageNeedsAttention(state: KiroAccountUsage): boolean {
+  if (state === 'signin-required' || state === 'failed' || state === 'config-unreadable') return true
+  if (!state || state === 'none' || isAccountOnly(state)) return false
+  const limit = state.limit + state.bonusCredits.reduce((sum, grant) => sum + grant.total, 0)
+  const used = state.used + state.bonusCredits.reduce((sum, grant) => sum + grant.used, 0)
+  return limit > 0 && used >= limit
+}
+
 /** The capsule's credits segment for the current reading, or nothing on a harness with no balance. */
 export function kiroUsageSegment({ kiroUsageState, usageSegmentHidden, setKiroUsageOpen }: {
   kiroUsageState: KiroAccountUsage

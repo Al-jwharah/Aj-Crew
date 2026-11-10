@@ -23760,5 +23760,20 @@
         "label_is_open_in_its_own_window_focus_it": "La app {{label}} está abierta en su propia ventana — enfócala"
       }
     }
+  },
+  "simpleLayout": {
+    "recent": "Recientes",
+    "no_chats": "Aún no hay chats",
+    "all_chats": "Todos los chats",
+    "more": "Más",
+    "suggestions_label": "Tareas sugeridas",
+    "layout_label": "Diseño",
+    "layout_hint": "Simple pone el chat primero: una barra lateral, una barra superior discreta y un cuadro de mensaje centrado en un chat nuevo. Avanzado es el espacio de trabajo completo. Ambos dan acceso a todas las funciones.",
+    "layout_simple": "Simple",
+    "layout_advanced": "Avanzado",
+    "switch_to_simple": "Cambiar al diseño simple",
+    "switch_to_advanced": "Cambiar al diseño avanzado",
+    "switch_to_simple_hint": "El chat primero: una barra lateral y una barra superior discreta",
+    "switch_to_advanced_hint": "El espacio de trabajo completo"
   }
 }

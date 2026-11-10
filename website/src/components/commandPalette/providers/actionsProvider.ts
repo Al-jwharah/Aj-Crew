@@ -2,13 +2,14 @@ import { createElement } from 'react'
 import type { ReactNode } from 'react'
 import { useMemo } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { Command, MessageSquarePlus, SunMoon, Keyboard, Pin } from 'lucide-react'
+import { Command, MessageSquarePlus, SunMoon, Keyboard, Pin, PanelsTopLeft, Fullscreen, Lightbulb, LifeBuoy } from 'lucide-react'
 
 import { useAppDispatch, useAppSelector, useAppStore } from '../../../store'
 import { createChatForView, reportCreateFailure, showCreatedChat } from '../../../lib/createdChatView'
 import { useAskingNavigate } from '../../NavigationLeaveGuard'
 import { useSessionActions } from '../../../hooks/useSessionActions'
 import { useTheme } from '../../../hooks/useTheme'
+import { useShellLayout, type ShellLayout } from '../../../hooks/useShellLayout'
 import { fuzzyMatch, makeScoreThenNameComparator } from '../../../utils/fuzzyMatch'
 import type { ResourceProvider, Result } from '../types'
 
@@ -74,6 +75,20 @@ export interface ActionsProviderDeps {
   openShortcuts: () => void
   /** Pin state + toggle for the active session; null when no session is active (action omitted). */
   pinCurrentSession?: { pinned: boolean; toggle: () => void } | null
+  /** The shell layout now drawn and its setter: backs "Switch to Simple / Advanced layout". */
+  shellLayout?: { layout: ShellLayout; set: (layout: ShellLayout) => void }
+  /** Shell commands the Simple layout's top bar does not draw; each action is omitted when absent. */
+  shellActions?: ShellPaletteActions
+}
+
+/**
+ * Commands owned by the app shell. The Advanced top bar has a control for each;
+ * the Simple top bar does not, so the palette is where they are reached there.
+ */
+export interface ShellPaletteActions {
+  toggleFocusMode?: () => void
+  requestFeature?: () => void
+  reportProblem?: () => void
 }
 
 const compareResults = makeScoreThenNameComparator<Result>(
@@ -136,6 +151,52 @@ export function createActionsProvider(deps: ActionsProviderDeps): ResourceProvid
     })
   }
 
+  if (deps.shellLayout) {
+    const { layout, set } = deps.shellLayout
+    const next: ShellLayout = layout === 'simple' ? 'advanced' : 'simple'
+    actions.push({
+      key: 'switch-layout',
+      get title() {
+        return next === 'advanced'
+          ? i18nT('simpleLayout.switch_to_advanced')
+          : i18nT('simpleLayout.switch_to_simple')
+      },
+      get subtitle() {
+        return next === 'advanced'
+          ? i18nT('simpleLayout.switch_to_advanced_hint')
+          : i18nT('simpleLayout.switch_to_simple_hint')
+      },
+      icon: inlineIcon(PanelsTopLeft),
+      run: () => set(next),
+    })
+  }
+
+  const { toggleFocusMode, requestFeature, reportProblem } = deps.shellActions ?? {}
+  if (toggleFocusMode) {
+    actions.push({
+      key: 'focus-mode',
+      get title() { return i18nT('app.focus_mode') },
+      icon: inlineIcon(Fullscreen),
+      run: toggleFocusMode,
+    })
+  }
+  if (requestFeature) {
+    actions.push({
+      key: 'request-feature',
+      get title() { return i18nT('app.request_a_feature_2') },
+      icon: inlineIcon(Lightbulb),
+      run: requestFeature,
+    })
+  }
+  if (reportProblem) {
+    actions.push({
+      key: 'report-problem',
+      get title() { return i18nT('components.reportProblemModal.report_a_problem') },
+      icon: inlineIcon(LifeBuoy),
+      run: reportProblem,
+    })
+  }
+
   return {
     id: PROVIDER_ID,
     // A GETTER, not a plain call: the provider object is built inside a `useMemo`
@@ -182,12 +243,13 @@ export function createActionsProvider(deps: ActionsProviderDeps): ResourceProvid
  *   palette host because the `ShortcutsModal` open state is owned by the app
  *   shell, not a global store slice (mirrors `useKeyboardShortcuts`).
  */
-export function useActionsProvider(opts: { openShortcuts: () => void }): ResourceProvider {
+export function useActionsProvider(opts: { openShortcuts: () => void; shellActions?: ShellPaletteActions }): ResourceProvider {
   const dispatch = useAppDispatch()
   const store = useAppStore()
   const navigate = useAskingNavigate()
   const { cycle } = useTheme()
-  const { openShortcuts } = opts
+  const { openShortcuts, shellActions } = opts
+  const [layout, setLayout] = useShellLayout()
 
   const { togglePin } = useSessionActions()
   const activeSlot = useAppSelector((s) => s.chat.activeSlot)
@@ -217,7 +279,9 @@ export function useActionsProvider(opts: { openShortcuts: () => void }): Resourc
         pinCurrentSession: activeSlot
           ? { pinned: activePinned, toggle: () => togglePin(activeSlot) }
           : null,
+        shellLayout: { layout, set: setLayout },
+        shellActions,
       }),
-    [doNewSession, cycle, openShortcuts, activeSlot, activePinned, togglePin],
+    [doNewSession, cycle, openShortcuts, activeSlot, activePinned, togglePin, layout, setLayout, shellActions],
   )
 }

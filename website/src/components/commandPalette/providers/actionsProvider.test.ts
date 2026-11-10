@@ -129,6 +129,52 @@ describe('createActionsProvider — pin current session', () => {
   })
 })
 
+describe('createActionsProvider — shell layout', () => {
+  it('omits the layout action unless the shell supplies the layout', async () => {
+    const { d } = deps()
+    const titles = (await run(createActionsProvider(d), '')).map((r) => r.title)
+    expect(titles).not.toContain('Switch to Advanced layout')
+    expect(titles).not.toContain('Switch to Simple layout')
+  })
+
+  it('offers the other layout and sets it on activation', async () => {
+    const { d } = deps()
+    const set = vi.fn()
+    const fromSimple = await run(createActionsProvider({ ...d, shellLayout: { layout: 'simple', set } }), 'layout')
+    expect(fromSimple.map((r) => r.title)).toEqual(['Switch to Advanced layout'])
+    expect(fromSimple[0].id).toBe('actions:switch-layout')
+    fromSimple[0].onActivate()
+    expect(set).toHaveBeenLastCalledWith('advanced')
+
+    const fromAdvanced = await run(createActionsProvider({ ...d, shellLayout: { layout: 'advanced', set } }), 'layout')
+    expect(fromAdvanced.map((r) => r.title)).toEqual(['Switch to Simple layout'])
+    fromAdvanced[0].onActivate()
+    expect(set).toHaveBeenLastCalledWith('simple')
+  })
+})
+
+describe('createActionsProvider — shell commands', () => {
+  // The Simple top bar draws no control for these three; the palette is where
+  // they are reached there.
+  it('omits each command the shell does not supply', async () => {
+    const { d } = deps()
+    const titles = (await run(createActionsProvider({ ...d, shellActions: {} }), '')).map((r) => r.title)
+    for (const title of ['Focus mode', 'Request a Feature', 'Report a Problem']) expect(titles).not.toContain(title)
+  })
+
+  it('runs focus mode, the feature request and the problem report', async () => {
+    const { d } = deps()
+    const shellActions = { toggleFocusMode: vi.fn(), requestFeature: vi.fn(), reportProblem: vi.fn() }
+    const arr = await run(createActionsProvider({ ...d, shellActions }), '')
+    arr.find((r) => r.title === 'Focus mode')!.onActivate()
+    arr.find((r) => r.title === 'Request a Feature')!.onActivate()
+    arr.find((r) => r.title === 'Report a Problem')!.onActivate()
+    expect(shellActions.toggleFocusMode).toHaveBeenCalledTimes(1)
+    expect(shellActions.requestFeature).toHaveBeenCalledTimes(1)
+    expect(shellActions.reportProblem).toHaveBeenCalledTimes(1)
+  })
+})
+
 describe('createActionsProvider — filtering', () => {
   it('filters to actions whose title matches the query', async () => {
     const { d } = deps()

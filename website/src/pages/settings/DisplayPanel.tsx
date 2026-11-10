@@ -1,4 +1,5 @@
 import { Loader2, Eye, Type, SquareTerminal, FileCode, Palette, PanelLeft, Monitor, Sun, Moon, FolderOpen } from 'lucide-react'
+import { useShellLayout, type ShellLayout } from '../../hooks/useShellLayout'
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { useZoomCtx } from '../../hooks/ZoomProvider'
@@ -137,6 +138,7 @@ export function DisplayPanel({ basePath }: { basePath?: string } = {}) {
   // "Show search in the top bar", on by default. useAppShell reads the same key
   // to draw the header, and usePersistedBool keeps the two readers in step.
   const [topbarSearch, setTopbarSearch] = usePersistedBool('mc-topbar-search', true)
+  const [shellLayout, setShellLayout] = useShellLayout()
   const { botName, directLocal } = useBranding()
   const termFont = useTerminalFont()
   // Probed families become picker rows previewed in their own family, so the
@@ -737,6 +739,16 @@ export function DisplayPanel({ basePath }: { basePath?: string } = {}) {
               message={i18nT('settings.display.language.sync_failed')}
             />
           )}
+          {/* Which shell the dashboard draws (hooks/useShellLayout). Browser-
+              local like the two switches below; every open tab follows it at
+              once, no reload. Advanced is the full workspace shell; Simple
+              keeps every destination, behind fewer controls. */}
+          <SettingsButtonGroup label={i18nT('simpleLayout.layout_label')} hint={i18nT('simpleLayout.layout_hint')} value={shellLayout}
+            options={[
+              { value: 'simple', label: i18nT('simpleLayout.layout_simple') },
+              { value: 'advanced', label: i18nT('simpleLayout.layout_advanced') },
+            ]}
+            onChange={v => setShellLayout(v as ShellLayout)} />
           <SettingsButtonGroup label={i18nT('pages.settings.displayPanel.interface')} hint={i18nT('pages.settings.displayPanel.chat_bubbles_or_cli_style_line_by_line_output')} value={uiMode}
             options={[
               { value: 'chat', label: i18nT('pages.settings.displayPanel.interface_chat') },

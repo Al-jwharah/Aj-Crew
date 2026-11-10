@@ -22672,5 +22672,20 @@
         "label_is_open_in_its_own_window_focus_it": "{{label}} 앱은 별도 창에서 열려 있습니다 — 그 창으로 포커스 이동"
       }
     }
+  },
+  "simpleLayout": {
+    "recent": "최근",
+    "no_chats": "아직 채팅이 없습니다",
+    "all_chats": "모든 채팅",
+    "more": "더 보기",
+    "suggestions_label": "추천 작업",
+    "layout_label": "레이아웃",
+    "layout_hint": "단순 레이아웃은 채팅 중심입니다. 사이드바 하나, 간결한 상단 바, 새 채팅에서는 가운데에 놓인 메시지 상자를 사용합니다. 고급 레이아웃은 전체 작업 공간입니다. 두 레이아웃 모두 모든 기능을 사용할 수 있습니다.",
+    "layout_simple": "단순",
+    "layout_advanced": "고급",
+    "switch_to_simple": "단순 레이아웃으로 전환",
+    "switch_to_advanced": "고급 레이아웃으로 전환",
+    "switch_to_simple_hint": "채팅 중심: 사이드바 하나와 간결한 상단 바",
+    "switch_to_advanced_hint": "전체 작업 공간"
   }
 }

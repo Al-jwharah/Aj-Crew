@@ -64,12 +64,15 @@ export function readMetricsFrame(raw: SysMetricsFrame) {
   }
 }
 
+/** The Simple layout's readout fold ('0' open). Folded by default. */
+export const SIMPLE_CAPSULE_KEY = 'mc-simple-topbar-capsule-collapsed'
+
 /**
  * The readout capsule's own state: its collapse to the bare connection dot, and
  * the system-metrics control — the inline readings, the narrow-band popover, the
  * hover card and the metrics query they all read.
  */
-export function useMetricsReadout(isMobile: boolean, updateAvailable: boolean, actionsLevel: number) {
+export function useMetricsReadout(isMobile: boolean, updateAvailable: boolean, actionsLevel: number, simpleLayout = false) {
   const [metricsOpen, setMetricsOpen] = useState(() => localStorage.getItem('mc-topbar-metrics') === '1')
   // The inline metric readings are dropped by a CSS container-query rung when
   // the actions group runs out of room (the ladder in index.css, whose rungs
@@ -88,7 +91,20 @@ export function useMetricsReadout(isMobile: boolean, updateAvailable: boolean, a
   const metricsPopoverRef = useRef<HTMLDivElement>(null)
   // Readout capsule collapse: clicking the connection dot folds the capsule
   // down to just the dot; clicking again restores the full readout.
-  const [capsuleCollapsed, setCapsuleCollapsed] = usePersistedBool('mc-topbar-capsule-collapsed', false)
+  const [advancedCollapsed, setAdvancedCollapsed] = usePersistedBool('mc-topbar-capsule-collapsed', false)
+  // The Simple layout keeps its own fold, closed until the user opens it: the
+  // readouts sit behind the connection glyph there, and opening them must not
+  // change what the Advanced top bar shows (or the other way round). Persisted
+  // only on a change, so an Advanced-only install never gains the key.
+  const [simpleCollapsed, setSimpleCollapsed] = useState(() => localStorage.getItem(SIMPLE_CAPSULE_KEY) !== '0')
+  const simpleCollapsedStored = useRef(simpleCollapsed)
+  useEffect(() => {
+    if (simpleCollapsedStored.current === simpleCollapsed) return
+    simpleCollapsedStored.current = simpleCollapsed
+    safeSetItem(SIMPLE_CAPSULE_KEY, simpleCollapsed ? '1' : '0')
+  }, [simpleCollapsed])
+  const capsuleCollapsed = simpleLayout ? simpleCollapsed : advancedCollapsed
+  const setCapsuleCollapsed = simpleLayout ? setSimpleCollapsed : setAdvancedCollapsed
   const [capsuleLayoutPulse, setCapsuleLayoutPulse] = useState(false)
   const capsulePulseTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
   const pulseCapsuleLayout = useCallback(() => {
@@ -352,9 +368,14 @@ export function metricsSegment(metrics: MetricsReadout, seg: string): ReactNode 
 }
 
 /** The read-failure hand-off that follows the desktop capsule. */
-export function MetricsErrorNotice({ metrics }: { metrics: MetricsReadout }) {
+export function MetricsErrorNotice({ metrics, throughFold = false }: {
+  metrics: MetricsReadout
+  /** Simple layout: the readouts start folded there, and a failed read of a
+   *  readout the person turned on must not be folded away with them. */
+  throughFold?: boolean
+}) {
   const { capsuleCollapsed, metricsOpen, sysMetrics, sysMetricsError } = metrics
-  if (capsuleCollapsed || !metricsOpen || sysMetrics || !sysMetricsError) return null
+  if ((capsuleCollapsed && !throughFold) || !metricsOpen || sysMetrics || !sysMetricsError) return null
   const message = i18nT('app.metrics_unavailable')
   return (
     <ErrorNotice
