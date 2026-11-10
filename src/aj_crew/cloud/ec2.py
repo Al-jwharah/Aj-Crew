@@ -72,8 +72,9 @@ _POLL_TIMEOUT = 60
 
 # --- input validation (values flow into subprocess argv) -------------------
 # Cap at 51 chars: the template names the IAM role/instance-profile
-# `ajcrew-ec2-${StackTag}` (13-char prefix), and IAM role names max out at 64,
-# so 13 + 51 = 64. A longer tag would fail role creation at deploy time.
+# `ajcrew-ec2-${StackTag}` (11-char prefix), and IAM role names max out at 64,
+# so 11 + 51 = 62 fits. The cap was sized for a 13-char prefix and is kept, so
+# a tag that was valid before stays valid and nothing that was refused is let in.
 _TAG_RE = re.compile(r"^[a-zA-Z0-9-]{1,51}\Z")
 _TAG_SPEC = FieldSpec(name="tag", type=str, max_len=51, pattern=_TAG_RE)
 _REGION_RE = re.compile(r"^[a-z]{2}-[a-z]+-\d+\Z")

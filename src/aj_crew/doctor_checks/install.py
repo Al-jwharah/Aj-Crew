@@ -349,7 +349,9 @@ def _doctor_path_launcher() -> None:
     render._print_wrapped(
         "Both can coexist — the wheel keeps its own updates — but `ajcrew` in a "
         "terminal runs the one on PATH, which may be a different version or "
-        "channel. Run `ajcrew setup` from the install you want to own the name."
+        "channel. Run `ajcrew setup` from the install you want to own the name.",
+        # One line: a break between the two words leaves a command that cannot be pasted.
+        keep=("`ajcrew setup`",),
     )
 
 

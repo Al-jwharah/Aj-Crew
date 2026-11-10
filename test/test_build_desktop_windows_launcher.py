@@ -212,9 +212,9 @@ def test_relocates_every_frozen_pip_launcher_and_leaves_native_exes(tmp_path: Pa
 
     assert replaced == ["httpx", "pwcpp-cli"]
     assert sorted(p.name for p in scripts.iterdir()) == [
+        "ajcrew.cmd",
         "httpx-script.py",
         "httpx.cmd",
-        "ajcrew.cmd",
         "pwcpp-cli-script.py",
         "pwcpp-cli.cmd",
         "uv.exe",

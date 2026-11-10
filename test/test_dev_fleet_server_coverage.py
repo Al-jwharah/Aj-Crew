@@ -274,7 +274,7 @@ async def test_load_fallback_repos_skips_same_named_fork(monkeypatch):
             if remote == "ajcrew":
                 return 0, "https://github.com/Al-jwharah/Aj-Crew.git\n", ""
             # Same repo NAME, different owner — a fork, not a pre-rename repo.
-            return 0, "git@github.com:someone/AjCrew.git\n", ""
+            return 0, "git@github.com:someone/Aj-Crew.git\n", ""
         return 1, "", "unexpected"
 
     monkeypatch.setattr(repository, "_repo", lambda: "/fake/repo")
@@ -302,7 +302,7 @@ async def test_load_fallback_repos_keeps_renamed_repo_alongside_a_fork(monkeypat
             if remote == "ajcrew":
                 return 0, "https://github.com/Al-jwharah/Aj-Crew.git\n", ""
             if remote == "fork":
-                return 0, "git@github.com:someone/AjCrew.git\n", ""
+                return 0, "git@github.com:someone/Aj-Crew.git\n", ""
             return 0, "git@github.com:kirodotdev/kirocrew-old.git\n", ""
         return 1, "", "unexpected"
 
@@ -317,10 +317,10 @@ def test_normalize_repo_identity_spellings_and_host():
     """Same repo across https/scp/.git spellings is one identity; host matters."""
     https = repository._normalize_repo_identity("https://github.com/Al-jwharah/Aj-Crew.git")
     scp = repository._normalize_repo_identity("git@github.com:Al-jwharah/Aj-Crew")
-    assert https == scp == ("github.com", "kirodotdev/kirocrew")
+    assert https == scp == ("github.com", "al-jwharah/aj-crew")
     # Same owner/repo on a different forge is a DISTINCT identity.
-    other = repository._normalize_repo_identity("https://gitlab.com/kirodotdev/kirocrew.git")
-    assert other == ("gitlab.com", "kirodotdev/kirocrew")
+    other = repository._normalize_repo_identity("https://gitlab.com/Al-jwharah/Aj-Crew.git")
+    assert other == ("gitlab.com", "al-jwharah/aj-crew")
     assert other != https
     # Unparseable URL yields None.
     assert repository._normalize_repo_identity("not-a-url") is None

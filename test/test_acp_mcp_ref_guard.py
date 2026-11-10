@@ -353,12 +353,12 @@ class TestTheWarning:
             found = warn_unresolved_server_refs(
                 spec, [], backend=backend, agent="ajcrew", gateway_enabled=False
             )
-        assert found == ["@glean", "@ajcrew-core"]
+        assert found == ["@ajcrew-core", "@glean"]
         text = caplog.records[-1].getMessage()
         assert text == (
             "agent-spec tool refs name no MCP server in Crew's projection for this "
-            f"session: backend={backend!r} agent='ajcrew' unresolved=@glean, "
-            "@ajcrew-core mcp_gateway=off. Crew's projection delivers none of those "
+            f"session: backend={backend!r} agent='ajcrew' unresolved=@ajcrew-core, "
+            "@glean mcp_gateway=off. Crew's projection delivers none of those "
             "servers; the harness may mount a same-named server from its own "
             "configuration, so a listed ref may still be served and this line cannot "
             "tell which. The harness still works. A backend that reads no agent file "
@@ -1189,7 +1189,7 @@ class TestGateWithheldServers:
         found = warn_unresolved_server_refs(
             self._SPEC, [], backend=ACP_BACKEND_CODEX, agent="a", gateway_enabled=False
         )
-        assert found == ["@glean", "@ajcrew-computer"]
+        assert found == ["@ajcrew-computer", "@glean"]
 
     def test_a_raising_gate_keeps_its_ref_reported(self, monkeypatch):
         # Emission withholds the server; the diagnostic still names it, as doctor does.
@@ -1203,7 +1203,7 @@ class TestGateWithheldServers:
         found = warn_unresolved_server_refs(
             self._SPEC, [], backend=ACP_BACKEND_CODEX, agent="a", gateway_enabled=False
         )
-        assert found == ["@glean", "@ajcrew-computer"]
+        assert found == ["@ajcrew-computer", "@glean"]
 
     def test_an_unreadable_registry_drops_nothing(self, monkeypatch):
         class Broken(dict):

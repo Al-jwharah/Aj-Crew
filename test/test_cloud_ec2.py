@@ -198,9 +198,9 @@ class TestValidation:
             ec2.validate_tag("bad;rm -rf")
 
     def test_tag_length_capped_for_iam_role_name(self):
-        # ajcrew-ec2-<tag> must fit IAM's 64-char role-name limit; 13-char
-        # prefix + tag <= 64 => tag <= 51.
-        assert len("ajcrew-ec2-") + 51 == 64
+        # ajcrew-ec2-<tag> must fit IAM's 64-char role-name limit. The cap is
+        # 51, sized for a 13-char prefix; the 11-char one leaves two to spare.
+        assert len("ajcrew-ec2-") + 51 <= 64
         ec2.validate_tag("a" * 51)  # ok
         with pytest.raises(ValidationError):
             ec2.validate_tag("a" * 52)

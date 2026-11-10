@@ -53,7 +53,10 @@ DEFAULTS_JSON = REPO_ROOT / "src" / "aj_crew" / "config" / "defaults.json"
 # ``.ajcrew`` NOT followed by ``-`` or ``.`` -- so the top-level siblings that
 # genuinely did not move (``.ajcrew-pods``, ``.ajcrew-dev``,
 # ``.ajcrew.breadcrumb``, ``.ajcrew.archived``) are not false positives.
-LEGACY_HOME = re.compile(r"\.ajcrew(?![-.])")
+# The lookbehind keeps a dotted identifier that merely ends in the name (the
+# app id ``io.github.al-jwharah.ajcrew``) from reading as a home path: a home
+# directory is always introduced by a separator or a quote, never by a label.
+LEGACY_HOME = re.compile(r"(?<![A-Za-z0-9_-])\.ajcrew(?![-.])")
 
 CURRENT_HOME = "/.kiro/crew"
 

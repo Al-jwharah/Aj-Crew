@@ -58,12 +58,12 @@ GITHUB_ENTRY = {
 def test_the_worker_is_read_as_it_runs():
     has = cat.worker_has(WORKER, SKILLS)
     assert has["servers"] == [
+        {"name": "ajcrew-core", "runs_without_asking": "all"},
         {
             "name": "jira",
             "runs_without_asking": ["get_issue", "search"],
             "switched_off": ["delete_issue"],
         },
-        {"name": "ajcrew-core", "runs_without_asking": "all"},
     ]
     assert has["skills"] == ["release"]
     assert has["builtin_tools_left_out"] == ["execute_bash"]
@@ -166,7 +166,7 @@ def test_find_capabilities_answers_worker_then_gateway_then_registry(crewmate, m
     status, body = _post(state, FIND, "/api/member/self/capabilities", {"query": "acme"})
     assert status == 200, body
     assert list(body) == ["worker", "gateway", "registry", "next"]
-    assert [s["name"] for s in body["worker"]["servers"]] == ["jira", "ajcrew-core"]
+    assert [s["name"] for s in body["worker"]["servers"]] == ["ajcrew-core", "jira"]
     assert [s["name"] for s in body["gateway"]["servers"]] == ["github", "slack"]
     assert body["registry"][0]["id"] == "io.github/acme-mcp"
     assert "repo_url" not in body["registry"][0]

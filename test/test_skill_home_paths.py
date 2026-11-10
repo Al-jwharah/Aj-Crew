@@ -31,7 +31,9 @@ SKILL_SUFFIXES = {".md", ".sh", ".py"}
 #   ~/.ajcrew-dev        -> per-worktree dev data dir (dev-backend.sh)
 #   ~/.ajcrew.breadcrumb -> recovery pointer written beside the home
 # The negative lookahead below is what distinguishes them from the old home.
-LEGACY_HOME = re.compile(r"\.ajcrew(?![-.])")
+# The lookbehind skips a dotted identifier that only ends in the name, such as
+# the app id ``io.github.al-jwharah.ajcrew``.
+LEGACY_HOME = re.compile(r"(?<![A-Za-z0-9_-])\.ajcrew(?![-.])")
 
 CURRENT_HOME_POSIX = "~/.kiro/crew"
 

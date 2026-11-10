@@ -136,7 +136,7 @@ def _evaluate(
             "PR_BODY": body,
             "PR_DRAFT": "true" if draft else "false",
             "GITHUB_OUTPUT": str(output),
-            "GITHUB_REPOSITORY": "kirodotdev/KiroCrew",
+            "GITHUB_REPOSITORY": "Al-jwharah/Aj-Crew",
         }
     )
     env.pop("PR_CALLER", None)
