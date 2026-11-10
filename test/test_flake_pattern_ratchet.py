@@ -26,7 +26,7 @@ import subprocess
 import tokenize
 import warnings
 from collections import Counter
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Iterator
 from pathlib import Path
 
 import pytest
@@ -1069,14 +1069,15 @@ def _counted(rel: str) -> bool:
     return _is_python_test_file(rel) or _is_js_test_file(rel)
 
 
-def _sites_at(root: Path, base: str | None, rel: str | None) -> tuple[_Sites, _Sites]:
+def _sites_at(source: Path | Iterator[str | None], rel: str | None) -> tuple[_Sites, _Sites]:
+    """Sites of *rel*: read under a root, or taken as the next text of files at the base."""
     if rel is None or not _counted(rel):
         return Counter(), Counter()
-    if base is not None:
-        text = ratchet_scope.show_at(base, rel, cwd=root)
+    if not isinstance(source, Path):
+        text = next(source)
     else:
         try:
-            text = (root / rel).read_text(encoding="utf-8")
+            text = (source / rel).read_text(encoding="utf-8")
         except (OSError, UnicodeDecodeError):
             text = None
     return sites(rel, text) if text is not None else (Counter(), Counter())
@@ -1152,9 +1153,12 @@ def change_risen(root: Path, base: str) -> dict[tuple[str, str], tuple[int, int]
     befores: list[_Sites] = []
     nows: list[_Sites] = []
     gones: list[_Sites] = []
-    for old, new in sorted(changed_files(root, base), key=lambda pair: str(pair[1] or pair[0])):
-        before, _before_present = _sites_at(root, base, old)
-        now, now_present = _sites_at(root, None, new)
+    pairs = sorted(changed_files(root, base), key=lambda pair: str(pair[1] or pair[0]))
+    olds = [old for old, _new in pairs if old is not None and _counted(old)]
+    base_texts = ratchet_scope.show_each_at(base, olds, cwd=root)  # in this loop's order
+    for old, new in pairs:
+        before, _before_present = _sites_at(base_texts, old)
+        now, now_present = _sites_at(root, new)
         paths.append(new)
         befores.append(before)
         nows.append(now)

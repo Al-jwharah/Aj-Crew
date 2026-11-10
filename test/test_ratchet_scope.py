@@ -28,6 +28,7 @@ import os
 import shutil
 import subprocess
 from pathlib import Path
+from typing import Any
 
 import pytest
 from git_maintenance_helpers import git_maintenance_off_entries
@@ -982,3 +983,68 @@ class TestChangeFilesAndShowAt:
     ) -> None:
         assert scope.show_at(self._base(repo), "a.txt", cwd=repo.root) == "one\n"
         assert scope.show_at(self._base(repo), "nope.txt", cwd=repo.root) is None
+
+    #: Every kind of path a caller can ask for, a repeat included.
+    _ASKED = (
+        "a.txt",
+        "crlf.txt",
+        "not-utf8.txt",
+        "empty.txt",
+        "no-final-newline.txt",
+        "with space.txt",
+        "sub",
+        "sub/inner.txt",
+        "nope.txt",
+        "nope missing",
+        "a\nb.txt",
+        "a.txt",
+    )
+
+    def _commit_every_kind_of_file(self, repo: _RepoHelper) -> str:
+        (repo / "crlf.txt").write_bytes(b"one\r\ntwo\rthree\n")
+        (repo / "not-utf8.txt").write_bytes(b"\xff\xfe not text\n")
+        (repo / "empty.txt").write_bytes(b"")
+        (repo / "no-final-newline.txt").write_bytes(b"no final newline")
+        (repo / "with space.txt").write_bytes(b"spaced\n")
+        (repo / "sub").mkdir()
+        (repo / "sub" / "inner.txt").write_bytes(b"inner\n")
+        repo.git("add", "-A")
+        repo.git("commit", "-q", "-m", "every kind of file")
+        return repo.git("rev-parse", "HEAD")
+
+    @pytest.mark.parametrize("batch", [1, 2, 256])
+    def test_show_each_at_answers_exactly_as_show_at_does(
+        self, repo: _RepoHelper, monkeypatch: pytest.MonkeyPatch, batch: int
+    ) -> None:
+        base = self._commit_every_kind_of_file(repo)
+        monkeypatch.setattr(scope, "_SHOW_BATCH", batch)
+
+        each = list(scope.show_each_at(base, self._ASKED, cwd=repo.root))
+
+        assert each == [scope.show_at(base, path, cwd=repo.root) for path in self._ASKED]
+        assert each[:4] == ["one\n", "one\ntwo\nthree\n", "\ufffd\ufffd not text\n", ""]
+        assert each[4] == "no final newline"
+        assert each[8:11] == [None, None, None]
+
+    def test_show_each_at_reads_many_files_in_one_process(
+        self, repo: _RepoHelper, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        base = self._commit_every_kind_of_file(repo)
+        files = [path for path in self._ASKED if path.endswith(".txt") and "\n" not in path]
+        started: list[list[str]] = []
+        real_run = subprocess.run
+
+        def counting_run(argv: list[str], **kwargs: Any) -> Any:
+            started.append(argv)
+            return real_run(argv, **kwargs)
+
+        monkeypatch.setattr(scope.subprocess, "run", counting_run)
+
+        each = list(scope.show_each_at(base, files, cwd=repo.root))
+
+        assert started == [["git", "cat-file", "--batch"]]
+        assert each.count(None) == 1  # nope.txt, answered "missing" by the same process
+
+    def test_show_each_at_of_an_unknown_base_is_all_absent(self, repo: _RepoHelper) -> None:
+        asked = ["a.txt", "b.txt"]
+        assert list(scope.show_each_at("no-such-ref", asked, cwd=repo.root)) == [None, None]
