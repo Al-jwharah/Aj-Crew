@@ -455,7 +455,7 @@ _REAL_MODEL = os.environ.get("AJCREW_TEST_EMBED_MODEL", "")
 # plus the shipped model's pin. Proven on linux_x86_64 with the shipped
 # qwen3-embedding-0.6b.gguf, sha256
 # 06507c7b42688469c4e7298b0a1e16deff06caf291cf0a5b278c308249c3e439.
-_PROVEN_RUNTIME_DIGEST = "f21927a85bc583a0f395251864096a70a9f91396268bcf7c31aa9bb7d765debc"
+_PROVEN_RUNTIME_DIGEST = "420d1a08bec45143b8128cc55510d9a2bcac1fc55e69b86ac6c25360417d9858"
 _EMBED_PATH_BINDINGS = ("llama_cpp/llama.py", "llama_cpp/_internals.py", "llama_cpp/llama_cpp.py")
 _VENDOR_MANIFEST = (
     pathlib.Path(__file__).resolve().parents[1] / "scripts" / "vendor_manifest.sha256"
