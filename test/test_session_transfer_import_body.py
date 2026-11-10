@@ -32,7 +32,7 @@ from session_transfer_helpers import (  # noqa: F401 -- the autouse fixture regi
     _valid,
 )
 
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.testing.wait import async_wait_until, await_until
 
 # ── install from a FILE: the body format ─────────────────────────────────
 
@@ -45,7 +45,7 @@ async def test_import_accepts_the_exact_bytes_the_export_endpoint_writes(monkeyp
     a test that re-implements the sending half could pass while the two halves
     disagree about the format.
     """
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     resp = await _run_import(st, monkeypatch, None, gz=_export_gz(_valid()))
 
@@ -58,7 +58,7 @@ async def test_import_still_accepts_a_plain_json_body(monkeypatch):
     """The tunnel's server-to-server caller posts uncompressed JSON and must not
     break: the sender is an independently-updated install, so a receiver that
     started demanding gzip would refuse every peer that has not shipped this."""
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     resp = await _run_import(st, monkeypatch, _valid())
 
@@ -71,7 +71,7 @@ async def test_import_sniffs_the_magic_and_not_the_content_type(monkeypatch):
     for the type — often ``application/octet-stream``, sometimes nothing. The
     stub request carries NO content type at all, so a handler that branched on
     the header could not reach the gzip path this asserts."""
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     request = _make_request(_stub_state(st, monkeypatch), None, gz=_export_gz(_valid()))
     assert not hasattr(request, "content_type")
@@ -89,7 +89,7 @@ async def test_import_refuses_a_corrupt_gzip_with_its_own_code(monkeypatch):
     ``transfer_invalid_json`` it would go looking for a syntax error in a
     document it never wrote by hand.
     """
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     truncated = _export_gz(_valid())[: len(_export_gz(_valid())) // 2]
     resp = await _run_import(st, monkeypatch, None, gz=truncated)
@@ -101,7 +101,7 @@ async def test_import_refuses_a_corrupt_gzip_with_its_own_code(monkeypatch):
 @pytest.mark.asyncio
 async def test_import_still_refuses_plain_garbage_as_bad_json(monkeypatch):
     """Bytes that are neither gzip nor JSON keep the code they always had."""
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     state = _stub_state(st, monkeypatch)
     resp = await st.api_chat_slot_import(_make_request(state, None, raw="{not json"))
@@ -113,7 +113,7 @@ async def test_import_still_refuses_plain_garbage_as_bad_json(monkeypatch):
 @pytest.mark.asyncio
 async def test_import_names_a_zip_archive_as_an_unsupported_format(monkeypatch):
     """A Kiro IDE session export is a zip; it is refused as a format, not as bad JSON."""
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     archive = io.BytesIO()
     with zipfile.ZipFile(archive, "w") as zf:
@@ -131,7 +131,7 @@ async def test_import_has_no_size_ceiling(monkeypatch):
     decompressed body imports successfully — the owner's decision that a transfer
     is never blocked by size.
     """
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     huge = _valid(
         messages=[{"role": "user", "content": "x" * 4_000_000, "ts": ""} for _ in range(8)]
@@ -152,7 +152,7 @@ def test_import_never_reads_the_whole_body_into_memory():
     import ast
     from pathlib import Path as _Path
 
-    import kiro_crew.dashboard.session_transfer as st
+    import aj_crew.dashboard.session_transfer as st
 
     tree = ast.parse(
         "\n".join(
@@ -200,7 +200,7 @@ async def test_concurrent_expansions_are_bounded_and_the_excess_is_refused(monke
     presence of a semaphore: the gunzip is replaced with one that records how
     many are inside it at once.
     """
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     monkeypatch.setattr(st, "_expansion_lock", None)
     monkeypatch.setattr(st, "_expansion_slots", None)
@@ -252,7 +252,7 @@ async def test_the_expansion_permit_outlives_the_decompression(monkeypatch):
     A decompressed bundle stays resident through redaction and persistence, so the bound
     is on how many are resident at once. Measured inside the post-decompression pass.
     """
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     monkeypatch.setattr(st, "_expansion_lock", None)
     monkeypatch.setattr(st, "_expansion_slots", None)
@@ -308,7 +308,7 @@ async def test_the_transcript_only_mark_reads_layer_b_skipped_not_absence(monkey
     * no Layer B, ``layer_b_skipped`` set: context was withheld; marked.
     * Layer B present: not marked.
     """
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     never_had = await _run_import(st, monkeypatch, None, gz=_export_gz(_valid()), return_slot=True)
     assert "transcript only" not in never_had.title
@@ -339,8 +339,8 @@ async def test_an_exported_file_installs_with_no_step_in_between(tmp_path):
     from aiohttp.test_utils import TestClient, TestServer
     from chat_test_helpers import _make_state
 
-    from kiro_crew.dashboard.session_export import api_chat_slot_export
-    from kiro_crew.dashboard.session_transfer import api_chat_slot_import
+    from aj_crew.dashboard.session_export import api_chat_slot_export
+    from aj_crew.dashboard.session_transfer import api_chat_slot_import
 
     state = _make_state(tmp_path)
     # Make the SOURCE session auto-approving, so the exported file genuinely
@@ -426,7 +426,7 @@ async def test_a_body_past_the_server_client_max_size_still_imports(tmp_path):
     from aiohttp.test_utils import TestClient, TestServer
     from chat_test_helpers import _make_state
 
-    from kiro_crew.dashboard.session_transfer import api_chat_slot_import
+    from aj_crew.dashboard.session_transfer import api_chat_slot_import
 
     app = web.Application(client_max_size=1024)
     app["state"] = _make_state(tmp_path)
@@ -437,7 +437,7 @@ async def test_a_body_past_the_server_client_max_size_still_imports(tmp_path):
     # character would compress to well under 1 KiB and prove nothing about gzip).
     big = _valid(
         origin="seedbox",
-        # nosemgrep: kirocrew.test-unseeded-random -- pre-existing high-entropy filler: no assertion reads its bytes, only its size against the limit; moved verbatim
+        # nosemgrep: ajcrew.test-unseeded-random -- pre-existing high-entropy filler: no assertion reads its bytes, only its size against the limit; moved verbatim
         messages=[{"role": "user", "content": os.urandom(40_000).hex(), "ts": ""}],
     )
     plain = json.dumps(big).encode()
@@ -470,7 +470,7 @@ async def test_a_body_past_the_server_client_max_size_still_imports(tmp_path):
 async def test_gzip_is_sniffed_across_a_one_byte_first_chunk(tmp_path, chunks):
     """The gzip magic is two bytes; a network chunk can be one. Deciding from a
     one-byte prefix would read every such gzip body as plain JSON."""
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     dst = tmp_path / "body"
     is_gzip, total = await st._stream_request_to_file(
@@ -484,7 +484,7 @@ async def test_gzip_is_sniffed_across_a_one_byte_first_chunk(tmp_path, chunks):
 
 @pytest.mark.asyncio
 async def test_a_body_shorter_than_the_magic_is_kept_whole(tmp_path):
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     dst = tmp_path / "body"
     is_gzip, total = await st._stream_request_to_file(
@@ -500,7 +500,7 @@ async def test_the_temp_file_is_opened_and_closed_off_the_event_loop(tmp_path, m
     """A close flushes, so it is as able to stall the loop as a write is."""
     import threading
 
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     loop_thread = threading.get_ident()
     seen: dict[str, int] = {}
@@ -548,7 +548,7 @@ _MIB = 1024 * 1024
 
 @pytest.mark.asyncio
 async def test_a_large_import_waits_for_memory_instead_of_being_refused(monkeypatch):
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     readings = iter([10, 10, 10_000])  # short, short, then freed
     _fake_memory(st, monkeypatch, total_mib=100_000, available=readings)
@@ -561,7 +561,7 @@ async def test_a_large_import_waits_for_memory_instead_of_being_refused(monkeypa
 
 @pytest.mark.asyncio
 async def test_a_wait_past_the_budget_is_refused_as_retryable(monkeypatch):
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     _fake_memory(st, monkeypatch, total_mib=100_000, available=iter(lambda: 1, None))
     monkeypatch.setattr(st, "SESSION_IMPORT_MEMORY_WAIT_SECS", 0.01)
@@ -574,7 +574,7 @@ async def test_a_wait_past_the_budget_is_refused_as_retryable(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_a_document_larger_than_the_host_is_refused_without_waiting(monkeypatch):
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     # One reading only: a second, which a wait would take, fails the test.
     _fake_memory(st, monkeypatch, total_mib=100, available=iter([100]))
@@ -588,7 +588,7 @@ async def test_a_document_larger_than_the_host_is_refused_without_waiting(monkey
 async def test_a_second_import_waits_for_the_first_ones_reservation(monkeypatch):
     """Both see the same free memory; the reservation is what stops them both
     parsing at once."""
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     reads: list[int] = []
 
@@ -631,8 +631,8 @@ async def test_a_second_import_waits_for_the_first_ones_reservation(monkeypatch)
 
 @pytest.mark.asyncio
 async def test_an_unreadable_host_is_not_gated(monkeypatch):
-    from kiro_crew.dashboard import session_transfer as st
-    from kiro_crew.dashboard import session_transfer_intake as intake
+    from aj_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer_intake as intake
 
     _fake_memory(st, monkeypatch, total_mib=0, available=iter(lambda: 0, None))
     before = intake._memory_reserved
@@ -645,7 +645,7 @@ async def test_an_unreadable_host_is_not_gated(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_the_import_route_answers_a_session_the_host_cannot_hold(monkeypatch):
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     _fake_memory(st, monkeypatch, total_mib=0, available=iter(lambda: 1, None))
     monkeypatch.setattr(st.platform_compat, "host_total_mib", lambda: 1)
@@ -667,7 +667,7 @@ def test_decompression_stops_before_the_volume_fills(tmp_path, monkeypatch):
     once the volume is down to its headroom."""
     import gzip as _gzip
 
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     src = tmp_path / "body.gz"
     src.write_bytes(_gzip.compress(b"x" * (4 * st._CHUNK_BYTES)))
@@ -679,7 +679,7 @@ def test_decompression_stops_before_the_volume_fills(tmp_path, monkeypatch):
 
 @pytest.mark.asyncio
 async def test_a_plain_body_stops_before_the_volume_fills(tmp_path, monkeypatch):
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     _low_disk(st, monkeypatch)
     chunks = [b"{" + b" " * 1000] * 4
@@ -692,7 +692,7 @@ async def test_a_plain_body_stops_before_the_volume_fills(tmp_path, monkeypatch)
 
 @pytest.mark.asyncio
 async def test_the_import_route_answers_507_when_the_volume_is_full(monkeypatch):
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     _low_disk(st, monkeypatch)
     resp = await _run_import(st, monkeypatch, _valid())
@@ -703,7 +703,7 @@ async def test_the_import_route_answers_507_when_the_volume_is_full(monkeypatch)
 
 @pytest.mark.asyncio
 async def test_an_unreadable_volume_is_not_gated(tmp_path, monkeypatch):
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     def _raise(_p):
         raise OSError("no statvfs")
@@ -719,7 +719,7 @@ async def test_an_unreadable_volume_is_not_gated(tmp_path, monkeypatch):
 
 @pytest.mark.asyncio
 async def test_a_session_too_big_for_the_host_names_the_budget(monkeypatch):
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     monkeypatch.setattr(st.platform_compat, "host_total_mib", lambda: 2048)
     monkeypatch.setattr(st, "_MEMORY_HEADROOM_BYTES", 1024 * _MIB)
@@ -735,7 +735,7 @@ async def test_a_session_too_big_for_the_host_names_the_budget(monkeypatch):
 async def test_a_temp_file_the_volume_cannot_create_is_a_coded_507(monkeypatch, fail_on):
     import gzip as _gzip
 
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     real = st._new_import_temp
     calls = {"n": 0}
@@ -764,7 +764,7 @@ def test_a_second_gzip_member_is_refused_wherever_the_first_ends(tmp_path, monke
     import gzip as _gzip
     import zlib as _zlib
 
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     first = _gzip.compress(b'{"a":1}')
     monkeypatch.setattr(st, "_CHUNK_BYTES", len(first) if aligned else len(first) + 3)
@@ -797,7 +797,7 @@ def _marks_outside_strings(doc: str) -> int:
 def test_the_document_measure_counts_messages_across_chunk_boundaries(tmp_path, monkeypatch):
     """Every message is counted exactly once, including one whose key straddles
     a read boundary, and the count never has to hold the document."""
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     doc = json.dumps(_valid(messages=[{"role": "user", "content": "x", "ts": ""}] * 50))
     p = tmp_path / "doc.json"
@@ -811,7 +811,7 @@ def test_the_document_measure_counts_messages_across_chunk_boundaries(tmp_path, 
 def test_the_value_count_skips_marks_inside_strings(tmp_path, monkeypatch):
     """Code-dense text and an embedded log carry ``{ [ , :`` in their content;
     those build no values and must not reserve for them, at any chunk size."""
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     content = 'def f(a, b): return {"k": [a, b]}  \\ ' + '{"ev":"x","n":[1,2]}\n' * 20
     doc = json.dumps({"messages": [{"role": "user", "content": content}] * 5, "tail": "\\"})
@@ -827,7 +827,7 @@ def test_the_value_count_skips_marks_inside_strings(tmp_path, monkeypatch):
 def test_the_measure_splits_escape_runs_at_any_chunk_boundary(tmp_path, monkeypatch):
     """Odd and even backslash runs straddling a chunk boundary keep their quotes
     paired, so the value count matches the unchunked count."""
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     doc = json.dumps(
         {"messages": [{"content": "a" + "\\" * n + '"' + "{,:"} for n in range(9)], "k": [1, 2]}
@@ -845,7 +845,7 @@ def test_a_long_backslash_run_is_measured_in_bounded_memory(tmp_path, monkeypatc
     measure runs before the memory admission, so it must not accumulate it."""
     import tracemalloc
 
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     chunk = 4096
     monkeypatch.setattr(st, "_CHUNK_BYTES", chunk)
@@ -876,7 +876,7 @@ def test_the_parse_factor_follows_the_widest_character(
 ):
     """One wide character makes CPython store the whole decoded text, and the
     string holding it, at that width; the reservation has to follow."""
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     doc = json.dumps(
         {"messages": [{"role": "user", "content": "x" * 100 + text}]}, ensure_ascii=ensure_ascii
@@ -891,7 +891,7 @@ def test_the_parse_factor_follows_the_widest_character(
 @pytest.mark.asyncio
 async def test_many_short_messages_are_reserved_for_by_count_not_only_by_size(monkeypatch):
     """Their objects outweigh their text, so the reservation grows with the count."""
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     _fake_memory(st, monkeypatch, total_mib=100_000, available=iter(lambda: 100_000, None))
 
@@ -903,7 +903,7 @@ async def test_many_short_messages_are_reserved_for_by_count_not_only_by_size(mo
 async def test_the_import_route_counts_messages_into_the_reservation(monkeypatch):
     """A document small by size but heavy by count is refused on a host that
     the size-only estimate would have admitted."""
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     body = _valid(messages=[{"role": "user", "content": "x", "ts": ""}] * 2000)
     size = len(json.dumps(body).encode())
@@ -921,7 +921,7 @@ async def test_a_body_smaller_than_the_check_interval_is_still_checked(tmp_path,
     """The headroom holds for every body, not only those past the first interval."""
     import gzip as _gzip
 
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     monkeypatch.setattr(st.shutil, "disk_usage", lambda _p: SimpleNamespace(free=0))
     assert st._DISK_CHECK_EVERY_CHUNKS > 1
@@ -940,7 +940,7 @@ async def test_a_body_smaller_than_the_check_interval_is_still_checked(tmp_path,
 async def test_a_container_heavy_document_is_reserved_for_by_its_values(monkeypatch):
     """An array of empty objects carries no messages and costs about 24 times its
     text; the value count is what reserves for it."""
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     _fake_memory(st, monkeypatch, total_mib=100_000, available=iter(lambda: 100_000, None))
 
@@ -952,7 +952,7 @@ async def test_a_container_heavy_document_is_reserved_for_by_its_values(monkeypa
 async def test_the_import_route_reserves_for_a_messageless_container_flood(monkeypatch):
     """A document with no ``role`` key at all but many empty objects is refused on
     a host that a text-and-message estimate would have admitted."""
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     body = _valid(messages=[{"role": "user", "content": "x", "ts": ""}])
     body["filler"] = [{}] * 20000
@@ -971,7 +971,7 @@ async def test_one_emoji_raises_the_imports_reservation(monkeypatch, emoji, stat
     """A single character past the BMP widens the whole parse, so a host that
     fits the ASCII estimate with room to spare must refuse the same document
     carrying one emoji rather than admit it and run out of memory."""
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     body = _valid(messages=[{"role": "user", "content": "x" * (2 * _MIB) + emoji, "ts": ""}])
     size = len(json.dumps(body).encode())
@@ -1008,7 +1008,7 @@ async def test_a_sender_that_goes_quiet_is_cut_off(tmp_path, monkeypatch, sent):
     """No total deadline, but a no-progress one: a stalled upload cannot hold
     its connection and temp file forever, whether it went quiet before its first
     chunk or after some."""
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     monkeypatch.setattr(st, "DEFAULT_SESSION_TRANSFER_TIMEOUT_SECS", 0.05)
     sender = _StalledContent(sent)
@@ -1029,7 +1029,7 @@ async def test_a_sender_that_goes_quiet_is_cut_off(tmp_path, monkeypatch, sent):
 async def test_an_upload_in_flight_holds_no_arrival_permit(tmp_path, monkeypatch):
     """Slow senders must not fill the permits every other import waits on; the
     permit is taken only once the body is on disk."""
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     monkeypatch.setattr(st, "_expansion_lock", None)
     monkeypatch.setattr(st, "_expansion_slots", None)
@@ -1055,7 +1055,7 @@ async def test_an_upload_in_flight_holds_no_arrival_permit(tmp_path, monkeypatch
 async def test_uploads_past_the_cap_are_refused_before_a_file_is_opened(monkeypatch):
     """Each in-flight upload holds a staging descriptor before the arrival permit,
     so the number streaming at once is capped and the slot is released after."""
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     monkeypatch.setattr(st, "_MAX_CONCURRENT_UPLOADS", 2)
     monkeypatch.setattr(st, "_uploads_in_flight", 0)
@@ -1098,7 +1098,7 @@ async def test_uploads_past_the_cap_are_refused_before_a_file_is_opened(monkeypa
 async def test_a_cgroup_limit_below_the_host_refuses_what_the_pod_cannot_hold(monkeypatch):
     """A gateway under a 4 GiB unit limit on a far larger host: the unit's limit,
     not the host's RAM, decides whether the document can ever fit."""
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     _fake_memory(
         st,
@@ -1117,7 +1117,7 @@ async def test_a_cgroup_limit_below_the_host_refuses_what_the_pod_cannot_hold(mo
 async def test_a_full_cgroup_waits_rather_than_failing_open(monkeypatch):
     """No headroom left under the cgroup reads as zero available, which waits;
     it is not the unreadable-host reading that lets everything through."""
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     headroom = iter([0, 0, 4096 * _MIB])
     _fake_memory(st, monkeypatch, total_mib=100_000, available=iter(lambda: 100_000, None))
@@ -1130,8 +1130,8 @@ async def test_a_full_cgroup_waits_rather_than_failing_open(monkeypatch):
 def test_the_cgroup_limit_is_the_tightest_on_the_process_ancestry(tmp_path, monkeypatch):
     """The walk reads every level from the process's cgroup up to the mount and
     keeps the smallest finite limit; ``max`` at a level does not constrain."""
-    from kiro_crew import subagent
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew import subagent
+    from aj_crew.dashboard import session_transfer as st
 
     mount = tmp_path / "cg"
     leaf = mount / "system.slice" / "gateway.service"
@@ -1183,7 +1183,7 @@ def test_the_reservation_covers_the_measured_parse_peak(tmp_path, shape):
     object sizes or in the estimate fails here rather than in a gateway."""
     import tracemalloc
 
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     p = tmp_path / "doc.json"
     p.write_text(_adversarial_documents()[shape], encoding="utf-8")
@@ -1204,7 +1204,7 @@ async def test_concurrent_uploads_share_one_disk_headroom(tmp_path, monkeypatch)
     """Arrivals stream outside every permit, so each write counts against the free
     space the others are already cleared to use; the headroom holds however many
     arrive at once."""
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     chunk = st._CHUNK_BYTES
     # Room for exactly two in-flight chunks above the headroom.
@@ -1228,7 +1228,7 @@ async def test_a_reserved_write_releases_when_the_write_finishes(tmp_path, monke
     cannot drop the reservation while the worker is still writing."""
     import threading
 
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     monkeypatch.setattr(st, "_disk_inflight", 0)
     monkeypatch.setattr(st.shutil, "disk_usage", lambda _p: SimpleNamespace(free=1 << 62))

@@ -15,7 +15,7 @@ from typing import TypeVar
 
 import pytest
 
-from kiro_crew.history import ConversationLog
+from aj_crew.history import ConversationLog
 
 # Not UTF-8: 0xff never starts a UTF-8 sequence.
 _UNDECODABLE = b'\xff\xfe{"summary": "x"}'

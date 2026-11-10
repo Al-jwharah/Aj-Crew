@@ -60,7 +60,7 @@ const slots = [
     running: false,
     last_message: "Your account cannot use model 'auto' — running on 'claude-opus-4-8' instead.",
     messages: 3,
-    agent: 'kirocrew',
+    agent: 'ajcrew',
     model: SERVED,
     memory_mode: 'persistent',
     project: '/home/user/workspace/notes',
@@ -75,7 +75,7 @@ const slots = [
     running: false,
     last_message: "This account is not entitled to any served model.",
     messages: 2,
-    agent: 'kirocrew',
+    agent: 'ajcrew',
     model: '',
     memory_mode: 'persistent',
     project: '/home/user/workspace/notes',
@@ -90,7 +90,7 @@ const slots = [
     running: false,
     last_message: "\u2139\uFE0F Model-fallback retry cancelled \u2014 your newer message runs instead.",
     messages: 3,
-    agent: 'kirocrew',
+    agent: 'ajcrew',
     model: SERVED,
     memory_mode: 'persistent',
     project: '/home/user/workspace/notes',
@@ -196,8 +196,8 @@ async function main() {
   const extra = async (path, route) => {
     if (path === '/api/agents' || path === '/api/chat/agents') {
       await json(route, {
-        agents: [{ name: 'kirocrew', model: SERVED }],
-        default_agent: 'kirocrew',
+        agents: [{ name: 'ajcrew', model: SERVED }],
+        default_agent: 'ajcrew',
         models: ADVERTISED.map(id => ({ id, name: id })),
       })
       return true

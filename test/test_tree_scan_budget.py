@@ -1,7 +1,7 @@
 """The per-test timeout a ``tree_scan`` group carries.
 
 The ``tree_scan_*`` xdist groups hold the gates that parse or walk a whole tree: the
-package under ``src/kiro_crew`` or the suite under ``test/``. The slow ones take
+package under ``src/aj_crew`` or the suite under ``test/``. The slow ones take
 20-42 s of CPU on a fast host and about three times that on a hosted runner, which
 is past the suite-wide ``--timeout=120``.
 

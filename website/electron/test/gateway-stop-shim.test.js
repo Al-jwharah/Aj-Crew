@@ -4,9 +4,9 @@
 // holding the port and the lock.
 const { test } = require("node:test");
 const assert = require("node:assert");
-const { stopGatewayGracefully, isKirocrewGatewayCommand } = require("../gateway-stop");
+const { stopGatewayGracefully, isAjcrewGatewayCommand } = require("../gateway-stop");
 
-const GATEWAY_CMD = "/opt/py/bin/python3 -m kirocrew_edition gateway --port 5476";
+const GATEWAY_CMD = "/opt/py/bin/python3 -m ajcrew_edition gateway --port 5476";
 
 // A fake process table. `procs[pid] = { cmd, onSignal(signal) -> "die" | "live" }`.
 function world(procs) {
@@ -44,7 +44,7 @@ function shimProc(pid = 100) {
 
 const base = {
   backendUrl: "http://127.0.0.1:1",
-  kirocrewHome: "/nope",
+  ajcrewHome: "/nope",
   postShutdownFn: async () => false, // the endpoint failed: the signal path
   platform: "darwin",
   survivorPollMs: 5,
@@ -194,14 +194,14 @@ test("shim: each pid's SIGTERM follows its own identity check, with no other che
   assert.deepStrictEqual(trace, ["check:101", "SIGTERM:101", "check:102", "SIGTERM:102"]);
 });
 
-// The shim shape main.js actually spawns on POSIX: `<root>/bin/kirocrew gateway
-// --no-open --port N`, where bin/kirocrew is a console script (so ps shows the
+// The shim shape main.js actually spawns on POSIX: `<root>/bin/ajcrew gateway
+// --no-open --port N`, where bin/ajcrew is a console script (so ps shows the
 // interpreter first) or the executable itself. The gateway's own built-in MCP
 // servers are the SAME executable with a non-server subcommand.
-const CONSOLE_GATEWAY_CMD = "/app/backend-dist/kirocrew-backend/bin/kirocrew gateway --no-open --port 5476";
-const SCRIPT_GATEWAY_CMD = "/app/backend-dist/kirocrew-backend/bin/python3 /app/backend-dist/kirocrew-backend/bin/kirocrew gateway --no-open --port 5476";
-const MCP_CORE_CMD = "/app/backend-dist/kirocrew-backend/bin/kirocrew mcp-core";
-const MCP_CRON_SCRIPT_CMD = "/app/backend-dist/kirocrew-backend/bin/python3 /app/backend-dist/kirocrew-backend/bin/kirocrew mcp-cron";
+const CONSOLE_GATEWAY_CMD = "/app/backend-dist/ajcrew-backend/bin/ajcrew gateway --no-open --port 5476";
+const SCRIPT_GATEWAY_CMD = "/app/backend-dist/ajcrew-backend/bin/python3 /app/backend-dist/ajcrew-backend/bin/ajcrew gateway --no-open --port 5476";
+const MCP_CORE_CMD = "/app/backend-dist/ajcrew-backend/bin/ajcrew mcp-core";
+const MCP_CRON_SCRIPT_CMD = "/app/backend-dist/ajcrew-backend/bin/python3 /app/backend-dist/ajcrew-backend/bin/ajcrew mcp-cron";
 
 // A shim that IGNORES SIGTERM and dies only to the SIGKILL the child's own
 // deadline sends. By the time its 'exit' fires, that deadline is already spent.
@@ -314,7 +314,7 @@ test("shim: a hung identity read settles the stop and signals nothing", async ()
   assert.ok(Date.now() - started < 4000, "the hung read is bounded on the JS side");
 });
 
-test("shim: a `kirocrew mcp-core` descendant is left alone while the `kirocrew gateway` one is stopped", async () => {
+test("shim: a `ajcrew mcp-core` descendant is left alone while the `ajcrew gateway` one is stopped", async () => {
   const w = world({
     101: { cmd: CONSOLE_GATEWAY_CMD, onSignal: () => "die" },
     102: { cmd: MCP_CORE_CMD, onSignal: () => "die" },
@@ -333,14 +333,14 @@ test("shim: a `kirocrew mcp-core` descendant is left alone while the `kirocrew g
   assert.ok(w.alive.has(102) && w.alive.has(104));
 });
 
-test("isKirocrewGatewayCommand: server subcommand required in argparse's first positional slot", () => {
-  assert.strictEqual(isKirocrewGatewayCommand(CONSOLE_GATEWAY_CMD), true);
-  assert.strictEqual(isKirocrewGatewayCommand(SCRIPT_GATEWAY_CMD), true);
-  assert.strictEqual(isKirocrewGatewayCommand("/opt/py/bin/python3 -m kiro_crew gateway"), true);
-  assert.strictEqual(isKirocrewGatewayCommand("kirocrew-backend start"), true);
-  assert.strictEqual(isKirocrewGatewayCommand(MCP_CORE_CMD), false);
-  assert.strictEqual(isKirocrewGatewayCommand(MCP_CRON_SCRIPT_CMD), false);
-  assert.strictEqual(isKirocrewGatewayCommand("/opt/bin/kirocrew"), false, "no subcommand at all");
-  assert.strictEqual(isKirocrewGatewayCommand("/opt/bin/kirocrew run gateway"), false, "later slot never qualifies");
-  assert.strictEqual(isKirocrewGatewayCommand("/usr/local/bin/kiro-cli acp"), false);
+test("isAjcrewGatewayCommand: server subcommand required in argparse's first positional slot", () => {
+  assert.strictEqual(isAjcrewGatewayCommand(CONSOLE_GATEWAY_CMD), true);
+  assert.strictEqual(isAjcrewGatewayCommand(SCRIPT_GATEWAY_CMD), true);
+  assert.strictEqual(isAjcrewGatewayCommand("/opt/py/bin/python3 -m aj_crew gateway"), true);
+  assert.strictEqual(isAjcrewGatewayCommand("ajcrew-backend start"), true);
+  assert.strictEqual(isAjcrewGatewayCommand(MCP_CORE_CMD), false);
+  assert.strictEqual(isAjcrewGatewayCommand(MCP_CRON_SCRIPT_CMD), false);
+  assert.strictEqual(isAjcrewGatewayCommand("/opt/bin/ajcrew"), false, "no subcommand at all");
+  assert.strictEqual(isAjcrewGatewayCommand("/opt/bin/ajcrew run gateway"), false, "later slot never qualifies");
+  assert.strictEqual(isAjcrewGatewayCommand("/usr/local/bin/kiro-cli acp"), false);
 });

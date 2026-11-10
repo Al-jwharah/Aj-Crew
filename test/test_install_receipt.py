@@ -14,9 +14,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew import beacon
-from kiro_crew.apps import install_receipt, manager, registry
-from kiro_crew.apps.manager import AppResult
+from aj_crew import beacon
+from aj_crew.apps import install_receipt, manager, registry
+from aj_crew.apps.manager import AppResult
 
 _SECRET = "0123456789abcdef" * 4  # 64-hex receipt-only secret
 _BEACON_ID = "0123456789abcdef0123456789abcdef"  # a heartbeat id, for independence checks
@@ -294,13 +294,13 @@ class TestReceiptTransport:
         assert threads[0]["started"] is True
 
     def test_dispatch_resolves_config_dir_before_home_is_unpatched(self, monkeypatch, tmp_path):
-        """dispatch()'s worker must write under the KIROCREW_HOME pinned AT
+        """dispatch()'s worker must write under the AJCREW_HOME pinned AT
 
         DISPATCH TIME, even if that env var is unset again before the
         background thread finishes. Regression test for a real-home leak: the
         worker must not call beacon.config_dir() itself, lazily, on the
         background thread: a race against the caller's teardown unpatching
-        KIROCREW_HOME could land the secret file in the operator's real
+        AJCREW_HOME could land the secret file in the operator's real
         data home instead of the pinned test one.
         """
         pinned_home = tmp_path / "pinned-home"
@@ -308,8 +308,8 @@ class TestReceiptTransport:
         monkeypatch.setattr(beacon, "is_default_home", lambda: True)
 
         def fake_config_dir():
-            # Mirrors production: honors KIROCREW_HOME at call time.
-            override = os.environ.get("KIROCREW_HOME")
+            # Mirrors production: honors AJCREW_HOME at call time.
+            override = os.environ.get("AJCREW_HOME")
             if override:
                 return Path(override) / ".kiro" / "crew"
             return real_home_config_dir
@@ -319,7 +319,7 @@ class TestReceiptTransport:
         monkeypatch.setattr(install_receipt, "receipt_secret", _real_receipt_secret)
         monkeypatch.setattr(
             install_receipt,
-            "KiroCrewConfig",
+            "AjCrewConfig",
             MagicMock(
                 load=lambda: MagicMock(
                     telemetry=MagicMock(
@@ -332,16 +332,16 @@ class TestReceiptTransport:
         )
         monkeypatch.setattr(install_receipt.urllib.request, "urlopen", _fake_urlopen([]))
 
-        monkeypatch.setenv("KIROCREW_HOME", str(pinned_home))
+        monkeypatch.setenv("AJCREW_HOME", str(pinned_home))
         install_receipt.dispatch("issue-radar", official=True, kind=install_receipt.KIND_FRESH)
-        # Simulate the test's own teardown unpatching KIROCREW_HOME while the
+        # Simulate the test's own teardown unpatching AJCREW_HOME while the
         # background thread may still be about to run.
-        monkeypatch.delenv("KIROCREW_HOME", raising=False)
+        monkeypatch.delenv("AJCREW_HOME", raising=False)
 
         install_receipt.wait_for_pending_receipt_writes(timeout=5.0)
 
         assert not any(
-            t.is_alive() for t in threading.enumerate() if t.name == "kirocrew-install-receipt"
+            t.is_alive() for t in threading.enumerate() if t.name == "ajcrew-install-receipt"
         )
         assert (pinned_home / ".kiro" / "crew" / "app_receipt_secret").exists()
         assert not real_home_config_dir.exists()
@@ -350,7 +350,7 @@ class TestReceiptTransport:
     async def test_dispatch_async_reads_config_off_the_loop_and_hands_it_over(self, monkeypatch):
         """The coroutine form must not do the config read on the loop thread.
 
-        ``KiroCrewConfig.load()`` is file I/O plus schema validation, and the
+        ``AjCrewConfig.load()`` is file I/O plus schema validation, and the
         registry awaits this at the end of every official install. The read
         has to run in a worker thread, and the config it returns has to be the
         one ``dispatch`` receives — a second load there would put the I/O
@@ -367,7 +367,7 @@ class TestReceiptTransport:
             load_threads.append(threading.get_ident())
             return loaded
 
-        monkeypatch.setattr(install_receipt, "KiroCrewConfig", MagicMock(load=fake_load))
+        monkeypatch.setattr(install_receipt, "AjCrewConfig", MagicMock(load=fake_load))
         handed: list[dict[str, object]] = []
         monkeypatch.setattr(
             install_receipt, "dispatch", lambda slug, **kwargs: handed.append(kwargs)
@@ -395,7 +395,7 @@ class TestReceiptTransport:
         def boom():
             raise OSError("unreadable")
 
-        monkeypatch.setattr(install_receipt, "KiroCrewConfig", MagicMock(load=boom))
+        monkeypatch.setattr(install_receipt, "AjCrewConfig", MagicMock(load=boom))
         await install_receipt.dispatch_async(
             "issue-radar", official=True, kind=install_receipt.KIND_FRESH
         )
@@ -524,7 +524,7 @@ class TestNonRegistryPaths:
     def app_home(self, tmp_path, monkeypatch):
         home = tmp_path / "home"
         home.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         monkeypatch.setattr(manager, "app_admission_denied", lambda *_a, **_k: None)
         monkeypatch.setattr(manager, "app_execution_denied", lambda *_a, **_k: None)
         monkeypatch.setattr(manager, "sel", lambda: MagicMock())

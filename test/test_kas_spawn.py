@@ -1,13 +1,13 @@
 """KAS spawn contract: relay argv, auth owner, sandbox classification, capabilities, demux.
 
-Kiro Crew reaches KAS through kiro-cli's own ACP relay
+Aj Crew reaches KAS through kiro-cli's own ACP relay
 (``kiro-cli acp --agent-engine v3``) rather than by locating kiro-cli's
 extracted KAS bundle and running ``node acp-server.js`` itself. See
-:mod:`kiro_crew.acp.kas_transport` for why, for the frame-parity measurement
+:mod:`aj_crew.acp.kas_transport` for why, for the frame-parity measurement
 that preceded the switch, and for the two auth owners: ``--auth-method cli``
 (kiro-cli's store, the default) or -- when Crew's own vault holds an identity --
 ``--auth-method client`` (no flag below the release floor), with Crew answering
-the engine's ``_kiro/auth/getAccessToken`` request from :mod:`kiro_crew.auth`.
+the engine's ``_kiro/auth/getAccessToken`` request from :mod:`aj_crew.auth`.
 
 The invocation proof lives in ``TestKasInvocation``: it spawns a real
 ``AcpRuntime`` configured for the KAS backend against a stub agent that speaks
@@ -39,9 +39,9 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from named_cases_helpers import named_cases
 
-from kiro_crew.acp import session_handle as sh
-from kiro_crew.acp.kas_host_auth import HostAuthCallbackError
-from kiro_crew.acp.kas_transport import (
+from aj_crew.acp import session_handle as sh
+from aj_crew.acp.kas_host_auth import HostAuthCallbackError
+from aj_crew.acp.kas_transport import (
     KAS_AUTH_CALLBACK_ERROR_CODE,
     KAS_RELAY_AUTH_CLIENT,
     KAS_RELAY_AUTH_OWNER,
@@ -50,17 +50,17 @@ from kiro_crew.acp.kas_transport import (
     METHOD_KAS_AUTH_GET_ACCESS_TOKEN,
     build_kas_argv,
 )
-from kiro_crew.acp.runtime import AcpRuntime
-from kiro_crew.acp.types import (
+from aj_crew.acp.runtime import AcpRuntime
+from aj_crew.acp.types import (
     ACP_BACKEND_KAS,
     ACP_BACKEND_KIRO,
     ACP_BACKENDS_HOST_AUTH_CALLBACK,
     ACP_CLIENT_CAPABILITIES,
     KAS_CLIENT_CAPABILITIES,
 )
-from kiro_crew.agent_sdk.tool_search import ToolSearchSettings
-from kiro_crew.config.paths import kiro_agents_dir
-from kiro_crew.kiro_cli import KAS_AUTH_CLIENT_MIN_KIRO_CLI, kas_auth_client_flag_supported
+from aj_crew.agent_sdk.tool_search import ToolSearchSettings
+from aj_crew.config.paths import kiro_agents_dir
+from aj_crew.kiro_cli import KAS_AUTH_CLIENT_MIN_KIRO_CLI, kas_auth_client_flag_supported
 
 
 @pytest.fixture(autouse=True)
@@ -163,7 +163,7 @@ class TestAuthOwnership:
     Two owners: kiro-cli (``--auth-method cli``, the default -- the frame never
     arrives) or Crew (``--auth-method client``, or no flag below the release
     floor, because the Crew vault held an identity at spawn -- the frame arrives
-    and is answered from :mod:`kiro_crew.auth`). A third
+    and is answered from :mod:`aj_crew.auth`). A third
     shape is forbidden: a shell-out to kiro-cli's hidden token verb.
     """
 
@@ -171,7 +171,7 @@ class TestAuthOwnership:
         """The credential is Crew's own vault or kiro-cli's own store -- never
         a subprocess. Asserted on the module surface because a re-added helper
         is exactly the regression the relay switch was meant to prevent."""
-        from kiro_crew.acp import runtime as runtime_mod
+        from aj_crew.acp import runtime as runtime_mod
 
         for gone in ("_deliver_kas_access_token", "resolve_kas_access_token"):
             assert not hasattr(AcpRuntime, gone), f"AcpRuntime.{gone} should be gone"
@@ -179,7 +179,7 @@ class TestAuthOwnership:
 
     def test_the_shell_out_module_is_gone(self):
         with pytest.raises(ModuleNotFoundError):
-            __import__("kiro_crew.acp.kas_auth")
+            __import__("aj_crew.acp.kas_auth")
 
     def test_host_auth_callback_is_positive_membership(self):
         """Handing a child a credential is authorized by membership (H5/H8), and
@@ -196,7 +196,7 @@ class TestAuthOwnership:
         Crew-owned), so staying conservative costs one respawn, never a turn on
         stale credentials.
         """
-        from kiro_crew.acp.types import backends_retired_by_host_logout
+        from aj_crew.acp.types import backends_retired_by_host_logout
 
         assert ACP_BACKEND_KAS in backends_retired_by_host_logout()
 
@@ -259,7 +259,7 @@ class TestAuthOwnership:
             return rendered
 
         with (
-            patch("kiro_crew.acp.harness.kas.answer_get_access_token", side_effect=fake_answer),
+            patch("aj_crew.acp.harness.kas.answer_get_access_token", side_effect=fake_answer),
             patch.object(runtime, "send_response", side_effect=record_response),
         ):
             await runtime._answer_get_access_token(7)
@@ -280,14 +280,14 @@ class TestAuthOwnership:
             sent.append((request_id, code, message))
 
         async def refuse():
-            raise HostAuthCallbackError("not signed in to Kiro Crew")
+            raise HostAuthCallbackError("not signed in to Aj Crew")
 
         with (
-            patch("kiro_crew.acp.harness.kas.answer_get_access_token", side_effect=refuse),
+            patch("aj_crew.acp.harness.kas.answer_get_access_token", side_effect=refuse),
             patch.object(runtime, "send_error", side_effect=record_error),
         ):
             await runtime._answer_get_access_token(8)
-        assert sent == [(8, KAS_AUTH_CALLBACK_ERROR_CODE, "not signed in to Kiro Crew")]
+        assert sent == [(8, KAS_AUTH_CALLBACK_ERROR_CODE, "not signed in to Aj Crew")]
 
     @pytest.mark.asyncio
     async def test_a_repeated_auth_failure_warns_once_until_one_is_served(self, tmp_path, caplog):
@@ -307,7 +307,7 @@ class TestAuthOwnership:
 
         async def answer():
             if not signed_in:
-                raise HostAuthCallbackError("not signed in to Kiro Crew")
+                raise HostAuthCallbackError("not signed in to Aj Crew")
             return {"accessToken": "t", "expiresAt": "2099-01-01T00:00:00+00:00"}
 
         def warnings() -> int:
@@ -317,9 +317,9 @@ class TestAuthOwnership:
                 if r.levelno == logging.WARNING and "KAS auth callback failed" in r.getMessage()
             )
 
-        caplog.set_level(logging.DEBUG, logger="kiro_crew.acp.runtime")
+        caplog.set_level(logging.DEBUG, logger="aj_crew.acp.runtime")
         with (
-            patch("kiro_crew.acp.harness.kas.answer_get_access_token", side_effect=answer),
+            patch("aj_crew.acp.harness.kas.answer_get_access_token", side_effect=answer),
             patch.object(runtime, "send_error", side_effect=record_error),
             patch.object(runtime, "send_response", side_effect=AsyncMock()),
         ):
@@ -365,7 +365,7 @@ class TestSandboxClassification:
             sandbox_mode="off",
             acp_backend=ACP_BACKEND_KAS,
         )
-        with patch("kiro_crew.acp.runtime.wrap_argv", side_effect=fake_wrap):
+        with patch("aj_crew.acp.runtime.wrap_argv", side_effect=fake_wrap):
             with pytest.raises(self._Abort):
                 await runtime.spawn()
         return captured
@@ -374,7 +374,7 @@ class TestSandboxClassification:
     async def test_kas_relay_is_classified_as_kiro_cli_where_its_sandbox_runs(
         self, kas_stub, tmp_path
     ):
-        with patch("kiro_crew.acp.harness.kas._kiro_cli_sandbox_owns_relay", return_value=True):
+        with patch("aj_crew.acp.harness.kas._kiro_cli_sandbox_owns_relay", return_value=True):
             captured = await self._wrap_kwargs(tmp_path)
         assert captured["is_kiro_cli"] is True
 
@@ -387,7 +387,7 @@ class TestSandboxClassification:
         So nothing that only a delegated spawn needs may refuse it: a workspace that
         Crew's launcher would seal still starts, exactly as before KAS could delegate.
         """
-        with patch("kiro_crew.acp.harness.kas._kiro_cli_sandbox_owns_relay", return_value=False):
+        with patch("aj_crew.acp.harness.kas._kiro_cli_sandbox_owns_relay", return_value=False):
             captured = await self._wrap_kwargs(tmp_path, work_dir=kiro_agents_dir())
         assert captured["is_kiro_cli"] is False
 
@@ -420,11 +420,11 @@ class TestSandboxClassification:
             acp_backend=ACP_BACKEND_KAS,
         )
         with (
-            patch("kiro_crew.acp.harness.kas._kiro_cli_sandbox_owns_relay", return_value=True),
+            patch("aj_crew.acp.harness.kas._kiro_cli_sandbox_owns_relay", return_value=True),
             patch(
-                "kiro_crew.sandbox.delegated_workspace_exposes_sealed_target", side_effect=sealed
+                "aj_crew.sandbox.delegated_workspace_exposes_sealed_target", side_effect=sealed
             ),
-            patch("kiro_crew.acp.runtime.wrap_argv", side_effect=fake_wrap),
+            patch("aj_crew.acp.runtime.wrap_argv", side_effect=fake_wrap),
         ):
             with pytest.raises(sh.AcpRuntimeError, match="kiro agents directory"):
                 await runtime.spawn()
@@ -446,10 +446,10 @@ class TestSandboxClassification:
     def test_only_macos_with_the_switch_on_hands_the_relay_to_kiro_cli(
         self, monkeypatch, platform, switch_on, owned
     ):
-        from kiro_crew.acp.harness import kas as kas_mod
+        from aj_crew.acp.harness import kas as kas_mod
 
         monkeypatch.setattr(kas_mod, "sys", SimpleNamespace(platform=platform))
-        monkeypatch.setattr("kiro_crew.sandbox.kiro_internal_sandbox_enabled", lambda: switch_on)
+        monkeypatch.setattr("aj_crew.sandbox.kiro_internal_sandbox_enabled", lambda: switch_on)
         assert kas_mod._kiro_cli_sandbox_owns_relay() is owned
 
     @pytest.mark.asyncio
@@ -464,14 +464,14 @@ class TestSandboxClassification:
         async def fake_bin(*, environ=None, home=None):
             return "/usr/bin/kiro-cli"
 
-        monkeypatch.setattr("kiro_crew.acp.client._resolve_kiro_bin_for_spawn", fake_bin)
-        monkeypatch.setattr("kiro_crew.agent.ensure_agent_materialized", lambda _agent: None)
+        monkeypatch.setattr("aj_crew.acp.client._resolve_kiro_bin_for_spawn", fake_bin)
+        monkeypatch.setattr("aj_crew.agent.ensure_agent_materialized", lambda _agent: None)
         monkeypatch.setattr(
-            "kiro_crew.acp.skill_projection.prepare_native_skill_projection",
+            "aj_crew.acp.skill_projection.prepare_native_skill_projection",
             lambda _work_dir, **_kw: None,
         )
         runtime = AcpRuntime(work_dir=tmp_path / "sbx2", sandbox_mode="off")
-        with patch("kiro_crew.acp.runtime.wrap_argv", side_effect=fake_wrap):
+        with patch("aj_crew.acp.runtime.wrap_argv", side_effect=fake_wrap):
             with pytest.raises(self._Abort):
                 await runtime.spawn()
         assert captured["is_kiro_cli"] is True
@@ -526,10 +526,10 @@ if (_FLAGGED and _AUTH not in (["cli"], ["client"])) or _ARGS.count("--auth-meth
     # kiro-cli refuses any other value at argument parse.
     sys.exit(2)
 HOST_OWNED = _AUTH != ["cli"]
-CAPTURE = os.environ.get("KIROCREW_TEST_KAS_AUTH_CAPTURE")
-INIT_CAPTURE = os.environ.get("KIROCREW_TEST_KAS_INIT_CAPTURE")
+CAPTURE = os.environ.get("AJCREW_TEST_KAS_AUTH_CAPTURE")
+INIT_CAPTURE = os.environ.get("AJCREW_TEST_KAS_INIT_CAPTURE")
 # Records what the relay would authenticate with from its own environment.
-KEY_CAPTURE = os.environ.get("KIROCREW_TEST_KAS_KEY_CAPTURE")
+KEY_CAPTURE = os.environ.get("AJCREW_TEST_KAS_KEY_CAPTURE")
 if KEY_CAPTURE:
     with open(KEY_CAPTURE, "w") as fh:
         json.dump({"KIRO_API_KEY": os.environ.get("KIRO_API_KEY")}, fh)
@@ -590,7 +590,7 @@ for line in sys.stdin:
 #: The one agent spec ``session/new`` projects onto KAS. Minimal on purpose: this
 #: file tests the SPAWN contract; the projection itself is covered elsewhere.
 _STUB_AGENT_SPEC = {
-    "name": "kirocrew",
+    "name": "ajcrew",
     "description": "spawn-contract stub",
     "prompt": "You are a test agent.",
     "tools": [],
@@ -633,10 +633,10 @@ def kas_stub(tmp_path, monkeypatch):
     async def fake_bin(*, environ=None, home=None) -> str:
         return str(launcher)
 
-    monkeypatch.setattr("kiro_crew.acp.client._resolve_kiro_bin_for_spawn", fake_bin)
+    monkeypatch.setattr("aj_crew.acp.client._resolve_kiro_bin_for_spawn", fake_bin)
     # The host's own kiro-cli must not decide the argv: a test that cares about
     # the release patches this again.
-    monkeypatch.setattr("kiro_crew.acp.harness.kas.installed_kiro_cli_version", lambda: None)
+    monkeypatch.setattr("aj_crew.acp.harness.kas.installed_kiro_cli_version", lambda: None)
     monkeypatch.setenv("KIRO_HOME", str(tmp_path / "kiro-home"))
     agents_dir = kiro_agents_dir()
     agents_dir.mkdir(parents=True, exist_ok=True)
@@ -682,20 +682,20 @@ class TestKasInvocation:
             await runtime.kill()
 
     async def _handshake_settings(self, tmp_path, monkeypatch, *, tools, tool_search):
-        """Spawn the stub with ``kirocrew``'s spec granting *tools* and return the
+        """Spawn the stub with ``ajcrew``'s spec granting *tools* and return the
         ``_meta.kiro.settings`` the stub saw on ``initialize``."""
         spec = {**_STUB_AGENT_SPEC, "tools": tools}
         # Both resolvers: the fixture's KIRO_HOME home AND the per-test pin the
         # root conftest installs on ``agent.KIRO_AGENTS_DIR`` -- the spawn-time
         # self-heal and the spec read consult the pinned one, and an absent file
         # there is regenerated from the shipped default, which grants the loader.
-        from kiro_crew.agent import kiro_agents_dir_path
+        from aj_crew.agent import kiro_agents_dir_path
 
         for agents_dir in {kiro_agents_dir(), kiro_agents_dir_path()}:
             agents_dir.mkdir(parents=True, exist_ok=True)
             (agents_dir / f"{spec['name']}.json").write_text(json.dumps(spec), encoding="utf-8")
         capture = tmp_path / "init-caps.json"
-        monkeypatch.setenv("KIROCREW_TEST_KAS_INIT_CAPTURE", str(capture))
+        monkeypatch.setenv("AJCREW_TEST_KAS_INIT_CAPTURE", str(capture))
         runtime = AcpRuntime(
             work_dir=tmp_path / "ws-ts",
             sandbox_mode="off",
@@ -762,7 +762,7 @@ class TestKasInvocation:
         work_dir = tmp_path / "ws-ts"
         project_agents = work_dir / ".kiro" / "agents"
         project_agents.mkdir(parents=True)
-        (project_agents / "kirocrew.json").write_text(
+        (project_agents / "ajcrew.json").write_text(
             json.dumps({**_STUB_AGENT_SPEC, "tools": ["fs_read", "tool_search"]}),
             encoding="utf-8",
         )
@@ -801,9 +801,9 @@ class TestKasInvocation:
         completing at all proves the callback was answered; the capture file
         proves it was answered with the vault's rendering, on the request's id.
         """
-        monkeypatch.setattr("kiro_crew.acp.harness.kas.installed_kiro_cli_version", lambda: version)
+        monkeypatch.setattr("aj_crew.acp.harness.kas.installed_kiro_cli_version", lambda: version)
         capture = tmp_path / "auth-reply.json"
-        monkeypatch.setenv("KIROCREW_TEST_KAS_AUTH_CAPTURE", str(capture))
+        monkeypatch.setenv("AJCREW_TEST_KAS_AUTH_CAPTURE", str(capture))
         rendered = {
             "accessToken": "t",
             "expiresAt": "2099-01-01T00:00:00+00:00",
@@ -823,9 +823,9 @@ class TestKasInvocation:
         )
         with (
             patch(
-                "kiro_crew.acp.harness.kas.vault_holds_identity_off_loop", side_effect=has_identity
+                "aj_crew.acp.harness.kas.vault_holds_identity_off_loop", side_effect=has_identity
             ),
-            patch("kiro_crew.acp.harness.kas.answer_get_access_token", side_effect=fake_answer),
+            patch("aj_crew.acp.harness.kas.answer_get_access_token", side_effect=fake_answer),
         ):
             try:
                 await runtime.spawn()
@@ -841,7 +841,7 @@ class TestKasInvocation:
         """The control: with no Crew identity the stub sees ``--auth-method`` and
         raises no callback, and the vault answerer is never reached."""
         capture = tmp_path / "auth-reply.json"
-        monkeypatch.setenv("KIROCREW_TEST_KAS_AUTH_CAPTURE", str(capture))
+        monkeypatch.setenv("AJCREW_TEST_KAS_AUTH_CAPTURE", str(capture))
 
         async def no_identity():
             return False
@@ -856,9 +856,9 @@ class TestKasInvocation:
         )
         with (
             patch(
-                "kiro_crew.acp.harness.kas.vault_holds_identity_off_loop", side_effect=no_identity
+                "aj_crew.acp.harness.kas.vault_holds_identity_off_loop", side_effect=no_identity
             ),
-            patch("kiro_crew.acp.harness.kas.answer_get_access_token", side_effect=must_not_run),
+            patch("aj_crew.acp.harness.kas.answer_get_access_token", side_effect=must_not_run),
         ):
             try:
                 await runtime.spawn()
@@ -885,7 +885,7 @@ class TestKasInvocation:
         vault callback, which would outlive a dashboard sign-out.
         """
         capture = tmp_path / "key.json"
-        monkeypatch.setenv("KIROCREW_TEST_KAS_KEY_CAPTURE", str(capture))
+        monkeypatch.setenv("AJCREW_TEST_KAS_KEY_CAPTURE", str(capture))
         monkeypatch.setenv("KIRO_API_KEY", "ksk-operator-key")
 
         async def vault():
@@ -900,8 +900,8 @@ class TestKasInvocation:
             acp_backend=ACP_BACKEND_KAS,
         )
         with (
-            patch("kiro_crew.acp.harness.kas.vault_holds_identity_off_loop", side_effect=vault),
-            patch("kiro_crew.acp.harness.kas.answer_get_access_token", side_effect=fake_answer),
+            patch("aj_crew.acp.harness.kas.vault_holds_identity_off_loop", side_effect=vault),
+            patch("aj_crew.acp.harness.kas.answer_get_access_token", side_effect=fake_answer),
         ):
             try:
                 await runtime.spawn()
@@ -928,7 +928,7 @@ class TestKasInvocation:
             acp_backend=ACP_BACKEND_KAS,
         )
         with patch(
-            "kiro_crew.acp.harness.kas.vault_holds_identity_off_loop", side_effect=no_identity
+            "aj_crew.acp.harness.kas.vault_holds_identity_off_loop", side_effect=no_identity
         ):
             argv = (await runtime._resolve_spawn_plan()).argv
         assert argv == build_kas_argv(str(kas_stub))
@@ -964,10 +964,10 @@ class TestKasInvocation:
         )
         with (
             patch(
-                "kiro_crew.acp.harness.kas.vault_holds_identity_off_loop",
+                "aj_crew.acp.harness.kas.vault_holds_identity_off_loop",
                 side_effect=has_identity,
             ),
-            patch("kiro_crew.acp.harness.kas.installed_kiro_cli_version", return_value=version),
+            patch("aj_crew.acp.harness.kas.installed_kiro_cli_version", return_value=version),
         ):
             argv = (await runtime._resolve_spawn_plan()).argv
         assert argv[:4] == build_kas_argv(str(kas_stub))[:4]
@@ -988,10 +988,10 @@ class TestKasInvocation:
         )
         with (
             patch(
-                "kiro_crew.acp.harness.kas.vault_holds_identity_off_loop",
+                "aj_crew.acp.harness.kas.vault_holds_identity_off_loop",
                 side_effect=no_identity,
             ),
-            patch("kiro_crew.acp.harness.kas.installed_kiro_cli_version", return_value=(3, 0, 0)),
+            patch("aj_crew.acp.harness.kas.installed_kiro_cli_version", return_value=(3, 0, 0)),
         ):
             argv = (await runtime._resolve_spawn_plan()).argv
         assert argv == build_kas_argv(str(kas_stub))
@@ -1001,12 +1001,12 @@ class TestKasInvocation:
     @pytest.mark.asyncio
     async def test_missing_kiro_cli_fails_with_an_actionable_error(self, tmp_path, monkeypatch):
         """No kiro-cli means no relay, and the message must say which binary."""
-        from kiro_crew.acp.session_handle import AcpRuntimeError
+        from aj_crew.acp.session_handle import AcpRuntimeError
 
         async def no_bin(*, environ=None, home=None) -> None:
             return None
 
-        monkeypatch.setattr("kiro_crew.acp.client._resolve_kiro_bin_for_spawn", no_bin)
+        monkeypatch.setattr("aj_crew.acp.client._resolve_kiro_bin_for_spawn", no_bin)
         runtime = AcpRuntime(
             work_dir=tmp_path / "ws4",
             sandbox_mode="off",

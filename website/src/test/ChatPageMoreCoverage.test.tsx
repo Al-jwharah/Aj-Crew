@@ -13,7 +13,7 @@
  *     rendering is covered by AssistantMessage.test.tsx.
  *
  *  2. The window-event listeners: `mc-config-changed` (chat-settings reload),
- *     `toggle-pin-chat-sidebar`, `kirocrew-tool-call` (a shell browse must NOT
+ *     `toggle-pin-chat-sidebar`, `ajcrew-tool-call` (a shell browse must NOT
  *     auto-open the panel), and `mc:run-in-terminal` (both the non-string guard and the
  *     PTY-never-connects timeout that reports failure back to the code block).
  *
@@ -988,7 +988,7 @@ describe('ChatPage window-event listeners', () => {
     expect(store.getState().chat.activityOpen).toBe(false)
 
     act(() => {
-      window.dispatchEvent(new CustomEvent('kirocrew-tool-call', {
+      window.dispatchEvent(new CustomEvent('ajcrew-tool-call', {
         detail: {
           slot: 'chat-1',
           is_shell: true,
@@ -1672,9 +1672,9 @@ describe('ChatPage run-in-terminal reuse-current (#11641)', () => {
   beforeEach(() => { __resetBottomTerminal(); mockTerminalPopoutOpen = false })
 
   it('focuses the existing terminal and copies the command instead of injecting bytes', async () => {
-    // Setting ON: the handler reads it off the kirocrewConfig query at event
+    // Setting ON: the handler reads it off the ajcrewConfig query at event
     // time. A stale fetch mock would read as off, so seed BEFORE render.
-    apiMocks.kirocrewConfig = vi.fn().mockResolvedValue({
+    apiMocks.ajcrewConfig = vi.fn().mockResolvedValue({
       dashboard: { terminal: { reuse_current: true } },
     })
     await renderTurn()
@@ -1709,7 +1709,7 @@ describe('ChatPage run-in-terminal reuse-current (#11641)', () => {
   })
 
   it('reports failure when copying for the selected terminal is refused', async () => {
-    apiMocks.kirocrewConfig = vi.fn().mockResolvedValue({
+    apiMocks.ajcrewConfig = vi.fn().mockResolvedValue({
       dashboard: { terminal: { reuse_current: true } },
     })
     copyToClipboardMock.mockResolvedValueOnce(false)
@@ -1734,12 +1734,12 @@ describe('ChatPage run-in-terminal reuse-current (#11641)', () => {
   })
 
   it('surfaces a read-failure notice and still opens a fresh terminal when the config fetch fails (F1)', async () => {
-    // A failed kirocrewConfig read means the saved reuse setting is unknown, so
+    // A failed ajcrewConfig read means the saved reuse setting is unknown, so
     // a saved reuse-on would be silently ignored. errors-use-error-notice: the
     // query's failure must reach a user-facing notice rather than collapsing
     // into the off branch with nothing on screen. The command is NOT dropped —
     // a fresh tab is still minted and runs it — but the read failure is stated.
-    apiMocks.kirocrewConfig = vi.fn().mockRejectedValue(new Error('settings unavailable'))
+    apiMocks.ajcrewConfig = vi.fn().mockRejectedValue(new Error('settings unavailable'))
     await renderTurn()
     const dock = renderHook(() => useBottomTerminal())
 
@@ -1768,7 +1768,7 @@ describe('ChatPage run-in-terminal reuse-current (#11641)', () => {
     // Reuse on, no reusable tab, and the cap is already full: no fresh tab can
     // be minted, so the command is neither copied nor run. Say so through
     // ErrorNotice rather than only the button glyph (errors-use-error-notice).
-    apiMocks.kirocrewConfig = vi.fn().mockResolvedValue({
+    apiMocks.ajcrewConfig = vi.fn().mockResolvedValue({
       dashboard: { terminal: { reuse_current: false } },
     })
     await renderTurn()
@@ -1804,7 +1804,7 @@ describe('ChatPage run-in-terminal reuse-current (#11641)', () => {
     // would run something the dialog said would only be copied. With no tab to
     // focus, the raw command is copied verbatim (no shell to fence-transform for)
     // and no tab is minted.
-    apiMocks.kirocrewConfig = vi.fn().mockResolvedValue({
+    apiMocks.ajcrewConfig = vi.fn().mockResolvedValue({
       dashboard: { terminal: { reuse_current: true } },
     })
     await renderTurn()
@@ -1831,14 +1831,14 @@ describe('ChatPage run-in-terminal reuse-current (#11641)', () => {
 
   it('copies (never runs) while the initial config read is still pending (F1) — no execute on an unknown', async () => {
     // GPT 5.6 BLOCKING (#11641): the handler installs once ([]-deps) and reads
-    // the reuse setting at event time. Before the kirocrewConfig query settles
+    // the reuse setting at event time. Before the ajcrewConfig query settles
     // we cannot know whether reuse was saved on; collapsing that unknown to the
     // fresh-tab EXECUTE path would run a command a reuse-on user expected only
     // to be copied. So an UNSETTLED read takes the copy-never-run path: a tab is
     // not minted and nothing is executed, exactly as reuse-on behaves. (Benign
     // if reuse was actually off — the user merely pastes it themselves.)
     let resolveCfg: (v: unknown) => void = () => {}
-    apiMocks.kirocrewConfig = vi.fn().mockImplementation(
+    apiMocks.ajcrewConfig = vi.fn().mockImplementation(
       () => new Promise(res => { resolveCfg = res }), // never settles during the test
     )
     await renderTurn()

@@ -22,11 +22,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
-_BUILTINS_DIR = Path(__file__).resolve().parent.parent / "src" / "kiro_crew" / "apps" / "builtins"
+_BUILTINS_DIR = Path(__file__).resolve().parent.parent / "src" / "aj_crew" / "apps" / "builtins"
 
 #: Only files that participate in proxy-HMAC verification are in scope; a
 #: backend is recognised by the shared verifier import or the header name.
-_HMAC_MARKERS = ("verify_proxy_request", "X-KiroCrew-Proxy")
+_HMAC_MARKERS = ("verify_proxy_request", "X-AjCrew-Proxy")
 
 #: The two spellings of the decoded reconstruction that shipped the bug.
 #: ``request.query_string`` has no legitimate use next to the proxy HMAC --

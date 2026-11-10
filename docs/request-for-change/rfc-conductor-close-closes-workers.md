@@ -1,7 +1,7 @@
 ---
 title: Closing a conductor closes its workers
 status: accepted
-author: iamwhatever, with kirocrew
+author: iamwhatever, with ajcrew
 created: 2026-11-06
 last-audited: 2026-11-06
 audited-at: 4b5eee0c18

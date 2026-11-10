@@ -13,7 +13,7 @@ from source_providers_helpers import _mock_source_sel_fixture  # noqa: F401
 from source_providers_helpers import _no_visibility_refresh_side_task  # noqa: F401
 from source_providers_helpers import _app
 
-from kiro_crew.dashboard.handlers import source_providers as source
+from aj_crew.dashboard.handlers import source_providers as source
 
 
 def test_parse_repo_url_accepts_github_repo() -> None:
@@ -119,7 +119,7 @@ async def test_fetch_app_contributors_coalesces_concurrent_calls(monkeypatch) ->
         if "/contributors?" in command:
             calls["n"] += 1
             # flake-ok: pre-existing 20 ms sleep inside the stub that keeps the first read in flight while gather starts the second, moved verbatim; tracked for a de-flake pass
-            # nosemgrep: kirocrew.test-sleep-as-barrier -- pre-existing 20 ms stub sleep, moved verbatim; tracked for a de-flake pass
+            # nosemgrep: ajcrew.test-sleep-as-barrier -- pre-existing 20 ms stub sleep, moved verbatim; tracked for a de-flake pass
             await asyncio.sleep(0.02)
             return [{"login": "octocat", "avatar_url": "a"}]
         if command.endswith("users/octocat"):

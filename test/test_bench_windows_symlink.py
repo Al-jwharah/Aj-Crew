@@ -20,7 +20,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.eval.bench.safepath import (
+from aj_crew.eval.bench.safepath import (
     UnsafePathError,
     open_write_nofollow,
     write_text_atomic_nofollow,

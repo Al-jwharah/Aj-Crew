@@ -1,6 +1,6 @@
 """Cross-process exclusion for history consolidation.
 
-``HistoryConsolidator._running`` is per process, and ``kirocrew consolidate`` runs
+``HistoryConsolidator._running`` is per process, and ``ajcrew consolidate`` runs
 beside the gateway's idle sweep, doubling spend and memory. Pins who may take the
 durable lease, when a dead holder's claim lapses, and that a refused pass leaves the
 "processed" bookkeeping untouched.
@@ -19,10 +19,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew import history as history_mod
-from kiro_crew import history_consolidation
-from kiro_crew.history import ConversationLog, HistoryConsolidator
-from kiro_crew.history_consolidation import (
+from aj_crew import history as history_mod
+from aj_crew import history_consolidation
+from aj_crew.history import ConversationLog, HistoryConsolidator
+from aj_crew.history_consolidation import (
     _CONSOLIDATION_BUSY,
     _CONSOLIDATION_LEASE_CEILING_SECS,
     _CONSOLIDATION_LEASE_RENEW_SECS,
@@ -61,7 +61,7 @@ def _make_consolidator(log: ConversationLog, **kw: Any) -> HistoryConsolidator:
 def _live_lease(token: str = "someone-else", at: float | None = None) -> dict:
     """A lease record held by a process that demonstrably exists — this one."""
     pid = os.getpid()
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     record = {
         _LEASE_TOKEN: token,
@@ -87,9 +87,9 @@ def test_a_held_transcript_still_grants_the_lease(tmp_path, monkeypatch):
     """
     from windows_sim import replace_sharing_violation
 
-    from kiro_crew import atomic_write as aw
-    from kiro_crew import platform_compat
-    from kiro_crew.testing.clock import ManualClock
+    from aj_crew import atomic_write as aw
+    from aj_crew import platform_compat
+    from aj_crew.testing.clock import ManualClock
 
     monkeypatch.setattr(platform_compat, "IS_WINDOWS", True)
 
@@ -121,8 +121,8 @@ def test_a_held_transcript_refuses_the_lease_without_the_budget(tmp_path, monkey
     """
     from windows_sim import replace_sharing_violation
 
-    from kiro_crew import atomic_write as aw
-    from kiro_crew import history_projection, platform_compat
+    from aj_crew import atomic_write as aw
+    from aj_crew import history_projection, platform_compat
 
     monkeypatch.setattr(platform_compat, "IS_WINDOWS", True)
     monkeypatch.setattr(aw, "_REPLACE_BACKOFF_SECONDS", 0)
@@ -152,21 +152,21 @@ class TestWhoStillHoldsALease:
         assert _lease_holder_is_live(_live_lease(), now=time.monotonic())
 
     def test_a_dead_holder_does_not(self) -> None:
-        with patch("kiro_crew.platform_compat.pid_exists", return_value=False):
+        with patch("aj_crew.platform_compat.pid_exists", return_value=False):
             assert not _lease_holder_is_live(_live_lease(), now=time.monotonic())
 
     def test_a_recycled_pid_does_not(self) -> None:
         """The PID is alive, but it is not the process that took the lease."""
         record = _live_lease()
         record[_LEASE_START] = "a-different-process"
-        with patch("kiro_crew.platform_compat.get_process_start_id", return_value="live-token"):
+        with patch("aj_crew.platform_compat.get_process_start_id", return_value="live-token"):
             assert not _lease_holder_is_live(record, now=time.monotonic())
 
     def test_an_unknowable_identity_is_not_read_as_a_mismatch(self) -> None:
         """An unreadable start identity must not steal a live lease."""
         record = _live_lease()
         record.pop(_LEASE_START, None)
-        with patch("kiro_crew.platform_compat.get_process_start_id", return_value=None):
+        with patch("aj_crew.platform_compat.get_process_start_id", return_value=None):
             assert _lease_holder_is_live(record, now=time.monotonic())
 
     def test_the_ceiling_releases_a_holder_that_never_finishes(self) -> None:
@@ -211,7 +211,7 @@ class TestTheHeartbeatKeepsALiveHolder:
     @pytest.mark.asyncio
     async def test_the_heartbeat_renews_until_cancelled(self, tmp_path, monkeypatch) -> None:
         monkeypatch.setattr(
-            "kiro_crew.history_consolidation._CONSOLIDATION_LEASE_RENEW_SECS", 0.001
+            "aj_crew.history_consolidation._CONSOLIDATION_LEASE_RENEW_SECS", 0.001
         )
         log = _seed_log(tmp_path)
         c = _make_consolidator(log)
@@ -253,18 +253,18 @@ class TestTheHeartbeatKeepsALiveHolder:
     ) -> None:
         """A lost lease stops renewal rather than spinning."""
         monkeypatch.setattr(
-            "kiro_crew.history_consolidation._CONSOLIDATION_LEASE_RENEW_SECS", 0.001
+            "aj_crew.history_consolidation._CONSOLIDATION_LEASE_RENEW_SECS", 0.001
         )
         log = _seed_log(tmp_path)
         c = _make_consolidator(log)
 
         with (
             patch.object(c, "_renew_consolidation_lease", return_value=False),
-            caplog.at_level(logging.WARNING, logger="kiro_crew.history"),
+            caplog.at_level(logging.WARNING, logger="aj_crew.history"),
         ):
             await asyncio.wait_for(c._heartbeat_consolidation_lease(KEY, "gone"), timeout=30)
 
-        messages = [r.getMessage() for r in caplog.records if r.name == "kiro_crew.history"]
+        messages = [r.getMessage() for r in caplog.records if r.name == "aj_crew.history"]
         assert f"Consolidation lease lost for {KEY}; aborting pass" in messages
 
     @pytest.mark.asyncio
@@ -273,7 +273,7 @@ class TestTheHeartbeatKeepsALiveHolder:
     ) -> None:
         """The renewal has to land during the one await the pass spends."""
         monkeypatch.setattr(
-            "kiro_crew.history_consolidation._CONSOLIDATION_LEASE_RENEW_SECS", 0.001
+            "aj_crew.history_consolidation._CONSOLIDATION_LEASE_RENEW_SECS", 0.001
         )
         log = _seed_log(tmp_path)
         c = _make_consolidator(log)
@@ -369,7 +369,7 @@ class TestTakingAndDroppingTheLease:
         with history_mod.allow_on_loop_persist():
             log.update_metadata(KEY, _live_lease(token="crashed-mid-pass"))
 
-        with patch("kiro_crew.platform_compat.pid_exists", return_value=False):
+        with patch("aj_crew.platform_compat.pid_exists", return_value=False):
             token = c._acquire_consolidation_lease(KEY)
 
         assert token and token != "crashed-mid-pass"
@@ -456,7 +456,7 @@ class TestTheLeaseDoesNotOutliveItsPass:
 @pytest.mark.parametrize("failure", ["unreadable", "write_error", "unicode_error"])
 @pytest.mark.asyncio
 async def test_transient_renewal_failure_keeps_heartbeat_running(tmp_path, monkeypatch, failure):
-    monkeypatch.setattr("kiro_crew.history_consolidation._CONSOLIDATION_LEASE_RENEW_SECS", 0)
+    monkeypatch.setattr("aj_crew.history_consolidation._CONSOLIDATION_LEASE_RENEW_SECS", 0)
     log = _seed_log(tmp_path)
     c = _make_consolidator(log)
     token = c._acquire_consolidation_lease(KEY)
@@ -502,11 +502,11 @@ def test_acquisition_clears_previous_start_identity(tmp_path):
     log = _seed_log(tmp_path)
     c = _make_consolidator(log)
     log.update_metadata(KEY, {_LEASE_START: "previous-holder"})
-    with patch("kiro_crew.platform_compat.get_process_start_id", return_value=None):
+    with patch("aj_crew.platform_compat.get_process_start_id", return_value=None):
         token = c._acquire_consolidation_lease(KEY)
     assert token
     assert log.get_metadata(KEY)[_LEASE_START] is None
-    with patch("kiro_crew.platform_compat.get_process_start_id", return_value="recovered"):
+    with patch("aj_crew.platform_compat.get_process_start_id", return_value="recovered"):
         assert c._acquire_consolidation_lease(KEY) is None
 
 
@@ -549,7 +549,7 @@ def test_lease_cas_ignores_cached_metadata_after_peer_write(tmp_path, operation)
 @pytest.mark.parametrize("loss", ["peer", "heartbeat_error"])
 @pytest.mark.asyncio
 async def test_lease_loss_cancels_provider_before_durable_writes(tmp_path, monkeypatch, loss):
-    monkeypatch.setattr("kiro_crew.history_consolidation._CONSOLIDATION_LEASE_RENEW_SECS", 0)
+    monkeypatch.setattr("aj_crew.history_consolidation._CONSOLIDATION_LEASE_RENEW_SECS", 0)
     log = _seed_log(tmp_path)
     c = _make_consolidator(log)
     peer = ConversationLog(base_dir=tmp_path / "sessions")
@@ -654,15 +654,15 @@ def test_reboot_releases_reused_pid_and_start_ticks(now):
     record[_LEASE_START] = "123"
     record[_LEASE_INCARNATION] = "123:previous-boot"
     with (
-        patch("kiro_crew.platform_compat.get_process_start_id", return_value="123"),
-        patch("kiro_crew.platform_compat.process_incarnation_id", return_value="123:new-boot"),
+        patch("aj_crew.platform_compat.get_process_start_id", return_value="123"),
+        patch("aj_crew.platform_compat.process_incarnation_id", return_value="123:new-boot"),
     ):
         assert not _lease_holder_is_live(record, now=now)
 
 
 def test_unknown_reboot_identity_and_future_stamp_retain_holder():
     record = _live_lease(at=10000)
-    with patch("kiro_crew.platform_compat.process_incarnation_id", return_value=None):
+    with patch("aj_crew.platform_compat.process_incarnation_id", return_value=None):
         assert _lease_holder_is_live(record, now=10)
 
 
@@ -674,7 +674,7 @@ async def test_busy_pass_does_not_snapshot_or_copy(tmp_path):
     assert token
     with (
         patch.object(log, "snapshot_for_consolidation") as snapshot,
-        patch("kiro_crew.history_consolidation.copy.deepcopy") as copy_span,
+        patch("aj_crew.history_consolidation.copy.deepcopy") as copy_span,
     ):
         assert await c._consolidate(KEY) is _CONSOLIDATION_BUSY
     snapshot.assert_not_called()
@@ -872,7 +872,7 @@ async def test_empty_result_after_takeover_charges_nothing(tmp_path, prior_failu
     marker is refused, so ``retry_eligible`` would reject the new holder. The charge
     is fenced with the marker under one lock hold.
     """
-    from kiro_crew.history_consolidation import (
+    from aj_crew.history_consolidation import (
         _CONSOLIDATION_BACKOFF_BASE_SECS,
         _CONSOLIDATION_BACKOFF_MAX_SECS,
         _CONSOLIDATION_REFUSED,
@@ -918,7 +918,7 @@ async def test_empty_result_after_takeover_charges_nothing(tmp_path, prior_failu
 
 @pytest.mark.asyncio
 async def test_a_lost_lease_refuses_the_charge_and_the_abandon_marker(tmp_path):
-    from kiro_crew.history_consolidation import (
+    from aj_crew.history_consolidation import (
         _CONSOLIDATION_MAX_ATTEMPTS,
         AttemptedSpan,
     )
@@ -945,7 +945,7 @@ async def test_a_lost_lease_refuses_the_charge_and_the_abandon_marker(tmp_path):
 @pytest.mark.asyncio
 async def test_a_held_lease_charges_and_abandons_in_one_hold(tmp_path):
     """The fence passes for the current holder: charge, cap and marker as before."""
-    from kiro_crew.history_consolidation import (
+    from aj_crew.history_consolidation import (
         _CONSOLIDATION_MAX_ATTEMPTS,
         AttemptedSpan,
     )

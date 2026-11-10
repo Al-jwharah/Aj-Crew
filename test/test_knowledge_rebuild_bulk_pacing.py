@@ -23,16 +23,16 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew import embeddings as _embeddings
-from kiro_crew.embeddings import PRIORITY_BULK, PRIORITY_NORMAL
-from kiro_crew.knowledge import ingestion
-from kiro_crew.knowledge.chunker import HeadingAwareChunker
-from kiro_crew.knowledge.embedder import InProcessEmbedder
-from kiro_crew.knowledge.folder_watcher import FolderWatcher
-from kiro_crew.knowledge.ingestion import IngestionPipeline, rebuild_embeddings
-from kiro_crew.knowledge.readers import FileReader
-from kiro_crew.knowledge.store import KnowledgeStore
-from kiro_crew.knowledge.watcher import KnowledgeWatcher
+from aj_crew import embeddings as _embeddings
+from aj_crew.embeddings import PRIORITY_BULK, PRIORITY_NORMAL
+from aj_crew.knowledge import ingestion
+from aj_crew.knowledge.chunker import HeadingAwareChunker
+from aj_crew.knowledge.embedder import InProcessEmbedder
+from aj_crew.knowledge.folder_watcher import FolderWatcher
+from aj_crew.knowledge.ingestion import IngestionPipeline, rebuild_embeddings
+from aj_crew.knowledge.readers import FileReader
+from aj_crew.knowledge.store import KnowledgeStore
+from aj_crew.knowledge.watcher import KnowledgeWatcher
 
 # One sentinel delay for the whole file: every test that arms pacing stubs
 # ``bulk_pace_delay`` to return exactly this value, and the recorders below
@@ -342,7 +342,7 @@ class TestCallerWiring:
     async def test_dashboard_trigger_runs_unpaced_at_the_interactive_class(
         self, store, embedder, backend, sleeps, monkeypatch
     ):
-        from kiro_crew.dashboard.handlers.knowledge import _rebuild_embeddings_job
+        from aj_crew.dashboard.handlers.knowledge import _rebuild_embeddings_job
 
         monkeypatch.setattr(ingestion, "bulk_pace_delay", lambda elapsed: _PACE)
         _stale_items(store, 2)

@@ -25,9 +25,9 @@ from dashboard_templates_helpers import (
 )
 from skill_script_helpers import load_skill_script
 
-import kiro_crew.dashboard_templates.parity as parity
-from kiro_crew.dashboard_templates import Unsaid
-from kiro_crew.dashboard_templates.parity import ExtractionRefused, contract_keys, html_fields
+import aj_crew.dashboard_templates.parity as parity
+from aj_crew.dashboard_templates import Unsaid
+from aj_crew.dashboard_templates.parity import ExtractionRefused, contract_keys, html_fields
 
 
 # Declared at MODULE level: ``typing.get_type_hints`` resolves against module globals,
@@ -688,7 +688,7 @@ class TestTheContractReader:
         module.write_text(
             "from __future__ import annotations\n"
             "from typing import NotRequired, TypedDict\n"
-            "from kiro_crew.dashboard_templates import Unsaid\n\n" + declaration,
+            "from aj_crew.dashboard_templates import Unsaid\n\n" + declaration,
             encoding="utf-8",
         )
         name = f"leaky_contract_{spelling}"

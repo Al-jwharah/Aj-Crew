@@ -22,7 +22,7 @@ from sandbox_absent_ceiling_seal_helpers import (  # noqa: F401 -- fixtures are 
     crew_home_fixture,
 )
 
-from kiro_crew import sandbox
+from aj_crew import sandbox
 
 
 @_POSIX_ONLY
@@ -257,7 +257,7 @@ class TestTheAuthStoreStagingReconciliation:
         host over a file the governed process wrote itself.
         """
         monkeypatch.setattr(Path, "home", classmethod(lambda cls: tmp_path))
-        planted = tmp_path / ".kirocrew"
+        planted = tmp_path / ".ajcrew"
         staging = planted / sandbox._AUTH_STORE_STAGING_LEAF
         staging.mkdir(parents=True)
         key = planted / sandbox._AUTH_STORE_PUBLISHED_KEY_LEAF
@@ -323,7 +323,7 @@ class TestTheAuthStoreStagingLeafIsSpelledOnceInEffect:
     """
 
     def test_the_three_spellings_agree(self):
-        from kiro_crew.dashboard import token_secret as ts
+        from aj_crew.dashboard import token_secret as ts
 
         assert sandbox._AUTH_STORE_STAGING_LEAF == ts._AUTH_STORE_STAGING_LEAF, (
             "the sandbox masks one directory name and the publisher stages in another, "
@@ -331,7 +331,7 @@ class TestTheAuthStoreStagingLeafIsSpelledOnceInEffect:
         )
 
     def test_the_fence_names_the_same_directory(self):
-        from kiro_crew import security
+        from aj_crew import security
 
         assert any(
             leaf == sandbox._AUTH_STORE_STAGING_LEAF for leaf in security.sensitive_home_dirs()
@@ -522,7 +522,7 @@ class TestTheLegacyAuthStoreTempSweep:
         A rename on either side otherwise leaves the sweep matching a shape nothing
         produces, which reads exactly like a clean home.
         """
-        from kiro_crew.dashboard import token_secret as ts
+        from aj_crew.dashboard import token_secret as ts
 
         captured: list[str] = []
         real_link = os.link
@@ -531,7 +531,7 @@ class TestTheLegacyAuthStoreTempSweep:
             captured.append(os.path.basename(str(src_path)))
             return real_link(src_path, dst_path, **kwargs)
 
-        monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
         monkeypatch.setattr(os, "link", _spy_link)
         ts._load_or_create_secret()
 
@@ -629,7 +629,7 @@ class TestTheLegacyAuthStoreSweepRemembersACleanRoot:
         So its clean pass is not remembered: the root is listed on every spawn, and a
         legacy-shaped file written after a clean pass is reported and kept, as before.
         """
-        unused = tmp_path / ".kirocrew"
+        unused = tmp_path / ".ajcrew"
         unused.mkdir()
         sandbox._sweep_legacy_auth_store_temps()
         sandbox._sweep_legacy_auth_store_temps()

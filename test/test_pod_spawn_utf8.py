@@ -20,9 +20,9 @@ import sys
 
 import pytest
 
-from kiro_crew.pod import launchd
-from kiro_crew.pod import runtime as rt
-from kiro_crew.pod.config import PodConfig
+from aj_crew.pod import launchd
+from aj_crew.pod import runtime as rt
+from aj_crew.pod.config import PodConfig
 
 # The real spawn primitive, captured before any test patches
 # ``subprocess.run`` (the stubs patch the shared module attribute).
@@ -36,9 +36,9 @@ _NON_ASCII = "FATAL: no built dist under /opt/projet-José/wörk/ü"
 def cfg(tmp_path, monkeypatch) -> PodConfig:
     monkeypatch.setenv("HOME", str(tmp_path))
     monkeypatch.setenv("USERPROFILE", str(tmp_path))
-    monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
-    monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "pods-env"))
-    monkeypatch.setenv("KIROCREW_POD_ARTIFACTS_DIR", str(tmp_path / "artifacts"))
+    monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
+    monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "pods-env"))
+    monkeypatch.setenv("AJCREW_POD_ARTIFACTS_DIR", str(tmp_path / "artifacts"))
     return PodConfig.load()
 
 

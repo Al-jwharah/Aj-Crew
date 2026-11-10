@@ -35,7 +35,7 @@ export const DEFAULT_TTL = '20h'
 // registry rejects for an SSM crew.
 export const DEFAULT_SSM_RUN_AS = 'ec2-user'
 // The port a Fargate crew's front proxy listens on. Mirrors FRONT_PORT in
-// src/kiro_crew/cloud/fargate/taskdef.py; a fargate record forwards to it
+// src/aj_crew/cloud/fargate/taskdef.py; a fargate record forwards to it
 // rather than to a dashboard port.
 export const DEFAULT_FARGATE_REMOTE_PORT = '8080'
 // Example SSM target shown as the field's placeholder: a typical EC2 instance
@@ -101,7 +101,7 @@ export function instanceFormFromView(inst: InstanceView): InstanceFormValues {
 }
 
 /**
- * Seed the add form from a `kirocrew://remote-crew/add` link: an SSH crew at the
+ * Seed the add form from a `ajcrew://remote-crew/add` link: an SSH crew at the
  * link's host, with its port and label when the link carries them. A port the
  * link names stops following the transport default, as one typed by hand does.
  */
@@ -216,7 +216,7 @@ export function useInstanceFormState(
               ssm_run_as: opt(v.ssmRunAs, DEFAULT_SSM_RUN_AS),
             }
           : fargate
-            ? // A task has no remote user to run as and no kirocrew binary to
+            ? // A task has no remote user to run as and no ajcrew binary to
               // name: the forward reaches its front port and nothing else.
               coordinates
             : { ssh_host: v.sshHost.trim() }),
@@ -657,7 +657,7 @@ export function InstanceFormFields({
           </span>
         ) : null}
       </label>
-      {/* A fargate forward mints no token and runs no kirocrew binary, so the
+      {/* A fargate forward mints no token and runs no ajcrew binary, so the
           token TTL and the remote path have nothing to configure there. */}
       {isFargate ? null : (
       <label htmlFor={`${idPrefix}-ttl`} className="flex flex-col gap-1 text-[13px] text-muted">
@@ -672,18 +672,18 @@ export function InstanceFormFields({
       )}
       {isFargate ? null : (
       <label htmlFor={`${idPrefix}-remote-bin`} className="flex flex-col gap-1 text-[13px] text-muted sm:col-span-2">
-        {i18nT('pages.settings.instancesPanel.remote_kirocrew_path')} <span className="text-muted-strong">{i18nT('pages.settings.instancesPanel.optional')}</span>
+        {i18nT('pages.settings.instancesPanel.remote_ajcrew_path')} <span className="text-muted-strong">{i18nT('pages.settings.instancesPanel.optional')}</span>
         <input
           id={`${idPrefix}-remote-bin`}
-          aria-label={i18nT('pages.settings.instancesPanel.remote_kirocrew_path')}
+          aria-label={i18nT('pages.settings.instancesPanel.remote_ajcrew_path')}
           className={inputCls}
           value={values.remoteBin}
           onChange={e => set('remoteBin', e.target.value)}
-          placeholder={i18nT('pages.settings.instancesPanel.home_you_local_bin_kirocrew_leave_blank_for_stan')}
+          placeholder={i18nT('pages.settings.instancesPanel.home_you_local_bin_ajcrew_leave_blank_for_stan')}
         />
         <span className="text-[12px] text-muted leading-snug">
-          {i18nT('pages.settings.instancesPanel.only_needed_if')} <code className="text-text">{i18nT('pages.settings.instancesPanel.kirocrew')}</code> {i18nT('pages.settings.instancesPanel.is_installed_somewhere_non_standard_on_the_remot')} <code className="text-text">{i18nT('pages.settings.instancesPanel.command_v_kirocrew')}</code>{' '}
-          <Trans i18nKey="pages.settings.instancesPanel.commonly_path_use_absolute" components={{ path: <code className="text-text">{i18nT('pages.settings.instancesPanel.local_bin_kirocrew')}</code>, tilde: <code className="text-text">~</code> }} />
+          {i18nT('pages.settings.instancesPanel.only_needed_if')} <code className="text-text">{i18nT('pages.settings.instancesPanel.ajcrew')}</code> {i18nT('pages.settings.instancesPanel.is_installed_somewhere_non_standard_on_the_remot')} <code className="text-text">{i18nT('pages.settings.instancesPanel.command_v_ajcrew')}</code>{' '}
+          <Trans i18nKey="pages.settings.instancesPanel.commonly_path_use_absolute" components={{ path: <code className="text-text">{i18nT('pages.settings.instancesPanel.local_bin_ajcrew')}</code>, tilde: <code className="text-text">~</code> }} />
         </span>
       </label>
       )}

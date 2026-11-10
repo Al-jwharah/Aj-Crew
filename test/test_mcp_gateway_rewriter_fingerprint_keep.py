@@ -31,10 +31,10 @@ from mcp_gateway_rewriter_fingerprint_helpers import (  # noqa: F401 -- fixtures
     rewrite_counter_fixture,
 )
 
-from kiro_crew import agent_discovery
-from kiro_crew.mcp_gateway import rewriter
-from kiro_crew.mcp_gateway.hashing import expand_stub_flags
-from kiro_crew.mcp_gateway.rewriter import _FINGERPRINT_NAME, overlay_ready
+from aj_crew import agent_discovery
+from aj_crew.mcp_gateway import rewriter
+from aj_crew.mcp_gateway.hashing import expand_stub_flags
+from aj_crew.mcp_gateway.rewriter import _FINGERPRINT_NAME, overlay_ready
 
 
 def test_transient_settings_read_failure_does_not_rewrite_agent_overlays(
@@ -142,7 +142,7 @@ def test_a_deleted_overlay_is_rebuilt_even_on_a_settings_read_failure(
 
     assert overlay.is_file(), "a vanished overlay must be rebuilt, not withheld"
     servers = json.loads(overlay.read_text())["mcpServers"]
-    assert servers["srv"].get("_kirocrew_mcp_gateway_wrapped") is True
+    assert servers["srv"].get("_ajcrew_mcp_gateway_wrapped") is True
 
 
 def test_settings_read_failure_with_nothing_stubbed_still_rewrites(
@@ -192,7 +192,7 @@ def test_settings_read_failure_still_writes_an_agent_with_no_overlay(
     assert written.is_file(), "a cold pass must not be withheld"
     servers = json.loads(written.read_text())["mcpServers"]
     # The agent's OWN server is still wrapped and pooled.
-    assert servers["srv"].get("_kirocrew_mcp_gateway_wrapped") is True
+    assert servers["srv"].get("_ajcrew_mcp_gateway_wrapped") is True
     # The injected global is absent -- unknowable this pass -- but its raw entry
     # still merges from the real settings file, so no server is lost.
     assert "global-x" not in servers
@@ -327,14 +327,14 @@ def test_a_vanished_target_binary_refuses_the_keep(
     bin_dir = tmp_path / "extra-bin"
     bin_dir.mkdir()
     monkeypatch.setenv("PATH", str(bin_dir) + os.pathsep + os.environ.get("PATH", ""))
-    exe_name = "kirocrew-test-vanishing-cmd" + (".bat" if os.name == "nt" else "")
+    exe_name = "ajcrew-test-vanishing-cmd" + (".bat" if os.name == "nt" else "")
     exe = bin_dir / exe_name
     exe.write_text("#!/bin/sh\nexit 0\n")
     exe.chmod(0o755)
 
     src = _mk_tree(tmp_path, n_agents=1, with_env=False)
     spec = json.loads((src / "agent-0.json").read_text())
-    spec["mcpServers"]["srv"]["command"] = "kirocrew-test-vanishing-cmd"
+    spec["mcpServers"]["srv"]["command"] = "ajcrew-test-vanishing-cmd"
     (src / "agent-0.json").write_text(json.dumps(spec))
     _rewrite(tmp_path)
 
@@ -588,7 +588,7 @@ def test_legacy_overlay_acl_is_retightened_when_vouched(
     the file survives (dropping it would silently end the guard)."""
     import stat as _stat
 
-    from kiro_crew.mcp_gateway.rewriter import _stat_sig
+    from aj_crew.mcp_gateway.rewriter import _stat_sig
 
     src = _mk_tree(tmp_path, n_agents=1)
     _rewrite(tmp_path)
@@ -640,7 +640,7 @@ def test_lockdown_failure_falls_through_to_full_rewrite(
     or otherwise unprotectable artifact must never be served from cache — the
     cache hit aborts and the full rewrite re-creates the artifact through its
     protect-before-content writers."""
-    from kiro_crew import platform_compat as _pc
+    from aj_crew import platform_compat as _pc
 
     _mk_tree(tmp_path, n_agents=1)
     _rewrite(tmp_path)
@@ -653,7 +653,7 @@ def test_lockdown_failure_falls_through_to_full_rewrite(
             raise OSError("operation not permitted (foreign owner)")
         real(path)
 
-    monkeypatch.setattr("kiro_crew.mcp_gateway.rewriter.platform_compat.restrict_to_owner", failing)
+    monkeypatch.setattr("aj_crew.mcp_gateway.rewriter.platform_compat.restrict_to_owner", failing)
     before = rewrite_counter["n"]
     _rewrite(tmp_path)
     fail["on"] = False
@@ -672,7 +672,7 @@ def test_fingerprint_carries_no_command_material(tmp_path: Path) -> None:
     data = json.loads(fp.read_text())
     assert set(data.keys()) == {"inputs", "outputs", "which"}
     # ...and none of it is in the fingerprint.
-    assert "KIROCREW_MCP_TARGET" not in fp.read_text()
+    assert "AJCREW_MCP_TARGET" not in fp.read_text()
 
 
 def test_fingerprint_file_survives_prune_and_does_not_fake_overlay_ready(

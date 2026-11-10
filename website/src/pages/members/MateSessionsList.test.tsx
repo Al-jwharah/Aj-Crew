@@ -28,7 +28,7 @@ import { ApiError } from '../../api/apiError'
 const MATE = 'dm-ada'
 
 function worker(key: string, over: Partial<CrewWorker> = {}): CrewWorker {
-  return { key, title: key, agent: 'kirocrew', status: 'idle', group: 'waiting', last_activity: '', ledger_item: '', created_by: MATE, ...over }
+  return { key, title: key, agent: 'ajcrew', status: 'idle', group: 'waiting', last_activity: '', ledger_item: '', created_by: MATE, ...over }
 }
 
 const RECAP: CrewWorkerRecap = {

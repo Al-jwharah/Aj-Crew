@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.apps.backend — backend process management.
+"""Tests for aj_crew.apps.backend — backend process management.
 
 The spawn environment, the post-startup health watch, the MCP reconcile and the
 enablement gate on promotion and undo live in ``test_app_backend_spawn_env.py``,
@@ -23,7 +23,7 @@ from app_backend_helpers import _make_app_with_backend
 from test_update_provider import _UNALLOCATABLE_PID
 
 from conftest import requires_symlinks
-from kiro_crew.apps.backend import (
+from aj_crew.apps.backend import (
     AppProcess,
     PortUnavailableError,
     _find_free_port,
@@ -33,7 +33,7 @@ from kiro_crew.apps.backend import (
     start_app_backend,
     stop_app_backend,
 )
-from kiro_crew.apps.manager import APP_MANIFEST_FILENAME, install_app
+from aj_crew.apps.manager import APP_MANIFEST_FILENAME, install_app
 
 
 def _own_probe_sel(probe_home: str):
@@ -45,7 +45,7 @@ def _own_probe_sel(probe_home: str):
     ``sync=True`` writes the audit inline with no writer thread, so nothing outlives the
     ``TemporaryDirectory()`` and re-creates the deleted home.
     """
-    from kiro_crew.sel import SecurityEventLog
+    from aj_crew.sel import SecurityEventLog
 
     if SecurityEventLog._instance is not None:
         return None
@@ -66,7 +66,7 @@ def _retire_probe_sel(owned) -> None:
     thread. Clearing the slots lets the first test's ``sel()`` rebuild under
     the session floor's redirected default dir (``_isolate_sel_default_dir``).
     """
-    from kiro_crew.sel import SecurityEventLog
+    from aj_crew.sel import SecurityEventLog
 
     if owned is None or SecurityEventLog._instance is not owned:
         return
@@ -81,7 +81,7 @@ def _sandbox_can_spawn() -> bool:
     a spawn can fail for reasons a probe cannot see (e.g. CI runners that deny a separate
     unshare(NEWNS)).
 
-    It runs under an EMPTY ``KIROCREW_HOME``: at collection time a bare ``wrap_argv()``
+    It runs under an EMPTY ``AJCREW_HOME``: at collection time a bare ``wrap_argv()``
     would read the operator's real config, which on Windows or macOS often sets
     ``agent.sandbox_allow_unsandboxed_exec=true``. The gate must see the default config.
 
@@ -90,11 +90,11 @@ def _sandbox_can_spawn() -> bool:
     leaking a temp directory per xdist worker.
     """
     try:
-        from kiro_crew import sandbox as _sb
+        from aj_crew import sandbox as _sb
 
         with tempfile.TemporaryDirectory() as empty_home:
-            saved = os.environ.get("KIROCREW_HOME")
-            os.environ["KIROCREW_HOME"] = empty_home
+            saved = os.environ.get("AJCREW_HOME")
+            os.environ["AJCREW_HOME"] = empty_home
             owned = None
             cleanup = None
             try:
@@ -102,9 +102,9 @@ def _sandbox_can_spawn() -> bool:
                 argv, cleanup = _sb.wrap_argv([sys.executable, "-c", "pass"], mode="standard")
             finally:
                 if saved is None:
-                    os.environ.pop("KIROCREW_HOME", None)
+                    os.environ.pop("AJCREW_HOME", None)
                 else:
-                    os.environ["KIROCREW_HOME"] = saved
+                    os.environ["AJCREW_HOME"] = saved
                 _retire_probe_sel(owned)
             try:
                 # cwd=empty_home: a child inherits pytest's CWD (the checkout)
@@ -135,7 +135,7 @@ _needs_sandbox_spawn = pytest.mark.skipif(
 
 class TestPortAllocation:
     def test_find_free_port(self, app_env):
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         port = _find_free_port()
         # Bounds read off the module, not the 9100/9200 literals: ``app_env`` gives
@@ -153,7 +153,7 @@ class TestPortAllocation:
         """
         import threading
 
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         with bmod._lock:
             bmod._allocated_ports.clear()
@@ -191,11 +191,11 @@ def _drive_spawn_to_publication(monkeypatch, name, *, wrap_marks_sandbox):
     On Linux that cleanup path identifies the generated forking namespace launcher.
     Everything after the Popen boundary is faked so the body reaches publication.
     """
-    import kiro_crew.apps.backend as bmod
+    import aj_crew.apps.backend as bmod
 
     def _wrap(argv, **k):
         if wrap_marks_sandbox:
-            return (["/run/kirocrew_sandbox_1.py", *argv], "/run/kirocrew_sandbox_1.py")
+            return (["/run/ajcrew_sandbox_1.py", *argv], "/run/ajcrew_sandbox_1.py")
         return (list(argv), None)
 
     class _AliveProc:
@@ -225,7 +225,7 @@ def test_spawn_sets_forking_launcher_true_for_the_namespace_launcher_wrap(
     The predicate is ``IS_LINUX and cleanup_path is not None``: on Linux it names the
     namespace launcher; elsewhere the seatbelt cleanup path leaves the flag False.
     """
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     src = tmp_path / "source" / "ns-app"
     src.mkdir(parents=True)
@@ -262,7 +262,7 @@ def test_the_namespace_launcher_forks_once_and_its_parent_only_waits(tier):
     """
     import ast
 
-    from kiro_crew import sandbox
+    from aj_crew import sandbox
 
     tree = ast.parse(sandbox._build_launcher_script(tier))
     called = [ast.unparse(n.func) for n in ast.walk(tree) if isinstance(n, ast.Call)]
@@ -333,12 +333,12 @@ def test_an_app_entry_point_named_like_the_launcher_does_not_set_the_forking_fla
     tmp_path, app_env, monkeypatch
 ):
     """An app-controlled entry-point name cannot confer ownership of its children."""
-    from kiro_crew import platform_compat, sandbox
-    from kiro_crew.apps.backend import running_spawned_backend_pids
+    from aj_crew import platform_compat, sandbox
+    from aj_crew.apps.backend import running_spawned_backend_pids
 
     src = tmp_path / "source" / "launcher-named-app"
     src.mkdir(parents=True)
-    entry_point = "kirocrew_sandbox_main.py"
+    entry_point = "ajcrew_sandbox_main.py"
     (src / APP_MANIFEST_FILENAME).write_text(
         json.dumps(
             {
@@ -371,7 +371,7 @@ class TestFixedAndAutoPortIsolation:
         auto worker can select that exact number first and the fixed app is then
         refused even though other ports were free — an enabled backend left down.
         """
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         # These exercise promotion logic, not enablement: their app names are
         # fabricated and so are not in installed.json. The real gate is pinned by
@@ -413,7 +413,7 @@ class TestFixedAndAutoPortIsolation:
 
     def test_preclaim_tolerates_unreadable_or_invalid_manifests(self, monkeypatch):
         """Pre-claiming is best-effort: it must never itself fail boot."""
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         # These exercise promotion logic, not enablement: their app names are
         # fabricated and so are not in installed.json. The real gate is pinned by
@@ -441,7 +441,7 @@ class TestFixedAndAutoPortIsolation:
         Boot spawns concurrently, so a late record lets an auto-port app take the same
         number (EADDRINUSE). The port must be reserved when the spawn body runs.
         """
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         # These exercise promotion logic, not enablement: their app names are
         # fabricated and so are not in installed.json. The real gate is pinned by
@@ -490,7 +490,7 @@ class TestFixedAndAutoPortIsolation:
         allocate), so a failure that kept the reservation would permanently burn
         that port — and a gateway retrying a broken app would leak one per attempt.
         """
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         # These exercise promotion logic, not enablement: their app names are
         # fabricated and so are not in installed.json. The real gate is pinned by
@@ -532,7 +532,7 @@ class TestFixedAndAutoPortIsolation:
         Fixed ports sit inside the auto range (_MIN_PORT.._MAX_PORT), so an auto app may
         already hold it; recording anyway maps two apps to one port.
         """
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         with bmod._lock:
             bmod._allocated_ports.clear()
@@ -549,7 +549,7 @@ class TestFixedAndAutoPortIsolation:
 
     def test_reclaiming_your_own_fixed_port_is_idempotent(self):
         """A restart/retry of the SAME app must not be refused its own port."""
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         with bmod._lock:
             bmod._allocated_ports.clear()
@@ -563,7 +563,7 @@ class TestFixedAndAutoPortIsolation:
 
     def test_auto_allocation_skips_ports_claimed_by_other_apps(self):
         """The free-port scan must honor claims, not just live sockets."""
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         with bmod._lock:
             bmod._allocated_ports.clear()
@@ -602,7 +602,7 @@ class TestBootSpawnLatency:
         """
         import time as real_time
 
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         # These exercise promotion logic, not enablement: their app names are
         # fabricated and so are not in installed.json. The real gate is pinned by
@@ -634,7 +634,7 @@ class TestBootSpawnLatency:
         host) must be reported as failed. Only OUR child owning the listener —
         positive evidence that its own bind succeeded — may short-circuit.
         """
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         # These exercise promotion logic, not enablement: their app names are
         # fabricated and so are not in installed.json. The real gate is pinned by
@@ -666,7 +666,7 @@ class TestBootSpawnLatency:
         and about to die of EADDRINUSE — reporting a doomed pid as started and
         routing two apps at one backend.
         """
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         # These exercise promotion logic, not enablement: their app names are
         # fabricated and so are not in installed.json. The real gate is pinned by
@@ -699,7 +699,7 @@ class TestBootSpawnLatency:
         or the early exit would never fire in production (where the listening pid
         is the launcher's child, not the pid Popen returned).
         """
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         # These exercise promotion logic, not enablement: their app names are
         # fabricated and so are not in installed.json. The real gate is pinned by
@@ -740,7 +740,7 @@ class TestBootSpawnLatency:
         """
         import time as real_time
 
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         class _Alive:
             pid = 4242
@@ -765,7 +765,7 @@ class TestBootSpawnLatency:
         """No port to observe → unchanged behavior (wait out the whole window)."""
         import time as real_time
 
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         class _Alive:
             pid = 4242
@@ -783,7 +783,7 @@ class TestBootSpawnLatency:
         """No port->PID tool → cannot prove ownership → keep the old behavior."""
         import time as real_time
 
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         # These exercise promotion logic, not enablement: their app names are
         # fabricated and so are not in installed.json. The real gate is pinned by
@@ -818,7 +818,7 @@ class TestBootSpawnLatency:
         """
         import threading
 
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         # These exercise promotion logic, not enablement: their app names are
         # fabricated and so are not in installed.json. The real gate is pinned by
@@ -840,7 +840,7 @@ class TestBootSpawnLatency:
 
     def test_concurrent_boot_isolates_a_single_app_failure(self, monkeypatch):
         """One app's spawn failure must never take down the others (or boot)."""
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         # These exercise promotion logic, not enablement: their app names are
         # fabricated and so are not in installed.json. The real gate is pinned by
@@ -978,8 +978,8 @@ class TestBackendLifecycle:
         # by the runtime backstop in _start_app_backend_body. We materialize the
         # app dir directly (bypassing install-time validation) to exercise the
         # boot-time guard — never spawning a real process.
-        from kiro_crew.apps.backend import _start_app_backend_body
-        from kiro_crew.apps.manager import app_dir, get_app_manifest
+        from aj_crew.apps.backend import _start_app_backend_body
+        from aj_crew.apps.manager import app_dir, get_app_manifest
 
         root = app_dir("escape-app")
         root.mkdir(parents=True, exist_ok=True)
@@ -1007,8 +1007,8 @@ class TestBackendLifecycle:
         # when the switch is off.
         import logging
 
-        import kiro_crew.apps.backend as bmod
-        from kiro_crew.apps.manager import app_dir, get_app_manifest
+        import aj_crew.apps.backend as bmod
+        from aj_crew.apps.manager import app_dir, get_app_manifest
 
         root = app_dir("third-party-backend")
         root.mkdir(parents=True, exist_ok=True)
@@ -1025,7 +1025,7 @@ class TestBackendLifecycle:
             )
         )
         monkeypatch.setattr(
-            "kiro_crew.apps.execution.third_party_execution_allowed", lambda: False
+            "aj_crew.apps.execution.third_party_execution_allowed", lambda: False
         )
         monkeypatch.setattr(
             bmod.subprocess, "Popen", lambda *a, **k: pytest.fail("spawned despite gate off")
@@ -1042,8 +1042,8 @@ class TestBackendLifecycle:
     ):
         # The gate stays open for a real shipped builtin only when the manifest's
         # python -m target resolves inside that builtin's immutable package.
-        import kiro_crew.apps.backend as bmod
-        from kiro_crew.apps.manager import (
+        import aj_crew.apps.backend as bmod
+        from aj_crew.apps.manager import (
             InstalledApp,
             _write_installed,
             app_dir,
@@ -1061,7 +1061,7 @@ class TestBackendLifecycle:
                     "displayName": "Files",
                     "description": "shipped builtin backend",
                     "backend": {
-                        "entryPoint": "kiro_crew.apps.builtins.file_explorer.server",
+                        "entryPoint": "aj_crew.apps.builtins.file_explorer.server",
                         "port": "auto",
                     },
                 }
@@ -1072,7 +1072,7 @@ class TestBackendLifecycle:
             InstalledApp(name=name, origin="builtin", enabled=True),
         )
         monkeypatch.setattr(
-            "kiro_crew.apps.execution.third_party_execution_allowed", lambda: False
+            "aj_crew.apps.execution.third_party_execution_allowed", lambda: False
         )
 
         class _ReachedSpawn(Exception):
@@ -1100,8 +1100,8 @@ class TestBackendLifecycle:
         # when its dotted entry resolves to genuine shipped builtin code.
         import logging
 
-        import kiro_crew.apps.backend as bmod
-        from kiro_crew.apps.manager import (
+        import aj_crew.apps.backend as bmod
+        from aj_crew.apps.manager import (
             InstalledApp,
             _write_installed,
             app_dir,
@@ -1118,7 +1118,7 @@ class TestBackendLifecycle:
                     "displayName": "Evil",
                     "description": "forged builtin provenance",
                     "backend": {
-                        "entryPoint": "kiro_crew.apps.builtins.file_explorer.server",
+                        "entryPoint": "aj_crew.apps.builtins.file_explorer.server",
                         "port": "auto",
                     },
                 }
@@ -1129,7 +1129,7 @@ class TestBackendLifecycle:
             InstalledApp(name="evil-dotted", origin="builtin", enabled=True),
         )
         monkeypatch.setattr(
-            "kiro_crew.apps.execution.third_party_execution_allowed", lambda: False
+            "aj_crew.apps.execution.third_party_execution_allowed", lambda: False
         )
         monkeypatch.setattr(
             bmod.subprocess, "Popen", lambda *a, **k: pytest.fail("spawned despite gate off")
@@ -1146,8 +1146,8 @@ class TestBackendLifecycle:
     ):
         import logging
 
-        import kiro_crew.apps.backend as bmod
-        from kiro_crew.apps.manager import (
+        import aj_crew.apps.backend as bmod
+        from aj_crew.apps.manager import (
             InstalledApp,
             _write_installed,
             app_dir,
@@ -1174,7 +1174,7 @@ class TestBackendLifecycle:
             InstalledApp(name=name, origin="builtin", enabled=True),
         )
         monkeypatch.setattr(
-            "kiro_crew.apps.execution.third_party_execution_allowed", lambda: False
+            "aj_crew.apps.execution.third_party_execution_allowed", lambda: False
         )
         monkeypatch.setattr(
             bmod.subprocess, "Popen", lambda *a, **k: pytest.fail("spawned mutable code")
@@ -1192,7 +1192,7 @@ class TestBackendLifecycle:
         # reported as started — otherwise the gateway proxies to a dead port (502) and
         # respawns onto the same doomed port forever (the crash-loop we hit). The spawn
         # verifies the child survived its bind; an immediate exit → None + cleared state.
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         # These exercise promotion logic, not enablement: their app names are
         # fabricated and so are not in installed.json. The real gate is pinned by
@@ -1239,7 +1239,7 @@ class TestBackendLifecycle:
         # sandboxed os.fork()s racing (a fork-in-threads deadlock unrelated to this fix).
         import threading
 
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         src = _make_app_with_backend(tmp_path)
         install_app(src)
@@ -1290,7 +1290,7 @@ class TestBackendLifecycle:
         # never fires), an awaiting caller hits the deadline with the placeholder still
         # STARTING. It must clear that placeholder and return None — otherwise the app is
         # wedged in 'starting' forever and every later call re-enters the 20s wait.
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         with bmod._lock:
             bmod._processes["wedged-app"] = AppProcess(
@@ -1347,8 +1347,8 @@ class TestShellDispatch:
     def _dispatch_cmd(self, tmp_path, monkeypatch, name, entry_rel, content, *,
                       executable, backend_type=""):
         """Install an app, then capture the argv the dispatch builds."""
-        import kiro_crew.apps.backend as bmod
-        from kiro_crew.apps.manager import get_app_manifest
+        import aj_crew.apps.backend as bmod
+        from aj_crew.apps.manager import get_app_manifest
 
         src = tmp_path / "source" / name
         src.mkdir(parents=True)
@@ -1432,8 +1432,8 @@ class TestShellDispatch:
         # On native Windows (IS_POSIX False) the shell branch must fail fast
         # with a logged error and return None — never reach Popen with a
         # shebang-dependent argv or the nonexistent /bin/sh.
-        import kiro_crew.apps.backend as bmod
-        from kiro_crew.apps.manager import get_app_manifest
+        import aj_crew.apps.backend as bmod
+        from aj_crew.apps.manager import get_app_manifest
 
         name = "win-shell-refused"
         src = tmp_path / "source" / name
@@ -1462,7 +1462,7 @@ class TestShellDispatch:
     ):
         # The routes read this after start_app_backend's None, so it must
         # answer exactly the spawn body's exec refusal and nothing else.
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         def _install(name, entry, body, **backend):
             src = tmp_path / "source" / name
@@ -1500,8 +1500,8 @@ class TestShellDispatch:
         # The persisted manifest is read without validate(), so an edited untyped
         # entry that escapes the root must be refused by the spawn's own file-entry
         # screen before _is_shell_entry opens or probes it.
-        import kiro_crew.apps.backend as bmod
-        from kiro_crew.apps.manager import app_dir
+        import aj_crew.apps.backend as bmod
+        from aj_crew.apps.manager import app_dir
 
         name = "win-escape"
         src = tmp_path / "source" / name

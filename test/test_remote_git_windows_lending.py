@@ -18,8 +18,8 @@ from pathlib import Path
 import pytest
 from git_maintenance_helpers import git_maintenance_off_entries
 
-from kiro_crew.remote_session import git_gateway, relay
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.remote_session import git_gateway, relay
+from aj_crew.testing.wait import async_wait_until
 
 _WINDOWS = pytest.mark.skipif(sys.platform != "win32", reason="Windows primitives")
 _POSIX = pytest.mark.skipif(sys.platform == "win32", reason="POSIX behaviour")
@@ -136,14 +136,14 @@ async def test_direct_fill_with_no_applicable_helper_says_what_to_set(monkeypatc
 @pytest.mark.asyncio
 async def test_real_git_lends_through_a_directly_run_store_helper(tmp_path, monkeypatch):
     """The Windows path end to end with real git: no shell, no secret anywhere but stdout."""
-    from kiro_crew.platform_compat import trusted_git_bin
+    from aj_crew.platform_compat import trusted_git_bin
 
     git = trusted_git_bin()
     if git is None:
         pytest.skip("trusted Git is required")
     monkeypatch.setattr(git_gateway, "_runs_helpers_directly", lambda: True)
     monkeypatch.setattr(
-        "kiro_crew.github_runner.validate_provider_executable",
+        "aj_crew.github_runner.validate_provider_executable",
         lambda path, *, require_protected: path,
     )
     home = tmp_path / "home"
@@ -196,13 +196,13 @@ async def test_a_helper_listed_before_the_reset_is_never_consulted(tmp_path, mon
     login and print it in a failed assertion. Here an ``osxkeychain`` found in a
     trusted directory holds another login, listed before the reset.
     """
-    from kiro_crew import platform_compat
-    from kiro_crew.platform_compat import trusted_git_bin
+    from aj_crew import platform_compat
+    from aj_crew.platform_compat import trusted_git_bin
 
     if trusted_git_bin() is None:
         pytest.skip("trusted Git is required")
     monkeypatch.setattr(git_gateway, "_runs_helpers_directly", lambda: True)
-    monkeypatch.setattr("kiro_crew.github_runner.validate_provider_executable", _real_files_only)
+    monkeypatch.setattr("aj_crew.github_runner.validate_provider_executable", _real_files_only)
     system = tmp_path / "system-bin"
     system.mkdir()
     ran = tmp_path / "system-helper-ran"
@@ -214,7 +214,7 @@ async def test_a_helper_listed_before_the_reset_is_never_consulted(tmp_path, mon
     helper.chmod(0o700)
     real_dirs = platform_compat.trusted_system_path() or ""
     monkeypatch.setattr(
-        "kiro_crew.platform_compat.trusted_system_path",
+        "aj_crew.platform_compat.trusted_system_path",
         lambda: os.pathsep.join(d for d in (str(system), real_dirs) if d),
     )
     home = tmp_path / "home"
@@ -241,12 +241,12 @@ async def test_a_windows_gateway_lends_with_real_git(tmp_path, monkeypatch):
     """No seam patched: the real Windows gateway decides, and it lends."""
     assert git_gateway._runs_helpers_directly() is True
     assert git_gateway.lending_unverifiable() is False
-    from kiro_crew.platform_compat import trusted_git_bin
+    from aj_crew.platform_compat import trusted_git_bin
 
     if trusted_git_bin() is None:
         pytest.skip("trusted Git is required")
     monkeypatch.setattr(
-        "kiro_crew.github_runner.validate_provider_executable",
+        "aj_crew.github_runner.validate_provider_executable",
         lambda path, *, require_protected: path,
     )
     home = tmp_path / "home"
@@ -285,8 +285,8 @@ def _fake_helper(directory: Path, name: str) -> Path:
 
 @_WINDOWS
 def test_git_credential_manager_beside_git_exe_is_accepted(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.github_runner.validate_provider_executable", _real_files_only)
-    monkeypatch.setattr("kiro_crew.platform_compat.trusted_system_path", lambda: "")
+    monkeypatch.setattr("aj_crew.github_runner.validate_provider_executable", _real_files_only)
+    monkeypatch.setattr("aj_crew.platform_compat.trusted_system_path", lambda: "")
     gcm = _fake_helper(tmp_path / "mingw64" / "bin", "git-credential-manager.exe")
     exec_path = str(tmp_path / "mingw64" / "libexec" / "git-core")
     git = str(gcm.parent / "git.exe")
@@ -299,8 +299,8 @@ def test_git_credential_manager_beside_git_exe_is_accepted(tmp_path, monkeypatch
 
 @_POSIX
 def test_off_windows_the_git_directory_is_not_a_helper_source(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.github_runner.validate_provider_executable", _real_files_only)
-    monkeypatch.setattr("kiro_crew.platform_compat.trusted_system_path", lambda: "")
+    monkeypatch.setattr("aj_crew.github_runner.validate_provider_executable", _real_files_only)
+    monkeypatch.setattr("aj_crew.platform_compat.trusted_system_path", lambda: "")
     beside = _fake_helper(tmp_path / "bin", "git-credential-manager")
     exec_path = str(tmp_path / "libexec")
     git = str(beside.parent / "git")
@@ -310,8 +310,8 @@ def test_off_windows_the_git_directory_is_not_a_helper_source(tmp_path, monkeypa
 
 def test_the_posix_helper_spelling_is_unchanged(tmp_path, monkeypatch):
     """Off the direct path git still gets the same ``!`` text it always did."""
-    monkeypatch.setattr("kiro_crew.github_runner.validate_provider_executable", _real_files_only)
-    monkeypatch.setattr("kiro_crew.platform_compat.trusted_system_path", lambda: "")
+    monkeypatch.setattr("aj_crew.github_runner.validate_provider_executable", _real_files_only)
+    monkeypatch.setattr("aj_crew.platform_compat.trusted_system_path", lambda: "")
     suffix = ".exe" if os.name == "nt" else ""
     store = _fake_helper(tmp_path / "with space", f"git-credential-store{suffix}")
     import shlex
@@ -332,7 +332,7 @@ def test_off_windows_lending_is_never_unverifiable():
 @_WINDOWS
 @pytest.mark.parametrize("broken", ["sid", "acl"])
 def test_a_windows_gateway_that_cannot_verify_itself_lends_nothing(monkeypatch, broken):
-    from kiro_crew import platform_compat, windows_acl
+    from aj_crew import platform_compat, windows_acl
 
     assert git_gateway.lending_unverifiable() is False
     if broken == "sid":
@@ -377,7 +377,7 @@ async def test_every_coroutine_reads_the_windows_walk_off_the_event_loop(monkeyp
 
 @_WINDOWS
 def test_the_relay_token_file_has_an_owner_only_dacl(tmp_path):
-    from kiro_crew import platform_compat, windows_acl
+    from aj_crew import platform_compat, windows_acl
 
     path = tmp_path / "relay.token"
     relay.write_token_file(path, b"token-bytes")
@@ -411,7 +411,7 @@ def test_a_token_file_that_cannot_be_locked_down_is_never_written(tmp_path, monk
 
 @pytest.mark.parametrize("failure", ["no-sid", "apply-fails", "read-back-differs"])
 def test_the_owner_lock_refuses_whatever_it_cannot_confirm(tmp_path, monkeypatch, failure):
-    from kiro_crew import platform_compat, windows_acl
+    from aj_crew import platform_compat, windows_acl
 
     applied = []
     monkeypatch.setattr(
@@ -444,7 +444,7 @@ async def test_a_stopped_lookup_kills_its_whole_tree_on_every_os(monkeypatch):
         killed.append(pid)
         return True
 
-    monkeypatch.setattr("kiro_crew.platform_compat.kill_process_tree_async", tree)
+    monkeypatch.setattr("aj_crew.platform_compat.kill_process_tree_async", tree)
     monkeypatch.setattr(git_gateway, "_GH_TIMEOUT_SECS", 0.2)
     with pytest.raises(git_gateway._NoCredential, match="timed out"):
         await git_gateway._run_quiet(
@@ -457,7 +457,7 @@ async def test_a_stopped_lookup_kills_its_whole_tree_on_every_os(monkeypatch):
 @pytest.mark.asyncio
 async def test_on_windows_a_timed_out_lookup_leaves_no_grandchild(tmp_path, monkeypatch):
     """``az`` is ``az.cmd``: the Python under ``cmd.exe`` must go too."""
-    from kiro_crew.platform_compat import pid_exists
+    from aj_crew.platform_compat import pid_exists
 
     pid_file = tmp_path / "grandchild.pid"
     script = (

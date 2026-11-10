@@ -1,6 +1,6 @@
 """Fixtures and dispatch helpers shared by the ``test_mcp_computer*.py`` modules.
 
-``home`` points ``KIROCREW_HOME`` at a tmp dir so the keystone lands there,
+``home`` points ``AJCREW_HOME`` at a tmp dir so the keystone lands there,
 ``keystone`` is its path and ``_enable`` writes it ON, and ``fake_backend`` installs
 the shipped fake backend with clean shared singletons. ``_dispatch`` and ``_get_state``
 run one tool through the gateway dispatcher as an attended session. The fixtures are
@@ -16,12 +16,12 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.computer_use import backend as cu_backend
-from kiro_crew.computer_use import index as cu_index
-from kiro_crew.computer_use import service as cu_service
-from kiro_crew.computer_use import tools as cu_tools
-from kiro_crew.computer_use.types import STATE_FILE_NAME, TOOL_GET_STATE
-from kiro_crew.testing.fake_computer_use import FAKE_FILES_APP, FakeComputerUseBackend
+from aj_crew.computer_use import backend as cu_backend
+from aj_crew.computer_use import index as cu_index
+from aj_crew.computer_use import service as cu_service
+from aj_crew.computer_use import tools as cu_tools
+from aj_crew.computer_use.types import STATE_FILE_NAME, TOOL_GET_STATE
+from aj_crew.testing.fake_computer_use import FAKE_FILES_APP, FakeComputerUseBackend
 
 # A session key that looks attended. The gate refuses unattended surfaces
 # (``cron:``/``subagent:``/``taskrunner``) even with no profile on disk, so an
@@ -31,13 +31,13 @@ _SESSION = "dashboard:main"
 
 @pytest.fixture(name="home")
 def home_fixture(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    """Redirect ``KIROCREW_HOME`` so the keystone lands in a tmp dir.
+    """Redirect ``AJCREW_HOME`` so the keystone lands in a tmp dir.
 
     Mandatory, not hygiene: without it a developer's real
     ``~/.kiro/crew/computer_use.json`` would decide whether these tests see the
     feature as enabled.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     return tmp_path
 
 

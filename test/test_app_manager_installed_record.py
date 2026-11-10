@@ -16,7 +16,7 @@ from app_manager_helpers import app_home_fixture  # noqa: F401 - fixture
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from kiro_crew.apps.manager import (
+from aj_crew.apps.manager import (
     AppResult,
     InstalledApp,
     _read_installed,
@@ -215,20 +215,20 @@ class TestInstalledApp:
         assert meta.lifecycle == "locked"
         assert meta.schemaVersion == 2
 
-    def test_migrate_managed_kirocrew(self):
-        """Old managed='kirocrew' with no source → defaults to registry."""
-        meta = InstalledApp.from_dict({"name": "old", "managed": "kirocrew"})
+    def test_migrate_managed_ajcrew(self):
+        """Old managed='ajcrew' with no source → defaults to registry."""
+        meta = InstalledApp.from_dict({"name": "old", "managed": "ajcrew"})
         assert meta.origin == "registry"
         assert meta.resources == "gateway"
         assert meta.lifecycle == "gateway"
         assert meta.schemaVersion == 2
 
-    def test_migrate_managed_kirocrew_local_source(self):
-        """Old managed='kirocrew' with filesystem source → origin='local'."""
+    def test_migrate_managed_ajcrew_local_source(self):
+        """Old managed='ajcrew' with filesystem source → origin='local'."""
         meta = InstalledApp.from_dict(
             {
                 "name": "old",
-                "managed": "kirocrew",
+                "managed": "ajcrew",
                 "source": "/Users/dev/my-tool",
             }
         )
@@ -236,12 +236,12 @@ class TestInstalledApp:
         assert meta.resources == "gateway"
         assert meta.lifecycle == "gateway"
 
-    def test_migrate_managed_kirocrew_registry_source(self):
-        """Old managed='kirocrew' with registry: source → origin='registry'."""
+    def test_migrate_managed_ajcrew_registry_source(self):
+        """Old managed='ajcrew' with registry: source → origin='registry'."""
         meta = InstalledApp.from_dict(
             {
                 "name": "old",
-                "managed": "kirocrew",
+                "managed": "ajcrew",
                 "source": "registry:my-app",
             }
         )
@@ -265,7 +265,7 @@ class TestInstalledApp:
 
     @pytest.mark.parametrize("origin", ["builtin", "local"])
     def test_retired_uninstall_refuses_locked_non_qualifying_app(self, app_home, origin):
-        from kiro_crew.apps.manager import app_dir
+        from aj_crew.apps.manager import app_dir
 
         name = "agent-worlds"
         _write_installed(name, InstalledApp(name=name, origin=origin, lifecycle="locked"))
@@ -277,7 +277,7 @@ class TestInstalledApp:
 
     def test_uninstall_locked_rejected(self, tmp_path, app_home):
         """lifecycle=locked apps cannot be uninstalled."""
-        from kiro_crew.apps.manager import register_builtin_apps
+        from aj_crew.apps.manager import register_builtin_apps
 
         register_builtin_apps()
         result = uninstall_app("agent-worlds")
@@ -478,7 +478,7 @@ class TestEnabledStateTellsUnreadableFromNotInstalled:
         assert not junction.exists() and not junction.is_symlink() and not junction.is_dir()
 
         monkeypatch.setattr(
-            "kiro_crew.apps.manager.is_link_or_junction",
+            "aj_crew.apps.manager.is_link_or_junction",
             lambda path: Path(path) == junction,
         )
 
@@ -495,7 +495,7 @@ class TestEnabledStateTellsUnreadableFromNotInstalled:
         assert not meta.exists() and not meta.is_symlink() and not meta.is_dir()
 
         monkeypatch.setattr(
-            "kiro_crew.apps.manager.is_link_or_junction",
+            "aj_crew.apps.manager.is_link_or_junction",
             lambda path: Path(path) == meta,
         )
 

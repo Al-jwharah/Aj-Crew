@@ -19,7 +19,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import platform_compat as pc
+from aj_crew import platform_compat as pc
 
 # Each test starts with the macOS libc and libproc handle caches unbuilt and puts them
 # back after, as every test of the test_platform_compat family does (see conftest.py).
@@ -257,7 +257,7 @@ def _plant_on_path(tmp_path, monkeypatch, name):
 def _pin_warnings(caplog):
     """Only this module's records, so an unrelated warning cannot skew the count."""
 
-    return [r for r in caplog.records if r.name == "kiro_crew.platform_compat"]
+    return [r for r in caplog.records if r.name == "aj_crew.platform_compat"]
 
 
 def test_a_tool_installed_outside_the_trusted_dirs_is_diagnosable(tmp_path, monkeypatch, caplog):
@@ -265,14 +265,14 @@ def test_a_tool_installed_outside_the_trusted_dirs_is_diagnosable(tmp_path, monk
 
     NixOS and Homebrew/conda prefixes keep a perfectly good ``lsof`` outside the
     system directories. The pin still refuses it, but without this line the
-    operator sees only ``kirocrew stop`` no-opping and a prompt to install a
+    operator sees only ``ajcrew stop`` no-opping and a prompt to install a
     tool they already have.
     """
 
     monkeypatch.setattr(pc, "_UNPINNED_TOOL_PROBED", set())
     planted = _plant_on_path(tmp_path, monkeypatch, "definitely-not-a-system-tool")
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.platform_compat"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.platform_compat"):
         assert pc.trusted_system_bin("definitely-not-a-system-tool") is None
 
     records = _pin_warnings(caplog)
@@ -290,7 +290,7 @@ def test_the_unpinned_tool_diagnostic_does_not_repeat(tmp_path, monkeypatch, cap
     monkeypatch.setattr(pc, "_UNPINNED_TOOL_PROBED", set())
     _plant_on_path(tmp_path, monkeypatch, "definitely-not-a-system-tool")
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.platform_compat"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.platform_compat"):
         for _ in range(3):
             assert pc.trusted_system_bin("definitely-not-a-system-tool") is None
 
@@ -307,7 +307,7 @@ def test_a_genuinely_absent_tool_is_not_reported_as_misplaced(tmp_path, monkeypa
     monkeypatch.setattr(pc, "_UNPINNED_TOOL_PROBED", set())
     monkeypatch.setenv("PATH", str(tmp_path))
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.platform_compat"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.platform_compat"):
         assert pc.trusted_system_bin("definitely-not-a-system-tool") is None
 
     assert _pin_warnings(caplog) == []
@@ -365,7 +365,7 @@ class TestIsBundledInterpreter:
             / "Contents"
             / "Resources"
             / "backend-dist"
-            / "kirocrew-backend-arm64"
+            / "ajcrew-backend-arm64"
             / "bin"
             / "python3.12"
         )

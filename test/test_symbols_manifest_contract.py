@@ -52,8 +52,8 @@ from typing import NamedTuple
 import pytest
 import yaml
 
-from kiro_crew import platform_compat
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew import platform_compat
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = ROOT / ".github" / "workflows" / "build-desktop.yml"
@@ -545,7 +545,7 @@ def _run_symbolizer(
             "PATH": _symbolizer_path(*extra_path),
             "HOME": str(tmp_path),
             "TMPDIR": str(tmp_path),
-            "KIROCREW_SYMBOL_CACHE": str(cache),
+            "AJCREW_SYMBOL_CACHE": str(cache),
         },
         start_new_session=True,
         **UTF8_TEXT,
@@ -763,14 +763,14 @@ def _ips_report(tmp_path: Path, version: str, uuid: str, arch: str) -> Path:
     Line 1 is a JSON summary header, the remainder is the payload -- which is why
     the script parses `slice(1)` rather than the whole file.
     """
-    path = tmp_path / "Kiro Crew-2026-09-04-120000.ips"
-    header = {"app_name": "Kiro Crew", "timestamp": "2026-09-04 12:00:00.00 +0000"}
+    path = tmp_path / "Aj Crew-2026-09-04-120000.ips"
+    header = {"app_name": "Aj Crew", "timestamp": "2026-09-04 12:00:00.00 +0000"}
     payload = {
         "usedImages": [
             {"name": "dyld", "path": "/usr/lib/dyld", "uuid": "0" * 36, "arch": arch},
             {
                 "name": "Electron Framework",
-                "path": "/Applications/Kiro Crew.app/Contents/Frameworks/"
+                "path": "/Applications/Aj Crew.app/Contents/Frameworks/"
                 "Electron Framework.framework/Versions/A/Electron Framework",
                 "CFBundleShortVersionString": version,
                 "uuid": uuid,

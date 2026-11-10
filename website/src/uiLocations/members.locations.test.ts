@@ -15,7 +15,7 @@ interface Placement {
 interface Loc { id: string; kind: string; label_key: string; placements: Placement[]; terms?: Record<string, string[]> }
 interface Index { locations: Loc[]; labels: Record<string, Record<string, string>> }
 
-const INDEX_FILE = path.resolve(__dirname, '../../../src/kiro_crew/docs/ui-index.generated.json')
+const INDEX_FILE = path.resolve(__dirname, '../../../src/aj_crew/docs/ui-index.generated.json')
 const index = JSON.parse(fs.readFileSync(INDEX_FILE, 'utf-8')) as Index
 const byId = new Map(index.locations.map(l => [l.id, l]))
 
@@ -58,12 +58,12 @@ const EXPECTED: Record<string, [string, string, string, string, string[], string
   'members.details': ['toggle', 'pages.membersPage.panel_toggle', 'Dashboard & files', '仪表板和文件', ['page.members'], 'header', '/members', [cond('crewmate_selected'), cond('crewmate_panel_not_docked')]],
   // The side panel's Dashboard tab, behind its opener while the panel is closed.
   'members.dashboard-tab': ['tab', 'pages.membersPage.dashboard_tab', 'Dashboard', '仪表板', ['page.members'], 'content', '/members', [cond('crewmate_selected'), { kind: 'shown_by', location: 'members.details', when: 'crewmate_panel_closed' }]],
-  'agents.add': ['button', 'pages.kiroCrewAgentsPage.add_crew_member', 'New bot', '新建 Bot', ['page.capabilities', 'tab.capabilities.crews'], 'toolbar', '/capabilities?tab=crews', []],
-  'agents.create-first': ['button', 'pages.kiroCrewAgentsPage.create_your_first_crew', 'Create your first bot', '创建你的第一个 Bot', ['page.capabilities', 'tab.capabilities.crews'], 'content', '/capabilities?tab=crews', [cond('no_crewmates')]],
+  'agents.add': ['button', 'pages.ajCrewAgentsPage.add_crew_member', 'New bot', '新建 Bot', ['page.capabilities', 'tab.capabilities.crews'], 'toolbar', '/capabilities?tab=crews', []],
+  'agents.create-first': ['button', 'pages.ajCrewAgentsPage.create_your_first_crew', 'Create your first bot', '创建你的第一个 Bot', ['page.capabilities', 'tab.capabilities.crews'], 'content', '/capabilities?tab=crews', [cond('no_crewmates')]],
   'agents.edit-avatar': ['button', 'components.avatarBuilder.edit_avatar', 'Edit avatar', '编辑头像', ['page.capabilities', 'tab.capabilities.crews', 'agents.section-model'], 'tab', '/capabilities?tab=crews', [cond('crewmate_editor_open')]],
-  'agents.delete': ['button', 'pages.kiroCrewAgentsPage.delete_crew', 'Delete bot', '删除 Bot', ['page.capabilities', 'tab.capabilities.crews', 'agents.section-danger'], 'tab', '/capabilities?tab=crews', [cond('crewmate_editor_open')]],
-  'agents.crew-list': ['list', 'pages.kiroCrewAgentsPage.agents', 'Agents', '代理', ['page.capabilities', 'tab.capabilities.crews'], 'content', '/capabilities?tab=crews', []],
-  'agents.model': ['field', 'pages.kiroCrewAgentsPage.edit_model', 'Edit default model', '编辑默认模型', ['page.capabilities', 'tab.capabilities.crews', 'agents.section-model'], 'tab', '/capabilities?tab=crews', [cond('crewmate_editor_open')]],
+  'agents.delete': ['button', 'pages.ajCrewAgentsPage.delete_crew', 'Delete bot', '删除 Bot', ['page.capabilities', 'tab.capabilities.crews', 'agents.section-danger'], 'tab', '/capabilities?tab=crews', [cond('crewmate_editor_open')]],
+  'agents.crew-list': ['list', 'pages.ajCrewAgentsPage.agents', 'Agents', '代理', ['page.capabilities', 'tab.capabilities.crews'], 'content', '/capabilities?tab=crews', []],
+  'agents.model': ['field', 'pages.ajCrewAgentsPage.edit_model', 'Edit default model', '编辑默认模型', ['page.capabilities', 'tab.capabilities.crews', 'agents.section-model'], 'tab', '/capabilities?tab=crews', [cond('crewmate_editor_open')]],
   // The editor's section rail rows a guide opens on the way (CrewEditorNextRail).
   'agents.section-model': ['tab', 'crewEditorNext.section_general', 'General', '常规', ['page.capabilities', 'tab.capabilities.crews'], 'content', '/capabilities?tab=crews', [cond('crewmate_editor_open')]],
   'agents.section-danger': ['tab', 'crewEditorNext.section_danger', 'Danger Zone', '危险区域', ['page.capabilities', 'tab.capabilities.crews'], 'content', '/capabilities?tab=crews', [cond('crewmate_editor_open')]],

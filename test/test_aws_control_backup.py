@@ -18,7 +18,7 @@ from aws_control_backup_helpers import (
     ACCOUNT,
 )
 
-from kiro_crew.apps.builtins.aws_control.backend import backup
+from aj_crew.apps.builtins.aws_control.backend import backup
 
 # _authorize_upload — the branches the teardown test in the P0 suite skips over
 
@@ -37,7 +37,7 @@ class TestAuthorizeUpload:
         # mid-build refuse: the recorded account and the account the profile
         # resolves to today do not agree, so the bytes must not leave.
         with mock.patch(
-            "kiro_crew.deploy.engine._checked",
+            "aj_crew.deploy.engine._checked",
             return_value=json.dumps({"Account": "999988887777"}),
         ):
             with pytest.raises(RuntimeError, match="no longer points at"):
@@ -53,7 +53,7 @@ class TestAuthorizeUpload:
         # A garbled STS response must not be trusted as a match: it decodes to
         # an empty account, which can never equal the requested one, so the
         # upload is refused rather than proceeding on unknown identity.
-        with mock.patch("kiro_crew.deploy.engine._checked", return_value="not json"):
+        with mock.patch("aj_crew.deploy.engine._checked", return_value="not json"):
             with pytest.raises(RuntimeError, match="no longer points at"):
                 backup._authorize_upload(
                     ACCOUNT,
@@ -68,10 +68,10 @@ class TestAuthorizeUpload:
         # local check catches it before put_file.
         with (
             mock.patch(
-                "kiro_crew.deploy.engine._checked",
+                "aj_crew.deploy.engine._checked",
                 return_value=json.dumps({"Account": ACCOUNT}),
             ),
-            mock.patch("kiro_crew.apps.manager.is_app_enabled", return_value=False),
+            mock.patch("aj_crew.apps.manager.is_app_enabled", return_value=False),
         ):
             with pytest.raises(RuntimeError, match="was disabled"):
                 backup._authorize_upload(
@@ -87,11 +87,11 @@ class TestAuthorizeUpload:
         # withdrawal reason is surfaced so the audit trail says why.
         with (
             mock.patch(
-                "kiro_crew.deploy.engine._checked",
+                "aj_crew.deploy.engine._checked",
                 return_value=json.dumps({"Account": ACCOUNT}),
             ),
-            mock.patch("kiro_crew.apps.manager.is_app_enabled", return_value=True),
-            mock.patch("kiro_crew.aws_consent.is_granted", return_value=(False, "expired")),
+            mock.patch("aj_crew.apps.manager.is_app_enabled", return_value=True),
+            mock.patch("aj_crew.aws_consent.is_granted", return_value=(False, "expired")),
         ):
             with pytest.raises(RuntimeError, match="consent no longer holds.*expired"):
                 backup._authorize_upload(
@@ -107,7 +107,7 @@ class TestAuthorizeUpload:
         # this profile and region but names another account; the second names this
         # account under another profile. Neither record allows the upload, so the
         # gate must judge one record, not a half of each.
-        from kiro_crew import aws_consent
+        from aj_crew import aws_consent
 
         records = [
             aws_consent.Grant(
@@ -129,11 +129,11 @@ class TestAuthorizeUpload:
         ]
         with (
             mock.patch(
-                "kiro_crew.deploy.engine._checked",
+                "aj_crew.deploy.engine._checked",
                 return_value=json.dumps({"Account": ACCOUNT}),
             ),
-            mock.patch("kiro_crew.apps.manager.is_app_enabled", return_value=True),
-            mock.patch("kiro_crew.aws_consent.read_grant", side_effect=records) as read,
+            mock.patch("aj_crew.apps.manager.is_app_enabled", return_value=True),
+            mock.patch("aj_crew.aws_consent.read_grant", side_effect=records) as read,
         ):
             with pytest.raises(RuntimeError, match="does not name this account"):
                 backup._authorize_upload(
@@ -195,7 +195,7 @@ class TestRunSnapshotBackup:
         # collide on one key. The run record is written under the account.
         def fake_snapshot(argv):
             out_dir = Path(argv[0])
-            archive = out_dir / "kirocrew-snapshot-20260101T000000Z.tar.gz"
+            archive = out_dir / "ajcrew-snapshot-20260101T000000Z.tar.gz"
             with tarfile.open(archive, "w:gz"):
                 pass  # an empty-but-valid gzip tar; only its bytes matter here
             return 0
@@ -249,7 +249,7 @@ class TestRunSnapshotBackup:
         # The install id is its own key SEGMENT, which is what lets one delimited
         # listing name every install writing here instead of walking the prefix.
         install_id = backup.install_identity()["id"]
-        assert pushed_key.startswith(f"snapshots/{install_id}/kirocrew-snapshot-")
+        assert pushed_key.startswith(f"snapshots/{install_id}/ajcrew-snapshot-")
         # Entropy suffix means the pushed key is NOT the engine's file name.
         assert "20260101T000000Z" not in pushed_key
         assert record["key"] == pushed_key
@@ -260,7 +260,7 @@ class TestRunSnapshotBackup:
         # not be reported as failed because a hundred-byte display string did not
         # -- the reader degrades to the id on its own.
         def fake_snapshot(argv):
-            archive = Path(argv[0]) / "kirocrew-snapshot-20260101T000000Z.tar.gz"
+            archive = Path(argv[0]) / "ajcrew-snapshot-20260101T000000Z.tar.gz"
             with tarfile.open(archive, "w:gz"):
                 pass
             return 0

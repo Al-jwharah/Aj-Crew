@@ -24,8 +24,8 @@ from pathlib import Path
 import pytest
 
 from conftest import _find_posix_test_shell
-from kiro_crew.security.shell_normalizer import _arms_case_context
-from kiro_crew.testing.wait import FALLBACK_TIMEOUT_SECS
+from aj_crew.security.shell_normalizer import _arms_case_context
+from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS
 
 _SENTINEL = "SENTINEL"
 _TAIL = "printf '%s%s\\n' SENT INEL;; esac)"

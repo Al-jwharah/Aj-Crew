@@ -1,4 +1,4 @@
-"""``kirocrew kas install|status|remove`` -- the operator CLI over the engine bundle.
+"""``ajcrew kas install|status|remove`` -- the operator CLI over the engine bundle.
 
 What is pinned, per subcommand:
 
@@ -35,15 +35,15 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import cli_kas
-from kiro_crew.agent_sdk import kas_bundle
+from aj_crew import cli_kas
+from aj_crew.agent_sdk import kas_bundle
 
 _PIN = cli_kas.KAS_PIN_VERSION
 
 
 def _set_route(monkeypatch, *, bundle: bool, reason: str = "") -> None:
     """Pin the route `_report_installed` reads (the predicate doctor shares)."""
-    from kiro_crew.acp.kas_route import KasRoute
+    from aj_crew.acp.kas_route import KasRoute
 
     monkeypatch.setattr(kas_bundle, "kas_route", lambda: KasRoute(bundle=bundle, reason=reason))
 
@@ -80,7 +80,7 @@ def _manifest_doc(version: str = _PIN) -> dict:
 def cfg(monkeypatch):
     agent = SimpleNamespace(kas_bundle=False, kas_bundle_url="https://kas.test")
     monkeypatch.setattr(
-        "kiro_crew.config.loader.KiroCrewConfig.load",
+        "aj_crew.config.loader.AjCrewConfig.load",
         classmethod(lambda cls: SimpleNamespace(agent=agent)),
     )
     return agent
@@ -104,7 +104,7 @@ def local_source(tmp_path, monkeypatch):
 
 
 def _parse(*argv: str) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(prog="kirocrew kas")
+    parser = argparse.ArgumentParser(prog="ajcrew kas")
     cli_kas.add_kas_parser(parser)
     return parser.parse_args(argv)
 
@@ -138,7 +138,7 @@ class TestParser:
 
     def test_no_action_is_usage(self, capsys):
         assert cli_kas.kas_cmd(argparse.Namespace()) == 2
-        assert "usage: kirocrew kas" in capsys.readouterr().err
+        assert "usage: ajcrew kas" in capsys.readouterr().err
 
 
 class TestInstallFromDir:
@@ -177,7 +177,7 @@ class TestInstallFromDir:
         assert "  engine:   0%" in out and "  engine:  55%" in out and "  engine: 100%" in out
         assert "  engine:  56%" not in out
         # Route off: the closing advice says how to turn it on.
-        assert "kirocrew config set agent.kas_bundle true" in out
+        assert "ajcrew config set agent.kas_bundle true" in out
         assert "kiro-cli is not used on this route" in out
 
     def test_route_on_names_the_restart_only(
@@ -188,14 +188,14 @@ class TestInstallFromDir:
         monkeypatch.setattr(kas_bundle, "install_bundle", lambda m, **k: _installed(tmp_path))
         assert cli_kas.kas_cmd(self._args(local_source)) == 0
         out = capsys.readouterr().out
-        assert "agent.kas_bundle is on; `kirocrew restart` picks the new engine up." in out
+        assert "agent.kas_bundle is on; `ajcrew restart` picks the new engine up." in out
         assert "config set agent.kas_bundle true" not in out
 
     def test_automatic_route_does_not_tell_the_user_to_turn_it_on(
         self, cfg, host, local_source, tmp_path, monkeypatch, capsys
     ):
         # The flag is off but no kiro-cli resolves, so the route is the bundle
-        # automatically -- the same thing `kirocrew doctor` reports. The
+        # automatically -- the same thing `ajcrew doctor` reports. The
         # installer must not contradict it by telling the user to turn it on.
         cfg.kas_bundle = False
         _set_route(monkeypatch, bundle=True, reason="no_kiro_cli")
@@ -204,7 +204,7 @@ class TestInstallFromDir:
         out = capsys.readouterr().out
         assert "The bundle route is off" not in out
         assert "config set agent.kas_bundle true" not in out
-        assert "Kiro Crew will use this engine" in out
+        assert "Aj Crew will use this engine" in out
 
     def test_a_version_the_harness_does_not_run_names_the_override_env(
         self, cfg, host, local_source, tmp_path, monkeypatch, capsys
@@ -355,10 +355,10 @@ class TestOldGlibcRefusedFirst:
 
     @pytest.fixture
     def old_glibc(self, monkeypatch):
-        from kiro_crew.acp import kas_bundle as acp_kas_bundle
+        from aj_crew.acp import kas_bundle as acp_kas_bundle
 
         monkeypatch.setattr(acp_kas_bundle, "_host_os", lambda _system: "linux")
-        monkeypatch.setattr("kiro_crew.constants._host_glibc_version", lambda: (2, 26))
+        monkeypatch.setattr("aj_crew.constants._host_glibc_version", lambda: (2, 26))
         monkeypatch.setattr(kas_bundle, "fetch_manifest", lambda *a, **k: pytest.fail("fetched"))
         monkeypatch.setattr(
             kas_bundle, "install_bundle", lambda *a, **k: pytest.fail("install_bundle reached")
@@ -417,7 +417,7 @@ class TestInstallWhenAlreadyInstalled:
         assert present == [(tmp_path / "engines", _PIN)]
         out = capsys.readouterr().out
         assert f"✅ KAS {_PIN} is already installed at {tmp_path / 'engines' / _PIN}" in out
-        assert "kirocrew config set agent.kas_bundle true" in out
+        assert "ajcrew config set agent.kas_bundle true" in out
 
     def test_the_pinned_engine_on_disk_still_sweeps_a_stale_staging_tree(
         self, cfg, present, tmp_path, monkeypatch
@@ -512,7 +512,7 @@ class TestStatus:
         code, out = self._run(capsys)
         assert code == 0
         assert f"installed:     KAS {_PIN}, Node 22.23.3" in out
-        assert "also on disk:  0.60.0  (`kirocrew kas remove --version V`)" in out
+        assert "also on disk:  0.60.0  (`ajcrew kas remove --version V`)" in out
         assert str(tmp_path / _PIN / "bundle" / "acp-server.js") in out
 
     def test_the_override_env_is_named_when_it_moves_the_pin(
@@ -716,7 +716,7 @@ class TestInstallIfInUse:
         def broken(cls):
             raise ValueError("config.json is not JSON")
 
-        monkeypatch.setattr("kiro_crew.config.loader.KiroCrewConfig.load", classmethod(broken))
+        monkeypatch.setattr("aj_crew.config.loader.AjCrewConfig.load", classmethod(broken))
         monkeypatch.setattr(kas_bundle, "installed_versions", lambda: [])
         assert cli_kas._engine_need() is None
 
@@ -730,7 +730,7 @@ class TestInstallIfInUse:
         self, cfg, host, tmp_path, monkeypatch, capsys
     ):
         """Route off, engine on disk, download fails: the update must still switch."""
-        from kiro_crew.platform.release_apply import ENGINE_OPTIONAL_FAILED_EXIT
+        from aj_crew.platform.release_apply import ENGINE_OPTIONAL_FAILED_EXIT
 
         monkeypatch.setattr(cli_kas, "_bundle_switch_on", lambda: False)
         monkeypatch.setattr(kas_bundle, "installed_versions", lambda: ["0.66.33"])
@@ -739,12 +739,12 @@ class TestInstallIfInUse:
         assert cli_kas.kas_cmd(self._args()) == ENGINE_OPTIONAL_FAILED_EXIT
         err = capsys.readouterr().err
         assert "HTTP 403" in err
-        assert "Retry with: kirocrew kas install" in err
+        assert "Retry with: ajcrew kas install" in err
 
     def test_an_optional_refresh_on_a_host_that_cannot_run_it_offers_no_retry(
         self, cfg, host, tmp_path, monkeypatch, capsys
     ):
-        from kiro_crew.platform.release_apply import ENGINE_OPTIONAL_FAILED_EXIT
+        from aj_crew.platform.release_apply import ENGINE_OPTIONAL_FAILED_EXIT
 
         monkeypatch.setattr(cli_kas, "_bundle_switch_on", lambda: False)
         monkeypatch.setattr(kas_bundle, "installed_versions", lambda: ["0.66.33"])
@@ -782,7 +782,7 @@ class TestInstallIfInUse:
         self, cfg, host, tmp_path, monkeypatch, capsys
     ):
         """A full or unwritable disk is reported like a refused fetch: exit 4, not 1."""
-        from kiro_crew.platform.release_apply import ENGINE_OPTIONAL_FAILED_EXIT
+        from aj_crew.platform.release_apply import ENGINE_OPTIONAL_FAILED_EXIT
 
         monkeypatch.setattr(cli_kas, "_bundle_switch_on", lambda: False)
         monkeypatch.setattr(kas_bundle, "installed_versions", lambda: ["0.66.33"])
@@ -795,7 +795,7 @@ class TestInstallIfInUse:
         assert cli_kas.kas_cmd(self._args()) == ENGINE_OPTIONAL_FAILED_EXIT
         err = capsys.readouterr().err
         assert "No space left on device" in err
-        assert "Retry with: kirocrew kas install" in err
+        assert "Retry with: ajcrew kas install" in err
 
     def test_an_os_error_with_the_switch_on_is_not_softened(self, cfg, host, tmp_path, monkeypatch):
         monkeypatch.setattr(cli_kas, "_bundle_switch_on", lambda: True)
@@ -827,7 +827,7 @@ class TestInstallIfInUse:
     ):
         """A slow download stops at its next chunk, before the update's own kill of the
         child, and the update reads the exit as the optional case, not a failure."""
-        from kiro_crew.platform import release_apply
+        from aj_crew.platform import release_apply
 
         self._engine_only_on_disk(monkeypatch, tmp_path)
         monkeypatch.setattr(release_apply, "ENGINE_OPTIONAL_DEADLINE_SECS", 0.0)
@@ -845,13 +845,13 @@ class TestInstallIfInUse:
         assert chunks == []
         assert out.splitlines()[0] == release_apply.ENGINE_OPTIONAL_MARKER
         assert "did not finish within 0s" in err
-        assert "Retry with: kirocrew kas install" in err
+        assert "Retry with: ajcrew kas install" in err
 
     def test_a_stalled_optional_refresh_is_ended_by_its_own_timer(
         self, cfg, host, tmp_path, monkeypatch, capsys
     ):
         """A stall that never reaches a chunk is ended by the child itself, exit 4."""
-        from kiro_crew.platform import release_apply
+        from aj_crew.platform import release_apply
 
         self._engine_only_on_disk(monkeypatch, tmp_path)
         monkeypatch.setattr(release_apply, "ENGINE_OPTIONAL_HARD_STOP_SECS", 0.0)
@@ -873,13 +873,13 @@ class TestInstallIfInUse:
         assert exited == [release_apply.ENGINE_OPTIONAL_FAILED_EXIT]
         err = capsys.readouterr().err
         assert "the engine refresh did not finish within 0s" in err
-        assert "Retry with: kirocrew kas install" in err
+        assert "Retry with: ajcrew kas install" in err
 
     def test_a_required_install_carries_no_deadline_and_no_marker(
         self, cfg, host, tmp_path, monkeypatch, capsys
     ):
         """With the switch on the engine is needed, so only the update's own bound applies."""
-        from kiro_crew.platform import release_apply
+        from aj_crew.platform import release_apply
 
         self._engine_only_on_disk(monkeypatch, tmp_path, switch_on=True)
         monkeypatch.setattr(release_apply, "ENGINE_OPTIONAL_DEADLINE_SECS", 0.0)

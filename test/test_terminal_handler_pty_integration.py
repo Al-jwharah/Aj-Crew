@@ -31,9 +31,9 @@ from terminal_handler_helpers import (  # noqa: F401 -- the autouse fixture regi
     _unwrapped,
 )
 
-from kiro_crew.dashboard.handlers import terminal
-from kiro_crew.dashboard.ws_heartbeat import LagTolerantWebSocketResponse
-from kiro_crew.testing.wait import async_wait_until, default_timeout, finished
+from aj_crew.dashboard.handlers import terminal
+from aj_crew.dashboard.ws_heartbeat import LagTolerantWebSocketResponse
+from aj_crew.testing.wait import async_wait_until, default_timeout, finished
 
 #: What ends a read of the terminal socket. A closed ``ClientWebSocketResponse`` answers
 #: ``receive()`` at once without yielding to the loop, so a read that did not stop on every
@@ -243,7 +243,7 @@ class TestTerminalWsIntegration:
     """
 
     @pytest.fixture(autouse=True)
-    # nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- pre-existing autouse fixture moved verbatim; no test of the family calls monkeypatch.undo()
+    # nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- pre-existing autouse fixture moved verbatim; no test of the family calls monkeypatch.undo()
     def _isolated_terminal_shell(self, monkeypatch, tmp_path):
         """Keep ordinary PTY tests out of the operator's login profiles.
 
@@ -286,7 +286,7 @@ class TestTerminalWsIntegration:
             # This is an AUTOUSE fixture on the whole PTY-integration class, so a
             # no-op or a skip here would silently hand the sibling tests back to
             # the shipped resolver, which spawns ``$SHELL -l`` under the ambient
-            # HOME (the test harness pins KIROCREW_HOME, not HOME) -- exactly the
+            # HOME (the test harness pins AJCREW_HOME, not HOME) -- exactly the
             # side-effect this fixture exists to prevent, with no assertion left
             # to witness it. Fail loudly instead: a host with no Bash in any
             # trusted location must extend the list above, not run these tests
@@ -300,20 +300,20 @@ class TestTerminalWsIntegration:
         ambient_home = tmp_path / "ambient-home"
         ambient_home.mkdir()
         profile_sentinel = tmp_path / "ambient-profile-ran"
-        profile_marker = b"__KIROCREW_AMBIENT_PROFILE_RAN__"
+        profile_marker = b"__AJCREW_AMBIENT_PROFILE_RAN__"
         # The profile ALSO installs a PROMPT_COMMAND hook: a developer whose
         # login profile sets PROMPT_COMMAND (e.g. an auto tmux attach, a
         # `history -a`) is the exact case that must not fire inside the transport
         # tests. A `--noprofile --norc` shell never sources this file, so neither
         # the profile body nor the PROMPT_COMMAND it would install ever runs.
         prompt_command_sentinel = tmp_path / "ambient-prompt-command-ran"
-        prompt_command_marker = b"__KIROCREW_AMBIENT_PROMPT_COMMAND_RAN__"
+        prompt_command_marker = b"__AJCREW_AMBIENT_PROMPT_COMMAND_RAN__"
         (ambient_home / ".bash_profile").write_text(
-            "printf '__KIROCREW_AMBIENT_PROFILE_RAN__\\n'\n"
+            "printf '__AJCREW_AMBIENT_PROFILE_RAN__\\n'\n"
             f": > {shlex.quote(str(profile_sentinel))}\n"
             "export PROMPT_COMMAND="
             + shlex.quote(
-                "printf '__KIROCREW_AMBIENT_PROMPT_COMMAND_RAN__\\n'; "
+                "printf '__AJCREW_AMBIENT_PROMPT_COMMAND_RAN__\\n'; "
                 f": > {shlex.quote(str(prompt_command_sentinel))}"
             )
             + "\n"
@@ -1027,7 +1027,7 @@ class TestTerminalWsIntegration:
 
         class _FakeWinPty:
             def __init__(self, argv, cwd=None, env=None, cols=80, rows=24):
-                # nosemgrep: kirocrew.mock-pid-allocatable -- pre-existing mock pid moved verbatim; the process double is never signalled
+                # nosemgrep: ajcrew.mock-pid-allocatable -- pre-existing mock pid moved verbatim; the process double is never signalled
                 self.pid = 4321
                 self._alive = True
                 self._reads = iter((b"PS> ", b""))
@@ -1047,7 +1047,7 @@ class TestTerminalWsIntegration:
             def terminate(self, force=True):
                 self._alive = False
 
-        monkeypatch.setattr("kiro_crew.conpty.WindowsPty", _FakeWinPty)
+        monkeypatch.setattr("aj_crew.conpty.WindowsPty", _FakeWinPty)
 
         registry: dict = {}
         app = _make_app(registry=registry)
@@ -1286,7 +1286,7 @@ class TestTerminalWsIntegration:
     @pytest.mark.asyncio
     async def test_ws_bash_runs_a_login_guarded_profile(self, monkeypatch, tmp_path):
         """A profile stanza behind a login-shell guard must
-        run in a Kiro Crew terminal.
+        run in a Aj Crew terminal.
 
         The shell is spawned with ``-l``, so ``shopt -q login_shell`` is true and
         the guard passes. Emulating the profile chain from an rc file (what an ``--init-file`` rc file did) cannot substitute: the option is read-only,
@@ -1669,8 +1669,8 @@ class TestTerminalWsIntegration:
             "the gateway's exported PROMPT_COMMAND was not restored after the "
             f"readiness hook withdrew. PTY tail: {tail[-500:]!r}"
         )
-        # The Kiro Crew names are gone from the session either way.
-        assert b"KIROCREW_TERMINAL_READY" not in tail
+        # The Aj Crew names are gone from the session either way.
+        assert b"AJCREW_TERMINAL_READY" not in tail
 
     @pytest.mark.asyncio
     async def test_rest_create_list_delete(self, monkeypatch, tmp_path):
@@ -1706,7 +1706,7 @@ class TestTerminalWsIntegration:
             assert resp.status == 404
 
             # Seed registry directly, then delete
-            from kiro_crew.dashboard.handlers import terminal as _term
+            from aj_crew.dashboard.handlers import terminal as _term
 
             registry = _term._get_registry(
                 type("R", (), {"app": client.app})()  # type: ignore[arg-type]

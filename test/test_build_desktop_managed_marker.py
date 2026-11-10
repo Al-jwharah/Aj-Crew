@@ -4,7 +4,7 @@
 Background
 ----------
 An edition whose installs are owned by an external package manager (a Toolbox,
-a corporate installer) names its marker through ``KIROCREW_MANAGED_INSTALL_MARKER``.
+a corporate installer) names its marker through ``AJCREW_MANAGED_INSTALL_MARKER``.
 The script copies it to ``website/electron/EXTERNALLY-MANAGED`` so electron-builder
 packs it INTO ``app.asar`` next to ``main.js``, where ``readExternallyManaged``
 (``website/electron/auto-update.js``) trusts it as the application's own code on
@@ -65,9 +65,9 @@ def _extract_step() -> str:
 def _run(tmp_path: Path, marker_env: str | None) -> tuple[subprocess.CompletedProcess, Path]:
     electron_dir = tmp_path / "electron"
     electron_dir.mkdir(exist_ok=True)
-    env = {k: v for k, v in os.environ.items() if k != "KIROCREW_MANAGED_INSTALL_MARKER"}
+    env = {k: v for k, v in os.environ.items() if k != "AJCREW_MANAGED_INSTALL_MARKER"}
     if marker_env is not None:
-        env["KIROCREW_MANAGED_INSTALL_MARKER"] = marker_env
+        env["AJCREW_MANAGED_INSTALL_MARKER"] = marker_env
     env["ELECTRON_DIR"] = str(electron_dir)
     # The same strict mode the real script runs under, and its `log` helper.
     # The step arms an EXIT trap that removes the staged copy, so its content is
@@ -96,8 +96,8 @@ def _witness(dest: Path) -> Path:
 
 VALID = {
     "managedBy": "Builder Toolbox",
-    "updateCommand": "/opt/toolbox/bin/toolbox update kirocrew",
-    "checkCommand": "/opt/toolbox/bin/kirocrew-update-check",
+    "updateCommand": "/opt/toolbox/bin/toolbox update ajcrew",
+    "checkCommand": "/opt/toolbox/bin/ajcrew-update-check",
 }
 
 
@@ -118,8 +118,8 @@ def test_valid_marker_is_staged_verbatim_and_cleaned_up_on_exit(tmp_path: Path) 
 @pytest.mark.parametrize(
     "relaunch",
     [
-        "/Applications/KiroCrew.app/Contents/MacOS/KiroCrew",
-        "~/Apps/KiroCrew.app/Contents/MacOS/KiroCrew",
+        "/Applications/AjCrew.app/Contents/MacOS/AjCrew",
+        "~/Apps/AjCrew.app/Contents/MacOS/AjCrew",
         # Windows forms the runtime reader's path.isAbsolute accepts there.
         "C:/Apps/app-binary.exe",
         "C:\\Apps\\app-binary.exe",
@@ -172,7 +172,7 @@ def test_empty_value_means_unset(tmp_path: Path) -> None:
         (json.dumps({**VALID, "updateCommand": "/usr/bin/" + "x" * 513}), "caps at 512"),
         (json.dumps({**VALID, "managedBy": "m" * 129}), "caps at 128"),
         (
-            json.dumps({**VALID, "relaunchPath": "Applications/KiroCrew"}),
+            json.dumps({**VALID, "relaunchPath": "Applications/AjCrew"}),
             "must be an absolute path",
         ),
         (json.dumps({**VALID, "relaunchPath": "/" + "x" * 1024}), "caps at 1024"),
@@ -206,7 +206,7 @@ def test_malformed_marker_fails_the_build(tmp_path: Path, body: str, reason: str
     proc, dest = _run(tmp_path, str(src))
     assert proc.returncode != 0
     assert reason in proc.stderr, proc.stderr
-    assert "KIROCREW_MANAGED_INSTALL_MARKER rejected" in proc.stderr
+    assert "AJCREW_MANAGED_INSTALL_MARKER rejected" in proc.stderr
     assert not _witness(dest).exists(), "a rejected marker must not be staged"
 
 

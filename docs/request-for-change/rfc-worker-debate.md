@@ -1,7 +1,7 @@
 ---
 title: Worker debate — record the protocol, make critics question harder, and keep one model by default
 status: accepted
-author: kirocrew agent session, directed by zejiangg
+author: ajcrew agent session, directed by zejiangg
 created: 2026-11-08
 last-audited: 2026-11-09
 audited-at: b94f8cb3ac
@@ -47,9 +47,9 @@ Readers who have not followed the work can read §1.1 and §2.1 first.
 ## Motivation
 
 - **No single record.** The rules live in
-  [`goal-conductor/references/worker-debate.md`](../../src/kiro_crew/builtin_skills/goal-conductor/references/worker-debate.md)
+  [`goal-conductor/references/worker-debate.md`](../../src/aj_crew/builtin_skills/goal-conductor/references/worker-debate.md)
   and the Worker debate section of
-  [`goal-conductor/SKILL.md`](../../src/kiro_crew/builtin_skills/goal-conductor/SKILL.md).
+  [`goal-conductor/SKILL.md`](../../src/aj_crew/builtin_skills/goal-conductor/SKILL.md).
   The reasons live in four PR bodies. The one RFC that describes the debate,
   [`rfc-worker-messaging.md`](rfc-worker-messaging.md), predates three of the
   four PRs.
@@ -133,7 +133,7 @@ another file is named.
 | `goal-conductor/SKILL.md:119` vs [`skills/grill/SKILL.md:3-4`](../../skills/grill/SKILL.md) | The word "grill" may mean a debate, and the Conductor asks | The grill skill also triggers on "grill me", "challenge this", "poke holes" | Not a contradiction, since the Conductor asks; but two features answer to one word. See §4 Q3 |
 
 `docs/system-specs/modules/crew-mode.md:4154` and
-the Bot's tracking prompt in `src/kiro_crew/crewmate_prompts.json` send the Bot conductor to
+the Bot's tracking prompt in `src/aj_crew/crewmate_prompts.json` send the Bot conductor to
 `goal-conductor` for worker debate. They agree with the skill text.
 
 ## 2. Make critics question harder
@@ -148,7 +148,7 @@ Three grill sources were read.
   silently; only decisions are asked (`:33`). If the plan is simple, it says so
   instead of inventing questions (`:38`).
 - **The Research Lab grill tree**
-  (`src/kiro_crew/apps/builtins/auto_research/campaign/grill.py`). A question
+  (`src/aj_crew/apps/builtins/auto_research/campaign/grill.py`). A question
   tree, at most depth 4 and 5 children per node (`:23-24`). Its prompt asks for
   distinct, non-overlapping angles, one focused question per node, a
   recommended answer, and never a question the agent could look up (`:47-67`).
@@ -204,8 +204,8 @@ Three patterns stand out:
    more rule. Closing them grew the plan 2.4 times. Only one row asked to fold
    rows together. No row asked what would stay if the plan were cut in half.
 2. **A proposer's claim about the code went unchecked by one of three
-   critics.** In round 3, proposer A wrote that `kirocrew pod up --seed <dir>`
-   "already seeds a pod's home", citing `src/kiro_crew/pod/README.md` lines
+   critics.** In round 3, proposer A wrote that `ajcrew pod up --seed <dir>`
+   "already seeds a pod's home", citing `src/aj_crew/pod/README.md` lines
    88-128. Lines 105-109 of that same range say a directory seed copies only a
    cleaned `config.json`. The measurement and safety critics caught it as
    blocking. The operations critic marked the dependent row "holds, propose
@@ -455,7 +455,7 @@ sentence, how much risk is acceptable.
 - The owner asks for one.
 - The question is mostly judgment, not facts that can be checked.
 - A one-shot second opinion is enough. The built-in
-  [`llm-council`](../../src/kiro_crew/builtin_skills/llm-council/SKILL.md)
+  [`llm-council`](../../src/aj_crew/builtin_skills/llm-council/SKILL.md)
   skill already runs a panel of different model families, with an adversarial
   mode. Running it once on the final file gets cross-model review without
   paying the slowest model's pace in every round.

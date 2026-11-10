@@ -17,8 +17,8 @@ import uuid
 
 import pytest
 
-from kiro_crew.cron import CronService
-from kiro_crew.mcp_cron import _call_tool_inner
+from aj_crew.cron import CronService
+from aj_crew.mcp_cron import _call_tool_inner
 
 
 @pytest.fixture(autouse=True)
@@ -37,8 +37,8 @@ def _jobs(tmp_path):
 
 class TestCronAddInvalidTimezoneNoOrphan:
     def test_invalid_timezone_returns_error(self, monkeypatch, tmp_path):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
         name = f"tz-bad-{uuid.uuid4().hex[:8]}"
         result = _call_tool_inner(
             "cron_add",
@@ -49,8 +49,8 @@ class TestCronAddInvalidTimezoneNoOrphan:
 
     def test_invalid_timezone_persists_no_job(self, monkeypatch, tmp_path):
         """The failure scenario from the audit: no orphaned job left behind."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
         name = f"tz-orphan-{uuid.uuid4().hex[:8]}"
         _call_tool_inner(
             "cron_add",
@@ -61,8 +61,8 @@ class TestCronAddInvalidTimezoneNoOrphan:
 
     def test_invalid_timezone_retry_does_not_duplicate(self, monkeypatch, tmp_path):
         """A retried cron_add after an invalid-tz error must not accumulate jobs."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
         name = f"tz-retry-{uuid.uuid4().hex[:8]}"
         for _ in range(3):
             _call_tool_inner(
@@ -74,8 +74,8 @@ class TestCronAddInvalidTimezoneNoOrphan:
 
 class TestCronAddInvalidSkipDatesNoOrphan:
     def test_invalid_skip_date_returns_error_and_no_job(self, monkeypatch, tmp_path):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
         name = f"skip-bad-{uuid.uuid4().hex[:8]}"
         result = _call_tool_inner(
             "cron_add",
@@ -93,8 +93,8 @@ class TestCronAddInvalidSkipDatesNoOrphan:
 
 class TestCronAddValidTimezoneStillWorks:
     def test_valid_timezone_persists_job(self, monkeypatch, tmp_path):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
         name = f"tz-ok-{uuid.uuid4().hex[:8]}"
         result = _call_tool_inner(
             "cron_add",
@@ -130,8 +130,8 @@ class TestCronUpdateValidation:
         return name, jid
 
     def test_update_invalid_skip_date_rejected(self, monkeypatch, tmp_path):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
         _name, jid = self._make_job(tmp_path)
         result = _call_tool_inner(
             "cron_update",
@@ -144,8 +144,8 @@ class TestCronUpdateValidation:
         assert job.skip_dates == []
 
     def test_update_invalid_timezone_rejected(self, monkeypatch, tmp_path):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
         _name, jid = self._make_job(tmp_path)
         result = _call_tool_inner(
             "cron_update",
@@ -155,8 +155,8 @@ class TestCronUpdateValidation:
         assert "invalid timezone" in result
 
     def test_update_valid_skip_dates_persist(self, monkeypatch, tmp_path):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
         _name, jid = self._make_job(tmp_path)
         result = _call_tool_inner(
             "cron_update",

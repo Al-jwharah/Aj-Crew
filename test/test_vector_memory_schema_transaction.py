@@ -14,17 +14,17 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew.vector_memory as vector_memory
-import kiro_crew.vector_memory_lifecycle as lifecycle
-from kiro_crew import memory_schema
+import aj_crew.vector_memory as vector_memory
+import aj_crew.vector_memory_lifecycle as lifecycle
+from aj_crew import memory_schema
 
 # The SQLite library the store opens its file with (the bundled pysqlite3 where it
 # is installed). Every connection here must use it: a second library in this process
 # keeps its own lock table, so the store would not see that connection's locks, and
 # its exceptions are unrelated classes.
-from kiro_crew._sqlite_compat import sqlite3
-from kiro_crew.memory_stores import memory_stores_root
-from kiro_crew.vector_memory import VectorMemoryStore
+from aj_crew._sqlite_compat import sqlite3
+from aj_crew.memory_stores import memory_stores_root
+from aj_crew.vector_memory import VectorMemoryStore
 
 #: (where the file lives, lineage it is born with). A named store's file under the
 #: data home's ``memory_stores/`` takes the crew lineage; any other file takes v1.

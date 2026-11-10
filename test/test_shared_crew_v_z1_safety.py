@@ -11,11 +11,11 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew.config.sections_shared_crew import effective_limits, shared_crew_config_from
-from kiro_crew.dashboard import server
-from kiro_crew.shared_crew import admission_gate as ag
-from kiro_crew.shared_crew import containment, lifecycle, routes_admission, wiring
-from kiro_crew.shared_crew.admission import OperationKind
+from aj_crew.config.sections_shared_crew import effective_limits, shared_crew_config_from
+from aj_crew.dashboard import server
+from aj_crew.shared_crew import admission_gate as ag
+from aj_crew.shared_crew import containment, lifecycle, routes_admission, wiring
+from aj_crew.shared_crew.admission import OperationKind
 
 
 def _service():

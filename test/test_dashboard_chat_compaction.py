@@ -9,8 +9,8 @@ from chat_test_helpers import _make_state
 from dashboard_chat_helpers import _provider_mock
 from real_session_manager import real_sessions
 
-from kiro_crew.acp.types import ACP_BACKEND_CLAUDE, ACP_BACKEND_KIRO
-from kiro_crew.agent_sdk.capabilities import capabilities_for
+from aj_crew.acp.types import ACP_BACKEND_CLAUDE, ACP_BACKEND_KIRO
+from aj_crew.agent_sdk.capabilities import capabilities_for
 
 
 class TestBroadcastCompactionResultBackoff:
@@ -22,7 +22,7 @@ class TestBroadcastCompactionResultBackoff:
 
     @staticmethod
     def _make_slot_and_state(tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         slot = state.get_or_create_slot("s1")
@@ -30,18 +30,18 @@ class TestBroadcastCompactionResultBackoff:
 
     @staticmethod
     def _failed_event(title: str = ""):
-        from kiro_crew.providers.base import LLMEvent
+        from aj_crew.providers.base import LLMEvent
 
         return LLMEvent(kind="compaction_status", text="failed", title=title)
 
     @staticmethod
     def _completed_event(title: str = "did stuff"):
-        from kiro_crew.providers.base import LLMEvent
+        from aj_crew.providers.base import LLMEvent
 
         return LLMEvent(kind="compaction_status", text="completed", title=title)
 
     def test_first_n_failures_shown_as_is(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.chat_utils import (
+        from aj_crew.dashboard.chat_utils import (
             _COMPACTION_NOTICE_SHOW_FIRST_N,
             _broadcast_compaction_result,
         )
@@ -56,7 +56,7 @@ class TestBroadcastCompactionResultBackoff:
             assert f"{i}x in a row" not in msg
 
     def test_failures_beyond_limit_suppressed_within_cooldown(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.chat_utils import (
+        from aj_crew.dashboard.chat_utils import (
             _COMPACTION_NOTICE_SHOW_FIRST_N,
             _broadcast_compaction_result,
         )
@@ -74,7 +74,7 @@ class TestBroadcastCompactionResultBackoff:
         assert len(slot.messages) == before
 
     def test_cooldown_elapsed_shows_collapsed_streak_message(self, tmp_path, monkeypatch):
-        import kiro_crew.dashboard.chat_utils as chat_utils
+        import aj_crew.dashboard.chat_utils as chat_utils
 
         state, slot = self._make_slot_and_state(tmp_path, monkeypatch)
 
@@ -100,7 +100,7 @@ class TestBroadcastCompactionResultBackoff:
         failure, so the ACP layer now carries the notification's own reason
         there — the row must name it instead of collapsing to
         "unknown error"."""
-        from kiro_crew.dashboard.chat_utils import _broadcast_compaction_result
+        from aj_crew.dashboard.chat_utils import _broadcast_compaction_result
 
         state, slot = self._make_slot_and_state(tmp_path, monkeypatch)
 
@@ -112,7 +112,7 @@ class TestBroadcastCompactionResultBackoff:
         assert "unknown error" not in msg
 
     def test_success_resets_streak_and_cooldown(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.chat_utils import (
+        from aj_crew.dashboard.chat_utils import (
             _COMPACTION_NOTICE_SHOW_FIRST_N,
             _broadcast_compaction_result,
         )
@@ -138,7 +138,7 @@ class TestBroadcastCompactionResultBackoff:
         """Regression: the in-turn compaction path posted the notice but never
         refreshed the context meter — the bar stayed at the pre-compaction
         value until the next turn."""
-        from kiro_crew.dashboard.chat_utils import _broadcast_compaction_result
+        from aj_crew.dashboard.chat_utils import _broadcast_compaction_result
 
         state, slot = self._make_slot_and_state(tmp_path, monkeypatch)
 
@@ -153,7 +153,7 @@ class TestBroadcastCompactionResultBackoff:
 
     def test_failed_does_not_broadcast_context_usage(self, tmp_path, monkeypatch):
         """A failed compaction leaves usage unchanged — no meter reset."""
-        from kiro_crew.dashboard.chat_utils import _broadcast_compaction_result
+        from aj_crew.dashboard.chat_utils import _broadcast_compaction_result
 
         state, slot = self._make_slot_and_state(tmp_path, monkeypatch)
 
@@ -173,7 +173,7 @@ class TestBroadcastCompactionResultBackoff:
         can claim it. Nothing else pins the writer side, so a wording change here
         would silently unfold a multi-KB summary back into a plain notice. This
         test is that pin — change both sides together."""
-        from kiro_crew.dashboard.chat_utils import _broadcast_compaction_result
+        from aj_crew.dashboard.chat_utils import _broadcast_compaction_result
 
         state, slot = self._make_slot_and_state(tmp_path, monkeypatch)
 
@@ -200,9 +200,9 @@ class TestBroadcastCompactionResultBackoff:
         The RSS hold notice leads with ⚠️ U+26A0 U+FE0F, which ``NoticeCard.tsx``'s
         ``LEAD_EMOJI_RE`` strips into its warn tone. No compaction wording follows
         it, so ``FAILED_LEAD_RE`` leaves it a notice."""
-        from kiro_crew.dashboard import state as st
-        from kiro_crew.dashboard.state_parts.session_events import rss_hold_notice
-        from kiro_crew.session_rss_rebound import RssHold
+        from aj_crew.dashboard import state as st
+        from aj_crew.dashboard.state_parts.session_events import rss_hold_notice
+        from aj_crew.session_rss_rebound import RssHold
 
         assert st._AUTO_COMPACT_NOTICE.startswith("\U0001f504 ")
         assert st._SESSION_RECYCLED_NOTICE.startswith("\u267b\ufe0f ")
@@ -238,7 +238,7 @@ class TestRunChatCompactDeferredWait:
 
     @staticmethod
     def _make_state_for_run_chat(tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         state.push_slots_update = MagicMock()
@@ -252,7 +252,7 @@ class TestRunChatCompactDeferredWait:
     async def test_claude_backend_skips_wait_for_compaction(self, tmp_path, monkeypatch):
         """When the backend compacts INLINE, the dashboard must report success
         immediately and never call ``wait_for_compaction``."""
-        from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
 
         events = [LLMEvent(kind=EVENT_COMPLETE)]
 
@@ -267,7 +267,7 @@ class TestRunChatCompactDeferredWait:
         client.capabilities = capabilities_for(ACP_BACKEND_CLAUDE)
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "/compact")
 
@@ -300,7 +300,7 @@ class TestRunChatCompactDeferredWait:
     @pytest.mark.asyncio
     async def test_kiro_backend_still_waits_for_compaction(self, tmp_path, monkeypatch):
         """kiro-cli backend keeps the original deferred-wait path."""
-        from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
 
         events = [LLMEvent(kind=EVENT_COMPLETE)]
 
@@ -318,7 +318,7 @@ class TestRunChatCompactDeferredWait:
         client.capabilities = capabilities_for(ACP_BACKEND_KIRO)
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "/compact")
 
@@ -343,7 +343,7 @@ class TestRunChatCompactDeferredWait:
     @pytest.mark.asyncio
     async def test_completed_status_arms_skills_context_reinjection(self, tmp_path, monkeypatch):
         """A provider-native completed status restores skills context once."""
-        from kiro_crew.providers.base import EVENT_COMPACTION_STATUS, EVENT_COMPLETE, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPACTION_STATUS, EVENT_COMPLETE, LLMEvent
 
         state = self._make_state_for_run_chat(tmp_path, monkeypatch)
         slot = state.get_or_create_slot("s1")
@@ -355,7 +355,7 @@ class TestRunChatCompactDeferredWait:
         )
         state.sessions = real_sessions(client)
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "continue after provider compaction")
 
@@ -367,7 +367,7 @@ class TestRunChatCompactDeferredWait:
         """When the wait_for_compaction grace drain captured kiro's fresh
         post-compaction metadata, the broadcast must carry the REAL numbers
         (accurate pct + served window), not the reset/unknown fallback."""
-        from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
 
         events = [LLMEvent(kind=EVENT_COMPLETE)]
 
@@ -384,7 +384,7 @@ class TestRunChatCompactDeferredWait:
         client.capabilities = capabilities_for(ACP_BACKEND_KIRO)
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "/compact")
 
@@ -408,7 +408,7 @@ class TestRunChatCompactDeferredWait:
         """A failed deferred compaction leaves usage unchanged: re-send the
         current counts, never the reset form (which would blank a still-valid
         meter)."""
-        from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
 
         events = [LLMEvent(kind=EVENT_COMPLETE)]
 
@@ -422,7 +422,7 @@ class TestRunChatCompactDeferredWait:
         client.capabilities = capabilities_for(ACP_BACKEND_KIRO)
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "/compact")
 
@@ -452,7 +452,7 @@ class TestRunChatCompactDeferredWait:
         ordinary prompt, and no reinjection is armed because nothing was
         compacted.
         """
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         state = self._make_state_for_run_chat(tmp_path, monkeypatch)
         slot = state.get_or_create_slot("s1")
@@ -468,7 +468,7 @@ class TestRunChatCompactDeferredWait:
         state.sessions.consume_provider_switch_replay = MagicMock(return_value=True)
         state.sessions.commit_provider_switch_replay_sid = MagicMock(return_value=True)
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "/compact")
 
@@ -499,8 +499,8 @@ class TestRunChatCompactDeferredWait:
         must stay armed for the next ordinary prompt, and no reinjection is
         armed because nothing was compacted.
         """
-        from kiro_crew.dashboard.chat_turn.recovery import COMPACT_FRESH_SESSION_NOTICE
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.dashboard.chat_turn.recovery import COMPACT_FRESH_SESSION_NOTICE
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         state = self._make_state_for_run_chat(tmp_path, monkeypatch)
         slot = state.get_or_create_slot("s1")
@@ -516,7 +516,7 @@ class TestRunChatCompactDeferredWait:
         state.sessions.first_turn_history_owed_pending = MagicMock(return_value=True)
         state.sessions.consume_first_turn_history_owed = MagicMock(return_value=True)
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "/compact")
 
@@ -547,7 +547,7 @@ class TestRunChatCompactDeferredWait:
 
     async def _run_failed_compaction(self, tmp_path, monkeypatch, summary):
         """Drive /compact to a `failed` result carrying *summary*."""
-        from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
 
         state = self._make_state_for_run_chat(tmp_path, monkeypatch)
         slot = state.get_or_create_slot("s1")
@@ -562,7 +562,7 @@ class TestRunChatCompactDeferredWait:
         client.capabilities = capabilities_for(ACP_BACKEND_KIRO)
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "/compact")
         return slot
@@ -617,7 +617,7 @@ class TestRunChatCompactDeferredWait:
     @pytest.mark.asyncio
     async def test_failed_compaction_reason_is_length_capped(self, tmp_path, monkeypatch):
         """A wall of provider text cannot scroll the transcript away."""
-        from kiro_crew.dashboard.chat_runner import _COMPACT_FAIL_REASON_MAX_CHARS
+        from aj_crew.dashboard.chat_runner import _COMPACT_FAIL_REASON_MAX_CHARS
 
         slot = await self._run_failed_compaction(tmp_path, monkeypatch, "x" * 5_000)
         notice = self._compaction_notice(slot)

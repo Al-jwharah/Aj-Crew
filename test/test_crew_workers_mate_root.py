@@ -20,9 +20,9 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer, make_mocked_request
 from chat_test_helpers import _make_state
 
-from kiro_crew import crew_mode
-from kiro_crew.dashboard.state import SlotOrigin
-from kiro_crew.members_parts.member_space import DM_SLOT_MODE
+from aj_crew import crew_mode
+from aj_crew.dashboard.state import SlotOrigin
+from aj_crew.members_parts.member_space import DM_SLOT_MODE
 
 MATE = "dm-ada"
 
@@ -39,7 +39,7 @@ def _fresh_roots(_floor_monkeypatch: pytest.MonkeyPatch) -> None:
 def _row(key: str, **over: Any) -> dict[str, Any]:
     return {
         "key": key,
-        "agent": "kirocrew",
+        "agent": "ajcrew",
         "agent_kind": "template",
         "parent": None,
         **over,
@@ -50,7 +50,7 @@ _MATE_TREE = [
     _row(MATE, agent="ada", agent_kind="member", mode=DM_SLOT_MODE),
     _row("m1", created_by=MATE, title="Draft the notes", running=True),
     _row("m2", created_by="m1", title="Check the links", pending_approval=True),
-    _row("croot", agent="kirocrew-conductor"),
+    _row("croot", agent="ajcrew-conductor"),
     _row("cw", created_by="croot", title="Crew worker"),
     _row("plain", title="Not a worker"),
 ]
@@ -73,7 +73,7 @@ def _state(rows: list[dict[str, Any]], live: dict[str, Any] | None = None) -> An
 
 @pytest.fixture
 def _open_gate(monkeypatch):
-    from kiro_crew.dashboard.handlers import crew_workers
+    from aj_crew.dashboard.handlers import crew_workers
 
     async def _allow(*_a: Any, **_k: Any) -> None:
         return None
@@ -180,8 +180,8 @@ async def test_a_mate_threads_timeline_draws_its_sessions(_open_gate):
 
 @pytest.mark.asyncio
 async def test_steer_reaches_a_mate_worker_and_counts_no_crew_mode_steer(_open_gate, monkeypatch):
-    from kiro_crew.dashboard import chat_delivery, chat_runner, session_control
-    from kiro_crew.metrics import crew_mode as crew_mode_metrics
+    from aj_crew.dashboard import chat_delivery, chat_runner, session_control
+    from aj_crew.metrics import crew_mode as crew_mode_metrics
 
     queued: list[str] = []
     counted: list[bool] = []
@@ -196,7 +196,7 @@ async def test_steer_reaches_a_mate_worker_and_counts_no_crew_mode_steer(_open_g
 
     monkeypatch.setattr(chat_runner, "_start_next_queued_turn", _start)
     monkeypatch.setattr(session_control, "containment_meta", lambda st, slot: {})
-    monkeypatch.setattr("kiro_crew.dashboard.relay_archive.is_relay_archive", lambda s: False)
+    monkeypatch.setattr("aj_crew.dashboard.relay_archive.is_relay_archive", lambda s: False)
     monkeypatch.setattr(crew_mode_metrics, "record_steer", lambda **k: counted.append(True))
     monkeypatch.setattr(_open_gate, "_worker_item", lambda root, worker, tree: ("", ""))
     worker = SimpleNamespace(key="m1", turn_running=False, running=False, _app="", _queue=[])
@@ -244,7 +244,7 @@ async def test_a_crew_mode_root_cannot_steer_a_mates_worker(_open_gate):
 
 @pytest.mark.asyncio
 async def test_every_route_keeps_the_owner_gate_for_a_mate_root(monkeypatch):
-    from kiro_crew.dashboard.handlers import crew_workers
+    from aj_crew.dashboard.handlers import crew_workers
 
     async def _allow(*_a: Any, **_k: Any) -> None:
         return None
@@ -273,8 +273,8 @@ async def test_every_route_keeps_the_owner_gate_for_a_mate_root(monkeypatch):
 
 @pytest.fixture
 def state(tmp_path, monkeypatch):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     st = _make_state(tmp_path)
     st.broadcast_ws = MagicMock()
     st.push_slots_update = MagicMock()
@@ -297,8 +297,8 @@ async def _app_token(request: web.Request, handler):
 
 
 def _server(state, middleware) -> TestServer:
-    from kiro_crew.dashboard.chat_handlers import api_chat_slot_approve
-    from kiro_crew.dashboard.handlers.crew_workers import api_crew_worker_approve
+    from aj_crew.dashboard.chat_handlers import api_chat_slot_approve
+    from aj_crew.dashboard.handlers.crew_workers import api_crew_worker_approve
 
     app = web.Application(middlewares=[middleware])
     app["state"] = state
@@ -314,7 +314,7 @@ def _mate_crew(state, request_id: str = "rid-1"):
     mate.mode = DM_SLOT_MODE
     mate.agent = "ada"
     worker = state.get_or_create_slot("mw", origin=SlotOrigin.USER)
-    worker.agent = "kirocrew-worker"
+    worker.agent = "ajcrew-worker"
     worker._created_by = MATE
     other = state.get_or_create_slot("dm-bob", origin=SlotOrigin.USER)
     other.mode = DM_SLOT_MODE
@@ -380,8 +380,8 @@ async def test_a_mate_worker_is_not_a_root_to_approve_through(state):
 async def test_a_steer_under_a_root_that_is_no_mate_is_still_counted(monkeypatch):
     """Only a mate's steer is left out of the Crew Mode metric: a steer recorded
     after its Crew Mode root stopped being one (an agent switch) still counts."""
-    from kiro_crew.dashboard.handlers import crew_workers
-    from kiro_crew.metrics import crew_mode as crew_mode_metrics
+    from aj_crew.dashboard.handlers import crew_workers
+    from aj_crew.metrics import crew_mode as crew_mode_metrics
 
     counted: list[bool] = []
     monkeypatch.setattr(crew_mode_metrics, "record_steer", lambda **k: counted.append(True))

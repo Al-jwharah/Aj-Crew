@@ -17,7 +17,7 @@ export function slotSurfaceKey(slot: { mode?: string; surface?: string }): strin
  * server on it: `selectContinuable` (which must not OFFER Continue on one) and
  * ChatPage's regenerate / edit-resend gates (which must not offer those
  * either). Mirrors `relay_archive_refusal` in
- * `src/kiro_crew/dashboard/relay_archive.py`, which REFUSES the same actions
+ * `src/aj_crew/dashboard/relay_archive.py`, which REFUSES the same actions
  * with 409 `relay_archive_read_only`.
  *
  * Keyed on `executor` (the binding INTENT), never `instance_id`:

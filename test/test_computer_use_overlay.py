@@ -48,17 +48,17 @@ import threading
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.computer_use import overlay as overlay_mod
-from kiro_crew.computer_use import overlay_proc as proc_mod
-from kiro_crew.computer_use.cursor_motion import plan_motion
-from kiro_crew.computer_use.overlay import (
+from aj_crew import platform_compat
+from aj_crew.computer_use import overlay as overlay_mod
+from aj_crew.computer_use import overlay_proc as proc_mod
+from aj_crew.computer_use.cursor_motion import plan_motion
+from aj_crew.computer_use.overlay import (
     CursorOverlay,
     cursor_motion_enabled,
     get_shared_overlay,
     reset_shared_overlay,
 )
-from kiro_crew.computer_use.types import (
+from aj_crew.computer_use.types import (
     CLICK_PULSE_DEPTH,
     CLICK_PULSE_MS,
     CURSOR_GLYPH_HEIGHT,
@@ -284,7 +284,7 @@ class TestEnableGate:
 
         monkeypatch.setattr(platform_compat, "IS_MACOS", False)
         monkeypatch.setattr(
-            "kiro_crew.config.loader.KiroCrewConfig.load", classmethod(lambda cls: _Cfg())
+            "aj_crew.config.loader.AjCrewConfig.load", classmethod(lambda cls: _Cfg())
         )
         assert cursor_motion_enabled() is False
 
@@ -300,7 +300,7 @@ class TestEnableGate:
 
         monkeypatch.setattr(platform_compat, "IS_MACOS", True)
         monkeypatch.setattr(
-            "kiro_crew.config.loader.KiroCrewConfig.load", classmethod(lambda cls: _Cfg())
+            "aj_crew.config.loader.AjCrewConfig.load", classmethod(lambda cls: _Cfg())
         )
         assert cursor_motion_enabled() is False
 
@@ -312,7 +312,7 @@ class TestEnableGate:
                 computer_use = type("S", (), {"cursor_motion": value})()
 
             monkeypatch.setattr(
-                "kiro_crew.config.loader.KiroCrewConfig.load", classmethod(lambda cls: _Cfg())
+                "aj_crew.config.loader.AjCrewConfig.load", classmethod(lambda cls: _Cfg())
             )
             assert cursor_motion_enabled() is expected, value
 
@@ -321,7 +321,7 @@ class TestEnableGate:
             raise RuntimeError("config is unreadable")
 
         monkeypatch.setattr(platform_compat, "IS_MACOS", True)
-        monkeypatch.setattr("kiro_crew.config.loader.KiroCrewConfig.load", classmethod(_boom))
+        monkeypatch.setattr("aj_crew.config.loader.AjCrewConfig.load", classmethod(_boom))
         assert cursor_motion_enabled() is False
 
 
@@ -418,7 +418,7 @@ class TestSupervisorLifecycle:
         await overlay.move_to(1.0, 1.0)
         argv = spawned["argv"][0]
         assert argv[1:] == ("-s", "-P", "-m", OVERLAY_MODULE)
-        assert "kiro_crew.computer_use" in argv[4]
+        assert "aj_crew.computer_use" in argv[4]
 
     @pytest.mark.asyncio
     async def test_spawn_uses_the_platform_compat_isolation_flags(self, enabled, spawned):
@@ -1332,16 +1332,16 @@ class TestStructuralGuarantees:
             elif isinstance(node, ast.ImportFrom) and node.module:
                 modules.add(node.module)
         forbidden = {
-            "kiro_crew.computer_use.macos_ffi",
-            "kiro_crew.computer_use.macos_ffi_bind",
-            "kiro_crew.computer_use.macos_ffi_cf",
-            "kiro_crew.computer_use.macos_ffi_ax",
-            "kiro_crew.computer_use.macos_ffi_window",
-            "kiro_crew.computer_use.snapshot_macos",
-            "kiro_crew.computer_use.capture_macos",
-            "kiro_crew.computer_use.apps_macos",
-            "kiro_crew.computer_use.service",
-            "kiro_crew.computer_use.gate",
+            "aj_crew.computer_use.macos_ffi",
+            "aj_crew.computer_use.macos_ffi_bind",
+            "aj_crew.computer_use.macos_ffi_cf",
+            "aj_crew.computer_use.macos_ffi_ax",
+            "aj_crew.computer_use.macos_ffi_window",
+            "aj_crew.computer_use.snapshot_macos",
+            "aj_crew.computer_use.capture_macos",
+            "aj_crew.computer_use.apps_macos",
+            "aj_crew.computer_use.service",
+            "aj_crew.computer_use.gate",
         }
         assert modules & forbidden == set(), modules & forbidden
 

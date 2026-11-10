@@ -4,8 +4,8 @@ Fixtures can go stale silently when the vendor changes a field, so this replays 
 recorded SHAPE against the real endpoint. Opt-in: it needs real credentials and the
 network, so it never runs in the normal suite or on a fork PR:
 
-    KIROCREW_WIRE_PROBE=1 \\
-    KIROCREW_WIRE_PROBE_WEIXIN_TOKEN=<bot token> \\
+    AJCREW_WIRE_PROBE=1 \\
+    AJCREW_WIRE_PROBE_WEIXIN_TOKEN=<bot token> \\
     pytest test/test_channel_wire_conformance.py -v
 
 On drift ``assert_same_shape`` names the field and both types; re-probe and rewrite
@@ -21,19 +21,19 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.testing.channel_fixtures import assert_same_shape, load_fixture
+from aj_crew.testing.channel_fixtures import assert_same_shape, load_fixture
 
 # The fixtures root lives in the TEST tree, so the layout coupling lives here
-# too -- kiro_crew.testing.channel_fixtures ships in the wheel and deliberately
+# too -- aj_crew.testing.channel_fixtures ships in the wheel and deliberately
 # has no default root (no test/ tree exists in an installed package).
 CHANNEL_FIXTURES = Path(__file__).resolve().parent / "fixtures" / "channels"
 
-_PROBE_ENABLED = os.environ.get("KIROCREW_WIRE_PROBE") == "1"
+_PROBE_ENABLED = os.environ.get("AJCREW_WIRE_PROBE") == "1"
 
 pytestmark = pytest.mark.skipif(
     not _PROBE_ENABLED,
     reason=(
-        "live vendor conformance is opt-in: set KIROCREW_WIRE_PROBE=1 plus the "
+        "live vendor conformance is opt-in: set AJCREW_WIRE_PROBE=1 plus the "
         "per-channel credential env vars (real network calls)"
     ),
 )
@@ -53,9 +53,9 @@ class TestWeixinConformance:
         If ``qrcode_img_content`` stops being a string URL, or fields change, the
         fixture is stale and the diff says so.
         """
-        from kiro_crew.weixin.client import WeixinClient
+        from aj_crew.weixin.client import WeixinClient
 
-        token = _require("KIROCREW_WIRE_PROBE_WEIXIN_TOKEN")
+        token = _require("AJCREW_WIRE_PROBE_WEIXIN_TOKEN")
         fixture = load_fixture("weixin", "get_bot_qrcode", root=CHANNEL_FIXTURES)
 
         async def _probe() -> dict:

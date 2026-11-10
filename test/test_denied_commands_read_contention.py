@@ -19,15 +19,15 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import atomic_write, platform_compat
-from kiro_crew.dashboard.handlers import security as security_mod
+from aj_crew import atomic_write, platform_compat
+from aj_crew.dashboard.handlers import security as security_mod
 
 _RULE = {"id": "fx-user-1", "pattern": "danger", "enabled": True}
 
 
 @pytest.fixture
 def keystone(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     path = tmp_path / "denied_commands.json"
     path.write_text(json.dumps({"user_added": [_RULE]}), encoding="utf-8")
     return path

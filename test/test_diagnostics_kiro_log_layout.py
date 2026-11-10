@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest
 
 from conftest import make_dir_link
-from kiro_crew import agent_scratch, diagnostics, platform_compat, release_channel
+from aj_crew import agent_scratch, diagnostics, platform_compat, release_channel
 
 _NESTED = ("kiro-log", "logs")
 
@@ -43,7 +43,7 @@ def _windows_env(monkeypatch, temp: Path) -> None:
 def _isolate_bundle(monkeypatch, home: Path) -> None:
     """Point ``collect_bundle`` at a temp home, keeping the real log pickers."""
     home.mkdir(parents=True, exist_ok=True)
-    monkeypatch.setattr("kiro_crew.diagnostics.config_dir", lambda: home)
+    monkeypatch.setattr("aj_crew.diagnostics.config_dir", lambda: home)
     monkeypatch.setattr(agent_scratch, "config_dir", lambda: home)
     monkeypatch.setattr(diagnostics.Path, "home", classmethod(lambda cls: home))
     monkeypatch.setattr(diagnostics, "_macos_crash_reports", lambda: [])

@@ -18,7 +18,7 @@ from typing import Any
 import pytest
 from test_discord import DISCORD_CAPABILITIES, FakeClient
 
-from kiro_crew.discord.renderer import DiscordRenderer
+from aj_crew.discord.renderer import DiscordRenderer
 
 # The exact wording the renderer sends in place of a lost part.
 LOST_PART_NOTICE = "Part of this reply may not have been delivered."
@@ -88,7 +88,7 @@ def _sequence(cli: _Screen) -> list[str]:
 @pytest.mark.asyncio
 async def test_a_part_that_fails_for_good_is_replaced_by_a_notice(caplog) -> None:
     cli = _Screen(fail_marker="PART-B")
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.discord.renderer"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.discord.renderer"):
         r = await _three_part_reply(cli)
     assert _sequence(cli) == ["PART-A", "NOTICE", "PART-C"]
     assert any("could not be delivered" in rec.getMessage() for rec in caplog.records)

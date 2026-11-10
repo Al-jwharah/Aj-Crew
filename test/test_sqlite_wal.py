@@ -16,12 +16,12 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import sqlite_wal
+from aj_crew import sqlite_wal
 
 # The library the stores open their files with: a second SQLite library in this
 # process keeps its own lock table, so its locks would be invisible to the store.
-from kiro_crew._sqlite_compat import sqlite3
-from kiro_crew.vector_memory import VectorMemoryStore
+from aj_crew._sqlite_compat import sqlite3
+from aj_crew.vector_memory import VectorMemoryStore
 
 
 class _FakeTime:
@@ -227,7 +227,7 @@ def test_truncate_wal_before_close_never_raises(
 ) -> None:
     _db, conn = _wal_db(tmp_path)
     conn.close()
-    with caplog.at_level("DEBUG", logger="kiro_crew.sqlite_wal"):
+    with caplog.at_level("DEBUG", logger="aj_crew.sqlite_wal"):
         sqlite_wal.truncate_wal_before_close(conn)  # a closed connection is logged, not raised
-    logged = [r.getMessage() for r in caplog.records if r.name == "kiro_crew.sqlite_wal"]
+    logged = [r.getMessage() for r in caplog.records if r.name == "aj_crew.sqlite_wal"]
     assert logged == ["WAL checkpoint before close did not run"]

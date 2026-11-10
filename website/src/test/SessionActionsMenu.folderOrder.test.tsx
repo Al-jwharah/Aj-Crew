@@ -28,7 +28,7 @@ import {
 
 const mocks = vi.hoisted(() => ({
   chatFolders: vi.fn(),
-  kirocrewConfig: vi.fn(),
+  ajcrewConfig: vi.fn(),
 }))
 
 vi.mock('../api/client', () => ({
@@ -99,7 +99,7 @@ function mount(props: { sidebarOnScreen?: boolean } = {}) {
 beforeEach(() => {
   vi.clearAllMocks()
   mocks.chatFolders.mockResolvedValue(FOLDERS)
-  mocks.kirocrewConfig.mockResolvedValue({ dashboard: { folder_sort: 'name' } })
+  mocks.ajcrewConfig.mockResolvedValue({ dashboard: { folder_sort: 'name' } })
   __resetErrorJournalForTests()
   __resetNavSeamForTests()
   sessionStorage.clear()
@@ -121,7 +121,7 @@ describe('SessionActionsMenu folder-order read failure', () => {
   })
 
   it('stays quiet on a failed read while the sidebar is on screen: its banner says it once', async () => {
-    mocks.kirocrewConfig.mockRejectedValue(new Error('gateway restarting'))
+    mocks.ajcrewConfig.mockRejectedValue(new Error('gateway restarting'))
     mount({ sidebarOnScreen: true })
     await screen.findByTestId('move-submenu')
     // Long enough for the failed read to settle into the menu's tree.
@@ -141,7 +141,7 @@ describe('SessionActionsMenu folder-order read failure', () => {
     // hand-off as a sibling menu item the roving focus reaches, described by the
     // notice's id.
     const user = userEvent.setup()
-    mocks.kirocrewConfig.mockRejectedValue(new Error('gateway restarting'))
+    mocks.ajcrewConfig.mockRejectedValue(new Error('gateway restarting'))
     mount({ sidebarOnScreen: false })
     await screen.findByTestId('move-submenu')
     const notice = await screen.findByTestId('session-menu-folder-order-unavailable')
@@ -177,7 +177,7 @@ describe('SessionActionsMenu folder-order read failure', () => {
     expect(screen.queryByTestId('session-menu-folder-order-detail')).toBeNull()
     cleanup()
     mocks.chatFolders.mockResolvedValue([])
-    mocks.kirocrewConfig.mockRejectedValue(new Error('gateway restarting'))
+    mocks.ajcrewConfig.mockRejectedValue(new Error('gateway restarting'))
     mount({ sidebarOnScreen: false })
     await screen.findByRole('menuitem', { name: /tags/i })
     expect(screen.queryByTestId('move-submenu')).toBeNull()

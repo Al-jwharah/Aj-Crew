@@ -20,10 +20,10 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-import kiro_crew.dashboard.chat_runner as chat_runner
-from kiro_crew.dashboard.handlers import redacted_reveal
-from kiro_crew.security import reveal_store
-from kiro_crew.security.credential_sources import bounded_credential_records
+import aj_crew.dashboard.chat_runner as chat_runner
+from aj_crew.dashboard.handlers import redacted_reveal
+from aj_crew.security import reveal_store
+from aj_crew.security.credential_sources import bounded_credential_records
 
 _GH = "ghp_" + "k7qmz2x9wv4tb8ncr6yd3fj5hs1gpl0aeuo2"
 _SLOT = "slot-1"
@@ -31,7 +31,7 @@ _SLOT = "slot-1"
 
 class _Slot:
     key = _SLOT
-    agent = "kirocrew"
+    agent = "ajcrew"
     project = ""
     _app = ""
 
@@ -72,7 +72,7 @@ def audit_rows(monkeypatch):
         def log_api_access(self, **kw):
             rows.append(kw)
 
-    import kiro_crew.sel as sel_mod
+    import aj_crew.sel as sel_mod
 
     monkeypatch.setattr(sel_mod, "sel", lambda: _Sel())
     return rows
@@ -241,7 +241,7 @@ def test_no_log_line_carries_the_value(caplog, audit_rows) -> None:
 
 def test_only_the_saved_records_keep_a_value(_fresh_store) -> None:
     """A pass whose records are thrown away leaves nothing in the store."""
-    from kiro_crew.dashboard.chat_turn import segment_flush
+    from aj_crew.dashboard.chat_turn import segment_flush
 
     slot = _Slot()
     # A pass with no pending map (the per-delta check) mints no handle at all.
@@ -255,7 +255,7 @@ def test_only_the_saved_records_keep_a_value(_fresh_store) -> None:
 
 
 def test_a_flush_that_fails_closed_keeps_nothing(_fresh_store) -> None:
-    from kiro_crew.dashboard.chat_turn import segment_flush
+    from aj_crew.dashboard.chat_turn import segment_flush
 
     slot = _Slot()
     slot.segment_raw_text = None  # past the raw-copy cap: the flush fails closed

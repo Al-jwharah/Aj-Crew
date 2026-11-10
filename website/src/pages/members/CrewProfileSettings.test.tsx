@@ -22,7 +22,7 @@ import { createTestStore } from '../../test/helpers'
  * them like the card would show them. */
 
 const mockApi = vi.hoisted(() => ({
-  updateKirocrewAgent: vi.fn(),
+  updateAjcrewAgent: vi.fn(),
   chatMode: vi.fn(),
   chatSlotModel: vi.fn(),
   chatSlotReasoningEffort: vi.fn(),
@@ -30,7 +30,7 @@ const mockApi = vi.hoisted(() => ({
   harnessModels: vi.fn(),
   memberDashboard: vi.fn(),
   memberDashboardLock: vi.fn(),
-  kirocrewConfig: vi.fn(),
+  ajcrewConfig: vi.fn(),
 }))
 vi.mock('../../api/client', () => ({ api: mockApi }))
 const modelsState = vi.hoisted(() => ({ isDegraded: false }))
@@ -101,12 +101,12 @@ beforeEach(() => {
   modelsState.isDegraded = false
   mockApi.memberDashboard.mockResolvedValue({ structure_locked: false })
   mockApi.memberDashboardLock.mockResolvedValue({ ok: true, structure_locked: true })
-  mockApi.updateKirocrewAgent.mockResolvedValue({ ok: true })
+  mockApi.updateAjcrewAgent.mockResolvedValue({ ok: true })
   mockApi.chatMode.mockResolvedValue({ ok: true })
   mockApi.chatSlotModel.mockResolvedValue({ ok: true })
   mockApi.chatSlotReasoningEffort.mockResolvedValue({ ok: true })
   mockApi.agentResolvedModel.mockResolvedValue({ model: 'claude-opus-5' })
-  mockApi.kirocrewConfig.mockResolvedValue({ dashboard: {} })
+  mockApi.ajcrewConfig.mockResolvedValue({ dashboard: {} })
   mockApi.harnessModels.mockResolvedValue([{ model_name: 'auto' }, { model_name: 'sonnet-cc' }])
 })
 afterEach(() => { cleanup(); hosts?.forEach((h) => h.remove()) })
@@ -202,7 +202,7 @@ describe('CrewProfileSettings row and group', () => {
     expect(document.activeElement).toBe(trust)
     fireEvent.keyDown(trust, { key: 'Home' })
     expect(document.activeElement).toBe(normal)
-    expect(mockApi.updateKirocrewAgent).not.toHaveBeenCalled()
+    expect(mockApi.updateAjcrewAgent).not.toHaveBeenCalled()
   })
 
   it('keeps the notices under the group while no picker is open', () => {
@@ -252,7 +252,7 @@ describe('CrewProfileSettings permission', () => {
   it('sends one compare-and-set write; the server moves the live thread', async () => {
     setup(member())
     pick('approval_mode', /Normal/)
-    await waitFor(() => expect(mockApi.updateKirocrewAgent).toHaveBeenCalledWith('oncall', { approval_mode: 'normal', expected_approval_mode: '' }))
+    await waitFor(() => expect(mockApi.updateAjcrewAgent).toHaveBeenCalledWith('oncall', { approval_mode: 'normal', expected_approval_mode: '' }))
     // The browser never writes the thread's permission itself.
     expect(mockApi.chatMode).not.toHaveBeenCalled()
     // The page stays open with the check moved; the row behind it reads the new value.
@@ -264,33 +264,33 @@ describe('CrewProfileSettings permission', () => {
   it('does nothing when the checked option is tapped again', () => {
     setup(member())
     pick('approval_mode', /Trust/)
-    expect(mockApi.updateKirocrewAgent).not.toHaveBeenCalled()
+    expect(mockApi.updateAjcrewAgent).not.toHaveBeenCalled()
   })
 
   it('writes only the record when the mate has no thread yet', async () => {
     setup(member(), null)
     pick('approval_mode', /Reads/)
-    await waitFor(() => expect(mockApi.updateKirocrewAgent).toHaveBeenCalledWith('oncall', { approval_mode: 'trust_reads', expected_approval_mode: '' }))
+    await waitFor(() => expect(mockApi.updateAjcrewAgent).toHaveBeenCalledWith('oncall', { approval_mode: 'trust_reads', expected_approval_mode: '' }))
     expect(mockApi.chatMode).not.toHaveBeenCalled()
   })
 
   it('takes one save at a time, so a slow Trust cannot land after a later Normal', async () => {
     let finish!: () => void
-    mockApi.updateKirocrewAgent.mockReturnValueOnce(new Promise((r) => { finish = () => r({ ok: true }) }))
+    mockApi.updateAjcrewAgent.mockReturnValueOnce(new Promise((r) => { finish = () => r({ ok: true }) }))
     setup(member({ approval_mode: 'normal' }))
     pick('approval_mode', /Trust/)
-    await waitFor(() => expect(mockApi.updateKirocrewAgent).toHaveBeenCalledTimes(1))
+    await waitFor(() => expect(mockApi.updateAjcrewAgent).toHaveBeenCalledTimes(1))
     // The page's options are held while the save runs.
     expect(page('approval_mode')).toHaveAttribute('aria-busy', 'true')
     const normal = within(page('approval_mode')).getByRole('radio', { name: /Normal/ })
     expect(normal).toHaveAttribute('aria-disabled', 'true')
     fireEvent.click(normal)
-    expect(mockApi.updateKirocrewAgent).toHaveBeenCalledTimes(1)
+    expect(mockApi.updateAjcrewAgent).toHaveBeenCalledTimes(1)
     finish()
     await waitFor(() => expect(page('approval_mode')).not.toHaveAttribute('aria-busy', 'true'))
     expect(normal).not.toHaveAttribute('aria-disabled')
     expect(checked('approval_mode')).toHaveTextContent('Trust')
-    expect(mockApi.updateKirocrewAgent).toHaveBeenCalledTimes(1)
+    expect(mockApi.updateAjcrewAgent).toHaveBeenCalledTimes(1)
   })
 
   it('keeps the picked option focusable through the save, so Escape still reaches the card', async () => {
@@ -298,7 +298,7 @@ describe('CrewProfileSettings permission', () => {
     // outside the card, where its Escape handler returns early. The hold is
     // aria-disabled instead, and focus stays where the pick was made.
     let finish!: () => void
-    mockApi.updateKirocrewAgent.mockReturnValueOnce(new Promise((r) => { finish = () => r({ ok: true }) }))
+    mockApi.updateAjcrewAgent.mockReturnValueOnce(new Promise((r) => { finish = () => r({ ok: true }) }))
     setup(member())
     const normal = within(open('approval_mode')).getByRole('radio', { name: /Normal/ })
     normal.focus()
@@ -325,12 +325,12 @@ describe('CrewProfileSettings permission', () => {
     expect(within(p).getByRole('radio', { name: /Normal/ })).toHaveAttribute('aria-disabled', 'true')
     expect(within(p).getByTestId('crew-profile-settings-waiting')).toBeInTheDocument()
     fireEvent.click(within(p).getByRole('radio', { name: /Normal/ }))
-    expect(mockApi.updateKirocrewAgent).not.toHaveBeenCalled()
+    expect(mockApi.updateAjcrewAgent).not.toHaveBeenCalled()
     expect(rowValue('approval_mode')).toHaveTextContent('Trust')
   })
 
   it('shows the current value when the server refuses a stale pick', async () => {
-    mockApi.updateKirocrewAgent.mockRejectedValueOnce(
+    mockApi.updateAjcrewAgent.mockRejectedValueOnce(
       new ApiError(409, 'conflict', JSON.stringify({ code: 'approval_mode_conflict', approval_mode: 'trust_reads' })),
     )
     setup(member({ approval_mode: 'normal' }))
@@ -343,7 +343,7 @@ describe('CrewProfileSettings permission', () => {
   })
 
   it('puts the stored value back and says why when the save fails', async () => {
-    mockApi.updateKirocrewAgent.mockRejectedValueOnce(new Error('disk full'))
+    mockApi.updateAjcrewAgent.mockRejectedValueOnce(new Error('disk full'))
     setup(member({ approval_mode: 'normal' }))
     pick('approval_mode', /Trust/)
     await waitFor(() => expect(within(page('approval_mode')).getByTestId('crew-profile-settings-error')).toHaveTextContent('disk full'))
@@ -357,7 +357,7 @@ describe('CrewProfileSettings model and effort', () => {
     ['model', 'claude-opus-5'],
     ['reasoning_effort', 'High'],
   ])('touches no thread when saving %s fails', async (key, label) => {
-    mockApi.updateKirocrewAgent.mockRejectedValueOnce(new Error('record save failed'))
+    mockApi.updateAjcrewAgent.mockRejectedValueOnce(new Error('record save failed'))
     setup(member({ model: 'claude-haiku-4', reasoning_effort: 'low' }))
     pick(key, label)
     await waitFor(() => expect(within(page(key)).getByTestId('crew-profile-settings-error')).toHaveTextContent('record save failed'))
@@ -369,7 +369,7 @@ describe('CrewProfileSettings model and effort', () => {
     setup(member())
     pick('model', 'claude-opus-5')
     await waitFor(() => expect(mockApi.chatSlotModel).toHaveBeenCalledWith('member-oncall', 'claude-opus-5'))
-    expect(mockApi.updateKirocrewAgent).toHaveBeenCalledWith('oncall', { model: 'claude-opus-5' })
+    expect(mockApi.updateAjcrewAgent).toHaveBeenCalledWith('oncall', { model: 'claude-opus-5' })
     expect(rowValue('model')).toHaveTextContent('claude-opus-5')
   })
 
@@ -377,7 +377,7 @@ describe('CrewProfileSettings model and effort', () => {
     setup(member({ model: 'claude-opus-5' }))
     pick('model', 'Inherited')
     await waitFor(() => expect(mockApi.chatSlotModel).toHaveBeenCalledWith('member-oncall', ''))
-    expect(mockApi.updateKirocrewAgent).toHaveBeenCalledWith('oncall', { model: '' })
+    expect(mockApi.updateAjcrewAgent).toHaveBeenCalledWith('oncall', { model: '' })
   })
 
   it('offers a stored model the list no longer carries, checked', () => {
@@ -391,7 +391,7 @@ describe('CrewProfileSettings model and effort', () => {
     setup(member({ model: 'claude-opus-5' }))
     pick('reasoning_effort', 'High')
     await waitFor(() => expect(mockApi.chatSlotReasoningEffort).toHaveBeenCalledWith('member-oncall', 'high'))
-    expect(mockApi.updateKirocrewAgent).toHaveBeenCalledWith('oncall', { reasoning_effort: 'high' })
+    expect(mockApi.updateAjcrewAgent).toHaveBeenCalledWith('oncall', { reasoning_effort: 'high' })
     expect(rowValue('reasoning_effort')).toHaveTextContent('High')
   })
 
@@ -467,7 +467,7 @@ describe('CrewProfileSettings model and effort', () => {
     const p = page('reasoning_effort')
     expect(p).toHaveAttribute('aria-busy', 'true')
     expect(within(p).getByRole('radio', { name: 'High' })).toHaveAttribute('aria-disabled', 'true')
-    await waitFor(() => expect(mockApi.updateKirocrewAgent).toHaveBeenCalledWith('oncall', { reasoning_effort: '' }))
+    await waitFor(() => expect(mockApi.updateAjcrewAgent).toHaveBeenCalledWith('oncall', { reasoning_effort: '' }))
   })
 })
 
@@ -490,7 +490,7 @@ describe('CrewProfileSettings worker model and effort', () => {
   it('offers Auto as a pin and writes only the record', async () => {
     setup(member({ model: 'claude-opus-5' }))
     pick('worker_model', 'Auto (cheaper model)')
-    await waitFor(() => expect(mockApi.updateKirocrewAgent).toHaveBeenCalledWith('oncall', { worker_model: 'auto' }))
+    await waitFor(() => expect(mockApi.updateAjcrewAgent).toHaveBeenCalledWith('oncall', { worker_model: 'auto' }))
     expect(mockApi.chatSlotModel).not.toHaveBeenCalled()
     // Worded apart from "Same as oncall": one says cheaper, the other says same.
     expect(rowValue('worker_model')).toHaveTextContent('Auto (cheaper model)')
@@ -505,7 +505,7 @@ describe('CrewProfileSettings worker model and effort', () => {
     expect(rowValue('worker_model')).toHaveTextContent('claude-haiku-4')
     expect(open('worker_model')).toHaveTextContent("Workers run on claude-haiku-4 instead of claude-opus-5. Reasoning effort doesn't apply to this model.")
     fireEvent.click(within(page('worker_model')).getByRole('radio', { name: 'Same as oncall' }))
-    await waitFor(() => expect(mockApi.updateKirocrewAgent).toHaveBeenCalledWith('oncall', { worker_model: '' }))
+    await waitFor(() => expect(mockApi.updateAjcrewAgent).toHaveBeenCalledWith('oncall', { worker_model: '' }))
     expect(mockApi.chatSlotModel).not.toHaveBeenCalled()
   })
 
@@ -514,7 +514,7 @@ describe('CrewProfileSettings worker model and effort', () => {
     // A LEVEL, worded apart from the model row's "Same as oncall".
     expect(rowValue('worker_reasoning_effort')).toHaveTextContent('Same level as oncall')
     pick('worker_reasoning_effort', 'Low')
-    await waitFor(() => expect(mockApi.updateKirocrewAgent).toHaveBeenCalledWith('oncall', { worker_reasoning_effort: 'low' }))
+    await waitFor(() => expect(mockApi.updateAjcrewAgent).toHaveBeenCalledWith('oncall', { worker_reasoning_effort: 'low' }))
     expect(mockApi.chatSlotReasoningEffort).not.toHaveBeenCalled()
     expect(rowValue('worker_reasoning_effort')).toHaveTextContent('Low')
   })
@@ -683,8 +683,8 @@ describe('CrewProfileSettings Dynamic capabilities preview', () => {
     setupRosterBacked(member())
     await screen.findByTestId('crew-profile-dynamic-capabilities')
     fireEvent.click(sw())
-    await waitFor(() => expect(mockApi.updateKirocrewAgent).toHaveBeenCalledWith('oncall', { dynamic_capabilities: true }))
-    expect(mockApi.updateKirocrewAgent).toHaveBeenCalledTimes(1)
+    await waitFor(() => expect(mockApi.updateAjcrewAgent).toHaveBeenCalledWith('oncall', { dynamic_capabilities: true }))
+    expect(mockApi.updateAjcrewAgent).toHaveBeenCalledTimes(1)
     await waitFor(() => expect(sw().getAttribute('aria-checked')).toBe('true'))
   })
 
@@ -692,7 +692,7 @@ describe('CrewProfileSettings Dynamic capabilities preview', () => {
     setupRosterBacked(member({ dynamic_capabilities: true }))
     await screen.findByTestId('crew-profile-dynamic-capabilities')
     fireEvent.click(sw())
-    await waitFor(() => expect(mockApi.updateKirocrewAgent).toHaveBeenCalledWith('oncall', { dynamic_capabilities: false }))
+    await waitFor(() => expect(mockApi.updateAjcrewAgent).toHaveBeenCalledWith('oncall', { dynamic_capabilities: false }))
     await waitFor(() => expect(sw().getAttribute('aria-checked')).toBe('false'))
   })
 
@@ -744,7 +744,7 @@ describe('CrewProfileSettings harness', () => {
     expect(saved).toHaveTextContent("Saved. oncall's next message starts on this harness.")
     // A success is a status line, not an alert.
     expect(saved).toHaveAttribute('role', 'status')
-    expect(mockApi.updateKirocrewAgent).toHaveBeenCalledWith('oncall', { acp_backend: 'claude', model: '', worker_model: '' })
+    expect(mockApi.updateAjcrewAgent).toHaveBeenCalledWith('oncall', { acp_backend: 'claude', model: '', worker_model: '' })
     expect(mockApi.chatSlotModel).not.toHaveBeenCalled()
     expect(mockApi.chatSlotReasoningEffort).not.toHaveBeenCalled()
     expect(screen.queryByTestId('crew-profile-settings-error')).toBeNull()
@@ -756,7 +756,7 @@ describe('CrewProfileSettings harness', () => {
   it('shows a refused harness change and puts the stored harness back', async () => {
     readout({ acp_backend: 'kas' })
     const message = 'oncall is in the middle of a reply. Wait for it to finish, or stop it, then change the agent harness.'
-    mockApi.updateKirocrewAgent.mockRejectedValueOnce(
+    mockApi.updateAjcrewAgent.mockRejectedValueOnce(
       new ApiError(409, message, JSON.stringify({ error: message, code: 'crewmate_harness_busy' })),
     )
     setup(member({ model: 'claude-opus-5' }))
@@ -852,7 +852,7 @@ describe('CrewProfileSettings harness', () => {
     setup(member())
     await waitFor(() => expect(rowValue('acp_backend')).toHaveTextContent(/^Claude Code$/))
     pick('acp_backend', /Inherited/)
-    await waitFor(() => expect(mockApi.updateKirocrewAgent).toHaveBeenCalledWith('oncall', { acp_backend: '' }))
+    await waitFor(() => expect(mockApi.updateAjcrewAgent).toHaveBeenCalledWith('oncall', { acp_backend: '' }))
   })
 
   it('names the known worker limits beside each harness', async () => {
@@ -889,7 +889,7 @@ describe('CrewProfileSettings harness', () => {
     const options = open('acp_backend')
     fireEvent.click(within(options).getByRole('radio', { name: /Claude Code/ }))
     // sonnet-cc is served on Claude Code, so it stays; claude-opus-5 is not, so it goes to the default.
-    await waitFor(() => expect(mockApi.updateKirocrewAgent).toHaveBeenCalledWith('oncall', { acp_backend: 'claude', worker_model: '' }))
+    await waitFor(() => expect(mockApi.updateAjcrewAgent).toHaveBeenCalledWith('oncall', { acp_backend: 'claude', worker_model: '' }))
     expect(mockApi.harnessModels).toHaveBeenCalledWith('claude')
   })
 
@@ -900,7 +900,7 @@ describe('CrewProfileSettings harness', () => {
     setup(member({ model: 'sonnet-cc', worker_model: 'claude-haiku-4' }))
     await waitFor(() => expect(rowValue('acp_backend')).toHaveTextContent(/^Claude Code$/))
     pick('acp_backend', /Inherited/)
-    await waitFor(() => expect(mockApi.updateKirocrewAgent).toHaveBeenCalledWith('oncall', { acp_backend: '', model: '', worker_model: '' }))
+    await waitFor(() => expect(mockApi.updateAjcrewAgent).toHaveBeenCalledWith('oncall', { acp_backend: '', model: '', worker_model: '' }))
     expect(mockApi.harnessModels).not.toHaveBeenCalledWith('')
   })
 
@@ -911,7 +911,7 @@ describe('CrewProfileSettings harness', () => {
     setup(member({ model: 'claude-opus-5', worker_model: 'claude-haiku-4' }))
     await waitFor(() => expect(rowValue('acp_backend')).toHaveTextContent('Inherited'))
     pick('acp_backend', /Claude Code/)
-    await waitFor(() => expect(mockApi.updateKirocrewAgent).toHaveBeenCalledWith('oncall', { acp_backend: 'claude' }))
+    await waitFor(() => expect(mockApi.updateAjcrewAgent).toHaveBeenCalledWith('oncall', { acp_backend: 'claude' }))
   })
 
   it('says under each harness what a pick does to the model pins', async () => {
@@ -956,7 +956,7 @@ describe('CrewProfileSettings harness', () => {
     await waitFor(() => expect(within(options).getByRole('radio', { name: /Claude Code/ })).toHaveTextContent('Keeps CLAUDE-OPUS-5.'))
     fireEvent.click(within(options).getByRole('radio', { name: /Claude Code/ }))
     // Both pins are served on Claude Code up to case: nothing is reset.
-    await waitFor(() => expect(mockApi.updateKirocrewAgent).toHaveBeenCalledWith('oncall', { acp_backend: 'claude' }))
+    await waitFor(() => expect(mockApi.updateAjcrewAgent).toHaveBeenCalledWith('oncall', { acp_backend: 'claude' }))
   })
 
   it('changes nothing when the new harness model list cannot be read', async () => {
@@ -969,7 +969,7 @@ describe('CrewProfileSettings harness', () => {
     await waitFor(() => expect(rowValue('acp_backend')).toHaveTextContent('Kiro Agent'))
     fireEvent.click(within(open('acp_backend')).getByRole('radio', { name: /Claude Code/ }))
     await screen.findByTestId('crew-profile-settings-error')
-    expect(mockApi.updateKirocrewAgent).not.toHaveBeenCalled()
+    expect(mockApi.updateAjcrewAgent).not.toHaveBeenCalled()
   })
 
   it('lets a keyboard reach the choices when the stored pin is not one of them', async () => {
@@ -1001,10 +1001,10 @@ describe('CrewProfileSettings dashboard card send', () => {
   })
 
   it('writes the crewmate record and updates the roster row', async () => {
-    mockApi.updateKirocrewAgent.mockResolvedValue({ ok: true })
+    mockApi.updateAjcrewAgent.mockResolvedValue({ ok: true })
     setup(member())
     fireEvent.click(await screen.findByRole('switch', { name: SWITCH }))
-    await waitFor(() => expect(mockApi.updateKirocrewAgent).toHaveBeenCalledWith('oncall', { dashboard_card_send: true }))
+    await waitFor(() => expect(mockApi.updateAjcrewAgent).toHaveBeenCalledWith('oncall', { dashboard_card_send: true }))
     await waitFor(() => {
       const rows = lastQc.getQueryData<MemberRosterRow[]>(MEMBERS_ROSTER_QUERY_KEY)
       expect(rows?.[0].dashboard_card_send).toBe(true)
@@ -1012,7 +1012,7 @@ describe('CrewProfileSettings dashboard card send', () => {
   })
 
   it('says the setting did not change when the write fails, and leaves the row alone', async () => {
-    mockApi.updateKirocrewAgent.mockRejectedValue(new Error('500'))
+    mockApi.updateAjcrewAgent.mockRejectedValue(new Error('500'))
     setup(member())
     fireEvent.click(await screen.findByRole('switch', { name: SWITCH }))
     expect(await screen.findByTestId('crew-profile-dashboard-card-send-error')).toHaveTextContent(

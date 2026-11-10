@@ -8,7 +8,7 @@ import pytest
 from chat_test_helpers import _make_state
 from dashboard_chat_helpers import _provider_mock
 
-from kiro_crew.dashboard.chat_runner import _tool_call_ws_payload
+from aj_crew.dashboard.chat_runner import _tool_call_ws_payload
 
 
 def test_tool_call_ws_payload_preserves_shell_capability_signal():
@@ -40,11 +40,11 @@ class TestRunChatToolBoundarySegments:
 
     @pytest.mark.asyncio
     async def test_tool_boundary_splits_segments(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.providers.base import LLMEvent
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.providers.base import LLMEvent
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat.config_dir", lambda: tmp_path)
-        monkeypatch.setattr("kiro_crew.dashboard.chat.sel", lambda: MagicMock())
+        monkeypatch.setattr("aj_crew.dashboard.chat.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.chat.sel", lambda: MagicMock())
 
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
@@ -85,11 +85,11 @@ class TestRunChatToolBoundarySegments:
     @pytest.mark.asyncio
     async def test_tool_boundary_empty_chunk_still_splits(self, tmp_path, monkeypatch):
         """Empty text chunk after tool call doesn't prevent segment splitting."""
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.providers.base import LLMEvent
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.providers.base import LLMEvent
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat.config_dir", lambda: tmp_path)
-        monkeypatch.setattr("kiro_crew.dashboard.chat.sel", lambda: MagicMock())
+        monkeypatch.setattr("aj_crew.dashboard.chat.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.chat.sel", lambda: MagicMock())
 
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
@@ -148,7 +148,7 @@ class TestRunChatToolCallUpdate:
 
     @staticmethod
     def _make_state_for_run_chat(tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         state.push_slots_update = MagicMock()
@@ -162,7 +162,7 @@ class TestRunChatToolCallUpdate:
     async def test_refinement_patches_pill_content_and_meta(self, tmp_path, monkeypatch):
         """An initial tool_call with a stub title is overwritten by the refined
         title and the meta picks up the populated input."""
-        from kiro_crew.providers.base import (
+        from aj_crew.providers.base import (
             EVENT_COMPLETE,
             EVENT_TOOL_CALL,
             EVENT_TOOL_CALL_UPDATE,
@@ -189,7 +189,7 @@ class TestRunChatToolCallUpdate:
         client = self._make_mock_client(events)
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -205,7 +205,7 @@ class TestRunChatToolCallUpdate:
     async def test_refinement_carries_purpose_when_it_has_one(self, tmp_path, monkeypatch):
         """The update frame must carry the purpose so the live status line keeps
         showing the agent's own reason for the call."""
-        from kiro_crew.providers.base import (
+        from aj_crew.providers.base import (
             EVENT_COMPLETE,
             EVENT_TOOL_CALL,
             EVENT_TOOL_CALL_UPDATE,
@@ -235,7 +235,7 @@ class TestRunChatToolCallUpdate:
         client = self._make_mock_client(events)
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -249,7 +249,7 @@ class TestRunChatToolCallUpdate:
         sending an empty string: consumers merge field-by-field and read an
         absent ``purpose`` as "keep what the initial tool_call supplied", so an
         empty value would replace a good purpose with the raw command."""
-        from kiro_crew.providers.base import (
+        from aj_crew.providers.base import (
             EVENT_COMPLETE,
             EVENT_TOOL_CALL,
             EVENT_TOOL_CALL_UPDATE,
@@ -278,7 +278,7 @@ class TestRunChatToolCallUpdate:
         client = self._make_mock_client(events)
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -292,7 +292,7 @@ class TestRunChatToolCallUpdate:
         status: when the initial tool_call streamed an empty rawInput, _tool_meta
         wrote an empty purpose, and the reloaded transcript reads meta.purpose —
         so a live-only patch loses it on the next reload."""
-        from kiro_crew.providers.base import (
+        from aj_crew.providers.base import (
             EVENT_COMPLETE,
             EVENT_TOOL_CALL,
             EVENT_TOOL_CALL_UPDATE,
@@ -319,7 +319,7 @@ class TestRunChatToolCallUpdate:
         client = self._make_mock_client(events)
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -336,7 +336,7 @@ class TestRunChatToolCallUpdate:
         dashboard gates the inline diff-card promotion on kind == 'edit'
         (a shell command whose input looks like a diff must never promote),
         and historical rows can only be gated from persisted meta."""
-        from kiro_crew.providers.base import (
+        from aj_crew.providers.base import (
             EVENT_COMPLETE,
             EVENT_TOOL_CALL,
             LLMEvent,
@@ -358,7 +358,7 @@ class TestRunChatToolCallUpdate:
         client = self._make_mock_client(events)
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -369,7 +369,7 @@ class TestRunChatToolCallUpdate:
     async def test_refinement_broadcasts_chat_message_update(self, tmp_path, monkeypatch):
         """The handler broadcasts a chat_message_update WS event so the
         frontend can patch the persisted tile in place without a reload."""
-        from kiro_crew.providers.base import (
+        from aj_crew.providers.base import (
             EVENT_COMPLETE,
             EVENT_TOOL_CALL,
             EVENT_TOOL_CALL_UPDATE,
@@ -394,7 +394,7 @@ class TestRunChatToolCallUpdate:
         client = self._make_mock_client(events)
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -419,7 +419,7 @@ class TestRunChatToolCallUpdate:
     async def test_refinement_preserves_existing_icon(self, tmp_path, monkeypatch):
         """Auto-approved tools may already carry a ✅ marker on the message
         with the same tool_call_id. The patch must preserve that prefix."""
-        from kiro_crew.providers.base import (
+        from aj_crew.providers.base import (
             EVENT_COMPLETE,
             EVENT_TOOL_CALL_UPDATE,
             LLMEvent,
@@ -445,7 +445,7 @@ class TestRunChatToolCallUpdate:
         client = self._make_mock_client(events)
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -458,7 +458,7 @@ class TestRunChatToolCallUpdate:
     async def test_refinement_breaks_on_first_match_walking_reverse(self, tmp_path, monkeypatch):
         """When two messages share the tool_call_id (auto-approved double-emit
         with 🔧 then ✅), only the most recent one is patched."""
-        from kiro_crew.providers.base import (
+        from aj_crew.providers.base import (
             EVENT_COMPLETE,
             EVENT_TOOL_CALL_UPDATE,
             LLMEvent,
@@ -481,7 +481,7 @@ class TestRunChatToolCallUpdate:
         client = self._make_mock_client(events)
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -497,7 +497,7 @@ class TestRunChatToolCallUpdate:
         """_pending_tools feeds PostToolUse hooks by tool name. The refinement
         must strip the "Running: " prefix exactly like EVENT_TOOL_CALL does so
         hooks matching by name keep working after the refinement event."""
-        from kiro_crew.providers.base import (
+        from aj_crew.providers.base import (
             EVENT_COMPLETE,
             EVENT_TOOL_CALL,
             EVENT_TOOL_CALL_UPDATE,
@@ -532,7 +532,7 @@ class TestRunChatToolCallUpdate:
         # was updated correctly via the WS-broadcast surface area: the
         # refinement broadcasts the refined title without the "Running: "
         # prefix on the handler's local copy.
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -550,7 +550,7 @@ class TestRunChatToolCallUpdate:
     async def test_refinement_logs_sel_audit_event(self, tmp_path, monkeypatch):
         """The handler logs a `tool_invocation` audit event with
         outcome="refined" so the audit trail captures the refined name."""
-        from kiro_crew.providers.base import (
+        from aj_crew.providers.base import (
             EVENT_COMPLETE,
             EVENT_TOOL_CALL_UPDATE,
             LLMEvent,
@@ -562,7 +562,7 @@ class TestRunChatToolCallUpdate:
             def log_tool_invocation(self, **kw):
                 captured.append(kw)
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_runner.sel", lambda: _FakeSel())
+        monkeypatch.setattr("aj_crew.dashboard.chat_runner.sel", lambda: _FakeSel())
 
         events = [
             LLMEvent(
@@ -579,7 +579,7 @@ class TestRunChatToolCallUpdate:
         client = self._make_mock_client(events)
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -593,7 +593,7 @@ class TestRunChatToolCallUpdate:
     async def test_refinement_no_tool_call_id_skipped(self, tmp_path, monkeypatch):
         """Refinement events without a tool_call_id are silently dropped —
         we have nothing to merge against."""
-        from kiro_crew.providers.base import (
+        from aj_crew.providers.base import (
             EVENT_COMPLETE,
             EVENT_TOOL_CALL_UPDATE,
             LLMEvent,
@@ -608,7 +608,7 @@ class TestRunChatToolCallUpdate:
         client = self._make_mock_client(events)
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -626,7 +626,7 @@ class TestRunChatToolCallUpdate:
         """When no persisted tool message matches the tool_call_id, the
         handler still broadcasts the tool_call merge but skips
         chat_message_update (nothing to patch)."""
-        from kiro_crew.providers.base import (
+        from aj_crew.providers.base import (
             EVENT_COMPLETE,
             EVENT_TOOL_CALL_UPDATE,
             LLMEvent,
@@ -647,7 +647,7 @@ class TestRunChatToolCallUpdate:
         client = self._make_mock_client(events)
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -662,7 +662,7 @@ class TestRunChatToolCallUpdate:
         """Credentials in tool_input must be redacted before the broadcast
         and the persisted meta. _redact_tool_field applies both
         redact_exfiltration_urls and redact_credentials."""
-        from kiro_crew.providers.base import (
+        from aj_crew.providers.base import (
             EVENT_COMPLETE,
             EVENT_TOOL_CALL_UPDATE,
             LLMEvent,
@@ -685,7 +685,7 @@ class TestRunChatToolCallUpdate:
         client = self._make_mock_client(events)
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -700,7 +700,7 @@ class TestRunChatToolCallUpdate:
     async def test_refinement_handler_swallows_exceptions(self, tmp_path, monkeypatch):
         """A malformed broadcast or other exception inside the handler must
         not tear down the run loop. The try/except logs and continues."""
-        from kiro_crew.providers.base import (
+        from aj_crew.providers.base import (
             EVENT_COMPLETE,
             EVENT_TEXT_CHUNK,
             EVENT_TOOL_CALL_UPDATE,
@@ -735,7 +735,7 @@ class TestRunChatToolCallUpdate:
         client = self._make_mock_client(events)
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         # Must not raise — the run loop should continue past the exception.
         await _run_chat(state, slot, "hello")
@@ -748,11 +748,11 @@ class TestRunChatToolCallUpdate:
 @pytest.mark.asyncio
 async def test_a_tool_call_hands_its_pre_tool_hooks_the_served_model(tmp_path, monkeypatch):
     """The tool-call frame's PreToolUse fire carries the session's model too."""
-    from kiro_crew.dashboard.chat import _run_chat
-    from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TOOL_CALL, LLMEvent
+    from aj_crew.dashboard.chat import _run_chat
+    from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TOOL_CALL, LLMEvent
 
     fire = AsyncMock()
-    monkeypatch.setattr("kiro_crew.dashboard.chat_runner.fire_tool_hooks", fire)
+    monkeypatch.setattr("aj_crew.dashboard.chat_runner.fire_tool_hooks", fire)
     state = TestRunChatToolCallUpdate._make_state_for_run_chat(tmp_path, monkeypatch)
     slot = state.get_or_create_slot("s1")
     client = TestRunChatToolCallUpdate._make_mock_client(
@@ -774,16 +774,16 @@ async def test_a_tool_call_after_a_turn_scoped_fallback_hands_hooks_the_model_th
     tmp_path, monkeypatch
 ):
     """A pinned session's served_model still names the pin after the engine hops."""
-    from kiro_crew.acp.engine_fallback import (
+    from aj_crew.acp.engine_fallback import (
         TRACKER_ATTR,
         EngineFallbackTracker,
         ModelFallbackNotice,
     )
-    from kiro_crew.dashboard.chat import _run_chat
-    from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TOOL_CALL, LLMEvent
+    from aj_crew.dashboard.chat import _run_chat
+    from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TOOL_CALL, LLMEvent
 
     fire = AsyncMock()
-    monkeypatch.setattr("kiro_crew.dashboard.chat_runner.fire_tool_hooks", fire)
+    monkeypatch.setattr("aj_crew.dashboard.chat_runner.fire_tool_hooks", fire)
     state = TestRunChatToolCallUpdate._make_state_for_run_chat(tmp_path, monkeypatch)
     slot = state.get_or_create_slot("s1")
     client = TestRunChatToolCallUpdate._make_mock_client(

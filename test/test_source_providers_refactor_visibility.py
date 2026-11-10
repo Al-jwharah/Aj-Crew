@@ -14,7 +14,7 @@ import time
 
 import pytest
 
-from kiro_crew.dashboard.handlers import source_providers as sp
+from aj_crew.dashboard.handlers import source_providers as sp
 
 _GH = "https://github.com/acme/repo/pull/7"
 _GH_KEY = "github|github.com|acme|repo"

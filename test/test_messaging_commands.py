@@ -8,7 +8,7 @@ channel (where the copies could drift), the CONTRACT the hoist has to preserve -
 the ``None`` sentinel meaning "not this command, keep routing", the retryable busy
 answer, and the redaction every reply owes an external surface -- and the two
 structural guarantees that make the extraction safe: the module accepts no address,
-and ``kiro_crew.messaging`` still imports nothing from the surfaces built on it.
+and ``aj_crew.messaging`` still imports nothing from the surfaces built on it.
 """
 
 from __future__ import annotations
@@ -25,10 +25,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-import kiro_crew.messaging.commands as commands
-from kiro_crew.cron import CronJob, CronSchedule, CronStoreBusy
-from kiro_crew.dashboard.token_auth import parse_duration
-from kiro_crew.messaging.commands import (
+import aj_crew.messaging.commands as commands
+from aj_crew.cron import CronJob, CronSchedule, CronStoreBusy
+from aj_crew.dashboard.token_auth import parse_duration
+from aj_crew.messaging.commands import (
     _CRON_BUSY,
     DEFAULT_DASHBOARD_TTL_SECS,
     MIN_DASHBOARD_TTL_SECS,
@@ -48,8 +48,8 @@ from kiro_crew.messaging.commands import (
     task_arg_reply,
     task_command_reply,
 )
-from kiro_crew.messaging.queue_drain import owner_token
-from kiro_crew.messaging.queue_receipt import ReceiptQueue, receipt_text
+from aj_crew.messaging.queue_drain import owner_token
+from aj_crew.messaging.queue_receipt import ReceiptQueue, receipt_text
 
 
 class _Surface:
@@ -218,7 +218,7 @@ class TestStopRunningTurn:
 
 
 def _reset_grant() -> Any:
-    from kiro_crew.safety_override import safety_override
+    from aj_crew.safety_override import safety_override
 
     so = safety_override()
     if so.is_active():
@@ -314,7 +314,7 @@ class TestRunYoloCommand:
     def test_a_failed_activation_is_audited_as_denied(
         self, grant: Any, audit: _Sel, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.safety_override import ActivationResult
+        from aj_crew.safety_override import ActivationResult
 
         monkeypatch.setattr(
             grant,
@@ -483,7 +483,7 @@ class TestLayering:
     #: trade than one documented deferred import. Recorded as a pair so a NEW edge
     #: still fails, and so removing this one does not silently widen the gate.
     _ALLOWED_SURFACE_EDGES = {
-        ("dispatch.py", "kiro_crew.dashboard.session_directive_apply"),
+        ("dispatch.py", "aj_crew.dashboard.session_directive_apply"),
     }
 
     def test_messaging_imports_nothing_from_the_surfaces_built_on_it(self) -> None:
@@ -506,7 +506,7 @@ class TestLayering:
                     module = ",".join(a.name for a in node.names)
                 else:
                     continue
-                if "kiro_crew.dashboard" not in module and "kiro_crew.slack" not in module:
+                if "aj_crew.dashboard" not in module and "aj_crew.slack" not in module:
                     continue
                 if (path.name, module) in self._ALLOWED_SURFACE_EDGES:
                     continue
@@ -514,20 +514,20 @@ class TestLayering:
         assert not offenders, offenders
 
     #: The services the module docstring keeps duck-typed: each reaches
-    #: ``kiro_crew.slack`` transitively, so a RUNTIME import of either -- at any
+    #: ``aj_crew.slack`` transitively, so a RUNTIME import of either -- at any
     #: nesting depth -- is the ``messaging -> slack`` edge in disguise. Typing-only
     #: imports under ``if TYPE_CHECKING:`` are the sanctioned way to name them.
     _DUCK_TYPED_SERVICES = (
-        "kiro_crew.subagent",
-        "kiro_crew.taskrunner",
-        "kiro_crew.taskrunner_parts",
+        "aj_crew.subagent",
+        "aj_crew.taskrunner",
+        "aj_crew.taskrunner_parts",
     )
 
     def test_the_duck_typed_services_are_never_imported_at_runtime(self) -> None:
         """A deferred in-function import is still an edge: the channel ``spawn``
-        reply once reached for ``kiro_crew.subagent`` inside its function body to
+        reply once reached for ``aj_crew.subagent`` inside its function body to
         read the queued-reason kinds, which is why those live in the leaf module
-        ``kiro_crew.subagent_wait_reasons`` instead."""
+        ``aj_crew.subagent_wait_reasons`` instead."""
         pkg = Path(commands.__file__).resolve().parent
         offenders: list[str] = []
         for path in sorted(pkg.glob("*.py")):
@@ -560,25 +560,25 @@ class TestLayering:
 
     def test_the_wait_reason_kinds_come_from_a_leaf_module(self) -> None:
         """The module the channel reply reads the kinds from imports nothing from
-        ``kiro_crew`` itself, so reading it can never grow into the edge above;
-        and it agrees with what ``kiro_crew.subagent`` re-exports."""
+        ``aj_crew`` itself, so reading it can never grow into the edge above;
+        and it agrees with what ``aj_crew.subagent`` re-exports."""
         import importlib
 
-        leaf = importlib.import_module("kiro_crew.subagent_wait_reasons")
+        leaf = importlib.import_module("aj_crew.subagent_wait_reasons")
         tree = ast.parse(Path(leaf.__file__).read_text(encoding="utf-8"))
         edges = [
             (node.module or "")
             for node in ast.walk(tree)
-            if isinstance(node, ast.ImportFrom) and (node.module or "").startswith("kiro_crew")
+            if isinstance(node, ast.ImportFrom) and (node.module or "").startswith("aj_crew")
         ] + [
             a.name
             for node in ast.walk(tree)
             if isinstance(node, ast.Import)
             for a in node.names
-            if a.name.startswith("kiro_crew")
+            if a.name.startswith("aj_crew")
         ]
         assert edges == [], edges
-        from kiro_crew import subagent as sub
+        from aj_crew import subagent as sub
 
         assert sub.DEFERRED_QUEUED_REASONS is leaf.DEFERRED_QUEUED_REASONS
         assert leaf.QUEUED_REASON_CONCURRENCY_LIMIT not in leaf.DEFERRED_QUEUED_REASONS
@@ -608,7 +608,7 @@ _AWS_KEY = "AKIA" + "IOSFODNN7EXAMPLE"
 
 #: A non-Slack conversation key. Namespaced rather than a bare id because this is
 #: the shape every channel's session key has, and the value is forwarded verbatim.
-_TG_KEY = "telegram:kirocrew:direct:U9"
+_TG_KEY = "telegram:ajcrew:direct:U9"
 
 
 def _job(job_id: str = "j1", **kw: Any) -> CronJob:
@@ -831,7 +831,7 @@ class TestCron:
         svc.remove_jobs = AsyncMock(return_value=(["j1"], []))
         svc.remove_job_async = AsyncMock(return_value=True)
 
-        with patch("kiro_crew.messaging.commands.sel") as mock_sel:
+        with patch("aj_crew.messaging.commands.sel") as mock_sel:
             all_out = await cron_command_reply(
                 "cron remove all", svc, source="telegram", caller="7"
             )
@@ -852,7 +852,7 @@ class TestCron:
         svc.list_jobs.return_value = [_job("j1")]
         svc.remove_jobs = AsyncMock(return_value=(["j1"], []))
 
-        with patch("kiro_crew.messaging.commands.sel") as mock_sel:
+        with patch("aj_crew.messaging.commands.sel") as mock_sel:
             out = await cron_command_reply("cron remove all", svc, source="webex")
 
         assert "Removed 1 cron job(s)" in (out or "") and "`j1`" in (out or "")
@@ -883,7 +883,7 @@ class TestTaskRunner:
         runner = MagicMock(running=False)
         runner.start_background = AsyncMock()
         with patch(
-            "kiro_crew.apps.manager._read_installed",
+            "aj_crew.apps.manager._read_installed",
             return_value=SimpleNamespace(enabled=False),
         ) as read:
             out = await task_command_reply(f"task run {spec}", runner) or ""
@@ -1056,7 +1056,7 @@ class TestTaskSpecPathIsGated:
         key = secret_dir / "id_rsa"
         key.write_text("PRIVATE KEY", encoding="utf-8")
         monkeypatch.setattr(
-            "kiro_crew.hooks.is_sensitive_path",
+            "aj_crew.hooks.is_sensitive_path",
             lambda p: str(secret_dir) in str(p),
         )
 
@@ -1086,7 +1086,7 @@ class TestTaskSpecPathIsGated:
         link = tmp_path / "plan.yaml"
         link.symlink_to(secret_dir / "id_rsa")
         monkeypatch.setattr(
-            "kiro_crew.hooks.is_sensitive_path",
+            "aj_crew.hooks.is_sensitive_path",
             lambda p: str(secret_dir) in str(p),
         )
 
@@ -1133,7 +1133,7 @@ class TestSlackKeywordCarriesTheSessionKey:
 
     @pytest.mark.asyncio
     async def test_the_slack_handler_forwards_the_session_key(self) -> None:
-        from kiro_crew.slack import handler as sh
+        from aj_crew.slack import handler as sh
 
         seen: list[dict] = []
 
@@ -1149,16 +1149,16 @@ class TestSlackKeywordCarriesTheSessionKey:
                 object(),  # type: ignore[arg-type]
                 "C1",
                 "1.2",
-                session_key="slack:kirocrew:direct:U1",
+                session_key="slack:ajcrew:direct:U1",
             )
         assert out == "started"
-        assert seen and seen[0]["session_key"] == "slack:kirocrew:direct:U1"
+        assert seen and seen[0]["session_key"] == "slack:ajcrew:direct:U1"
 
     @pytest.mark.asyncio
     async def test_omitting_it_reproduces_the_old_behaviour(self) -> None:
         # Keyword-only with a default, so the ~25 existing positional call sites are
         # unchanged and an omitted key means owner-DM-only exactly as before.
-        from kiro_crew.slack import handler as sh
+        from aj_crew.slack import handler as sh
 
         seen: list[str] = []
 
@@ -1238,7 +1238,7 @@ class TestListsHostState:
             SimpleNamespace(id="a2", started=0.0, task="somebody elses"),
         ]
         manager = SimpleNamespace(running=agents, max_concurrent=4)
-        out = await commands.spawn_task_reply("list", manager, "telegram:kirocrew:direct:7")
+        out = await commands.spawn_task_reply("list", manager, "telegram:ajcrew:direct:7")
         assert out is not None
         assert "mine" in out and "somebody elses" in out
 
@@ -1279,7 +1279,7 @@ class TestCompactUnsupportedBackend:
 
 @pytest.mark.asyncio
 async def test_spawn_memory_refusal_does_not_announce_or_start_work(monkeypatch):
-    from kiro_crew.memory_stores import UnknownMemoryStore
+    from aj_crew.memory_stores import UnknownMemoryStore
 
     manager = SimpleNamespace(spawn_async=AsyncMock())
     loop_thread = threading.get_ident()
@@ -1289,7 +1289,7 @@ async def test_spawn_memory_refusal_does_not_announce_or_start_work(monkeypatch)
         assert key == "slack:C123:456.789"
         raise UnknownMemoryStore("Private memory binding is unavailable")
 
-    monkeypatch.setattr("kiro_crew.context.store_of_session", refuse)
+    monkeypatch.setattr("aj_crew.context.store_of_session", refuse)
     result = await spawn_task_reply("do work", manager, "slack:C123:456.789")
     assert "Private memory binding is unavailable" in result
     assert "Spawned" not in result

@@ -1,4 +1,4 @@
-# Kiro Crew AutoSDE Rules
+# Aj Crew AutoSDE Rules
 #
 # Root rules cover backend Python plus cross-stack invariants whose file patterns
 # span backend, frontend, and docs. Frontend-only rules live in
@@ -14,15 +14,15 @@ custom-rules:
     file-patterns:
       - "docs/feature-map/README.md"
       - "website/src/pages/**"
-      - "src/kiro_crew/dashboard/handlers/**"
-      - "src/kiro_crew/dashboard/chat_api/**"
-      - "src/kiro_crew/dashboard/messaging_api/**"
-      - "src/kiro_crew/dashboard/file_api/**"
-      - "src/kiro_crew/dashboard/agent_admin/**"
-      - "src/kiro_crew/dashboard/routes/**"
-      - "src/kiro_crew/dashboard/server.py"
-      - "src/kiro_crew/dashboard/server_*.py"
-      - "src/kiro_crew/dashboard/server_runtime/**/*.py"
+      - "src/aj_crew/dashboard/handlers/**"
+      - "src/aj_crew/dashboard/chat_api/**"
+      - "src/aj_crew/dashboard/messaging_api/**"
+      - "src/aj_crew/dashboard/file_api/**"
+      - "src/aj_crew/dashboard/agent_admin/**"
+      - "src/aj_crew/dashboard/routes/**"
+      - "src/aj_crew/dashboard/server.py"
+      - "src/aj_crew/dashboard/server_*.py"
+      - "src/aj_crew/dashboard/server_runtime/**/*.py"
       - "website/src/App.tsx"
     rule: |
       Keep the feature map semantically aligned with every structural dashboard
@@ -47,14 +47,14 @@ custom-rules:
   - id: backend-security-controls
     blocking: true
     file-patterns:
-      - "src/kiro_crew/**/*.py"
+      - "src/aj_crew/**/*.py"
     rule: |
-      Enforce KiroCrew backend security controls, based on real vulnerabilities
+      Enforce AjCrew backend security controls, based on real vulnerabilities
       found and fixed in this codebase.
 
       - Never read sensitive credential paths (for example ~/.aws, ~/.ssh,
         ~/.gnupg, ~/.docker, ~/.kube, ~/.npmrc, ~/.pypirc, ~/.netrc,
-        ~/.git-credentials, ~/.kiro/crew/.env and the pre-move ~/.kirocrew/.env;
+        ~/.git-credentials, ~/.kiro/crew/.env and the pre-move ~/.ajcrew/.env;
         the canonical list is `_SENSITIVE_HOME_DIRS` in security/paths_lists.py, and
         this list is illustrative, not the enforcement scope). File reads of
         user- or LLM-influenced paths MUST go
@@ -103,7 +103,7 @@ custom-rules:
   - id: no-blocking-call-on-event-loop
     blocking: true
     file-patterns:
-      - "src/kiro_crew/**/*.py"
+      - "src/aj_crew/**/*.py"
     rule: |
       Do NOT add a blocking syscall that runs on the asyncio event loop. The
       gateway runs everything on one loop; a single blocking call there freezes
@@ -141,25 +141,25 @@ custom-rules:
   - id: no-new-work-on-gateway-boot-path
     blocking: true
     file-patterns:
-      - "src/kiro_crew/slack/gateway.py"
-      - "src/kiro_crew/slack/gateway_runtime/**/*.py"
-      - "src/kiro_crew/dashboard/server.py"
-      - "src/kiro_crew/dashboard/server_*.py"
-      - "src/kiro_crew/dashboard/server_runtime/**/*.py"
-      - "src/kiro_crew/dashboard/handlers/**/*.py"
-      - "src/kiro_crew/dashboard/messaging_api/**/*.py"
-      - "src/kiro_crew/dashboard/file_api/**/*.py"
-      - "src/kiro_crew/dashboard/agent_admin/**/*.py"
-      - "src/kiro_crew/cli.py"
-      - "src/kiro_crew/cli_gateway_boot.py"
-      - "src/kiro_crew/cli_jail.py"
-      - "src/kiro_crew/cli_knowledge.py"
-      - "src/kiro_crew/cli_logging.py"
-      - "src/kiro_crew/cli_parser_*.py"
-      - "src/kiro_crew/cli_server.py"
-      - "src/kiro_crew/cli_server_*.py"
-      - "src/kiro_crew/dashboard/routes/**/*.py"
-      - "src/kiro_crew/deploy/handlers.py"
+      - "src/aj_crew/slack/gateway.py"
+      - "src/aj_crew/slack/gateway_runtime/**/*.py"
+      - "src/aj_crew/dashboard/server.py"
+      - "src/aj_crew/dashboard/server_*.py"
+      - "src/aj_crew/dashboard/server_runtime/**/*.py"
+      - "src/aj_crew/dashboard/handlers/**/*.py"
+      - "src/aj_crew/dashboard/messaging_api/**/*.py"
+      - "src/aj_crew/dashboard/file_api/**/*.py"
+      - "src/aj_crew/dashboard/agent_admin/**/*.py"
+      - "src/aj_crew/cli.py"
+      - "src/aj_crew/cli_gateway_boot.py"
+      - "src/aj_crew/cli_jail.py"
+      - "src/aj_crew/cli_knowledge.py"
+      - "src/aj_crew/cli_logging.py"
+      - "src/aj_crew/cli_parser_*.py"
+      - "src/aj_crew/cli_server.py"
+      - "src/aj_crew/cli_server_*.py"
+      - "src/aj_crew/dashboard/routes/**/*.py"
+      - "src/aj_crew/deploy/handlers.py"
     rule: |
       Do NOT add work to the gateway boot path. Everything between process
       start and the moment the dashboard socket accepts requests runs once, in
@@ -170,7 +170,7 @@ custom-rules:
       respawns into the same startup, turning a latency bug into a crash loop.
 
       The boot path means, specifically:
-      - `GatewayOrchestrator.run()` up to the `KIROCREW_READY` print
+      - `GatewayOrchestrator.run()` up to the `AJCREW_READY` print
       - `start_dashboard()` (the gateway's default dashboard) up to
         `await site.start()` on the reserved `SockSite`
       - `start_api_server()` (the `--no-dashboard` API-only path) up to
@@ -228,8 +228,8 @@ custom-rules:
       - "test/**/*.py"
       - "tests/**/*.py"
       - "packages/**/tests/**/*.py"
-      - "src/kiro_crew/apps/builtins/**/tests/**/*.py"
-      - "src/kiro_crew/apps/builtins/**/*_tests/**/*.py"
+      - "src/aj_crew/apps/builtins/**/tests/**/*.py"
+      - "src/aj_crew/apps/builtins/**/*_tests/**/*.py"
       - "conftest.py"
       - "**/conftest.py"
     rule: |
@@ -282,7 +282,7 @@ custom-rules:
       that hands a PER-TEST directory to a subsystem with a background thread, task or
       timer; the fix is a session-scoped directory that belongs to no individual test,
       never tidier cleanup. Same family: a bare `MagicMock` config reads TRUTHY, so
-      patching `KiroCrewConfig.load` with one starts whatever subsystem is gated on
+      patching `AjCrewConfig.load` with one starts whatever subsystem is gated on
       `cfg.<x>.enabled` and resolves `Path(cfg.local_dir)` to a RELATIVE path in the
       repo; and a sleeper child (`python -c "import time; time.sleep(30)"`) whose
       kill/wait sits on the happy path instead of in a `finally` or `addCleanup`.
@@ -300,7 +300,7 @@ custom-rules:
       Know which floor you are standing on — it is NOT the same everywhere:
       - The ROOTDIR `conftest.py` is the HOST-MUTATION FLOOR and applies to both
         testpaths. It pins $XDG_CONFIG_HOME and the launchd paths, blocks
-        host service mutation, pins KIROCREW_HOME per test (with
+        host service mutation, pins AJCREW_HOME per test (with
         `config.paths._resolved_home` reset, since resolving the home CREATES it
         and can run the legacy migration), pins the import-time `~/.kiro`
         bindings via `_isolate_shared_kiro_paths`, scrubs the inherited
@@ -310,7 +310,7 @@ custom-rules:
         restores the session CWD in a `tryfirst` teardown hook before fixture
         finalizers run, and fails the run on residue at the repository root.
       - `test/conftest.py` adds ~40 MORE autouse fixtures, and it applies ONLY to
-        `test/`. Tests under `src/kiro_crew/apps/builtins/**/tests/` see the
+        `test/`. Tests under `src/aj_crew/apps/builtins/**/tests/` see the
         rootdir conftest plus that app's own
         `tests/conftest.py` where one exists (`auto_improvement`,
         `code_review_sage`, `spec_builder` have one; the other apps do not), and
@@ -326,7 +326,7 @@ custom-rules:
       - `~/.kiro` is a SEPARATE isolation axis from the data home: it is
         kiro-cli's own machine-wide home, shared with the real installed agent,
         so `~/.kiro/settings/mcp.json` is the LIVE agent's MCP server list. A new
-        module-level `Path.home()` binding in `src/kiro_crew` must be added to
+        module-level `Path.home()` binding in `src/aj_crew` must be added to
         `_SHARED_KIRO_PATHS` or excluded with a reason —
         `test/test_host_isolation_floor.py` fails otherwise. That ratchet covers the
         IMPORT-TIME shape only: a lazy resolver such as `config.paths.kiro_home()`
@@ -339,8 +339,8 @@ custom-rules:
       and named in the corresponding conftest allowlist with a comment saying
       why. One scoped exception: the rootdir `conftest.py` keeps two per-user
       caches across runs on purpose, the hypothesis example database
-      (`~/.cache/kirocrew/hypothesis`) and the bytecode mirror
-      (`~/.cache/kirocrew/pycache`), both under `$XDG_CACHE_HOME` when set. Those
+      (`~/.cache/ajcrew/hypothesis`) and the bytecode mirror
+      (`~/.cache/ajcrew/pycache`), both under `$XDG_CACHE_HOME` when set. Those
       two are not a test's side effect; nothing else in a conftest is exempt.
 
       NEVER use bare `tempfile.mkdtemp()` or `tempfile.TemporaryDirectory()`
@@ -362,7 +362,7 @@ custom-rules:
       relative paths non-deterministic. Always anchor to the repo root via
       `_REPO_ROOT = Path(__file__).resolve().parents[1]` (for test/ files) or
       the equivalent number of parent hops for deeper test directories, then
-      use `_REPO_ROOT / "src/kiro_crew/..."`. This pattern is already
+      use `_REPO_ROOT / "src/aj_crew/..."`. This pattern is already
       established in test_builtin_app_assets.py, test_platform_compat.py, and
       test_skill_home_paths.py.
 
@@ -371,8 +371,8 @@ custom-rules:
     file-patterns:
       - "test/**/*.py"
       - "packages/**/tests/**/*.py"
-      - "src/kiro_crew/apps/builtins/**/tests/**/*.py"
-      - "src/kiro_crew/apps/builtins/**/*_tests/**/*.py"
+      - "src/aj_crew/apps/builtins/**/tests/**/*.py"
+      - "src/aj_crew/apps/builtins/**/*_tests/**/*.py"
       - "conftest.py"
       - "**/conftest.py"
     rule: |
@@ -483,7 +483,7 @@ custom-rules:
   - id: top-level-imports
     blocking: false
     file-patterns:
-      - "src/kiro_crew/**/*.py"
+      - "src/aj_crew/**/*.py"
     rule: |
       All imports must be at the top of the file, not inside functions or
       methods. In-method imports make dependencies hard to trace, break IDE
@@ -502,49 +502,49 @@ custom-rules:
   - id: harness-parity
     blocking: true
     file-patterns:
-      - "src/kiro_crew/acp/**/*.py"
-      - "src/kiro_crew/providers/**/*.py"
-      - "src/kiro_crew/platform/**/*.py"
-      - "src/kiro_crew/config/loader.py"
-      - "src/kiro_crew/config/loader_*.py"
-      - "src/kiro_crew/session.py"
-      - "src/kiro_crew/session_parts/*.py"
-      - "src/kiro_crew/subagent.py"
-      - "src/kiro_crew/subagent_parts/*.py"
-      - "src/kiro_crew/sandbox.py"
-      - "src/kiro_crew/sandbox_leaves.py"
-      - "src/kiro_crew/sandbox_tiers.py"
-      - "src/kiro_crew/sandbox_precreate.py"
-      - "src/kiro_crew/sandbox_seals.py"
-      - "src/kiro_crew/sandbox_aliases.py"
-      - "src/kiro_crew/sandbox_staging.py"
-      - "src/kiro_crew/sandbox_workspace.py"
-      - "src/kiro_crew/sandbox_argv.py"
-      - "src/kiro_crew/sandbox_delegation.py"
-      - "src/kiro_crew/sandbox_probe.py"
-      - "src/kiro_crew/sandbox_unavailable.py"
-      - "src/kiro_crew/sandbox_wrap.py"
-      - "src/kiro_crew/sandbox_cgroup.py"
-      - "src/kiro_crew/sandbox_slice.py"
-      - "src/kiro_crew/sandbox_rlimit.py"
-      - "src/kiro_crew/sandbox_spawn.py"
-      - "src/kiro_crew/sandbox_plan.py"
-      - "src/kiro_crew/sandbox_launcher.py"
-      - "src/kiro_crew/sandbox_launcher_program.py"
-      - "src/kiro_crew/sandbox_launcher_parts/*.py"
-      - "src/kiro_crew/sandbox_seatbelt.py"
-      - "src/kiro_crew/acp_backends.py"
-      - "src/kiro_crew/mcp_hot_reload.py"
-      - "src/kiro_crew/agent_sdk/backends.py"
-      - "src/kiro_crew/agent_sdk/backends_launch.py"
-      - "src/kiro_crew/agent_sdk/backends_mcp.py"
-      - "src/kiro_crew/agent_sdk/backends_members.py"
-      - "src/kiro_crew/agent_sdk/backends_models.py"
-      - "src/kiro_crew/agent_sdk/backends_routing.py"
-      - "src/kiro_crew/agent_sdk/backends_sessions.py"
-      - "src/kiro_crew/agent_sdk/backends_turns.py"
+      - "src/aj_crew/acp/**/*.py"
+      - "src/aj_crew/providers/**/*.py"
+      - "src/aj_crew/platform/**/*.py"
+      - "src/aj_crew/config/loader.py"
+      - "src/aj_crew/config/loader_*.py"
+      - "src/aj_crew/session.py"
+      - "src/aj_crew/session_parts/*.py"
+      - "src/aj_crew/subagent.py"
+      - "src/aj_crew/subagent_parts/*.py"
+      - "src/aj_crew/sandbox.py"
+      - "src/aj_crew/sandbox_leaves.py"
+      - "src/aj_crew/sandbox_tiers.py"
+      - "src/aj_crew/sandbox_precreate.py"
+      - "src/aj_crew/sandbox_seals.py"
+      - "src/aj_crew/sandbox_aliases.py"
+      - "src/aj_crew/sandbox_staging.py"
+      - "src/aj_crew/sandbox_workspace.py"
+      - "src/aj_crew/sandbox_argv.py"
+      - "src/aj_crew/sandbox_delegation.py"
+      - "src/aj_crew/sandbox_probe.py"
+      - "src/aj_crew/sandbox_unavailable.py"
+      - "src/aj_crew/sandbox_wrap.py"
+      - "src/aj_crew/sandbox_cgroup.py"
+      - "src/aj_crew/sandbox_slice.py"
+      - "src/aj_crew/sandbox_rlimit.py"
+      - "src/aj_crew/sandbox_spawn.py"
+      - "src/aj_crew/sandbox_plan.py"
+      - "src/aj_crew/sandbox_launcher.py"
+      - "src/aj_crew/sandbox_launcher_program.py"
+      - "src/aj_crew/sandbox_launcher_parts/*.py"
+      - "src/aj_crew/sandbox_seatbelt.py"
+      - "src/aj_crew/acp_backends.py"
+      - "src/aj_crew/mcp_hot_reload.py"
+      - "src/aj_crew/agent_sdk/backends.py"
+      - "src/aj_crew/agent_sdk/backends_launch.py"
+      - "src/aj_crew/agent_sdk/backends_mcp.py"
+      - "src/aj_crew/agent_sdk/backends_members.py"
+      - "src/aj_crew/agent_sdk/backends_models.py"
+      - "src/aj_crew/agent_sdk/backends_routing.py"
+      - "src/aj_crew/agent_sdk/backends_sessions.py"
+      - "src/aj_crew/agent_sdk/backends_turns.py"
     rule: |
-      Kiro Crew drives ONE first-class agent harness — kiro-cli
+      Aj Crew drives ONE first-class agent harness — kiro-cli
       (ACP_BACKEND_KIRO, spelled "") — and ADAPTS the others (the
       ACP_BACKEND_CLAUDE seam, KAS, and any bring-your-own harness). An added
       harness may only adapt itself to the seams the Kiro harness already runs
@@ -595,7 +595,7 @@ custom-rules:
         harness's membership must be an explicit decision in the diff. FLAG a
         new predicate that grants a capability to a harness the PR never
         mentions. For is_kiro_cli specifically the failure is OPEN — it makes
-        sandbox.wrap_argv SKIP Kiro Crew's own seatbelt in favour of the
+        sandbox.wrap_argv SKIP Aj Crew's own seatbelt in favour of the
         harness's internal one — so treat a grant to any non-kiro harness as a
         security finding.
 
@@ -638,7 +638,7 @@ custom-rules:
         build keeps, so there the kiro harness is selectable only when the
         remote policy allows it, and an unusable persisted acp_backend degrades
         to KAS with a logged reason. The edition is read ONLY from the
-        build-time constant (kiro_crew.edition.is_lts()), never from
+        build-time constant (aj_crew.edition.is_lts()), never from
         config, an env var or the platform context, so the selection gate stays
         free of a context read (H3). A KAS that is proven unable to start on
         the route it would take refuses the gateway start when the main backend
@@ -657,39 +657,39 @@ custom-rules:
   - id: memory-store-seam
     blocking: true
     file-patterns:
-      - "src/kiro_crew/context.py"
-      - "src/kiro_crew/context_assembly/**/*.py"
-      - "src/kiro_crew/memory.py"
-      - "src/kiro_crew/vector_memory.py"
-      - "src/kiro_crew/vector_memory_*.py"
-      - "src/kiro_crew/vector_memory_runtime/**/*.py"
-      - "src/kiro_crew/suggestions.py"
-      - "src/kiro_crew/tips.py"
-      - "src/kiro_crew/task_executor.py"
-      - "src/kiro_crew/task_planner.py"
-      - "src/kiro_crew/history_consolidation.py"
-      - "src/kiro_crew/history_consolidation_*.py"
-      - "src/kiro_crew/messaging/**/*.py"
-      - "src/kiro_crew/subagent_manager/**/*.py"
-      - "src/kiro_crew/slack/**/*.py"
-      - "src/kiro_crew/telegram/**/*.py"
-      - "src/kiro_crew/discord/**/*.py"
-      - "src/kiro_crew/feishu/**/*.py"
-      - "src/kiro_crew/imessage/**/*.py"
-      - "src/kiro_crew/teams/**/*.py"
-      - "src/kiro_crew/webex/**/*.py"
-      - "src/kiro_crew/wecom/**/*.py"
-      - "src/kiro_crew/weixin/**/*.py"
-      - "src/kiro_crew/dashboard/chat_api/**/*.py"
-      - "src/kiro_crew/dashboard/chat_runner.py"
-      - "src/kiro_crew/dashboard/chat_turn/**/*.py"
-      - "src/kiro_crew/dashboard/handlers/**/*.py"
-      - "src/kiro_crew/dashboard/messaging_api/**/*.py"
-      - "src/kiro_crew/dashboard/file_api/**/*.py"
-      - "src/kiro_crew/dashboard/agent_admin/**/*.py"
-      - "src/kiro_crew/eval/runner.py"
-      - "src/kiro_crew/config/loader.py"
-      - "src/kiro_crew/config/loader_*.py"
+      - "src/aj_crew/context.py"
+      - "src/aj_crew/context_assembly/**/*.py"
+      - "src/aj_crew/memory.py"
+      - "src/aj_crew/vector_memory.py"
+      - "src/aj_crew/vector_memory_*.py"
+      - "src/aj_crew/vector_memory_runtime/**/*.py"
+      - "src/aj_crew/suggestions.py"
+      - "src/aj_crew/tips.py"
+      - "src/aj_crew/task_executor.py"
+      - "src/aj_crew/task_planner.py"
+      - "src/aj_crew/history_consolidation.py"
+      - "src/aj_crew/history_consolidation_*.py"
+      - "src/aj_crew/messaging/**/*.py"
+      - "src/aj_crew/subagent_manager/**/*.py"
+      - "src/aj_crew/slack/**/*.py"
+      - "src/aj_crew/telegram/**/*.py"
+      - "src/aj_crew/discord/**/*.py"
+      - "src/aj_crew/feishu/**/*.py"
+      - "src/aj_crew/imessage/**/*.py"
+      - "src/aj_crew/teams/**/*.py"
+      - "src/aj_crew/webex/**/*.py"
+      - "src/aj_crew/wecom/**/*.py"
+      - "src/aj_crew/weixin/**/*.py"
+      - "src/aj_crew/dashboard/chat_api/**/*.py"
+      - "src/aj_crew/dashboard/chat_runner.py"
+      - "src/aj_crew/dashboard/chat_turn/**/*.py"
+      - "src/aj_crew/dashboard/handlers/**/*.py"
+      - "src/aj_crew/dashboard/messaging_api/**/*.py"
+      - "src/aj_crew/dashboard/file_api/**/*.py"
+      - "src/aj_crew/dashboard/agent_admin/**/*.py"
+      - "src/aj_crew/eval/runner.py"
+      - "src/aj_crew/config/loader.py"
+      - "src/aj_crew/config/loader_*.py"
       - "scripts/check_memory_store_seam.py"
     rule: |
       A named memory store is a SILO: cfg.agents[<crew>].memory_store
@@ -738,7 +738,7 @@ custom-rules:
         FLAG a change that returns config_dir() itself as a store's markdown
         root, or that moves the default store's vector file: either one takes
         every existing user's preferences.md, projects.md and history/ out from
-        under the consolidator and `kirocrew memory search`, with no error.
+        under the consolidator and `ajcrew memory search`, with no error.
       - IMPLICIT CONTENT TRANSFER INTO A NEW STORE. FLAG automatic copies, seeds
         or backfills, and any fallback read of Global Memory or another store when
         the selected store is missing or unreadable. Explicit owner-selected
@@ -825,7 +825,7 @@ custom-rules:
       - FLAG a heading that is not a plain release: `## [0.3.0-insider.9]`,
         `## [0.3.0-rc.2]` and similar prerelease spellings must not appear.
         A prerelease is a draft of its base version and is folded onto it by
-        src/kiro_crew/changelog.py; giving it its own heading puts a build
+        src/aj_crew/changelog.py; giving it its own heading puts a build
         stamp in the reader's version archive. Mechanically refused by
         `scripts/check_changelog_history.py` as well; a release branch writes
         its section once, under the release's final heading.
@@ -833,7 +833,7 @@ custom-rules:
       Allowed (do NOT flag):
       - A release PR that prepends one new `## [X.Y.Z] - YYYY-MM-DD` section
         and, in the same commit, bumps the version files docs/build/release.md
-        lists (src/kiro_crew/__init__.py, pyproject.toml,
+        lists (src/aj_crew/__init__.py, pyproject.toml,
         website/electron/package.json).
       - Correcting a genuine factual error inside an already-shipped section,
         when the PR body says that is what it is doing. Say it out loud; an
@@ -854,7 +854,7 @@ custom-rules:
     file-patterns:
       - "docs/decisions/**"
       - "website/src/**"
-      - "src/kiro_crew/**"
+      - "src/aj_crew/**"
     rule: |
       docs/decisions/ is the team's record of product and design decisions a
       person made: one immutable file per decision, indexed by its README. The
@@ -914,7 +914,7 @@ custom-rules:
   - id: recurring-defect-patterns
     blocking: false
     file-patterns:
-      - "src/kiro_crew/**/*.py"
+      - "src/aj_crew/**/*.py"
     rule: |
       Defect patterns harvested from this repository's own fix history (each
       appeared as a SERIES of shipped bugs, not a one-off). Flag a changed
@@ -944,49 +944,49 @@ custom-rules:
   - id: no-new-builtin-apps
     blocking: true
     file-patterns:
-      - "src/kiro_crew/apps/builtins/**"
-      - "src/kiro_crew/apps/manager_builtins.py"
-      - "src/kiro_crew/mcp_tools/apps.py"
-      - "src/kiro_crew/dashboard/server_internal_paths.py"
+      - "src/aj_crew/apps/builtins/**"
+      - "src/aj_crew/apps/manager_builtins.py"
+      - "src/aj_crew/mcp_tools/apps.py"
+      - "src/aj_crew/dashboard/server_internal_paths.py"
       - "website/src/apps/**"
       - "website/public/apps/**"
       - "website/public/app-assets/**"
       - "**/app.json"
-      - "src/kiro_crew/**/*.py"
+      - "src/aj_crew/**/*.py"
       - "website/src/**"
       - "website/electron/**"
       - "scripts/**"
       - ".github/workflows/**"
     rule: |
-      Kiro Crew accepts no new built-in app. The set that still ships is CLOSED
+      Aj Crew accepts no new built-in app. The set that still ships is CLOSED
       and is being EMPTIED: every app, first-party included, lives in a
       dedicated GitHub repository listed in the official registry
       (kirodotdev/KiroCrewApps, what the App Store's Discover page lists; the
       catalog repo holds data only, never app code). The existing built-ins
       move out under #26967
-      (docs/decisions/2026-11-01-kiro-crew-accepts-no-new-built-in-apps.md).
+      (docs/decisions/2026-11-01-aj-crew-accepts-no-new-built-in-apps.md).
       A built-in rides the wheel: it grows every user's install footprint,
       cannot be uninstalled (only disabled), and couples the app's release and
-      fix cadence to Kiro Crew releases — the registry exists precisely so an
+      fix cadence to Aj Crew releases — the registry exists precisely so an
       app can be listed, updated, and corrected with a catalog publish instead
       of a client ship.
 
       - FLAG any PR that adds a new app directory under
-        src/kiro_crew/apps/builtins/ (a new app.json), or re-adds an app that
+        src/aj_crew/apps/builtins/ (a new app.json), or re-adds an app that
         has already moved out.
       - FLAG a new app.json anywhere outside docs/app-kit/examples/ and test
-        fixtures (src/kiro_crew/tests_fixtures/, test/, website/src/test/).
+        fixtures (src/aj_crew/tests_fixtures/, test/, website/src/test/).
       - FLAG a new per-app page directory under website/src/apps/<app>/, or a
         new per-app entry in the core frontend registries
         (website/src/apps/builtinRegistry.ts, overlayRegistry.ts,
         builtinIcons.tsx) or a new per-app asset directory under
         website/public/app-assets/.
       - FLAG a new per-app row in a core built-in table: BUILTIN_NAMES in
-        src/kiro_crew/apps/builtins/__init__.py, or the name sets in
-        src/kiro_crew/apps/manager_builtins.py.
+        src/aj_crew/apps/builtins/__init__.py, or the name sets in
+        src/aj_crew/apps/manager_builtins.py.
       - FLAG a new line of core code (backend, frontend, Electron shell,
         scripts, CI workflows) that imports a specific app
-        (kiro_crew.apps.builtins.<app>, website/src/apps/<app>/) or hard-codes
+        (aj_crew.apps.builtins.<app>, website/src/apps/<app>/) or hard-codes
         a specific app id AS AN APP IDENTITY (an app-manager lookup, a manifest
         or registry key, an app_id comparison), outside the built-in tables
         listed in this rule that are being emptied and outside the app's own
@@ -996,10 +996,10 @@ custom-rules:
         core, and a capability it needs from core is a generic, app-agnostic
         App Kit seam. Existing references are migration debt removed as each
         app leaves; do not flag a line that only removes or narrows one.
-      - FLAG a new app-specific MCP tool in src/kiro_crew/mcp_tools/apps.py (a
+      - FLAG a new app-specific MCP tool in src/aj_crew/mcp_tools/apps.py (a
         tool named for, or serving, one app), or a new app-specific
         internal-secret path row in
-        src/kiro_crew/dashboard/server_internal_paths.py.
+        src/aj_crew/dashboard/server_internal_paths.py.
       - Point the author at a dedicated GitHub repository listed in the
         official registry (kirodotdev/KiroCrewApps). A capability an app
         cannot reach from outside core is an App Kit seam gap: the fix is a
@@ -1008,7 +1008,7 @@ custom-rules:
         is the only exception — the default is closed.
       - FLAG restoring a withdrawn built-in (the Board app) or un-hiding the
         Channels app from the App Store (flipping "hidden": true in
-        src/kiro_crew/apps/builtins/channels/app.json). Both are deliberate
+        src/aj_crew/apps/builtins/channels/app.json). Both are deliberate
         fork divergences an upstream sync must not undo.
 
       Allowed (do NOT flag):
@@ -1034,14 +1034,14 @@ custom-rules:
   - id: no-sync-store-call-from-a-coroutine
     blocking: true
     file-patterns:
-      - "src/kiro_crew/**/*.py"
+      - "src/aj_crew/**/*.py"
     rule: |
       A coroutine on the gateway event loop MUST NOT call a synchronous
       persistent-store method. This is narrower and stricter than
       `no-blocking-call-on-event-loop`: those are kernel-blocking syscalls, and a
       store call looks harmless because it usually returns in under a
       millisecond. It stops being harmless the moment a SECOND connection exists
-      — a `kirocrew doctor` reader, a second gateway on the same home, a
+      — a `ajcrew doctor` reader, a second gateway on the same home, a
       `sqlite3` shell, or `journal_mode=DELETE` on a network home — because then
       `PRAGMA busy_timeout` can hold the loop for its full window per call.
 
@@ -1083,7 +1083,7 @@ custom-rules:
     blocking: false
     file-patterns:
       - "test/**/*.py"
-      - "src/kiro_crew/apps/builtins/**/tests/**/*.py"
+      - "src/aj_crew/apps/builtins/**/tests/**/*.py"
     rule: |
       `no-sync-store-call-from-a-coroutine` exempts test code, and for most
       stores that is right. It is wrong for a store behind
@@ -1105,7 +1105,7 @@ custom-rules:
   - id: persist-before-you-publish
     blocking: true
     file-patterns:
-      - "src/kiro_crew/**/*.py"
+      - "src/aj_crew/**/*.py"
     rule: |
       When a durable record is the authority for a piece of state, the PERSISTED
       transition must be a precondition for publishing that state in memory —
@@ -1141,8 +1141,8 @@ custom-rules:
     blocking: true
     file-patterns:
       - "test/**/*.py"
-      - "src/kiro_crew/apps/builtins/**/tests/**/*.py"
-      - "src/kiro_crew/apps/builtins/**/container_tests/**/*.py"
+      - "src/aj_crew/apps/builtins/**/tests/**/*.py"
+      - "src/aj_crew/apps/builtins/**/container_tests/**/*.py"
       - "website/src/test/**"
       - "website/src/**/*.test.ts"
       - "website/src/**/*.test.tsx"
@@ -1204,7 +1204,7 @@ custom-rules:
     blocking: false
     file-patterns:
       - "test/**/*.py"
-      - "src/kiro_crew/apps/builtins/**/tests/**/*.py"
+      - "src/aj_crew/apps/builtins/**/tests/**/*.py"
     rule: |
       A test must not use real elapsed time as the PROOF that something
       happened. FLAG an added line that asserts a LOWER bound on a measured
@@ -1230,33 +1230,33 @@ custom-rules:
   - id: a-sandbox-widening-is-not-incidental-scope
     blocking: true
     file-patterns:
-      - "src/kiro_crew/sandbox.py"
-      - "src/kiro_crew/sandbox_leaves.py"
-      - "src/kiro_crew/sandbox_tiers.py"
-      - "src/kiro_crew/sandbox_precreate.py"
-      - "src/kiro_crew/sandbox_seals.py"
-      - "src/kiro_crew/sandbox_aliases.py"
-      - "src/kiro_crew/sandbox_staging.py"
-      - "src/kiro_crew/sandbox_workspace.py"
-      - "src/kiro_crew/sandbox_argv.py"
-      - "src/kiro_crew/sandbox_delegation.py"
-      - "src/kiro_crew/sandbox_probe.py"
-      - "src/kiro_crew/sandbox_unavailable.py"
-      - "src/kiro_crew/sandbox_wrap.py"
-      - "src/kiro_crew/sandbox_cgroup.py"
-      - "src/kiro_crew/sandbox_slice.py"
-      - "src/kiro_crew/sandbox_rlimit.py"
-      - "src/kiro_crew/sandbox_spawn.py"
-      - "src/kiro_crew/sandbox_plan.py"
-      - "src/kiro_crew/sandbox_launcher.py"
-      - "src/kiro_crew/sandbox_launcher_program.py"
-      - "src/kiro_crew/sandbox_launcher_parts/*.py"
-      - "src/kiro_crew/sandbox_seatbelt.py"
-      - "src/kiro_crew/sandbox_mount_sweep.py"
-      - "src/kiro_crew/security/**"
-      - "src/kiro_crew/hooks.py"
-      - "src/kiro_crew/hook_runtime/**"
-      - "src/kiro_crew/agent_sdk/tool_gate.py"
+      - "src/aj_crew/sandbox.py"
+      - "src/aj_crew/sandbox_leaves.py"
+      - "src/aj_crew/sandbox_tiers.py"
+      - "src/aj_crew/sandbox_precreate.py"
+      - "src/aj_crew/sandbox_seals.py"
+      - "src/aj_crew/sandbox_aliases.py"
+      - "src/aj_crew/sandbox_staging.py"
+      - "src/aj_crew/sandbox_workspace.py"
+      - "src/aj_crew/sandbox_argv.py"
+      - "src/aj_crew/sandbox_delegation.py"
+      - "src/aj_crew/sandbox_probe.py"
+      - "src/aj_crew/sandbox_unavailable.py"
+      - "src/aj_crew/sandbox_wrap.py"
+      - "src/aj_crew/sandbox_cgroup.py"
+      - "src/aj_crew/sandbox_slice.py"
+      - "src/aj_crew/sandbox_rlimit.py"
+      - "src/aj_crew/sandbox_spawn.py"
+      - "src/aj_crew/sandbox_plan.py"
+      - "src/aj_crew/sandbox_launcher.py"
+      - "src/aj_crew/sandbox_launcher_program.py"
+      - "src/aj_crew/sandbox_launcher_parts/*.py"
+      - "src/aj_crew/sandbox_seatbelt.py"
+      - "src/aj_crew/sandbox_mount_sweep.py"
+      - "src/aj_crew/security/**"
+      - "src/aj_crew/hooks.py"
+      - "src/aj_crew/hook_runtime/**"
+      - "src/aj_crew/agent_sdk/tool_gate.py"
     rule: |
       What the OS sandbox seals, masks, no-follow pins or refuses is an
       OPERATOR-FACING contract: it decides which of their own files their agent can
@@ -1286,7 +1286,7 @@ custom-rules:
       An added invariant ships with the data it demands, in the SAME commit, and
       at import time the blast radius is the whole PACKAGE rather than one test.
       #11556 added a module-level `assert` over the full sealed union while writing
-      wording for two of five leaves. `import kiro_crew.sandbox` then raised on
+      wording for two of five leaves. `import aj_crew.sandbox` then raised on
       main, so every backend test in the repo failed at COLLECTION — including
       `test_every_strict_leaf_of_either_shape_is_covered_by_the_delegated_guard`,
       the test written to pin that exact invariant, which could not report the gap
@@ -1301,7 +1301,7 @@ custom-rules:
   - id: prefer-subtracting-a-duplicate-mechanism
     blocking: false
     file-patterns:
-      - "src/kiro_crew/**/*.py"
+      - "src/aj_crew/**/*.py"
     rule: |
       A long-lived branch can be in review while `main` lands its OWN fix for the
       same incident. Merging both leaves two mechanisms deciding one question,
@@ -1333,7 +1333,7 @@ custom-rules:
   - id: a-refusal-is-not-a-commit
     blocking: true
     file-patterns:
-      - "src/kiro_crew/**/*.py"
+      - "src/aj_crew/**/*.py"
     rule: |
       The inverse of `persist-before-you-publish`, and it shipped separately.
       That rule says do not publish AHEAD of the write. This one says: when the
@@ -1376,7 +1376,7 @@ custom-rules:
   - id: an-invariant-line-needs-a-mutation-pin
     blocking: false
     file-patterns:
-      - "src/kiro_crew/**/*.py"
+      - "src/aj_crew/**/*.py"
       - "test/**/*.py"
     rule: |
       A line that CARRIES an invariant — a `generation=` argument, an
@@ -1413,7 +1413,7 @@ custom-rules:
   - id: a-bound-bounds-every-field-it-retains
     blocking: true
     file-patterns:
-      - "src/kiro_crew/**/*.py"
+      - "src/aj_crew/**/*.py"
     rule: |
       A cap on how many items are stored bounds memory only when every STORED
       FIELD of an item is bounded too. 4096 rows of an unbounded title is
@@ -1450,7 +1450,7 @@ custom-rules:
     file-patterns:
       - "config-baseline.json"
       - "docs/**/*.md"
-      - "src/kiro_crew/**/*.py"
+      - "src/aj_crew/**/*.py"
     rule: |
       `recurring-defect-patterns` already flags a docstring that contradicts the
       code BELOW it. This is the case adjacency cannot catch: a config help
@@ -1485,7 +1485,7 @@ custom-rules:
   - id: keep-modules-small
     blocking: false
     file-patterns:
-      - "src/kiro_crew/**/*.py"
+      - "src/aj_crew/**/*.py"
       - "test/**/*.py"
       - "scripts/**"
       - "packages/**/*.py"
@@ -1510,9 +1510,9 @@ custom-rules:
         module named for that responsibility, or for the split in this PR or one
         before it.
       - A split that reaches moved code through a plain re-export of a name
-        tests patch: `from kiro_crew.<owner> import name` in the original module
+        tests patch: `from aj_crew.<owner> import name` in the original module
         with nothing that carries the patch to the moved code (no
-        `kiro_crew._facade_mirror` install, no `kiro_crew._facade_compose.compose`
+        `aj_crew._facade_mirror` install, no `aj_crew._facade_compose.compose`
         call running that owner on the facade's globals, no facade-class
         `__setattr__` fan-out like `apps/backend.py`'s). The patch then rebinds
         the facade alone and silently stops reaching the owners that read the
@@ -1543,13 +1543,13 @@ custom-rules:
   - id: a-gateway-status-row-carries-a-notice-token
     blocking: false
     file-patterns:
-      - "src/kiro_crew/dashboard/**/*.py"
+      - "src/aj_crew/dashboard/**/*.py"
     rule: |
       A status row the chat gateway appends to a transcript keeps its English
       sentence as `content`, which channel mirrors, SSE readers and the model
       read verbatim. The dashboard localizes the row only through a structured
       `meta["notice"]` token (`GATEWAY_NOTICE_*` in
-      `src/kiro_crew/dashboard/gateway_notice.py`, or `TRANSIENT_NOTICE_*` in
+      `src/aj_crew/dashboard/gateway_notice.py`, or `TRANSIENT_NOTICE_*` in
       `chat_utils.py`) keyed in `website/src/pages/chat/gatewayNotice.ts`. A row
       with literal English and no token renders in English on every locale, and
       the only way left to translate it is a regex over the prose.

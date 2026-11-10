@@ -6,10 +6,10 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.config.sections import MemoryStoreConfig
-from kiro_crew.cron import CronJob
-from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef, read_session_execution
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.config.sections import MemoryStoreConfig
+from aj_crew.cron import CronJob
+from aj_crew.execution_context import ExecutionContext, MemoryStoreRef, read_session_execution
 
 
 class ReachedProvider(BaseException):
@@ -17,7 +17,7 @@ class ReachedProvider(BaseException):
 
 
 async def _callback(monkeypatch):
-    from kiro_crew.slack import gateway
+    from aj_crew.slack import gateway
 
     gw = gateway.GatewayOrchestrator.__new__(gateway.GatewayOrchestrator)
     gw.sessions = MagicMock()
@@ -51,7 +51,7 @@ async def _callback(monkeypatch):
 @pytest.mark.parametrize("store", ["", "legacy"])
 @pytest.mark.parametrize("sequence", [False, True])
 async def test_legacy_capture_reads_off_loop_and_freezes_selectors(monkeypatch, store, sequence):
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     cfg.memory_stores["legacy"] = MemoryStoreConfig()
     cfg.save()
     gw, callback = await _callback(monkeypatch)
@@ -67,7 +67,7 @@ async def test_legacy_capture_reads_off_loop_and_freezes_selectors(monkeypatch, 
     loop_thread = threading.get_ident()
     entered = asyncio.Event()
     release = threading.Event()
-    original_load = KiroCrewConfig.load
+    original_load = AjCrewConfig.load
     readers = []
 
     def read_config(cls):
@@ -78,7 +78,7 @@ async def test_legacy_capture_reads_off_loop_and_freezes_selectors(monkeypatch, 
             assert release.wait(5), "test did not release config reader"
         return original_load()
 
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(read_config))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(read_config))
     task = asyncio.create_task(callback(job))
     ready = asyncio.create_task(entered.wait())
     try:
@@ -114,12 +114,12 @@ async def test_legacy_capture_reads_off_loop_and_freezes_selectors(monkeypatch, 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("mode", ["persistent", "incognito", "temporary"])
 async def test_supplied_cron_carrier_does_not_reload_configuration(monkeypatch, mode):
-    from kiro_crew import execution_context, vector_memory
-    from kiro_crew.slack import gateway
+    from aj_crew import execution_context, vector_memory
+    from aj_crew.slack import gateway
 
     monkeypatch.setattr(execution_context, "_LIVE_EXECUTIONS", {})
     gw, callback = await _callback(monkeypatch)
-    from kiro_crew.memory_stores import memory_stores_root
+    from aj_crew.memory_stores import memory_stores_root
 
     vector_memory.create_member_database(
         memory_stores_root() / "member-store" / "memory.db",
@@ -147,7 +147,7 @@ async def test_supplied_cron_carrier_does_not_reload_configuration(monkeypatch, 
 
     monkeypatch.setattr(gateway, "_await_cron_fire_time_gate", later_gate)
     monkeypatch.setattr(
-        KiroCrewConfig, "load", MagicMock(side_effect=AssertionError("carrier reread config"))
+        AjCrewConfig, "load", MagicMock(side_effect=AssertionError("carrier reread config"))
     )
     with pytest.raises(ReachedProvider):
         await callback(job)
@@ -159,7 +159,7 @@ async def test_supplied_cron_carrier_does_not_reload_configuration(monkeypatch, 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("kind", ["member", "v2-store", "missing-store"])
 async def test_uncaptured_member_or_invalid_store_refuses_without_global(monkeypatch, kind):
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     cfg.memory_stores["v2"] = MemoryStoreConfig(memory_version=2, owner_member_id="member")
     cfg.save()
     gw, callback = await _callback(monkeypatch)
@@ -177,7 +177,7 @@ async def test_uncaptured_member_or_invalid_store_refuses_without_global(monkeyp
 
 @pytest.mark.asyncio
 async def test_uncaptured_legacy_v1_member_record_keeps_its_configured_store(monkeypatch):
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     cfg.memory_stores["legacy-member"] = MemoryStoreConfig(memory_version=1)
     cfg.save()
     gw, callback = await _callback(monkeypatch)
@@ -200,7 +200,7 @@ async def test_uncaptured_legacy_v1_member_record_keeps_its_configured_store(mon
 
 @pytest.mark.asyncio
 async def test_usage_fallback_keeps_captured_template_after_job_edit(monkeypatch):
-    from kiro_crew.slack import gateway
+    from aj_crew.slack import gateway
 
     gw, callback = await _callback(monkeypatch)
     gw.sessions.get_or_create = AsyncMock(return_value=(MagicMock(), True, False))

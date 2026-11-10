@@ -1,4 +1,4 @@
-"""``kirocrew gateway-pid`` prints this home's gateway-lock holder as JSON.
+"""``ajcrew gateway-pid`` prints this home's gateway-lock holder as JSON.
 
 Read-only: it resolves the incumbent through the same socket-independent
 :func:`gateway_lock.lock_holder` oracle that ``stop --expect-pid``/``restart``
@@ -12,8 +12,8 @@ import json
 
 import pytest
 
-from kiro_crew import cli_server
-from kiro_crew.gateway_lock import LockHolder, LockProbeError
+from aj_crew import cli_server
+from aj_crew.gateway_lock import LockHolder, LockProbeError
 
 
 @pytest.fixture

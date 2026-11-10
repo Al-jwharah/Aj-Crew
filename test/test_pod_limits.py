@@ -20,11 +20,11 @@ from pod_helpers import (  # noqa: F401 -- the autouse fixtures register by impo
     requires_posix_pod_lifecycle,
 )
 
-from kiro_crew.pod import cli as pod_cli
-from kiro_crew.pod import limits as pod_limits
-from kiro_crew.pod import runtime as rt
-from kiro_crew.pod import unit as unit_mod
-from kiro_crew.pod.config import PodConfig
+from aj_crew.pod import cli as pod_cli
+from aj_crew.pod import limits as pod_limits
+from aj_crew.pod import runtime as rt
+from aj_crew.pod import unit as unit_mod
+from aj_crew.pod.config import PodConfig
 
 _GIB = 1024**3
 
@@ -132,8 +132,8 @@ class TestUnitRendering:
 @requires_posix_pod_lifecycle
 class TestLifecycle:
     def _cfg(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> PodConfig:
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "env"))
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "env"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         monkeypatch.setattr(rt, "IS_MACOS", False)
         monkeypatch.setattr(rt, "IS_WINDOWS", False)
         c = PodConfig.load()
@@ -167,7 +167,7 @@ class TestLifecycle:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         c = self._cfg(tmp_path, monkeypatch)
-        from kiro_crew.pod import runtime_lifecycle as lc
+        from aj_crew.pod import runtime_lifecycle as lc
 
         steps: list[str] = []
 
@@ -180,7 +180,7 @@ class TestLifecycle:
     def test_restart_starts_nothing_when_the_halt_fails(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.pod import runtime_lifecycle as lc
+        from aj_crew.pod import runtime_lifecycle as lc
 
         c = self._cfg(tmp_path, monkeypatch)
         started: list[str] = []
@@ -193,7 +193,7 @@ class TestLifecycle:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Through the systemd adapter: stop and start, and the home is untouched."""
-        from kiro_crew.pod import runtime_lifecycle as lc
+        from aj_crew.pod import runtime_lifecycle as lc
 
         c = self._cfg(tmp_path, monkeypatch)
         rt.write_env_file(c, "demo", {"CHECKOUT": str(tmp_path / "wt")})
@@ -216,9 +216,9 @@ class TestLifecycle:
 @requires_posix_pod_lifecycle
 class TestCli:
     def _prep(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, *, active: bool) -> PodConfig:
-        monkeypatch.setenv("KIROCREW_POD_WORKTREES_ROOT", str(tmp_path / "wts"))
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "env"))
+        monkeypatch.setenv("AJCREW_POD_WORKTREES_ROOT", str(tmp_path / "wts"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "env"))
         monkeypatch.setattr(rt, "_git_worktrees", lambda ref: {})
         monkeypatch.setattr(rt, "require_backend", lambda: None)
         monkeypatch.setattr(rt, "IS_MACOS", False)
@@ -339,7 +339,7 @@ class TestCli:
         assert "pod up demo" in capsys.readouterr().err
 
     def test_parser_accepts_the_new_flags(self) -> None:
-        from kiro_crew import cli_parser_admin
+        from aj_crew import cli_parser_admin
 
         parser = argparse.ArgumentParser()
         cli_parser_admin.register_pod_parser(parser.add_subparsers(dest="command"))
@@ -354,10 +354,10 @@ class TestRestartEdges:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """A Windows start refuses the state a Windows stop keeps, so nothing is halted."""
-        from kiro_crew.pod import runtime_lifecycle as lc
+        from aj_crew.pod import runtime_lifecycle as lc
 
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "env"))
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "env"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         monkeypatch.setattr(rt, "IS_WINDOWS", True)
         monkeypatch.setattr(rt, "IS_MACOS", False)
         monkeypatch.setattr(lc, "halt_pod", lambda cfg, n: pytest.fail("must not stop"))
@@ -372,8 +372,8 @@ class TestRestartHealthFailure:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys
     ) -> None:
         """The started unit restarts every 5s on failure, so the CLI stops it, never reclaims."""
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "env"))
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "env"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         monkeypatch.setattr(rt, "IS_WINDOWS", False)
         monkeypatch.setattr(rt, "IS_MACOS", False)
         monkeypatch.setattr(rt, "require_backend", lambda: None)
@@ -419,10 +419,10 @@ def test_restart_refuses_a_bad_stored_ceiling_before_stopping_anything(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, host_16g_8cpu: None
 ) -> None:
     """The start would refuse it, so checking only then leaves a healthy pod stopped."""
-    from kiro_crew.pod import runtime_lifecycle as lc
+    from aj_crew.pod import runtime_lifecycle as lc
 
-    monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "env"))
-    monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+    monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "env"))
+    monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
     monkeypatch.setattr(rt, "IS_WINDOWS", False)
     c = PodConfig.load()
     rt.write_env_file(c, "demo", {"CHECKOUT": str(tmp_path / "wt"), "CPU": "lots"})

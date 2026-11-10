@@ -53,7 +53,7 @@ The mocks for every surface below, rendered on a live dashboard, are in the desc
 ### Current state
 
 A folder is a stored record with a name and a few settings, and no agent behind
-it. The record `create_folder` writes (`src/kiro_crew/dashboard/chat_folders_records.py`)
+it. The record `create_folder` writes (`src/aj_crew/dashboard/chat_folders_records.py`)
 carries `id`, `name`, `order`, `collapsed`, `hidden`, `parent_id`, `project_dir`,
 `default_agent`, `created_at`, and optionally `color`, `icon`, `steering_dirs` and
 `owner_app`. Nothing in it names a conductor.
@@ -87,7 +87,7 @@ The conductor that #18438 shipped is computed in the browser:
    to this project", and the screen says "I am talking to one of its chats".
 4. **A conductor cannot reach what is filed under it.** Session control fences
    every agent-created caller to the sessions it created
-   (`_caller_is_ownership_fenced`, `src/kiro_crew/dashboard/session_control_parts/caller_access.py`;
+   (`_caller_is_ownership_fenced`, `src/aj_crew/dashboard/session_control_parts/caller_access.py`;
    enforced in `authorize_target`, `target_authorization.py`). A conductor
    that an agent created cannot reach a session the person files into a folder by
    hand. A conductor the person started in their own tab is not fenced at all: it
@@ -117,7 +117,7 @@ The conductor that #18438 shipped is computed in the browser:
   (`target_authorization.py`) stays as it is.
 - Conductors for channel folders, app-owned folders (`owner_app`) and crew-member
   folders (`member:<store>` principals). These keep today's behaviour.
-- Changing what the `kirocrew-conductor` charter does beyond telling it which
+- Changing what the `ajcrew-conductor` charter does beyond telling it which
   folder it is.
 - A conductor that acts on its own without being asked. It acts on turns the
   person sends and on patrols the person arms, as any conductor does today.
@@ -131,7 +131,7 @@ The folder record gains one optional key:
 ```jsonc
 "conductor": {
   "slot": "chat-…",           // the conductor's session key, minted once
-  "agent": "kirocrew-conductor",
+  "agent": "ajcrew-conductor",
   "created_at": 1792368968.4
 }
 ```
@@ -144,7 +144,7 @@ The folder record gains one optional key:
   tab is unfenced and reaches the whole workspace, so the minted slot is fenced
   (§3) and starts from the reach of an agent-created caller.
 - **One slot for the folder's life.** The work ledger is keyed by the conductor's
-  slot key (`conductor_dir(slot_key)`, `src/kiro_crew/work_ledger_store.py`).
+  slot key (`conductor_dir(slot_key)`, `src/aj_crew/work_ledger_store.py`).
   A stable key keeps the ledger and the Dashboard tab across restarts. A fresh
   start uses the existing reset-conversation path, which keeps the slot and its
   ledger and drops only the model context.
@@ -159,7 +159,7 @@ The folder record gains one optional key:
   `folder_conductor_ineligible`.
 
 Only the person may mint a conductor. An app or crew-member principal is refused
-403, the way a non-empty `steering_dirs` is refused today (`steering_dirs_forbidden`, `src/kiro_crew/dashboard/chat_folders_paths.py`), so an agent cannot give itself a
+403, the way a non-empty `steering_dirs` is refused today (`steering_dirs_forbidden`, `src/aj_crew/dashboard/chat_folders_paths.py`), so an agent cannot give itself a
 conductor.
 
 ### 2. The folder chat reads as the folder
@@ -418,7 +418,7 @@ Exit criteria:
   folder's conductor. Phase 2 shows that once on the drop:
   "\<folder\>'s conductor can now read and message this chat."
 - **No new host access.** A conductor's file and tool permissions are the
-  `kirocrew-conductor` agent's, unchanged. Folder membership grants session
+  `ajcrew-conductor` agent's, unchanged. Folder membership grants session
   control, never filesystem paths; folder steering keeps its own person-only gate.
 - **Fail closed.** An unreadable folder store, a missing `filed_by`, or a slot whose
   `folder_conductor_of` names a deleted folder all fall through to the existing
@@ -450,6 +450,6 @@ Exit criteria:
    arms a patrol on bind. A folder conductor that patrols by default spends tokens
    on folders the person only glanced at.
 3. **Does `default_agent` choose the conductor's agent?** The proposal fixes it to
-   `kirocrew-conductor`. A folder may want a different lead.
+   `ajcrew-conductor`. A folder may want a different lead.
 4. **Should a person's own new chat in the folder notify its conductor?** Useful
    for awareness, but it turns every new tab into a conductor turn.

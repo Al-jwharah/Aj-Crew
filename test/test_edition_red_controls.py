@@ -1,4 +1,4 @@
-"""LTS-build values for the RFC's Red controls (``kiro_crew.edition_locks``).
+"""LTS-build values for the RFC's Red controls (``aj_crew.edition_locks``).
 
 One test per control: in an LTS build the feature stays off even when local
 config, the stored switch or the policy would turn it on; in an ``oss`` build the
@@ -14,13 +14,13 @@ from pathlib import Path
 import pytest
 from webhooks_api_helpers import wired_fixture  # noqa: F401
 
-from kiro_crew.platform.governance_parts.archetypes import Decision
+from aj_crew.platform.governance_parts.archetypes import Decision
 
 EDITIONS = ("oss", "lts")
 
 
 def _set_edition(monkeypatch: pytest.MonkeyPatch, value: str) -> bool:
-    monkeypatch.setattr("kiro_crew.edition.EDITION", value)
+    monkeypatch.setattr("aj_crew.edition.EDITION", value)
     return value == "lts"
 
 
@@ -45,8 +45,8 @@ def _profile_permit() -> Decision:
 @pytest.mark.parametrize("edition", EDITIONS)
 @pytest.mark.parametrize("answer", [_default_permit, _profile_permit])
 def test_script_hooks_off_by_default_in_lts(monkeypatch, edition, answer) -> None:
-    from kiro_crew.hook_runtime import governance_gate
-    from kiro_crew.platform import governance_profiles
+    from aj_crew.hook_runtime import governance_gate
+    from aj_crew.platform import governance_profiles
 
     lts = _set_edition(monkeypatch, edition)
     monkeypatch.setattr(governance_profiles, "governance_permits", lambda *a, **k: answer())
@@ -58,8 +58,8 @@ def test_script_hooks_off_by_default_in_lts(monkeypatch, edition, answer) -> Non
 
 @pytest.mark.parametrize("edition", EDITIONS)
 def test_script_hooks_follow_the_policy_in_lts(monkeypatch, edition) -> None:
-    from kiro_crew.hook_runtime import governance_gate
-    from kiro_crew.platform import governance_profiles
+    from aj_crew.hook_runtime import governance_gate
+    from aj_crew.platform import governance_profiles
 
     _set_edition(monkeypatch, edition)
     monkeypatch.setattr(governance_profiles, "governance_permits", lambda *a, **k: _policy_permit())
@@ -69,8 +69,8 @@ def test_script_hooks_follow_the_policy_in_lts(monkeypatch, edition) -> None:
 
 @pytest.mark.parametrize("edition", EDITIONS)
 def test_script_hooks_fail_closed_on_a_governance_error_in_lts(monkeypatch, edition) -> None:
-    from kiro_crew.hook_runtime import governance_gate
-    from kiro_crew.platform import governance_profiles
+    from aj_crew.hook_runtime import governance_gate
+    from aj_crew.platform import governance_profiles
 
     lts = _set_edition(monkeypatch, edition)
 
@@ -87,8 +87,8 @@ def test_script_hooks_fail_closed_on_a_governance_error_in_lts(monkeypatch, edit
 def test_user_kiro_hooks_follow_the_policy_in_lts(
     monkeypatch, tmp_path: Path, edition, policy_enables
 ) -> None:
-    from kiro_crew.agent import _apply_user_kiro_hooks
-    from kiro_crew.platform import governance_profiles
+    from aj_crew.agent import _apply_user_kiro_hooks
+    from aj_crew.platform import governance_profiles
 
     lts = _set_edition(monkeypatch, edition)
     seen: list[str] = []
@@ -123,7 +123,7 @@ def test_user_kiro_hooks_follow_the_policy_in_lts(
 
 @pytest.mark.parametrize("edition", EDITIONS)
 def test_webhooks_off_in_lts_even_when_switched_on(monkeypatch, tmp_path: Path, edition) -> None:
-    from kiro_crew import webhooks
+    from aj_crew import webhooks
 
     lts = _set_edition(monkeypatch, edition)
     store = webhooks.WebhookTokenStore(tmp_path)
@@ -137,7 +137,7 @@ def test_webhooks_off_in_lts_even_when_switched_on(monkeypatch, tmp_path: Path, 
 async def test_webhook_switch_enable_refused_in_lts(wired, monkeypatch, edition) -> None:
     from webhooks_api_helpers import _payload, _req
 
-    from kiro_crew.dashboard.handlers import hooks as H
+    from aj_crew.dashboard.handlers import hooks as H
 
     lts = _set_edition(monkeypatch, edition)
 
@@ -155,8 +155,8 @@ async def test_webhook_switch_enable_refused_in_lts(wired, monkeypatch, edition)
 async def test_webhook_refusal_names_the_edition_lock_in_lts(wired, monkeypatch, edition) -> None:
     from webhooks_api_helpers import _req
 
-    from kiro_crew import webhooks
-    from kiro_crew.dashboard.handlers import hooks as H
+    from aj_crew import webhooks
+    from aj_crew.dashboard.handlers import hooks as H
 
     lts = _set_edition(monkeypatch, edition)
     if not lts:
@@ -177,7 +177,7 @@ class _Installer:
         self.calls: list[str] = []
 
     async def _ok(self, name: str):
-        from kiro_crew.platform.interfaces import CapabilityResult
+        from aj_crew.platform.interfaces import CapabilityResult
 
         self.calls.append(name)
         return CapabilityResult(ok=True)
@@ -200,7 +200,7 @@ class _Installer:
 
 @pytest.mark.parametrize("edition", EDITIONS)
 def test_extension_install_off_in_lts(monkeypatch, edition) -> None:
-    from kiro_crew.platform.capability_bound import BoundedCapabilityManager
+    from aj_crew.platform.capability_bound import BoundedCapabilityManager
 
     lts = _set_edition(monkeypatch, edition)
     inner = _Installer()
@@ -227,7 +227,7 @@ def test_extension_install_off_in_lts(monkeypatch, edition) -> None:
 
 @pytest.mark.parametrize("edition", EDITIONS)
 def test_agentcore_off_in_lts_even_when_policy_enables_it(monkeypatch, edition) -> None:
-    from kiro_crew.platform.governance import (
+    from aj_crew.platform.governance import (
         agentcore_gateway_url,
         agentcore_posture,
         agentcore_workload_name,
@@ -260,8 +260,8 @@ def test_agentcore_off_in_lts_even_when_policy_enables_it(monkeypatch, edition) 
 
 def _patch_decisions(monkeypatch, answer) -> list[str]:
     """Answer both decision seams with *answer* and return the audit outcomes written."""
-    from kiro_crew import sel as sel_mod
-    from kiro_crew.decisions import capability
+    from aj_crew import sel as sel_mod
+    from aj_crew.decisions import capability
 
     rows: list[str] = []
 
@@ -283,7 +283,7 @@ def _patch_decisions(monkeypatch, answer) -> list[str]:
 @pytest.mark.parametrize("edition", EDITIONS)
 @pytest.mark.parametrize("answer", [_default_permit, _profile_permit])
 def test_external_decisions_off_by_default_in_lts(monkeypatch, edition, answer) -> None:
-    from kiro_crew.decisions import capability
+    from aj_crew.decisions import capability
 
     lts = _set_edition(monkeypatch, edition)
     rows = _patch_decisions(monkeypatch, answer)
@@ -295,7 +295,7 @@ def test_external_decisions_off_by_default_in_lts(monkeypatch, edition, answer) 
 
 @pytest.mark.parametrize("edition", EDITIONS)
 def test_external_decisions_follow_the_policy_in_lts(monkeypatch, edition) -> None:
-    from kiro_crew.decisions import capability
+    from aj_crew.decisions import capability
 
     _set_edition(monkeypatch, edition)
     rows = _patch_decisions(monkeypatch, _policy_permit)
@@ -309,9 +309,9 @@ def test_external_decisions_follow_the_policy_in_lts(monkeypatch, edition) -> No
 
 @pytest.mark.parametrize("edition", EDITIONS)
 def test_update_commands_off_in_lts(monkeypatch, edition) -> None:
-    from kiro_crew.platform import governance
-    from kiro_crew.platform.governance import UpdatePins
-    from kiro_crew.platform.update_provider import resolve_provider
+    from aj_crew.platform import governance
+    from aj_crew.platform.governance import UpdatePins
+    from aj_crew.platform.update_provider import resolve_provider
 
     lts = _set_edition(monkeypatch, edition)
     monkeypatch.setattr(governance, "active_update_pins", lambda: UpdatePins(apply_command="true"))
@@ -324,7 +324,7 @@ def test_update_commands_off_in_lts(monkeypatch, edition) -> None:
 
 @pytest.mark.parametrize("edition", EDITIONS)
 def test_sandbox_off_cannot_be_set_locally_in_lts(monkeypatch, edition) -> None:
-    from kiro_crew import sandbox_tiers
+    from aj_crew import sandbox_tiers
 
     lts = _set_edition(monkeypatch, edition)
 
@@ -337,12 +337,12 @@ def test_sandbox_off_cannot_be_set_locally_in_lts(monkeypatch, edition) -> None:
 def test_unsandboxed_exec_cannot_be_widened_locally_in_lts(monkeypatch, edition) -> None:
     from types import SimpleNamespace
 
-    from kiro_crew import sandbox_unavailable
-    from kiro_crew.config import loader
+    from aj_crew import sandbox_unavailable
+    from aj_crew.config import loader
 
     lts = _set_edition(monkeypatch, edition)
     loaded = SimpleNamespace(agent=SimpleNamespace(sandbox_allow_unsandboxed_exec=True))
-    monkeypatch.setattr(loader.KiroCrewConfig, "load", classmethod(lambda cls: loaded))
+    monkeypatch.setattr(loader.AjCrewConfig, "load", classmethod(lambda cls: loaded))
     monkeypatch.setattr(loader, "unsandboxed_exec_platform_default", lambda: False)
 
     assert sandbox_unavailable._allow_unsandboxed_exec() is not lts

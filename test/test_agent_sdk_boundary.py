@@ -8,7 +8,7 @@ application code. Pinned here:
    code is not.
 2. Every recorded baseline violation still exists, so the list only shrinks.
 3. ``TYPE_CHECKING``-only, relative, ``importlib.import_module`` and
-   ``from kiro_crew import acp`` imports are all caught.
+   ``from aj_crew import acp`` imports are all caught.
 
 If this goes red, fix the import direction or run ``--update-baseline``; do not relax
 the rule.
@@ -64,8 +64,8 @@ def gate():
 
 def test_the_sdk_package_exists_and_is_exempt(gate):
     """The boundary cannot be enforced before the package it names exists."""
-    assert (ROOT / "src" / "kiro_crew" / "agent_sdk" / "__init__.py").is_file()
-    assert gate._is_exempt("src/kiro_crew/agent_sdk/drivers/acp.py")
+    assert (ROOT / "src" / "aj_crew" / "agent_sdk" / "__init__.py").is_file()
+    assert gate._is_exempt("src/aj_crew/agent_sdk/drivers/acp.py")
 
 
 def test_the_exempt_set_is_exactly_the_boundary(gate):
@@ -77,21 +77,21 @@ def test_the_exempt_set_is_exactly_the_boundary(gate):
     RFC's final phase deletes the package.
     """
     assert set(gate.EXEMPT_PREFIXES) == {
-        "src/kiro_crew/agent_sdk/",
-        "src/kiro_crew/acp/",
-        "src/kiro_crew/providers/",
+        "src/aj_crew/agent_sdk/",
+        "src/aj_crew/acp/",
+        "src/aj_crew/providers/",
     }
 
 
 def test_only_a_built_in_apps_test_suite_is_out_of_scope(gate):
     """An app's tests/ suite is test code; everything beside it is still gated."""
-    assert gate._is_app_test("src/kiro_crew/apps/builtins/auto_improvement/tests/test_x.py")
+    assert gate._is_app_test("src/aj_crew/apps/builtins/auto_improvement/tests/test_x.py")
     for rel in (
-        "src/kiro_crew/apps/builtins/auto_improvement/backend/runner.py",
-        "src/kiro_crew/apps/builtins/auto_improvement/spine/tests_helpers.py",
-        "src/kiro_crew/apps/builtins/auto_improvement/backend/tests/x.py",
-        "src/kiro_crew/apps/tests/test_x.py",
-        "src/kiro_crew/dashboard/tests/test_x.py",
+        "src/aj_crew/apps/builtins/auto_improvement/backend/runner.py",
+        "src/aj_crew/apps/builtins/auto_improvement/spine/tests_helpers.py",
+        "src/aj_crew/apps/builtins/auto_improvement/backend/tests/x.py",
+        "src/aj_crew/apps/tests/test_x.py",
+        "src/aj_crew/dashboard/tests/test_x.py",
     ):
         assert not gate._is_app_test(rel), rel
 
@@ -116,15 +116,15 @@ def test_the_scan_actually_walks_the_tree(gate):
 
 
 def test_the_forbidden_roots_include_the_re_export_channel(gate):
-    """Watching only kiro_crew.acp would let providers launder ACP shapes.
+    """Watching only aj_crew.acp would let providers launder ACP shapes.
 
     ``providers/base.py`` aliases ``acp.types.AcpEvent`` as ``LLMEvent`` and
     re-exports the ``EVENT_*`` constants, so a consumer can depend on the backend
     without naming it. If this drops to acp-only, the baseline can fall while
     nothing is actually decoupled.
     """
-    assert "kiro_crew.acp" in gate.FORBIDDEN_ROOTS
-    assert "kiro_crew.providers" in gate.FORBIDDEN_ROOTS
+    assert "aj_crew.acp" in gate.FORBIDDEN_ROOTS
+    assert "aj_crew.providers" in gate.FORBIDDEN_ROOTS
 
 
 def test_the_baseline_header_comes_from_the_generator(gate):
@@ -162,7 +162,7 @@ def test_every_recorded_violation_still_exists(gate):
     [
         # The plain case: an ACP import in a file the baseline does not list.
         pytest.param(
-            "from kiro_crew.acp.types import AcpEvent\n",
+            "from aj_crew.acp.types import AcpEvent\n",
             "a fresh ACP import must be flagged",
             id="test_a_violation_outside_the_baseline_is_caught",
         ),
@@ -170,16 +170,16 @@ def test_every_recorded_violation_still_exists(gate):
         pytest.param(
             "from typing import TYPE_CHECKING\n"
             "if TYPE_CHECKING:\n"
-            "    from kiro_crew.acp.runtime import AcpRuntime\n",
+            "    from aj_crew.acp.runtime import AcpRuntime\n",
             "a TYPE_CHECKING import must not escape the scan",
             id="test_a_type_checking_only_import_is_still_refused",
         ),
         pytest.param(
-            "import importlib\nimportlib.import_module('kiro_crew.acp.client')\n",
+            "import importlib\nimportlib.import_module('aj_crew.acp.client')\n",
             "importlib.import_module with a literal must be flagged",
             id="test_a_dynamic_import_does_not_escape_the_scan",
         ),
-        # `from ..acp.types import x` inside kiro_crew is the same violation.
+        # `from ..acp.types import x` inside aj_crew is the same violation.
         pytest.param(
             "from ..acp.types import AcpEvent\n",
             "a relative ACP import must resolve and be flagged",
@@ -188,46 +188,46 @@ def test_every_recorded_violation_still_exists(gate):
     ],
 )
 def test_an_acp_import_in_an_unlisted_file_is_flagged(gate, source: str, why: str):
-    hits = gate._violations_in_source("src/kiro_crew/dashboard/brand_new.py", source)
+    hits = gate._violations_in_source("src/aj_crew/dashboard/brand_new.py", source)
     assert hits, why
 
 
 def test_a_neighbouring_name_is_not_a_violation(gate):
-    """`kiro_crew.acp_backends` is a leaf that imports no ACP; prefix-matching it
+    """`aj_crew.acp_backends` is a leaf that imports no ACP; prefix-matching it
     would flag four consumers for depending on the module that exists to keep
     them off the ACP package."""
     hits = gate._violations_in_source(
-        "src/kiro_crew/session.py",
-        "from kiro_crew.acp_backends import selectable_backends\n",
+        "src/aj_crew/session.py",
+        "from aj_crew.acp_backends import selectable_backends\n",
     )
     assert not hits, "a sibling module sharing the prefix must not be flagged"
 
 
 def test_a_bound_name_that_is_the_forbidden_package_is_a_violation(gate):
-    """`from kiro_crew import acp` binds the forbidden package by NAME.
+    """`from aj_crew import acp` binds the forbidden package by NAME.
 
-    The from-target is `kiro_crew`, which matches no forbidden root, so a gate
+    The from-target is `aj_crew`, which matches no forbidden root, so a gate
     that reads only `node.module` misses it. With no inline opt-out marker this
     ordinary spelling would have been the standard way around the rule, with the
     baseline still shrinking while dependence stayed put.
     """
-    rel = "src/kiro_crew/dashboard/probe.py"
+    rel = "src/aj_crew/dashboard/probe.py"
     for source in (
-        "from kiro_crew import acp\n",
-        "from kiro_crew import providers\n",
-        "from kiro_crew import acp as _a\n",
+        "from aj_crew import acp\n",
+        "from aj_crew import providers\n",
+        "from aj_crew import acp as _a\n",
         "from .. import acp\n",
     ):
         assert gate._violations_in_source(rel, source), f"not flagged: {source!r}"
 
 
 def test_a_bound_name_that_is_an_unrelated_sibling_is_clean(gate):
-    """The rule must not widen to every `from kiro_crew import ...` line."""
-    rel = "src/kiro_crew/dashboard/probe.py"
+    """The rule must not widen to every `from aj_crew import ...` line."""
+    rel = "src/aj_crew/dashboard/probe.py"
     for source in (
-        "from kiro_crew import session\n",
-        "from kiro_crew import config\n",
-        "from kiro_crew import *\n",
+        "from aj_crew import session\n",
+        "from aj_crew import config\n",
+        "from aj_crew import *\n",
     ):
         assert not gate._violations_in_source(rel, source), f"flagged: {source!r}"
 
@@ -239,29 +239,29 @@ def test_every_dynamic_import_spelling_is_a_violation(gate):
     other spelling, and a reviewer hands these out one per round -- so the whole
     branch table is asserted at once rather than the one that was reported.
     """
-    rel = "src/kiro_crew/dashboard/probe.py"
+    rel = "src/aj_crew/dashboard/probe.py"
     spellings = {
         "canonical attribute call": (
-            "import importlib\nimportlib.import_module('kiro_crew.acp.client')\n"
+            "import importlib\nimportlib.import_module('aj_crew.acp.client')\n"
         ),
-        "canonical dunder": "__import__('kiro_crew.acp.client')\n",
-        "module alias": ("import importlib as _il\n_il.import_module('kiro_crew.acp.types')\n"),
+        "canonical dunder": "__import__('aj_crew.acp.client')\n",
+        "module alias": ("import importlib as _il\n_il.import_module('aj_crew.acp.types')\n"),
         "bare from-import": (
-            "from importlib import import_module\nimport_module('kiro_crew.acp')\n"
+            "from importlib import import_module\nimport_module('aj_crew.acp')\n"
         ),
         "renamed from-import": (
-            "from importlib import import_module as _im\n_im('kiro_crew.acp')\n"
+            "from importlib import import_module as _im\n_im('aj_crew.acp')\n"
         ),
         "bound by assignment": (
-            "import importlib\n_im = importlib.import_module\n_im('kiro_crew.providers')\n"
+            "import importlib\n_im = importlib.import_module\n_im('aj_crew.providers')\n"
         ),
-        "keyword name": ("import importlib\nimportlib.import_module(name='kiro_crew.acp')\n"),
-        "dunder fromlist tuple": "__import__('kiro_crew', fromlist=('acp',))\n",
-        "dunder fromlist list": "__import__('kiro_crew', fromlist=['providers'])\n",
-        "dunder fromlist set": "__import__('kiro_crew', fromlist={'acp'})\n",
-        "dunder fromlist dict keys": ("__import__('kiro_crew', fromlist={'acp': True})\n"),
+        "keyword name": ("import importlib\nimportlib.import_module(name='aj_crew.acp')\n"),
+        "dunder fromlist tuple": "__import__('aj_crew', fromlist=('acp',))\n",
+        "dunder fromlist list": "__import__('aj_crew', fromlist=['providers'])\n",
+        "dunder fromlist set": "__import__('aj_crew', fromlist={'acp'})\n",
+        "dunder fromlist dict keys": ("__import__('aj_crew', fromlist={'acp': True})\n"),
         "relative via package": (
-            "import importlib\nimportlib.import_module('.acp', package='kiro_crew')\n"
+            "import importlib\nimportlib.import_module('.acp', package='aj_crew')\n"
         ),
         "relative via level": "__import__('acp', level=2)\n",
     }
@@ -274,19 +274,19 @@ def test_every_dynamic_import_spelling_is_a_violation(gate):
 def test_a_positional_package_resolves_a_relative_dynamic_import(gate):
     """`package` is argument 1, so reading only the keyword form is a false green.
 
-    With `package` unread, `import_module(".acp", "kiro_crew")` fell through to
+    With `package` unread, `import_module(".acp", "aj_crew")` fell through to
     resolving against the CALLING file's package. From a nested consumer that
-    lands on `kiro_crew.dashboard.acp` -- not a forbidden root -- so the file read
-    as clean while importing `kiro_crew.acp`.
+    lands on `aj_crew.dashboard.acp` -- not a forbidden root -- so the file read
+    as clean while importing `aj_crew.acp`.
     """
-    rel = "src/kiro_crew/dashboard/probe.py"
+    rel = "src/aj_crew/dashboard/probe.py"
     flagged = {
-        "positional package": ("import importlib\nimportlib.import_module('.acp', 'kiro_crew')\n"),
+        "positional package": ("import importlib\nimportlib.import_module('.acp', 'aj_crew')\n"),
         "positional package, two dots": (
-            "import importlib\n" "importlib.import_module('..providers', 'kiro_crew.dashboard')\n"
+            "import importlib\n" "importlib.import_module('..providers', 'aj_crew.dashboard')\n"
         ),
         "keyword package": (
-            "import importlib\nimportlib.import_module('.acp', package='kiro_crew')\n"
+            "import importlib\nimportlib.import_module('.acp', package='aj_crew')\n"
         ),
     }
     for label, source in flagged.items():
@@ -294,7 +294,7 @@ def test_a_positional_package_resolves_a_relative_dynamic_import(gate):
 
     clean = {
         "positional package on a sibling": (
-            "import importlib\nimportlib.import_module('.userns', 'kiro_crew.sandbox')\n"
+            "import importlib\nimportlib.import_module('.userns', 'aj_crew.sandbox')\n"
         ),
         # `__import__`'s slot 1 is `globals`, not `package`. A dict literal is not
         # a string constant, so reading that slot cannot invent a package name.
@@ -306,14 +306,14 @@ def test_a_positional_package_resolves_a_relative_dynamic_import(gate):
 
 def test_dynamic_import_of_an_unrelated_module_is_clean(gate):
     """The dynamic branch must not widen to every importlib call."""
-    rel = "src/kiro_crew/dashboard/probe.py"
+    rel = "src/aj_crew/dashboard/probe.py"
     clean = {
-        "unrelated module": ("import importlib\nimportlib.import_module('kiro_crew.session')\n"),
-        "unrelated fromlist": "__import__('kiro_crew', fromlist=('session',))\n",
-        "star fromlist": "__import__('kiro_crew', fromlist=('*',))\n",
-        "fromlist bare string": "__import__('kiro_crew', fromlist='acp')\n",
+        "unrelated module": ("import importlib\nimportlib.import_module('aj_crew.session')\n"),
+        "unrelated fromlist": "__import__('aj_crew', fromlist=('session',))\n",
+        "star fromlist": "__import__('aj_crew', fromlist=('*',))\n",
+        "fromlist bare string": "__import__('aj_crew', fromlist='acp')\n",
         "non-literal target": (
-            "import importlib\nmod = 'kiro_crew.acp'\nimportlib.import_module(mod)\n"
+            "import importlib\nmod = 'aj_crew.acp'\nimportlib.import_module(mod)\n"
         ),
     }
     flagged = [label for label, source in clean.items() if gate._violations_in_source(rel, source)]
@@ -326,17 +326,17 @@ def test_an_undecidable_fromlist_under_the_boundary_is_a_violation(gate):
     `('acp',) * 1`, `('a' + 'cp',)` and `frozenset({'acp'})` all import the same package,
     so when `name` is an ancestor of a forbidden root, an unreadable `fromlist` is reported.
     """
-    rel = "src/kiro_crew/dashboard/probe.py"
+    rel = "src/aj_crew/dashboard/probe.py"
     undecidable = {
-        "starred": "x = ['acp']\n__import__('kiro_crew', fromlist=(*x,))\n",
-        "dict unpack": "__import__('kiro_crew', fromlist={**{'acp': True}})\n",
-        "concatenation": "__import__('kiro_crew', fromlist=('acp',) + ())\n",
-        "repetition": "__import__('kiro_crew', fromlist=('acp',) * 1)\n",
-        "opaque call": "__import__('kiro_crew', fromlist=frozenset({'acp'}))\n",
-        "comprehension": "__import__('kiro_crew', fromlist=[m for m in ('acp',)])\n",
-        "generator": "__import__('kiro_crew', fromlist=(m for m in ('acp',)))\n",
-        "name reference": "f = ['acp']\n__import__('kiro_crew', fromlist=f)\n",
-        "element concat": "__import__('kiro_crew', fromlist=('a' + 'cp',))\n",
+        "starred": "x = ['acp']\n__import__('aj_crew', fromlist=(*x,))\n",
+        "dict unpack": "__import__('aj_crew', fromlist={**{'acp': True}})\n",
+        "concatenation": "__import__('aj_crew', fromlist=('acp',) + ())\n",
+        "repetition": "__import__('aj_crew', fromlist=('acp',) * 1)\n",
+        "opaque call": "__import__('aj_crew', fromlist=frozenset({'acp'}))\n",
+        "comprehension": "__import__('aj_crew', fromlist=[m for m in ('acp',)])\n",
+        "generator": "__import__('aj_crew', fromlist=(m for m in ('acp',)))\n",
+        "name reference": "f = ['acp']\n__import__('aj_crew', fromlist=f)\n",
+        "element concat": "__import__('aj_crew', fromlist=('a' + 'cp',))\n",
     }
     missed = [
         label
@@ -347,20 +347,20 @@ def test_an_undecidable_fromlist_under_the_boundary_is_a_violation(gate):
 
 
 def test_the_invariant_does_not_flag_a_sibling_package(gate):
-    """`kiro_crew.sandbox` is a sibling of the boundary, not an ancestor of it.
+    """`aj_crew.sandbox` is a sibling of the boundary, not an ancestor of it.
 
-    The tree really does call `__import__('kiro_crew.sandbox',
+    The tree really does call `__import__('aj_crew.sandbox',
     fromlist=['userns_available'])`, so a rule that reported every opaque
     `fromlist` regardless of the package would red the gate on existing code.
     """
-    rel = "src/kiro_crew/dashboard/probe.py"
+    rel = "src/aj_crew/dashboard/probe.py"
     clean = {
-        "real in-tree usage": ("__import__('kiro_crew.sandbox', fromlist=['userns_available'])\n"),
-        "opaque under a sibling": ("f = compute()\n__import__('kiro_crew.sandbox', fromlist=f)\n"),
-        "decidable and forbidden-free": ("__import__('kiro_crew', fromlist=('session',))\n"),
-        "empty": "__import__('kiro_crew', fromlist=())\n",
-        "non-strings only": "__import__('kiro_crew', fromlist=(1, 2))\n",
-        "bare string iterates characters": ("__import__('kiro_crew', fromlist='acp')\n"),
+        "real in-tree usage": ("__import__('aj_crew.sandbox', fromlist=['userns_available'])\n"),
+        "opaque under a sibling": ("f = compute()\n__import__('aj_crew.sandbox', fromlist=f)\n"),
+        "decidable and forbidden-free": ("__import__('aj_crew', fromlist=('session',))\n"),
+        "empty": "__import__('aj_crew', fromlist=())\n",
+        "non-strings only": "__import__('aj_crew', fromlist=(1, 2))\n",
+        "bare string iterates characters": ("__import__('aj_crew', fromlist='acp')\n"),
     }
     flagged = [label for label, source in clean.items() if gate._violations_in_source(rel, source)]
     assert not flagged, f"the invariant is too wide: {flagged}"
@@ -370,10 +370,10 @@ def test_an_empty_module_name_is_a_relative_import_not_a_missing_one(gate):
     """`__import__("")` with a level is how a purely relative import spells itself.
 
     `""` is falsy but legal, so it must not read as "no name given".
-    `__import__("", globals(), locals(), ("acp",), 2)` two levels under `kiro_crew`
-    really imports `kiro_crew.acp`.
+    `__import__("", globals(), locals(), ("acp",), 2)` two levels under `aj_crew`
+    really imports `aj_crew.acp`.
     """
-    rel = "src/kiro_crew/dashboard/probe.py"
+    rel = "src/aj_crew/dashboard/probe.py"
     relative = {
         "positional level": "__import__('', globals(), locals(), ('acp',), 2)\n",
         "keyword level": "__import__('', fromlist=('providers',), level=2)\n",
@@ -391,13 +391,13 @@ def test_an_empty_name_that_imports_nothing_stays_clean(gate):
 
     `importlib.import_module("", package=...)` raises `ValueError: Empty module
     name` and imports nothing, and level 1 from `dashboard/` resolves to
-    `kiro_crew.dashboard.acp`, which is not the boundary. Flagging either would be
+    `aj_crew.dashboard.acp`, which is not the boundary. Flagging either would be
     a false red on code that cannot cross.
     """
-    rel = "src/kiro_crew/dashboard/probe.py"
+    rel = "src/aj_crew/dashboard/probe.py"
     clean = {
         "import_module empty name raises": (
-            "import importlib\nimportlib.import_module('', package='kiro_crew.acp')\n"
+            "import importlib\nimportlib.import_module('', package='aj_crew.acp')\n"
         ),
         "no level at all": "__import__('')\n",
         "level one lands in dashboard": ("__import__('', fromlist=('acp',), level=1)\n"),
@@ -431,7 +431,7 @@ def test_seeding_outside_the_checkout_reports_the_file_it_wrote(
     the scan is pinned to a fixed edge set.
     """
     monkeypatch.setattr(gate, "ROOT", tmp_path / "checkout")
-    monkeypatch.setattr(gate, "_scan", lambda targets: {"src/kiro_crew/x.py": {3: "kiro_crew.acp"}})
+    monkeypatch.setattr(gate, "_scan", lambda targets: {"src/aj_crew/x.py": {3: "aj_crew.acp"}})
     target = tmp_path / "outside-the-checkout.txt"
     assert gate.seed_baseline(target) == 0
     assert target.is_file() and target.read_text(encoding="utf-8").strip()
@@ -445,12 +445,12 @@ def test_growth_in_an_untouched_file_is_not_this_prs_problem(gate):
     which made an edge landing anywhere in the tree fail the NEXT unrelated PR --
     with no fix available inside that PR's own diff.
     """
-    rel = "src/kiro_crew/dashboard/untouched.py"
-    violations = {rel: {10: "kiro_crew.acp", 11: "kiro_crew.acp"}}
+    rel = "src/aj_crew/dashboard/untouched.py"
+    violations = {rel: {10: "aj_crew.acp", 11: "aj_crew.acp"}}
     baseline = {rel: 1}
 
     _, grown, added_line_offenders, _ = gate._verdicts(
-        violations, baseline, {"src/kiro_crew/somewhere/else.py"}, {}
+        violations, baseline, {"src/aj_crew/somewhere/else.py"}, {}
     )
     assert grown == [], "an untouched file's growth was charged to this PR"
     assert added_line_offenders == {}, "and it must not resurface as an added-line error"
@@ -462,14 +462,14 @@ def test_growth_in_an_untouched_file_is_not_this_prs_problem(gate):
 def test_every_verdict_is_scope_gated(gate):
     """Guard the shape, not just the two cases: no verdict may ignore `changed`."""
     rels = {
-        "new": "src/kiro_crew/dashboard/brand_new.py",
-        "grown": "src/kiro_crew/dashboard/grew.py",
-        "shrunk": "src/kiro_crew/dashboard/shrank.py",
+        "new": "src/aj_crew/dashboard/brand_new.py",
+        "grown": "src/aj_crew/dashboard/grew.py",
+        "shrunk": "src/aj_crew/dashboard/shrank.py",
     }
     violations = {
-        rels["new"]: {1: "kiro_crew.acp"},
-        rels["grown"]: {1: "kiro_crew.acp", 2: "kiro_crew.acp"},
-        rels["shrunk"]: {1: "kiro_crew.acp"},
+        rels["new"]: {1: "aj_crew.acp"},
+        rels["grown"]: {1: "aj_crew.acp", 2: "aj_crew.acp"},
+        rels["shrunk"]: {1: "aj_crew.acp"},
     }
     baseline = {rels["grown"]: 1, rels["shrunk"]: 2}
 

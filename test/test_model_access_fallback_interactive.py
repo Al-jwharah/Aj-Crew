@@ -26,11 +26,11 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.acp.client import AcpError
-from kiro_crew.dashboard.chat import _run_chat
-from kiro_crew.dashboard.chat_utils import MODEL_UNENTITLED_KIND, SYNTHETIC_RECOVERY_KIND
-from kiro_crew.dashboard.recovery_replays import ReplayFamily
-from kiro_crew.testing.wait import await_until
+from aj_crew.acp.client import AcpError
+from aj_crew.dashboard.chat import _run_chat
+from aj_crew.dashboard.chat_utils import MODEL_UNENTITLED_KIND, SYNTHETIC_RECOVERY_KIND
+from aj_crew.dashboard.recovery_replays import ReplayFamily
+from aj_crew.testing.wait import await_until
 
 _MA = ReplayFamily.MODEL_ACCESS
 _MA_REPLAY = frozenset({_MA})
@@ -48,7 +48,7 @@ def _arm_ma_replay(slot, entry_id, *, session_key="", stop_gen=0, session_stop_g
 
 
 def _make_state_for_run_chat(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     state.broadcast_ws = MagicMock()
     state.push_slots_update = MagicMock()
@@ -64,7 +64,7 @@ def _client_raising(exc: BaseException) -> AsyncMock:
     streams a normal completion on the re-queued turn (so a successful swap is
     observable as the replay completing rather than as transient queue state,
     which ``_run_chat`` drains within the same call)."""
-    from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+    from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
     client = AsyncMock()
     client.context_usage_pct = MagicMock(return_value=10.0)
@@ -199,7 +199,7 @@ async def test_oversized_advertised_candidate_is_refused_not_retained(tmp_path, 
     the session log, so an id past ``_MAX_MODEL_ID_LEN`` makes the guard go false
     and the already-bounded terminal error surface instead of a swap.
     """
-    from kiro_crew.dashboard.chat_runner import _MAX_MODEL_ID_LEN
+    from aj_crew.dashboard.chat_runner import _MAX_MODEL_ID_LEN
 
     state = _make_state_for_run_chat(tmp_path, monkeypatch)
     slot = state.get_or_create_slot("s1")
@@ -227,7 +227,7 @@ async def test_oversized_rejected_id_is_refused_not_retained(tmp_path, monkeypat
     not reach the persisted notice even though a perfectly good candidate is
     advertised alongside it.
     """
-    from kiro_crew.dashboard.chat_runner import _MAX_MODEL_ID_LEN
+    from aj_crew.dashboard.chat_runner import _MAX_MODEL_ID_LEN
 
     state = _make_state_for_run_chat(tmp_path, monkeypatch)
     slot = state.get_or_create_slot("s1")
@@ -279,7 +279,7 @@ async def test_swap_recovery_replay_preserves_the_one_shot_flag(tmp_path, monkey
     state = _make_state_for_run_chat(tmp_path, monkeypatch)
     slot = state.get_or_create_slot("s1")
     # A clean client: the point is the reset path, not another rejection.
-    from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+    from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
     client = AsyncMock()
     client.context_usage_pct = MagicMock(return_value=10.0)
@@ -368,7 +368,7 @@ async def test_an_owed_completion_is_replayed_as_a_completion_despite_a_stop(tmp
     replay. Decided once, at the requeue: the replay is queued as the completion
     it is, with no model-access record for the drain or the consume seam to
     revoke, and the admission sweep exempts it like any queued completion."""
-    from kiro_crew.dashboard.chat_utils import SUBAGENT_COMPLETION_KIND
+    from aj_crew.dashboard.chat_utils import SUBAGENT_COMPLETION_KIND
 
     state = _make_state_for_run_chat(tmp_path, monkeypatch)
     slot = state.get_or_create_slot("s1")
@@ -385,7 +385,7 @@ async def test_an_owed_completion_is_replayed_as_a_completion_despite_a_stop(tmp
     state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
     inserts = _record_inserts(monkeypatch, slot)
     monkeypatch.setattr(
-        "kiro_crew.dashboard.chat_runner._start_next_queued_turn", AsyncMock(return_value=False)
+        "aj_crew.dashboard.chat_runner._start_next_queued_turn", AsyncMock(return_value=False)
     )
 
     await _run_chat(
@@ -411,7 +411,7 @@ async def test_a_synthesis_replay_stays_cancellable(tmp_path, monkeypatch):
     """The synthesis turn's ledger actor is ``subagent``, but it owes nothing:
     it is runner-authored. A Stop landing during the swap's set_model abandons
     its replay, exactly as it does a user turn's."""
-    from kiro_crew.dashboard.state import SUBAGENT_SYNTHESIS_PROMPT
+    from aj_crew.dashboard.state import SUBAGENT_SYNTHESIS_PROMPT
 
     state = _make_state_for_run_chat(tmp_path, monkeypatch)
     slot = state.get_or_create_slot("s1")
@@ -446,8 +446,8 @@ async def test_a_runner_continuation_of_a_completion_stays_cancellable(tmp_path,
     retry prompt, a stall continuation). That text is not the completion, so a
     model-access requeue of it keeps the family record a Stop, rebind or newer
     message revokes, instead of being queued as an uncancellable completion."""
-    from kiro_crew.dashboard.chat_runner import build_infra_retry_prompt
-    from kiro_crew.dashboard.chat_utils import SUBAGENT_COMPLETION_KIND
+    from aj_crew.dashboard.chat_runner import build_infra_retry_prompt
+    from aj_crew.dashboard.chat_utils import SUBAGENT_COMPLETION_KIND
 
     state = _make_state_for_run_chat(tmp_path, monkeypatch)
     slot = state.get_or_create_slot("s1")
@@ -455,7 +455,7 @@ async def test_a_runner_continuation_of_a_completion_stays_cancellable(tmp_path,
     state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
     inserts = _record_inserts(monkeypatch, slot)
     monkeypatch.setattr(
-        "kiro_crew.dashboard.chat_runner._start_next_queued_turn", AsyncMock(return_value=False)
+        "aj_crew.dashboard.chat_runner._start_next_queued_turn", AsyncMock(return_value=False)
     )
     retry_prompt = build_infra_retry_prompt("throttled", 5)
 
@@ -478,7 +478,7 @@ async def test_a_runner_continuation_of_a_completion_stays_cancellable(tmp_path,
 async def test_a_verbatim_recovery_of_a_completion_is_still_owed(tmp_path, monkeypatch):
     """A recovery entry the runner marked as a verbatim requeue of the completion
     replays the completion itself, so it stays owed through a Stop."""
-    from kiro_crew.dashboard.chat_utils import SUBAGENT_COMPLETION_KIND
+    from aj_crew.dashboard.chat_utils import SUBAGENT_COMPLETION_KIND
 
     state = _make_state_for_run_chat(tmp_path, monkeypatch)
     slot = state.get_or_create_slot("s1")
@@ -495,7 +495,7 @@ async def test_a_verbatim_recovery_of_a_completion_is_still_owed(tmp_path, monke
     state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
     inserts = _record_inserts(monkeypatch, slot)
     monkeypatch.setattr(
-        "kiro_crew.dashboard.chat_runner._start_next_queued_turn", AsyncMock(return_value=False)
+        "aj_crew.dashboard.chat_runner._start_next_queued_turn", AsyncMock(return_value=False)
     )
 
     await _run_chat(
@@ -533,7 +533,7 @@ async def test_a_hard_kill_discards_an_owed_completion(tmp_path, monkeypatch):
     state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
     inserts = _record_inserts(monkeypatch, slot)
     drain = AsyncMock(return_value=False)
-    monkeypatch.setattr("kiro_crew.dashboard.chat_runner._start_next_queued_turn", drain)
+    monkeypatch.setattr("aj_crew.dashboard.chat_runner._start_next_queued_turn", drain)
 
     await _run_chat(
         state,
@@ -554,8 +554,8 @@ async def test_the_verbatim_mark_travels_through_the_queue(tmp_path, monkeypatch
     """``_queue_recovery`` marks a verbatim requeue of a completion turn's own
     message, and the drain hands the mark to the replay turn; runner-written
     text queued by a recovery turn that is not the completion carries none."""
-    from kiro_crew.acp.transport_errors import AcpAuthRequired
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.acp.transport_errors import AcpAuthRequired
+    from aj_crew.dashboard import chat_runner
 
     state = _make_state_for_run_chat(tmp_path, monkeypatch)
     slot = state.get_or_create_slot("s1")
@@ -625,8 +625,8 @@ async def test_soft_stop_after_enqueue_drops_the_recovery_at_dequeue(tmp_path, m
     during post-turn cleanup must be dropped at DEQUEUE, comparing the live stop
     counter to the value snapshotted at enqueue, or the cancelled prompt would
     replay from the queue head."""
-    from kiro_crew.dashboard.chat_runner import _start_next_queued_turn
-    from kiro_crew.dashboard.chat_utils import payload_for_replay
+    from aj_crew.dashboard.chat_runner import _start_next_queued_turn
+    from aj_crew.dashboard.chat_utils import payload_for_replay
 
     state = _make_state_for_run_chat(tmp_path, monkeypatch)
     slot = state.get_or_create_slot("s1")
@@ -666,8 +666,8 @@ async def test_linked_channel_stop_drops_the_recovery_at_dequeue(tmp_path, monke
     drain above."""
     from unittest.mock import MagicMock
 
-    from kiro_crew.dashboard.chat_runner import _start_next_queued_turn
-    from kiro_crew.dashboard.chat_utils import payload_for_replay
+    from aj_crew.dashboard.chat_runner import _start_next_queued_turn
+    from aj_crew.dashboard.chat_utils import payload_for_replay
 
     state = _make_state_for_run_chat(tmp_path, monkeypatch)
     slot = state.get_or_create_slot("s1")
@@ -770,8 +770,8 @@ async def test_user_followup_drops_the_recovery_regardless_of_queue_position(tmp
     the disposition needs no queue-ordering invariant: if a future change appends
     the replay instead of prepending it, this stays correct and this test stays
     green."""
-    from kiro_crew.dashboard.chat_runner import _start_next_queued_turn
-    from kiro_crew.dashboard.chat_utils import payload_for_replay
+    from aj_crew.dashboard.chat_runner import _start_next_queued_turn
+    from aj_crew.dashboard.chat_utils import payload_for_replay
 
     state = _make_state_for_run_chat(tmp_path, monkeypatch)
     slot = state.get_or_create_slot("s1")
@@ -824,7 +824,7 @@ async def test_swap_registers_active_fallback_and_restores_without_pinning_slot_
     drives the real restore probe and asserts it clears the sticky state AND
     leaves slot.model exactly as it started (empty, an auto slot never gains a
     pin)."""
-    from kiro_crew.dashboard.chat_runner import _probe_fallback_restore_for_slot
+    from aj_crew.dashboard.chat_runner import _probe_fallback_restore_for_slot
 
     state = _make_state_for_run_chat(tmp_path, monkeypatch)
     slot = state.get_or_create_slot("s1")
@@ -880,7 +880,7 @@ async def test_restore_probe_honors_a_cross_alias_pick_via_the_shared_epoch(tmp_
     check and this test reddens, because set_model is awarded back to the primary
     over the alias's pick.
     """
-    from kiro_crew.dashboard.chat_runner import _probe_fallback_restore_for_slot
+    from aj_crew.dashboard.chat_runner import _probe_fallback_restore_for_slot
 
     state = _make_state_for_run_chat(tmp_path, monkeypatch)
     slot = state.get_or_create_slot("s1")
@@ -932,9 +932,9 @@ async def test_restore_probe_holds_the_session_lock_across_the_rpc(tmp_path, mon
     """
     from unittest.mock import AsyncMock
 
-    from kiro_crew.dashboard.chat_runner import _probe_fallback_restore_for_slot
-    from kiro_crew.dashboard.chat_utils import effective_session_key
-    from kiro_crew.llm_helpers import slot_switch_session_lock
+    from aj_crew.dashboard.chat_runner import _probe_fallback_restore_for_slot
+    from aj_crew.dashboard.chat_utils import effective_session_key
+    from aj_crew.llm_helpers import slot_switch_session_lock
 
     state = _make_state_for_run_chat(tmp_path, monkeypatch)
     slot = state.get_or_create_slot("s1")
@@ -975,7 +975,7 @@ async def test_swap_does_not_pin_the_substitute_into_an_unpinned_slot(tmp_path, 
     Mutation target: delete the `slot._active_fallback_model = _access_fb_candidate`
     line in the swap and this reds -- the backfill sees an unguarded unpinned slot
     and pins the substitute."""
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     state = _make_state_for_run_chat(tmp_path, monkeypatch)
     slot = state.get_or_create_slot("s1")
@@ -1112,8 +1112,8 @@ async def test_reactive_swap_holds_the_per_session_switch_lock(tmp_path, monkeyp
     swap and this test reddens, because the session lock is not held while the
     swap RPC (the exact window a twin's ``set_model`` interleaves) runs.
     """
-    from kiro_crew.dashboard.chat_utils import effective_session_key
-    from kiro_crew.llm_helpers import slot_switch_session_lock
+    from aj_crew.dashboard.chat_utils import effective_session_key
+    from aj_crew.llm_helpers import slot_switch_session_lock
 
     state = _make_state_for_run_chat(tmp_path, monkeypatch)
     slot = state.get_or_create_slot("s1")
@@ -1153,8 +1153,8 @@ async def test_recovery_replay_dropped_when_the_slot_rebinds_mid_episode(tmp_pat
     """
     from unittest.mock import MagicMock
 
-    from kiro_crew.dashboard.chat_runner import _start_next_queued_turn
-    from kiro_crew.dashboard.chat_utils import effective_session_key, payload_for_replay
+    from aj_crew.dashboard.chat_runner import _start_next_queued_turn
+    from aj_crew.dashboard.chat_utils import effective_session_key, payload_for_replay
 
     state = _make_state_for_run_chat(tmp_path, monkeypatch)
     slot = state.get_or_create_slot("s1")
@@ -1201,8 +1201,8 @@ async def test_recovery_record_cleared_when_the_admission_sweep_removes_the_entr
     """
     from unittest.mock import MagicMock
 
-    from kiro_crew.dashboard.chat_runner import _start_next_queued_turn
-    from kiro_crew.dashboard.chat_utils import effective_session_key, payload_for_replay
+    from aj_crew.dashboard.chat_runner import _start_next_queued_turn
+    from aj_crew.dashboard.chat_utils import effective_session_key, payload_for_replay
 
     state = _make_state_for_run_chat(tmp_path, monkeypatch)
     slot = state.get_or_create_slot("s1")
@@ -1248,7 +1248,7 @@ async def test_recovery_replay_forwards_attachment_metadata(tmp_path, monkeypatc
     ``_queue_recovery`` call and this test reddens, because the requeued entry's
     meta then lacks the ``dirs``/``files`` lists.
     """
-    from kiro_crew.dashboard.chat_utils import SYNTHETIC_RECOVERY_KIND
+    from aj_crew.dashboard.chat_utils import SYNTHETIC_RECOVERY_KIND
 
     state = _make_state_for_run_chat(tmp_path, monkeypatch)
     slot = state.get_or_create_slot("s1")
@@ -1293,7 +1293,7 @@ async def test_silent_noop_set_model_surfaces_error_not_a_false_fallback(tmp_pat
     non-raising return) and this test reddens, because the false fallback state
     and notice are published for a no-op swap.
     """
-    from kiro_crew.dashboard.chat_utils import MODEL_UNENTITLED_KIND
+    from aj_crew.dashboard.chat_utils import MODEL_UNENTITLED_KIND
 
     state = _make_state_for_run_chat(tmp_path, monkeypatch)
     slot = state.get_or_create_slot("s1")
@@ -1334,7 +1334,7 @@ async def test_recovery_replay_aborts_at_consume_when_stopped_after_dequeue(tmp_
     alone) and this test reddens, because the stopped replay streams instead of
     aborting.
     """
-    from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+    from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
     state = _make_state_for_run_chat(tmp_path, monkeypatch)
     slot = state.get_or_create_slot("s1")

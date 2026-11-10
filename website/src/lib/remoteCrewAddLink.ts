@@ -1,5 +1,5 @@
 /**
- * The dashboard half of the desktop app's `kirocrew://remote-crew/add` link.
+ * The dashboard half of the desktop app's `ajcrew://remote-crew/add` link.
  *
  * The Electron resolver (`website/electron/deep-link.js`) checks the link and
  * sends this window the route `/settings/instances?host=<ssh host>[&port=<n>][&name=<label>]`

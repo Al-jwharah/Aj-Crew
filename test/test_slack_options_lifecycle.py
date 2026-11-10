@@ -22,10 +22,10 @@ from slack_options_lifecycle_helpers import (
 from test_handler_turn import SLACK_TURN_FUNCTIONS
 from turn_harness import SlotSpec, TurnContext, TurnScript, run_turn
 
-from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, AcpEvent
-from kiro_crew.dashboard.chat_utils import remember_slack_options
-from kiro_crew.slack.format import build_options_blocks
-from kiro_crew.slack.outbound import PostedOptions
+from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, AcpEvent
+from aj_crew.dashboard.chat_utils import remember_slack_options
+from aj_crew.slack.format import build_options_blocks
+from aj_crew.slack.outbound import PostedOptions
 
 AWS_KEY = "AKIAIOSFODNN7EXAMPLE"
 
@@ -136,7 +136,7 @@ class TestControlPostedAfterTheWindowIsSpent:
         """
         import inspect
 
-        from kiro_crew.slack import handler, transport_dispatch
+        from aj_crew.slack import handler, transport_dispatch
 
         dispatch = inspect.getsource(transport_dispatch.handle_message_transport)
         owner_expr = "get_session_for_thread(reply_ts) or session_key"
@@ -170,7 +170,7 @@ class TestControlPostedAfterTheWindowIsSpent:
         """
         import inspect
 
-        from kiro_crew.slack import handler, transport_dispatch
+        from aj_crew.slack import handler, transport_dispatch
 
         for name, src, shortcuts in (
             (
@@ -211,8 +211,8 @@ class TestControlPostedAfterTheWindowIsSpent:
         pass — leaving live buttons for a superseded question. The drain re-checks
         and spends it itself.
         """
-        from kiro_crew.dashboard import chat_slack
-        from kiro_crew.dashboard.chat_backfill import BackfillSelection
+        from aj_crew.dashboard import chat_slack
+        from aj_crew.dashboard.chat_backfill import BackfillSelection
 
         expired: list[str] = []
 
@@ -262,9 +262,9 @@ class TestControlPostedAfterTheWindowIsSpent:
         A turn can finish DURING the drain and record its own control in the same slot,
         so the drain expires only the ts it posted itself.
         """
-        from kiro_crew.dashboard import chat_slack
-        from kiro_crew.dashboard.chat_backfill import BackfillSelection
-        from kiro_crew.slack.outbound import PostedOptions
+        from aj_crew.dashboard import chat_slack
+        from aj_crew.dashboard.chat_backfill import BackfillSelection
+        from aj_crew.slack.outbound import PostedOptions
 
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
@@ -317,8 +317,8 @@ class TestControlPostedAfterTheWindowIsSpent:
         choices would arrive as the characters `[OPTIONS: A | B]`. Only the newest
         reply is answerable; an earlier one renders struck through.
         """
-        from kiro_crew.dashboard import chat_slack
-        from kiro_crew.dashboard.chat_backfill import BackfillSelection
+        from aj_crew.dashboard import chat_slack
+        from aj_crew.dashboard.chat_backfill import BackfillSelection
 
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
@@ -362,8 +362,8 @@ class TestControlPostedAfterTheWindowIsSpent:
         history would put a credential into Slack with no redaction anywhere on
         that path.
         """
-        from kiro_crew.dashboard import chat_slack
-        from kiro_crew.dashboard.chat_backfill import BackfillSelection
+        from aj_crew.dashboard import chat_slack
+        from aj_crew.dashboard.chat_backfill import BackfillSelection
 
         secret = "AKIAIOSFODNN7EXAMPLE"
         reply = {"role": "assistant", "content": f"which key? [OPTIONS: {secret} | cancel]"}
@@ -396,8 +396,8 @@ class TestControlPostedAfterTheWindowIsSpent:
         add_message trims from the front past _MAX_SLOT_MESSAGES, so the length stays the
         same; total_messages is a lifetime counter and still moves.
         """
-        from kiro_crew.dashboard import chat_slack
-        from kiro_crew.dashboard.chat_backfill import BackfillSelection
+        from aj_crew.dashboard import chat_slack
+        from aj_crew.dashboard.chat_backfill import BackfillSelection
 
         expired: list[str] = []
 
@@ -447,8 +447,8 @@ class TestControlPostedAfterTheWindowIsSpent:
         slot.running is the same at both ends and no row may be appended yet, but the
         agent is mid-reply, so the replayed question is stale and must still be spent.
         """
-        from kiro_crew.dashboard import chat_slack
-        from kiro_crew.dashboard.chat_backfill import BackfillSelection
+        from aj_crew.dashboard import chat_slack
+        from aj_crew.dashboard.chat_backfill import BackfillSelection
 
         expired: list[str] = []
 
@@ -494,7 +494,7 @@ class TestControlPostedAfterTheWindowIsSpent:
         `redact_for_display`, which scans the form Slack DISPLAYS (ANSI, emphasis,
         backticks, link markup).
         """
-        from kiro_crew.slack.format import strip_ansi
+        from aj_crew.slack.format import strip_ansi
 
         # An AWS key broken up by a colour escape mid-token.
         secret = "AKIA\x1b[0mIOSFODNN7EXAMPLE"
@@ -516,11 +516,11 @@ class TestControlPostedAfterTheWindowIsSpent:
         would find it unheld. So the expiry marks the control terminal under the edit
         lock, and the queued click hits the same check a duplicate click does.
         """
-        from kiro_crew.dashboard.chat_utils import (
+        from aj_crew.dashboard.chat_utils import (
             expire_slack_options,
             remember_slack_options,
         )
-        from kiro_crew.slack.outbound import claim_options_answer
+        from aj_crew.slack.outbound import claim_options_answer
 
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
@@ -547,7 +547,7 @@ class TestControlPostedAfterTheWindowIsSpent:
         """
         import inspect
 
-        from kiro_crew.slack import interactions
+        from aj_crew.slack import interactions
 
         src = inspect.getsource(interactions._answer_options)
         assert (
@@ -598,10 +598,10 @@ class TestControlPostedAfterTheWindowIsSpent:
         """
         import inspect
 
-        from kiro_crew.dashboard.chat_utils import (
+        from aj_crew.dashboard.chat_utils import (
             slack_options_owner_keys_snapshot,
         )
-        from kiro_crew.slack import interactions
+        from aj_crew.slack import interactions
 
         state = MagicMock()
         state._slots = {}
@@ -634,7 +634,7 @@ class TestControlPostedAfterTheWindowIsSpent:
         message while the waiter proceeds on the old one, so two coroutines edit
         one Slack message at once and every guarantee built on this lock is off.
         """
-        from kiro_crew.slack import outbound
+        from aj_crew.slack import outbound
 
         key = ("CH-split", "msg-split")
         inside: list[str] = []
@@ -680,7 +680,7 @@ class TestControlPostedAfterTheWindowIsSpent:
         import inspect
         from pathlib import Path
 
-        from kiro_crew.dashboard.handlers import messaging
+        from aj_crew.dashboard.handlers import messaging
 
         # The send route's Slack leg runs from a messaging_api owner the facade
         # composes, so the scan reads the facade and every owner, and fails if the
@@ -739,7 +739,7 @@ class TestControlPostedAfterTheWindowIsSpent:
         so no dashboard turn would ever expire that record and a click on those
         buttons would answer into the dashboard session instead.
         """
-        from kiro_crew.dashboard.chat_slack import api_chat_slot_slack_link
+        from aj_crew.dashboard.chat_slack import api_chat_slot_slack_link
 
         state = _make_state(tmp_path)
         slack = MagicMock()
@@ -777,7 +777,7 @@ class TestControlPostedAfterTheWindowIsSpent:
         """The keys must be read BEFORE link_slack moves the index."""
         import inspect
 
-        from kiro_crew.dashboard import chat_slack
+        from aj_crew.dashboard import chat_slack
 
         src = inspect.getsource(chat_slack.link_slot_to_slack)
         snap = src.find("_prior_owner_keys = slack_options_owner_keys_snapshot(")
@@ -802,9 +802,9 @@ class TestControlPostedAfterTheWindowIsSpent:
         comparing the slot's live fields with those captured before the await, not by
         any check inside the clear.
         """
-        from kiro_crew.dashboard import chat_slack
-        from kiro_crew.dashboard.chat_slack import api_chat_slot_slack_unlink
-        from kiro_crew.dashboard.chat_utils import effective_session_key
+        from aj_crew.dashboard import chat_slack
+        from aj_crew.dashboard.chat_slack import api_chat_slot_slack_unlink
+        from aj_crew.dashboard.chat_utils import effective_session_key
 
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
@@ -837,7 +837,7 @@ class TestControlPostedAfterTheWindowIsSpent:
         """
         import inspect
 
-        from kiro_crew.slack import interactions
+        from aj_crew.slack import interactions
 
         src = inspect.getsource(interactions._handle_options)
         tail = src[src.find("Standard OPTIONS choice") :]
@@ -851,7 +851,7 @@ class TestControlPostedAfterTheWindowIsSpent:
         Eviction is by insertion order across the WHOLE workspace, so busy channels could
         drop the claim on buttons still on screen in a quiet thread.
         """
-        from kiro_crew.slack import outbound
+        from aj_crew.slack import outbound
 
         cap = outbound._MAX_EDIT_LOCKS
         # One claim whose buttons may still be live -- never settled.
@@ -879,7 +879,7 @@ class TestControlPostedAfterTheWindowIsSpent:
         landed, the original was deleted, or the expiry's strike-through
         succeeded. Only then may memory pressure reclaim it.
         """
-        from kiro_crew.slack import outbound
+        from aj_crew.slack import outbound
 
         assert outbound.claim_options_answer("C1", "s1") is True
         assert outbound._ANSWERED[("C1", "s1")] is False
@@ -898,8 +898,8 @@ class TestControlPostedAfterTheWindowIsSpent:
         """
         import inspect
 
-        from kiro_crew.dashboard import chat_utils
-        from kiro_crew.dashboard.chat_utils import options_records, set_options_records
+        from aj_crew.dashboard import chat_utils
+        from aj_crew.dashboard.chat_utils import options_records, set_options_records
 
         src = inspect.getsource(chat_utils.set_options_records)
         assert (
@@ -929,8 +929,8 @@ class TestControlPostedAfterTheWindowIsSpent:
         import inspect
         import sys
 
-        from kiro_crew.dashboard import chat_utils
-        from kiro_crew.dashboard import state as state_mod
+        from aj_crew.dashboard import chat_utils
+        from aj_crew.dashboard import state as state_mod
 
         assert "_slack_options_posted" not in inspect.getsource(
             state_mod
@@ -950,7 +950,7 @@ class TestControlPostedAfterTheWindowIsSpent:
         Record, expire and forget must all work for a session that has no dashboard
         slot at any point -- which is the normal state of a plain Slack thread.
         """
-        from kiro_crew.dashboard.chat_utils import (
+        from aj_crew.dashboard.chat_utils import (
             expire_slack_options,
             forget_slack_options,
             options_records,
@@ -991,7 +991,7 @@ class TestControlPostedAfterTheWindowIsSpent:
         twice. The claim is not "is a record tracked": ``remember_slack_options`` no-ops
         without a dashboard slot, the normal state of a plain Slack conversation.
         """
-        from kiro_crew.slack.outbound import claim_options_answer
+        from aj_crew.slack.outbound import claim_options_answer
 
         assert claim_options_answer("C-1", "opt-1") is True
         assert (
@@ -1011,7 +1011,7 @@ class TestControlPostedAfterTheWindowIsSpent:
         """
         import inspect
 
-        from kiro_crew.slack import interactions
+        from aj_crew.slack import interactions
 
         src = inspect.getsource(interactions._answer_options)
         lock_at = src.find("async with options_edit_lock(")
@@ -1031,7 +1031,7 @@ class TestControlPostedAfterTheWindowIsSpent:
         """
         import inspect
 
-        from kiro_crew.slack import interactions
+        from aj_crew.slack import interactions
 
         src = inspect.getsource(interactions._answer_options)
 
@@ -1057,7 +1057,7 @@ class TestControlPostedAfterTheWindowIsSpent:
         field, where ``<!channel>`` is INTERPRETED -- so an OPTIONS tag reading
         ``[OPTIONS: <!channel> | Skip]`` would page a whole channel on render.
         """
-        from kiro_crew.slack.format import build_options_selected_blocks
+        from aj_crew.slack.format import build_options_selected_blocks
 
         blocks = build_options_selected_blocks(["<!channel>", "Skip & go <b>"], [0])
         text = blocks[0]["elements"][0]["text"]

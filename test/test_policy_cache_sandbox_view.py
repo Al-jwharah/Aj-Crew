@@ -1,6 +1,6 @@
 """An LTS build's sandboxed processes take the ceiling from a read-only cache view.
 
-A Kiro Crew MCP server that kiro-cli starts inside the agent sandbox enters the central
+A Aj Crew MCP server that kiro-cli starts inside the agent sandbox enters the central
 tier in an LTS build, but the sandbox hides the Kiro sign-in from it, so it can
 never fetch. Instead the sandbox shows it the policy cache the gateway wrote, read-only,
 and the process resolves the ceiling in cache-only mode: no fetch, no sign-in, and a
@@ -25,13 +25,13 @@ from governance_distribution_helpers import install_ceiling_fixture  # noqa: F40
 from governance_distribution_helpers import transport_fixture  # noqa: F401
 from governance_distribution_helpers import _body, _doc, _static_fetcher
 
-from kiro_crew import sandbox, sandbox_launch_mark, sandbox_plan, sandbox_tiers
-from kiro_crew.platform import governance
-from kiro_crew.platform import policy_distribution as pd
-from kiro_crew.platform.context import PlatformCompositionError
-from kiro_crew.platform.enterprise_policy_translate import TRANSLATION_TAG
+from aj_crew import sandbox, sandbox_launch_mark, sandbox_plan, sandbox_tiers
+from aj_crew.platform import governance
+from aj_crew.platform import policy_distribution as pd
+from aj_crew.platform.context import PlatformCompositionError
+from aj_crew.platform.enterprise_policy_translate import TRANSLATION_TAG
 
-_REPO_SRC = Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+_REPO_SRC = Path(__file__).resolve().parents[1] / "src" / "aj_crew"
 _MODES = ("standard", "cc", "strict")
 
 
@@ -39,7 +39,7 @@ _MODES = ("standard", "cc", "strict")
 def _outside_any_sandbox(_floor_monkeypatch):
     """Start every test as the gateway: unsandboxed.
 
-    The suite itself may run inside a Kiro Crew sandbox, whose marker would otherwise
+    The suite itself may run inside a Aj Crew sandbox, whose marker would otherwise
     make every process here a child.
     """
     _floor_monkeypatch.delenv(sandbox_launch_mark.SANDBOX_MARKER, raising=False)
@@ -57,7 +57,7 @@ def _one_signed_in_profile(_floor_monkeypatch):
     """Every document and the vault name one profile, so the profile half of the source
     identity matches. The fake transport here stands in for the control plane; the
     profile binding itself is tested in ``test_enterprise_policy_fetch.py``."""
-    from kiro_crew.platform import enterprise_policy_fetch as epf
+    from aj_crew.platform import enterprise_policy_fetch as epf
 
     _floor_monkeypatch.setattr(epf, "document_scope", lambda body: "one-profile")
     _floor_monkeypatch.setattr(epf, "signed_in_scope", lambda: "one-profile")
@@ -66,7 +66,7 @@ def _one_signed_in_profile(_floor_monkeypatch):
 
 @pytest.fixture(name="lts")
 def lts_fixture(monkeypatch):
-    monkeypatch.setattr("kiro_crew.edition.EDITION", "lts")
+    monkeypatch.setattr("aj_crew.edition.EDITION", "lts")
 
 
 def _as_child(monkeypatch) -> None:
@@ -168,7 +168,7 @@ class TestTheChildEnforcesTheCachedCeiling:
     def test_each_entry_point_notes_the_marker_before_dropping_it(self, entry):
         text = (_REPO_SRC / entry).read_text(encoding="utf-8")
         noted = text.index("sandbox_launch_mark.note()")
-        dropped = text.index('os.environ.pop("KIROCREW_SANDBOX_ACTIVE", None)')
+        dropped = text.index('os.environ.pop("AJCREW_SANDBOX_ACTIVE", None)')
         assert noted < dropped
 
 
@@ -304,7 +304,7 @@ class TestTheSandboxShowsTheCacheReadOnly:
         self, lts_build, install_ceiling, monkeypatch
     ):
         if lts_build:
-            monkeypatch.setattr("kiro_crew.edition.EDITION", "lts")
+            monkeypatch.setattr("aj_crew.edition.EDITION", "lts")
         # A booted context, as a real spawn has: the wrap reads the governance floor.
         install_ceiling(governance.parse_policy(_doc("booted")))
         seen: dict = {}
@@ -315,7 +315,7 @@ class TestTheSandboxShowsTheCacheReadOnly:
 
         monkeypatch.setattr(sandbox, "detect_backend", lambda **_: "namespace")
         monkeypatch.setattr(sandbox, "namespace_argv", namespace_argv)
-        monkeypatch.setattr(sandbox, "_inside_kirocrew_sandbox", lambda: False)
+        monkeypatch.setattr(sandbox, "_inside_ajcrew_sandbox", lambda: False)
         monkeypatch.setattr(sandbox, "_spawns_kiro_cli", lambda argv: False)
 
         sandbox.wrap_argv(["/bin/true"], mode="standard")

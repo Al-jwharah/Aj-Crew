@@ -13,10 +13,10 @@ import asyncio
 from types import SimpleNamespace
 from typing import Any
 
-from kiro_crew.agent_sdk.drivers.acp_vocab import EVENT_TOOL_CALL, EVENT_TOOL_RESULT
-from kiro_crew.messaging import dashboard_live
-from kiro_crew.messaging.dashboard_live import DashboardLiveRenderer, TeeRenderer
-from kiro_crew.messaging.renderer import TEXT_CHUNK, TOOL_CALL, OutputEvent, SilentRenderer
+from aj_crew.agent_sdk.drivers.acp_vocab import EVENT_TOOL_CALL, EVENT_TOOL_RESULT
+from aj_crew.messaging import dashboard_live
+from aj_crew.messaging.dashboard_live import DashboardLiveRenderer, TeeRenderer
+from aj_crew.messaging.renderer import TEXT_CHUNK, TOOL_CALL, OutputEvent, SilentRenderer
 
 
 class _Sink:

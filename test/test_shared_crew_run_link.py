@@ -20,12 +20,12 @@ from test_shared_crew_admission import _open, _service
 from test_shared_crew_entry_points import _admission_request
 from test_shared_crew_entry_points import service as entry_service
 
-from kiro_crew.shared_crew import admission_gate as ag
-from kiro_crew.shared_crew import admission_run_link as link
-from kiro_crew.shared_crew import host_hooks
-from kiro_crew.shared_crew.admission import OperationKind, OperationState, ReasonCode
-from kiro_crew.shared_crew.contracts import Principal
-from kiro_crew.testing.clock import ManualClock
+from aj_crew.shared_crew import admission_gate as ag
+from aj_crew.shared_crew import admission_run_link as link
+from aj_crew.shared_crew import host_hooks
+from aj_crew.shared_crew.admission import OperationKind, OperationState, ReasonCode
+from aj_crew.shared_crew.contracts import Principal
+from aj_crew.testing.clock import ManualClock
 
 S = OperationState
 A = Principal.system("alice-run-link").id
@@ -176,7 +176,7 @@ def _record(service):
 async def test_start_names_the_run_id_before_start_background(service, monkeypatch, tmp_path):
     from handlers_taskrunner_coverage_helpers import _runner, _state
 
-    from kiro_crew.dashboard.handlers import taskrunner
+    from aj_crew.dashboard.handlers import taskrunner
 
     runner = _runner(tmp_path)
     runner.mint_task_id = lambda spec: f"{Path(spec).stem}_7"
@@ -206,7 +206,7 @@ async def test_start_refuses_and_removes_its_spec_when_the_link_fails(
 ):
     from handlers_taskrunner_coverage_helpers import _runner, _state
 
-    from kiro_crew.dashboard.handlers import taskrunner
+    from aj_crew.dashboard.handlers import taskrunner
 
     runner = _runner(tmp_path)
     runner.mint_task_id = lambda spec: "TASK_x_1"
@@ -233,7 +233,7 @@ async def test_a_resumed_run_is_linked_before_it_is_set_running(
 ):
     from handlers_taskrunner_coverage_helpers import _runner, _state
 
-    from kiro_crew.dashboard.handlers import taskrunner
+    from aj_crew.dashboard.handlers import taskrunner
 
     runner = _runner(tmp_path)
     runner._runs = {"t-1": SimpleNamespace(status="planned", name="nightly", task_id="t-1")}
@@ -313,7 +313,7 @@ def _probe_runner(status, *, task=None, pending=(), starting=()):
     ],
 )
 def test_the_task_runner_probe_settles_only_a_run_that_cannot_be_resumed(runner, expected):
-    from kiro_crew.shared_crew.admission_entry import taskrunner_probe
+    from aj_crew.shared_crew.admission_entry import taskrunner_probe
 
     assert taskrunner_probe(runner)("r1") is expected
 
@@ -325,7 +325,7 @@ async def test_a_linked_run_left_planned_by_a_restart_is_not_held_forever(tmp_pa
     run = await _task(_service(store, clock))
     assert await link.link_run(run, "r1")
     store.tasks.close()  # -- stopped before execute_plan set the run running
-    from kiro_crew.shared_crew.admission_entry import taskrunner_probe
+    from aj_crew.shared_crew.admission_entry import taskrunner_probe
 
     svc2 = _restart(path, clock, taskrunner_probe(_probe_runner("planned")))
     await svc2.ensure_ready()
@@ -359,7 +359,7 @@ def test_a_planned_run_also_waits_for_the_adoption_sweep(tmp_path):
 def test_ids_minted_before_either_run_is_registered_differ(tmp_path, monkeypatch):
     from test_taskrunner_spec_prefix import _runner
 
-    from kiro_crew.taskrunner_parts import run_lifecycle
+    from aj_crew.taskrunner_parts import run_lifecycle
 
     runner = _runner(tmp_path / "work")
     ManualClock(start=1.0).install(monkeypatch, run_lifecycle)  # a clock that does not move
@@ -371,7 +371,7 @@ def test_ids_minted_before_either_run_is_registered_differ(tmp_path, monkeypatch
 async def test_the_adoption_sweep_ends_the_recovery_wait(tmp_path, monkeypatch):
     from test_taskrunner_coverage import _runner as _coverage_runner
 
-    from kiro_crew.taskq.adapters import runner as runner_adapter
+    from aj_crew.taskq.adapters import runner as runner_adapter
 
     runner = _coverage_runner(tmp_path)
     runner._recovery_pending = {"r1"}
@@ -400,7 +400,7 @@ def test_detaching_the_queue_ends_the_recovery_wait(tmp_path):
 async def test_a_failed_adoption_sweep_still_ends_the_recovery_wait(tmp_path, monkeypatch):
     from test_taskrunner_coverage import _runner as _coverage_runner
 
-    from kiro_crew.taskq.adapters import runner as runner_adapter
+    from aj_crew.taskq.adapters import runner as runner_adapter
 
     def broken(*_a, **_kw):
         raise RuntimeError("row write refused")

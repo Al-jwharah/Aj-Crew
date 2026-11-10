@@ -7,7 +7,7 @@ away and the calling agent reported success unconditionally — on a host where
 the restart is a silent no-op (root-owned system unit, unix-socket listener)
 the original gateway kept running while the user was told it restarted.
 
-These tests drive the real script with a stubbed ``kirocrew`` on PATH and
+These tests drive the real script with a stubbed ``ajcrew`` on PATH and
 assert the contract the gateway-restart skill's "Verify the outcome" step
 reads: output appended to ``logs/restart.log``, the exit status written to
 ``logs/restart-status``, and a stale status file removed while an attempt is
@@ -39,7 +39,7 @@ needs_bash = pytest.mark.skipif(
 def _run_script(
     tmp_path: Path, exit_status: int, stub_body_extra: str = ""
 ) -> tuple[subprocess.CompletedProcess[str], Path]:
-    """Run do-restart.sh against a stub ``kirocrew`` that exits *exit_status*.
+    """Run do-restart.sh against a stub ``ajcrew`` that exits *exit_status*.
 
     Returns the completed process and the crew home used. The stub prints a
     recognizable line so the log-append assertion is about the RESTART's
@@ -49,7 +49,7 @@ def _run_script(
     crew_home = tmp_path / "crew-home"
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir(parents=True, exist_ok=True)
-    stub = bin_dir / "kirocrew"
+    stub = bin_dir / "ajcrew"
     stub.write_text(
         "#!/bin/bash\n"
         f"{stub_body_extra}"
@@ -60,9 +60,9 @@ def _run_script(
     stub.chmod(0o755)
     env = dict(os.environ)
     env["PATH"] = f"{bin_dir}{os.pathsep}{env.get('PATH', '')}"
-    env["KIROCREW_HOME"] = str(crew_home)
+    env["AJCREW_HOME"] = str(crew_home)
     # Collapse the human-scale scheduling delay; the delay is not under test.
-    env["KIROCREW_RESTART_DELAY"] = "0"
+    env["AJCREW_RESTART_DELAY"] = "0"
     proc = subprocess.run(
         ["bash", str(SCRIPT)],
         cwd=tmp_path,
@@ -129,8 +129,8 @@ def test_status_file_is_owner_only(tmp_path: Path) -> None:
 
 @needs_bash
 def test_dashboard_token_urls_are_redacted_from_the_log(tmp_path: Path) -> None:
-    # kirocrew restart prints a dashboard login link only to a terminal, and
-    # the script pipes it, so a real restart logs the kirocrew token hint. The
+    # ajcrew restart prints a dashboard login link only to a terminal, and
+    # the script pipes it, so a real restart logs the ajcrew token hint. The
     # stub prints token URLs anyway to pin the redaction guard: the skill
     # instructs the resumed agent to QUOTE this log into a conversation other
     # humans can read, so a bearer must not survive into the file. The
@@ -148,20 +148,20 @@ def test_dashboard_token_urls_are_redacted_from_the_log(tmp_path: Path) -> None:
 @needs_bash
 def test_attempt_specific_status_file_override(tmp_path: Path) -> None:
     # Overlapping restart attempts must not overwrite each other's verdict:
-    # when the scheduler passes KIROCREW_RESTART_STATUS_FILE, the verdict
+    # when the scheduler passes AJCREW_RESTART_STATUS_FILE, the verdict
     # lands there and the shared default is left untouched.
     crew_home = tmp_path / "crew-home"
     attempt = crew_home / "logs" / "restart-status.1234.99"
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir(parents=True)
-    stub = bin_dir / "kirocrew"
+    stub = bin_dir / "ajcrew"
     stub.write_text("#!/bin/bash\nexit 4\n", encoding="utf-8")
     stub.chmod(0o755)
     env = dict(os.environ)
     env["PATH"] = f"{bin_dir}{os.pathsep}{env.get('PATH', '')}"
-    env["KIROCREW_HOME"] = str(crew_home)
-    env["KIROCREW_RESTART_DELAY"] = "0"
-    env["KIROCREW_RESTART_STATUS_FILE"] = str(attempt)
+    env["AJCREW_HOME"] = str(crew_home)
+    env["AJCREW_RESTART_DELAY"] = "0"
+    env["AJCREW_RESTART_STATUS_FILE"] = str(attempt)
     proc = subprocess.run(
         ["bash", str(SCRIPT)],
         cwd=tmp_path,
@@ -192,7 +192,7 @@ def test_nonconforming_status_paths_fall_back_to_the_shared_default(tmp_path: Pa
     victim.write_text("precious\n", encoding="utf-8")
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir(parents=True)
-    stub = bin_dir / "kirocrew"
+    stub = bin_dir / "ajcrew"
     stub.write_text("#!/bin/bash\nexit 0\n", encoding="utf-8")
     stub.chmod(0o755)
     logs = crew_home / "logs"
@@ -206,9 +206,9 @@ def test_nonconforming_status_paths_fall_back_to_the_shared_default(tmp_path: Pa
     for evil in evil_paths:
         env = dict(os.environ)
         env["PATH"] = f"{bin_dir}{os.pathsep}{env.get('PATH', '')}"
-        env["KIROCREW_HOME"] = str(crew_home)
-        env["KIROCREW_RESTART_DELAY"] = "0"
-        env["KIROCREW_RESTART_STATUS_FILE"] = evil
+        env["AJCREW_HOME"] = str(crew_home)
+        env["AJCREW_RESTART_DELAY"] = "0"
+        env["AJCREW_RESTART_STATUS_FILE"] = evil
         proc = subprocess.run(
             ["bash", str(SCRIPT)],
             cwd=tmp_path,
@@ -245,14 +245,14 @@ def test_artifact_writes_refuse_planted_symlinks(tmp_path: Path) -> None:
     (logs / "restart-status.777.1.log").symlink_to(victim)
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
-    stub = bin_dir / "kirocrew"
+    stub = bin_dir / "ajcrew"
     stub.write_text("#!/bin/bash\necho probe-output\nexit 6\n", encoding="utf-8")
     stub.chmod(0o755)
     env = dict(os.environ)
     env["PATH"] = f"{bin_dir}{os.pathsep}{env.get('PATH', '')}"
-    env["KIROCREW_HOME"] = str(crew_home)
-    env["KIROCREW_RESTART_DELAY"] = "0"
-    env["KIROCREW_RESTART_STATUS_FILE"] = str(attempt)
+    env["AJCREW_HOME"] = str(crew_home)
+    env["AJCREW_RESTART_DELAY"] = "0"
+    env["AJCREW_RESTART_STATUS_FILE"] = str(attempt)
     proc = subprocess.run(
         ["bash", str(SCRIPT)],
         cwd=tmp_path,

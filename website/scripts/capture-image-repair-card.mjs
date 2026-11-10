@@ -37,7 +37,7 @@ const now = Date.now() / 1000
 
 const slotRow = {
   key: SLOT, title: 'Review the dashboard screenshots', running: false,
-  last_message: WEDGE_ROW, messages: 4, agent: 'kirocrew',
+  last_message: WEDGE_ROW, messages: 4, agent: 'ajcrew',
   memory_mode: 'persistent', project: PROJECT, modified: Math.floor(now),
   source_links: [], source_links_total: 0,
 }

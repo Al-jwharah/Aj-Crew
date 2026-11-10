@@ -15,7 +15,7 @@ import pytest
 from stray_line_helpers import cyclic_gc_quiesced  # noqa: F401 - fixture
 from stray_line_helpers import too_deep_to_decode
 
-from kiro_crew.cron_history import CronHistoryStore, CronRunRecord
+from aj_crew.cron_history import CronHistoryStore, CronRunRecord
 
 
 def _no_raise(fn: Callable[..., Any], *args: Any) -> Any:

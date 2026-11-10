@@ -19,8 +19,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import artifacts
-from kiro_crew.artifacts import ArtifactError, ArtifactStore
+from aj_crew import artifacts
+from aj_crew.artifacts import ArtifactError, ArtifactStore
 
 
 @pytest.fixture()

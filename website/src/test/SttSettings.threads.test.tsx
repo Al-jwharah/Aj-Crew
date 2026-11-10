@@ -120,7 +120,7 @@ describe('decode thread picker', () => {
     mountPanel({ threads_env: '48' })
     await openFineTuning()
     const picker = await screen.findByRole('combobox', { name: /decode threads/i })
-    expect(screen.getByText(/This gateway uses 48 threads, set by KIROCREW_STT_THREADS/)).toBeTruthy()
+    expect(screen.getByText(/This gateway uses 48 threads, set by AJCREW_STT_THREADS/)).toBeTruthy()
     // A choice has no effect while the variable wins, so the picker is disabled.
     expect((picker as HTMLButtonElement).disabled || picker.getAttribute('aria-disabled') === 'true').toBe(true)
   })

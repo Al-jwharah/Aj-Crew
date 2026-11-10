@@ -1,6 +1,6 @@
 """Helpers for tests that assert on a spawn's argv, or on a real child's death or interrupt.
 
-Resource limits are applied AFTER ``exec`` by ``kiro_crew._spawn_exec_shim``, so
+Resource limits are applied AFTER ``exec`` by ``aj_crew._spawn_exec_shim``, so
 every spawn routed through ``sandbox.create_subprocess_limited`` carries an argv
 prefix (``<python> -I -S -c <shim source> [options] --``) ahead of the real
 command. Tests that care about the command itself use :func:`strip_spawn_shim`
@@ -15,8 +15,8 @@ import sys
 from collections.abc import Iterator, Sequence
 from pathlib import Path
 
-from kiro_crew.platform_compat import SIGKILL, kill_pid, pid_exists, pid_is_zombie
-from kiro_crew.testing.wait import wait_until
+from aj_crew.platform_compat import SIGKILL, kill_pid, pid_exists, pid_is_zombie
+from aj_crew.testing.wait import wait_until
 
 _SHIM_FLAGS = ("-I", "-S", "-c")
 _ARGV_SEPARATOR = "--"

@@ -14,13 +14,13 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard.chat_handlers import (
+from aj_crew.dashboard.chat_handlers import (
     api_chat,
     api_chat_mode,
     api_chat_slot_approve,
 )
-from kiro_crew.dashboard.state import SlotOrigin
-from kiro_crew.safety_override import (
+from aj_crew.dashboard.state import SlotOrigin
+from aj_crew.safety_override import (
     reset_singleton,
 )
 
@@ -43,8 +43,8 @@ def _make_app_token_mode_app(state) -> web.Application:
 
 @pytest.fixture(autouse=True)
 def _hermetic_home(tmp_path, _floor_monkeypatch):
-    """Redirect KIROCREW_HOME so SEL writes never touch the developer's home."""
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    """Redirect AJCREW_HOME so SEL writes never touch the developer's home."""
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
 
 
 @pytest.fixture(autouse=True)
@@ -56,7 +56,7 @@ def _isolate_safety_override():
 
 @pytest.fixture(name="state")
 def state_fixture(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     st = _make_state(tmp_path)
     st.broadcast_ws = MagicMock()
     st.push_slots_update = MagicMock()

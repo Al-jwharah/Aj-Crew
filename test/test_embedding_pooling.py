@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import embeddings as emb
+from aj_crew import embeddings as emb
 
 
 def _gguf(path: Path, pooling_type: int | None, *, architecture: str = "bert") -> Path:

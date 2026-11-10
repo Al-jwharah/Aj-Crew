@@ -3,7 +3,7 @@
 Four ratchets, each shrink-only:
 
 * **No fork outside PENDING.** A channel dispatcher runs its turns through
-  :class:`~kiro_crew.messaging.dispatch.ChannelTurns`; only the channels listed in
+  :class:`~aj_crew.messaging.dispatch.ChannelTurns`; only the channels listed in
   :data:`PENDING` still drive their own ``TurnDriver``. Every behaviour the
   pipeline owns (the shutdown gate and the ceiling composed onto it, both of
   which wrap ``begin_turn``, the death attribution, the re-injection settle, the
@@ -18,7 +18,7 @@ Four ratchets, each shrink-only:
   it. A dispatcher that ran a turn by a third route (neither forking nor
   delegating) would escape both ratchets; only an entry in the shrink-only
   :data:`_RUNS_NO_TURN` list may do neither.
-* **Drift may only shrink.** :data:`~kiro_crew.messaging.dispatch.DISCORD_DRIFT`
+* **Drift may only shrink.** :data:`~aj_crew.messaging.dispatch.DISCORD_DRIFT`
   is pinned to a literal naming the ruling that would retire each member.
 * **The export budget may only fall.** The names other packages import from the
   pipeline's modules are counted; the step helpers leave as the engines that
@@ -33,7 +33,7 @@ from pathlib import Path
 import pytest
 from source_corpus import src_root
 
-from kiro_crew.messaging.dispatch import DISCORD_DRIFT, Drift
+from aj_crew.messaging.dispatch import DISCORD_DRIFT, Drift
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_channel_turn_structure")
 
@@ -84,13 +84,13 @@ _ALL_DRIFT = {
 #: Distinct names other packages import from the pipeline's modules. May only fall.
 _EXPORT_BUDGET = 31
 _PIPELINE_MODULES = (
-    "kiro_crew.messaging.dispatch",
-    "kiro_crew.messaging.dispatch_admission",
-    "kiro_crew.messaging.dispatch_contract",
-    "kiro_crew.messaging.dispatch_crew_log",
-    "kiro_crew.messaging.dispatch_recovery",
-    "kiro_crew.messaging.dispatch_tools",
-    "kiro_crew.messaging.turn_bracket",
+    "aj_crew.messaging.dispatch",
+    "aj_crew.messaging.dispatch_admission",
+    "aj_crew.messaging.dispatch_contract",
+    "aj_crew.messaging.dispatch_crew_log",
+    "aj_crew.messaging.dispatch_recovery",
+    "aj_crew.messaging.dispatch_tools",
+    "aj_crew.messaging.turn_bracket",
 )
 
 
@@ -219,7 +219,7 @@ def _pipeline_imports() -> set[tuple[str, str]]:
 def test_the_export_budget_may_only_fall() -> None:
     imported = _pipeline_imports()
     # Non-vacuity: the channels' own entry points are among them.
-    assert ("kiro_crew.messaging.dispatch", "ChannelTurns") in imported
+    assert ("aj_crew.messaging.dispatch", "ChannelTurns") in imported
     assert len(imported) <= _EXPORT_BUDGET, (
         f"{len(imported)} names are imported from the pipeline's modules, over the "
         f"budget of {_EXPORT_BUDGET}; narrow the interface rather than widen it:\n"

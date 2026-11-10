@@ -19,8 +19,8 @@ from __future__ import annotations
 import pytest
 from test_member_memory_upgrade import STORE, _write_legacy_home
 
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.execution_context import (
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.execution_context import (
     EXECUTION_CONTEXT_KEY,
     bind_session_execution,
     capture_session_execution,
@@ -29,8 +29,8 @@ from kiro_crew.execution_context import (
     read_vouched_session_execution,
     resolve_member_execution,
 )
-from kiro_crew.history import ConversationLog
-from kiro_crew.memory_stores import (
+from aj_crew.history import ConversationLog
+from aj_crew.memory_stores import (
     LEGACY_MEMBER_STORE_REMEDY,
     MissingExecutionIdentity,
     UnknownMemoryStore,
@@ -41,11 +41,11 @@ KEY = "dashboard:chat-old-member-session"
 REMEDY = "open a new chat with the same member"
 
 
-def _upgraded_home(*bound: str) -> KiroCrewConfig:
+def _upgraded_home(*bound: str) -> AjCrewConfig:
     """A 0.7.0.x home after the 0.7.0.8 start-of-process store migration."""
     _write_legacy_home(*bound)
     repair_legacy_member_stores()
-    return KiroCrewConfig.load()
+    return AjCrewConfig.load()
 
 
 def _legacy_record(key: str = KEY, **fields: object) -> dict:
@@ -183,7 +183,7 @@ class TestEveryAmbiguousShapeStaysRefused:
         """Two members bound to one store: the start-of-process migration skips
         it, so the store has no owner and the session cannot be derived. A new
         chat with the member would fail the same way, so the remedy named is the
-        store repair the boot log and ``kirocrew doctor`` use, not a new chat."""
+        store repair the boot log and ``ajcrew doctor`` use, not a new chat."""
         cfg = _upgraded_home("reviewer", "second")
         assert not cfg.memory_stores[STORE].owner_member_id
         _legacy_record()

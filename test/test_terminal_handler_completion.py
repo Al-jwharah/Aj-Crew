@@ -21,8 +21,8 @@ from terminal_handler_helpers import (  # noqa: F401 -- the autouse fixture regi
     _make_session,
 )
 
-from kiro_crew.dashboard import terminal_commands
-from kiro_crew.dashboard.handlers import terminal
+from aj_crew.dashboard import terminal_commands
+from aj_crew.dashboard.handlers import terminal
 
 
 class TestSplitPathToken:
@@ -287,7 +287,7 @@ def _sensitive(*, predicate=None, always=False, raises=False):
     chokepoint), while the per-ENTRY gate calls `is_sensitive_path` directly from
     the terminal module. A test that patched only one of them would silently
     exercise half the guard."""
-    import kiro_crew.hooks as hooks_mod
+    import aj_crew.hooks as hooks_mod
 
     kw = {}
     if raises:

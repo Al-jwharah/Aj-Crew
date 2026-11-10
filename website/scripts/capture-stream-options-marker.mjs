@@ -28,7 +28,7 @@ import { json, makeFixedApi, handleBootRoute } from './lib/boot-api.mjs'
 const OUT = process.argv[2] || '../temp-screenshots/stream-options-marker'
 const LABEL = process.argv[3] || 'after'
 const SLOT = 'chat-stream-options'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 
 mkdirSync(OUT, { recursive: true })
 
@@ -38,7 +38,7 @@ const slots = [{
   running: true,
   last_message: 'Renamed the hook and reran the suite.',
   messages: 2,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   modified: Math.floor(Date.now() / 1000),

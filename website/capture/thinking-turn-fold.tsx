@@ -44,7 +44,7 @@ const burstCount = Math.max(2, Number(params.get('bursts') || 6))
 // icon + preview tail).
 const stream = params.get('stream') === '1'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 /** A distinct, sentence-shaped reasoning body per burst, so a stack of them is
  *  visibly a stack (not one repeated line) and the merged form visibly carries

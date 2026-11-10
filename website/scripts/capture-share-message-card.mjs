@@ -42,7 +42,7 @@ const slots = [{
   running: false,
   last_message: ANSWER,
   messages: 2,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   folder_id: '',
@@ -80,7 +80,7 @@ async function main() {
       await route.fulfill({
         status: 200,
         contentType: 'image/png',
-        body: readFileSync(new URL('../../src/kiro_crew/static/kirocrew-logo.png', import.meta.url)),
+        body: readFileSync(new URL('../../src/aj_crew/static/ajcrew-logo.png', import.meta.url)),
       })
       return true
     }

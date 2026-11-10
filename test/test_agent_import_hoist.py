@@ -1,8 +1,8 @@
-"""Module-scope ``kiro_crew.agent`` imports stay at module scope.
+"""Module-scope ``aj_crew.agent`` imports stay at module scope.
 
-The four modules below import ``from kiro_crew.agent import ...`` at module
-scope. ``kiro_crew.agent`` imports nothing from ``kiro_crew.dashboard.*`` or
-``kiro_crew.session``, so no import cycle exists; these tests keep the imports
+The four modules below import ``from aj_crew.agent import ...`` at module
+scope. ``aj_crew.agent`` imports nothing from ``aj_crew.dashboard.*`` or
+``aj_crew.session``, so no import cycle exists; these tests keep the imports
 at module scope and prove no cycle exists in either load order.
 
 Order-dependent cycles only surface in a fresh interpreter, not under a
@@ -17,45 +17,45 @@ from pathlib import Path
 _SRC = Path(__file__).resolve().parent.parent / "src"
 
 _HOISTED_MODULES = (
-    "kiro_crew.dashboard.handlers.agents",
-    "kiro_crew.dashboard.handlers.mcp",
-    "kiro_crew.dashboard.handlers.hooks",
-    "kiro_crew.session",
+    "aj_crew.dashboard.handlers.agents",
+    "aj_crew.dashboard.handlers.mcp",
+    "aj_crew.dashboard.handlers.hooks",
+    "aj_crew.session",
 )
 
 _HOISTED_FILES = (
-    "kiro_crew/dashboard/handlers/agents.py",
-    "kiro_crew/dashboard/handlers/mcp.py",
-    "kiro_crew/dashboard/handlers/mcp_agent_sync.py",
-    "kiro_crew/dashboard/handlers/mcp_config_entries.py",
-    "kiro_crew/dashboard/handlers/mcp_config_files.py",
-    "kiro_crew/dashboard/handlers/mcp_config_purge.py",
-    "kiro_crew/dashboard/handlers/mcp_gateway_routes.py",
-    "kiro_crew/dashboard/handlers/mcp_gateway_stubs.py",
-    "kiro_crew/dashboard/handlers/mcp_probe.py",
-    "kiro_crew/dashboard/handlers/hooks.py",
-    "kiro_crew/dashboard/handlers/hooks_scripts.py",
-    "kiro_crew/dashboard/handlers/hooks_webhook_intake.py",
-    "kiro_crew/dashboard/handlers/hooks_webhooks.py",
-    "kiro_crew/session.py",
-    "kiro_crew/session_parts/claims.py",
-    "kiro_crew/session_parts/config_apply.py",
-    "kiro_crew/session_parts/links.py",
-    "kiro_crew/session_parts/policy.py",
-    "kiro_crew/session_parts/provider_probes.py",
-    "kiro_crew/session_parts/record.py",
-    "kiro_crew/session_parts/runtimes.py",
-    "kiro_crew/session_parts/state_views.py",
-    "kiro_crew/session_parts/sweeps.py",
-    "kiro_crew/session_parts/teardown.py",
-    "kiro_crew/session_parts/turn_context.py",
+    "aj_crew/dashboard/handlers/agents.py",
+    "aj_crew/dashboard/handlers/mcp.py",
+    "aj_crew/dashboard/handlers/mcp_agent_sync.py",
+    "aj_crew/dashboard/handlers/mcp_config_entries.py",
+    "aj_crew/dashboard/handlers/mcp_config_files.py",
+    "aj_crew/dashboard/handlers/mcp_config_purge.py",
+    "aj_crew/dashboard/handlers/mcp_gateway_routes.py",
+    "aj_crew/dashboard/handlers/mcp_gateway_stubs.py",
+    "aj_crew/dashboard/handlers/mcp_probe.py",
+    "aj_crew/dashboard/handlers/hooks.py",
+    "aj_crew/dashboard/handlers/hooks_scripts.py",
+    "aj_crew/dashboard/handlers/hooks_webhook_intake.py",
+    "aj_crew/dashboard/handlers/hooks_webhooks.py",
+    "aj_crew/session.py",
+    "aj_crew/session_parts/claims.py",
+    "aj_crew/session_parts/config_apply.py",
+    "aj_crew/session_parts/links.py",
+    "aj_crew/session_parts/policy.py",
+    "aj_crew/session_parts/provider_probes.py",
+    "aj_crew/session_parts/record.py",
+    "aj_crew/session_parts/runtimes.py",
+    "aj_crew/session_parts/state_views.py",
+    "aj_crew/session_parts/sweeps.py",
+    "aj_crew/session_parts/teardown.py",
+    "aj_crew/session_parts/turn_context.py",
 )
 
 
 #: ``handlers/agents.py`` runs the functions its ``dashboard/agent_admin`` owners
 #: define on its own globals, so the ratchet reads those owners as part of it.
 _COMPOSED_OWNERS = {
-    "kiro_crew/dashboard/handlers/agents.py": "kiro_crew/dashboard/agent_admin",
+    "aj_crew/dashboard/handlers/agents.py": "aj_crew/dashboard/agent_admin",
 }
 
 
@@ -90,25 +90,25 @@ def test_hoisted_modules_import_together_fresh() -> None:
 
 
 def test_hoisted_modules_import_agent_first_fresh() -> None:
-    """Loading kiro_crew.agent BEFORE the handlers must also be cycle-free.
+    """Loading aj_crew.agent BEFORE the handlers must also be cycle-free.
 
     A cycle between ``agent`` and these modules would be order-dependent:
     it can pass in one load order and raise ImportError in the other.
     """
-    _fresh_import("; ".join(["import kiro_crew.agent"] + [f"import {m}" for m in _HOISTED_MODULES]))
+    _fresh_import("; ".join(["import aj_crew.agent"] + [f"import {m}" for m in _HOISTED_MODULES]))
 
 
 def test_no_function_local_agent_imports_remain() -> None:
-    """Ratchet: no function-local ``from kiro_crew.agent import`` in the four files.
+    """Ratchet: no function-local ``from aj_crew.agent import`` in the four files.
 
-    Covers all three spellings; ``from kiro_crew import agent`` matches the bare
+    Covers all three spellings; ``from aj_crew import agent`` matches the bare
     ``agent`` name so ``agent_state`` does not trip it. Comments are excluded.
     """
     local_import = re.compile(
         r"^[ \t]+(?:"
-        r"from kiro_crew\.agent import"
-        r"|import kiro_crew\.agent\b"
-        r"|from kiro_crew import [^#\n]*\bagent\b"
+        r"from aj_crew\.agent import"
+        r"|import aj_crew\.agent\b"
+        r"|from aj_crew import [^#\n]*\bagent\b"
         r")",
         re.MULTILINE,
     )
@@ -119,25 +119,25 @@ def test_no_function_local_agent_imports_remain() -> None:
         if hits:
             offenders[rel] = len(hits)
     assert not offenders, (
-        f"function-local kiro_crew.agent imports reintroduced: {offenders}; "
+        f"function-local aj_crew.agent imports reintroduced: {offenders}; "
         f"import at module scope instead (no cycle exists — see issue #1050)"
     )
 
 
 def test_members_and_artifacts_import_first_fresh() -> None:
-    """``kiro_crew.members`` loads when the first ``kiro_crew`` import reaches ``artifacts``.
+    """``aj_crew.members`` loads when the first ``aj_crew`` import reaches ``artifacts``.
 
     ``artifacts`` -> ``hooks`` -> ``webhooks`` -> ``validation``, so ``validation``
     must read its content cap from the ``constants`` leaf, not ``artifacts``.
     """
-    _fresh_import("import kiro_crew.members; import kiro_crew.artifacts")
-    _fresh_import("import kiro_crew.artifacts; import kiro_crew.members")
+    _fresh_import("import aj_crew.members; import aj_crew.artifacts")
+    _fresh_import("import aj_crew.artifacts; import aj_crew.members")
 
 
 def test_validation_is_a_leaf_that_never_imports_artifacts() -> None:
     """The closing edge stays deleted: loading ``validation`` must not pull
     ``artifacts`` in, or the cycle above is one hoisted import from returning."""
     _fresh_import(
-        "import sys; import kiro_crew.validation; "
-        "assert 'kiro_crew.artifacts' not in sys.modules, 'validation imports artifacts'"
+        "import sys; import aj_crew.validation; "
+        "assert 'aj_crew.artifacts' not in sys.modules, 'validation imports artifacts'"
     )

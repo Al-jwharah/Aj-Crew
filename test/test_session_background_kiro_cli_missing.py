@@ -13,16 +13,16 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.acp.kiro_cli_missing import AcpKiroCliMissing
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.session import BACKGROUND_KEY, SessionManager
+from aj_crew.acp.kiro_cli_missing import AcpKiroCliMissing
+from aj_crew.config import AjCrewConfig
+from aj_crew.session import BACKGROUND_KEY, SessionManager
 
-_MISSING = "kiro-cli not found (searched 14 directories; set KIROCREW_KIRO_BIN or install it)"
+_MISSING = "kiro-cli not found (searched 14 directories; set AJCREW_KIRO_BIN or install it)"
 
 
 @pytest.fixture
 def cfg():
-    c = KiroCrewConfig()
+    c = AjCrewConfig()
     c.session.timeout_secs = 2
     return c
 

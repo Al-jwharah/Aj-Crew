@@ -1,7 +1,7 @@
 # App Kit
 
-Developer documentation for building apps that run inside Kiro Crew. A new app
-ships through a registry from its own repository: Kiro Crew accepts no new
+Developer documentation for building apps that run inside Aj Crew. A new app
+ships through a registry from its own repository: Aj Crew accepts no new
 built-in app ([publishing-guide.md](publishing-guide.md#10-add-a-registry-entry)).
 For the platform's own contracts (where an app's MCP servers land, how its agent
 JSON is composed), see

@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 from named_cases_helpers import named_cases
 
-from kiro_crew.platform.tool_names import (
+from aj_crew.platform.tool_names import (
     KAS_TOOL_FAMILY_BY_KIRO_CLI_NAME,
     KIRO_CLI_NAME_BY_KAS_TOOL,
     POLICY_ALIAS_DENY_ONLY_IDS,
@@ -87,7 +87,7 @@ class TestTheTablesMatchTheRecordedEngine:
     def test_the_first_verified_release_is_the_fixture_s_measured_version(self):
         """The release the id tables were first read on (the fixture's
         ``kiro_cli_version``) heads the verified list. One number, two homes."""
-        from kiro_crew.platform.tool_names import KAS_TOOL_IDS_VERIFIED_ON_KIRO_CLI
+        from aj_crew.platform.tool_names import KAS_TOOL_IDS_VERIFIED_ON_KIRO_CLI
 
         recorded = tuple(int(p) for p in self._registry()["_meta"]["kiro_cli_version"].split("."))
         assert KAS_TOOL_IDS_VERIFIED_ON_KIRO_CLI[0] == recorded
@@ -96,7 +96,7 @@ class TestTheTablesMatchTheRecordedEngine:
         """The drift comparison reads this list; the fixture's engine-bump note
         says to append to it after re-measuring. One list, two homes, ascending,
         starting at the release the tables were first read on."""
-        from kiro_crew.platform.tool_names import KAS_TOOL_IDS_VERIFIED_ON_KIRO_CLI
+        from aj_crew.platform.tool_names import KAS_TOOL_IDS_VERIFIED_ON_KIRO_CLI
 
         recorded = tuple(
             tuple(int(p) for p in v.split("."))
@@ -110,7 +110,7 @@ class TestTheTablesMatchTheRecordedEngine:
         assert "verified_kiro_cli_versions" in self._registry()["_meta"]["note"]
 
     def test_drift_is_one_comparison_for_doctor_and_session_start(self):
-        from kiro_crew.platform.tool_names import (
+        from aj_crew.platform.tool_names import (
             KAS_TOOL_IDS_VERIFIED_ON_KIRO_CLI,
             kas_verified_releases,
             kas_vocabulary_drift,
@@ -132,7 +132,7 @@ class TestTheTablesMatchTheRecordedEngine:
         back, and only a measurement says otherwise."""
         from unittest import mock
 
-        from kiro_crew.platform import tool_names
+        from aj_crew.platform import tool_names
 
         with mock.patch.object(
             tool_names, "KAS_TOOL_IDS_VERIFIED_ON_KIRO_CLI", ((2, 24, 0), (2, 24, 2))

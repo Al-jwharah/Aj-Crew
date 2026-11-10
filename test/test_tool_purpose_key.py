@@ -19,14 +19,14 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.acp._dispatch import (
+from aj_crew.acp._dispatch import (
     extract_tool_purpose,
     is_tool_purpose_key,
     parse_session_update,
     select_tool_title,
 )
-from kiro_crew.acp.client import _select_tool_title
-from kiro_crew.acp.types import EVENT_TOOL_CALL_UPDATE, TOOL_PURPOSE_KEYS
+from aj_crew.acp.client import _select_tool_title
+from aj_crew.acp.types import EVENT_TOOL_CALL_UPDATE, TOOL_PURPOSE_KEYS
 
 
 @pytest.mark.parametrize("key", list(TOOL_PURPOSE_KEYS))
@@ -119,7 +119,7 @@ def test_non_string_keys_are_tolerated() -> None:
 def test_a_deferred_call_reads_the_purpose_inside_its_envelope() -> None:
     """A Tool Search deferred call (KAS) nests the tool's own arguments, purpose included."""
     args = {"query": "r2 probe", "__tool_use_purpose": "Recall the probe"}
-    wrapped = {"tool_id": "kirocrew-core::memory_recall", "arguments": args}
+    wrapped = {"tool_id": "ajcrew-core::memory_recall", "arguments": args}
     assert extract_tool_purpose(wrapped) == "Recall the probe"
 
 

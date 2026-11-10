@@ -26,8 +26,8 @@ from typing import Any, get_args
 
 import pytest
 
-import kiro_crew.dashboard.chat_runner as cr
-from kiro_crew.notifications.bus import SYSTEM_CHANNELS, NotificationBus
+import aj_crew.dashboard.chat_runner as cr
+from aj_crew.notifications.bus import SYSTEM_CHANNELS, NotificationBus
 
 _EN_CATALOG = Path(__file__).parent.parent / "website/src/i18n/locales/en.manual.json"
 

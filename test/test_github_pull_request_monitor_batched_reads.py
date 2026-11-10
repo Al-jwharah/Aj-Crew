@@ -37,15 +37,15 @@ from github_pull_request_monitor_helpers import (
     _threads_node,
 )
 
-from kiro_crew.monitoring import github_pull_request
-from kiro_crew.monitoring.github_pull_request import (
+from aj_crew.monitoring import github_pull_request
+from aj_crew.monitoring.github_pull_request import (
     _MAX_SUBJECTS_PER_QUERY,
     GitHubPullRequestProbeResult,
     GitHubPullRequestProvider,
     GitHubPullRequestTarget,
     parse_github_pull_request_target,
 )
-from kiro_crew.monitoring.models import (
+from aj_crew.monitoring.models import (
     DEFAULT_MONITOR_CADENCE_SECS,
     DEFAULT_MONITOR_PROVIDER_ERRORS,
     DEFAULT_MONITOR_STALL_TICKS,
@@ -61,12 +61,12 @@ from kiro_crew.monitoring.models import (
     MonitorState,
     ProviderErrorKind,
 )
-from kiro_crew.monitoring.pull_request import (
+from aj_crew.monitoring.pull_request import (
     PullRequestCheck,
     PullRequestFacts,
     classify_pull_request_facts,
 )
-from kiro_crew.monitoring.shadow import run_shadow_probe
+from aj_crew.monitoring.shadow import run_shadow_probe
 
 
 def _alias_error(
@@ -938,7 +938,7 @@ class TestRestFallbackOnRateLimit:
                 _REST_PULL_REQUEST_PATH: _rest_pull_request(mergeable_state="blocked"),
                 _REST_STATUS_PATH: _rest_statuses(
                     ("PR Readiness", "failure"),
-                    ("AWS CodeBuild us-east-1 (kirocrew-gha-linux)", "success"),
+                    ("AWS CodeBuild us-east-1 (ajcrew-gha-linux)", "success"),
                 ),
             },
         )
@@ -950,7 +950,7 @@ class TestRestFallbackOnRateLimit:
         checks = result.canonical["checks"]
         assert isinstance(checks, Mapping)
         assert checks["failed"] == ["PR Readiness"]
-        assert checks["passed"] == ["AWS CodeBuild us-east-1 (kirocrew-gha-linux)"]
+        assert checks["passed"] == ["AWS CodeBuild us-east-1 (ajcrew-gha-linux)"]
 
     @pytest.mark.parametrize(
         ("error_type", "stderr", "kind"),
