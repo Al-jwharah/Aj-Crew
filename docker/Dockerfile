@@ -58,7 +58,7 @@ ARG SOURCE_REPO_URL="https://github.com/Al-jwharah/Aj-Crew"
 
 LABEL org.opencontainers.image.source="${SOURCE_REPO_URL}" \
       org.opencontainers.image.description="Aj Crew gateway — personal AI agent crew (dashboard + Slack/Discord/Telegram/WeCom/Webex)" \
-      org.opencontainers.image.licenses="MIT" \
+      org.opencontainers.image.licenses="Apache-2.0" \
       org.opencontainers.image.version="${AJCREW_VERSION}" \
       org.opencontainers.image.revision="${VCS_REF}" \
       dev.ajcrew.kiro-cli.version="${KIRO_CLI_VERSION}"

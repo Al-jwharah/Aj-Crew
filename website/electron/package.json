@@ -65,7 +65,7 @@
       "category": "Development",
       "icon": "build/icons",
       "executableName": "ajcrew-desktop",
-      "maintainer": "Aj Crew Maintainers <maintainers@crew.kiro.dev>",
+      "maintainer": "Al-jwharah <228141264+Al-jwharah@users.noreply.github.com>",
       "synopsis": "Persistent AI agent workspace with memory, schedules, and unattended work",
       "syncDesktopName": true,
       "target": [
