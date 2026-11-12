@@ -5,9 +5,9 @@ export const FEATURES = [
   { icon: '04', title: 'Persistent Memory', desc: 'Episodic + semantic + vector memory. Learns corrections, tracks projects, decays history over 90 days.', tag: 'AI' },
   { icon: '05', title: 'Parallel Subagents', desc: 'Fan-out independent tasks to parallel agents. Results auto-inject as completion events.', tag: 'Core' },
   { icon: '06', title: 'Autonomous Task Runner', desc: 'Give it a spec, walk away. Git-isolated execution, checkpoint resume, retry + replan, learn from failures.', tag: 'AI' },
-  { icon: '07', title: '100+ MCP Tools', desc: 'AWS, GitHub, CI/CD, issue trackers, calendars, email — all via Model Context Protocol.', tag: 'Ops' },
+  { icon: '07', title: 'MCP Tools', desc: 'AWS, GitHub, CI/CD, issue trackers, calendars, email — all via Model Context Protocol.', tag: 'Ops' },
   { icon: '08', title: 'Slack & Dashboard', desc: 'Same agent, same context. Voice memos via Whisper. Images to vision. Presigned 1-click dashboard links.', tag: 'Core' },
-  { icon: '09', title: 'Trust & Security', desc: 'Four-tier approval. 91+ tamper-resistant deny patterns. HMAC audit trail. Sandbox mode.', tag: 'Ops' },
+  { icon: '09', title: 'Trust & Security', desc: 'Tool approvals, tamper-resistant deny patterns, an audit trail, and OS sandboxing where available.', tag: 'Ops' },
 ];
 
 export const TAG_CLS: Record<string, string> = {
@@ -21,14 +21,14 @@ export const ARCH = [
   { label: 'Slack / Dashboard', sub: 'WebSocket + Events API' },
   { label: 'Gateway', sub: 'Python async orchestrator' },
   { label: 'Session Pool', sub: 'Warm agent processes' },
-  { label: 'LLM Provider', sub: 'ACP / Bedrock' },
-  { label: 'MCP Servers', sub: '12+ tool servers' },
+  { label: 'Agent Harness', sub: 'ACP (kiro-cli by default)' },
+  { label: 'MCP Servers', sub: 'Tool servers' },
 ];
 
 export const TERMINAL_LINES = [
   { prompt: true, text: 'ajcrew gateway' },
-  { text: 'Aj Crew v2.1 starting...' },
-  { text: '   Dashboard:  ', hl: 'http://localhost:7777' },
+  { text: 'Aj Crew starting...' },
+  { text: '   Dashboard:  ', hl: 'http://localhost:5476' },
   { text: '   Slack:      ', hl: 'connected (Socket Mode)' },
   { text: '   MCP:        ', hl: '12 servers loaded' },
   { text: '   Agents:     ', hl: '17 available' },
@@ -46,10 +46,10 @@ export const IN_ACTION = [
 ];
 
 export const FAQ = [
-  { q: 'Does any data leave my machine?', a: 'No. Aj Crew runs entirely locally. Dashboard is bound to localhost. Voice transcription uses local Whisper. The only external calls are to the LLM provider for inference.' },
-  { q: 'What LLM models are supported?', a: 'ACP (default) and Bedrock. Switch models mid-session from the dashboard. Claude Sonnet 4 is the default.' },
-  { q: 'Can non-engineers use it?', a: 'Yes — PMs, designers, data scientists, and any role. The Slack interface requires zero setup beyond the install.' },
-  { q: 'How do I add custom tools?', a: "Drop an MCP server config in ~/.kiro/crew/mcp.json. It's auto-discovered and synced. Or install via the dashboard MCP tab." },
+  { q: 'Does any data leave my machine?', a: 'Aj Crew runs on your own hardware and the dashboard binds to loopback by default. Model inference goes to the provider behind the agent harness you sign in to, and anything you connect (Slack, MCP servers, a cloud speech service) talks to that service. First start downloads the embedding model. Usage telemetry is off by default.' },
+  { q: 'What LLM models are supported?', a: 'The models your agent harness offers. kiro-cli is the default harness and needs its own install and sign-in; other verified ACP harnesses are selected in the configuration. Switch models mid-session from the dashboard.' },
+  { q: 'Can non-engineers use it?', a: 'Yes — PMs, designers, data scientists, and any role. The install is a source build today, so it takes someone comfortable with a terminal to set it up; after that the dashboard needs none.' },
+  { q: 'How do I add custom tools?', a: 'Add an MCP server from the dashboard, or declare it in ~/.kiro/settings/mcp.json, the global MCP config the default harness reads.' },
   { q: 'How do I contribute?', a: 'Fork the repo on GitHub, create a branch, and open a PR. See CONTRIBUTING.md for full guidelines.' },
 ];
 

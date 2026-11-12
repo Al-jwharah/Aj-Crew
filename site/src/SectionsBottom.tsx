@@ -64,14 +64,14 @@ export function InAction() {
 
 export function HowItWorks() {
   const steps = [
-    { n: '1', title: 'Clone & Install', code: 'git clone https://github.com/Al-jwharah/Aj-Crew.git\ncd Aj-Crew && pip install .' },
-    { n: '2', title: 'Start', code: 'ajcrew gateway', note: 'Dashboard opens at localhost:7777. Run ajcrew doctor to verify.' },
-    { n: '3', title: 'Connect', note: 'DM Aj Crew in Slack, or open the dashboard. Type !dashboard in Slack for a 1-click link.' },
+    { n: '1', title: 'Clone & Build', code: 'git clone https://github.com/Al-jwharah/Aj-Crew.git\ncd Aj-Crew\nmake build\nsource .venv/bin/activate' },
+    { n: '2', title: 'Start', code: 'ajcrew setup\najcrew doctor\najcrew gateway', note: 'The dashboard is at http://localhost:5476.' },
+    { n: '3', title: 'Connect', note: 'Open the dashboard. Slack and the other channels are optional and are connected from there.' },
   ];
   return (
     <section className="max-w-[800px] mx-auto px-6 pt-24 pb-24" id="how-it-works">
-      <FadeUp><h2 className="text-center text-4xl md:text-5xl font-bold mb-3 font-space">Up and running in 3 minutes</h2></FadeUp>
-      <FadeUp delay={0.1}><p className="text-center text-slate-500 dark:text-slate-400 text-lg mb-16 font-space">Prerequisites: Python 3.10+, Node.js 22+, kiro-cli</p></FadeUp>
+      <FadeUp><h2 className="text-center text-4xl md:text-5xl font-bold mb-3 font-space">Build it from source</h2></FadeUp>
+      <FadeUp delay={0.1}><p className="text-center text-slate-500 dark:text-slate-400 text-lg mb-16 font-space">Aj Crew publishes no installer or package yet. Prerequisites: Python 3.12+, Node.js 22.12+, npm, kiro-cli</p></FadeUp>
       <div className="flex flex-col gap-6">
         {steps.map((s, i) => (
           <FadeUp key={s.n} delay={i * 0.15}>
@@ -114,7 +114,7 @@ export function ThemesSection() {
   return (
     <section className="max-w-[1200px] mx-auto px-6 pb-24">
       <FadeUp><h2 className="text-center text-4xl md:text-5xl font-bold mb-3 font-space">Make it yours</h2></FadeUp>
-      <FadeUp delay={0.1}><p className="text-center text-slate-500 dark:text-slate-400 text-lg mb-12 font-space">22 built-in themes + custom theme creator</p></FadeUp>
+      <FadeUp delay={0.1}><p className="text-center text-slate-500 dark:text-slate-400 text-lg mb-12 font-space">Built-in themes and a custom theme creator</p></FadeUp>
       <FadeUp delay={0.2}>
         <div className="flex gap-3 justify-center flex-wrap">
           {THEMES.map((c) => (
@@ -164,15 +164,13 @@ export function Cta() {
     <section className="text-center px-6 pt-24 pb-16 bg-[radial-gradient(ellipse_60%_50%_at_50%_100%,rgba(245,158,11,0.06),transparent)]">
       <Parallax speed={-0.15}>
         <FadeUp><h2 className="text-4xl md:text-5xl font-bold mb-4 font-space">Ready to get started?</h2></FadeUp>
-        <FadeUp delay={0.1}><p className="text-slate-500 dark:text-slate-400 text-lg mb-8">One command to install. Every engineer's Aj Crew ends up different — that's the point.</p></FadeUp>
+        <FadeUp delay={0.1}><p className="text-slate-500 dark:text-slate-400 text-lg mb-8">Clone it, build it, run it on your own hardware. Every engineer's Aj Crew ends up different — that's the point.</p></FadeUp>
         <FadeUp delay={0.2}>
-          <a href="#how-it-works" className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl text-[15px] font-semibold bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-[0_0_24px_rgba(245,158,11,0.35)] hover:-translate-y-0.5 transition-all no-underline font-space">Install Aj Crew</a>
+          <a href="#how-it-works" className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl text-[15px] font-semibold bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-[0_0_24px_rgba(245,158,11,0.35)] hover:-translate-y-0.5 transition-all no-underline font-space">Build Aj Crew</a>
         </FadeUp>
         <FadeUp delay={0.3}>
           <div className="flex gap-4 justify-center mt-6 text-sm">
             <a href="https://github.com/Al-jwharah/Aj-Crew" target="_blank" rel="noopener noreferrer" className="text-amber-400 no-underline hover:underline">GitHub</a>
-            <span className="text-slate-600">&middot;</span>
-            <a href="https://github.com/Al-jwharah/Aj-Crew/discussions" target="_blank" rel="noopener noreferrer" className="text-amber-400 no-underline hover:underline">Discussions</a>
             <span className="text-slate-600">&middot;</span>
             <a href="https://github.com/Al-jwharah/Aj-Crew/issues" target="_blank" rel="noopener noreferrer" className="text-amber-400 no-underline hover:underline">Issues</a>
           </div>
@@ -186,11 +184,12 @@ export function Footer() {
   return (
     <footer className="text-center py-10 px-6 border-t border-amber-500/12 text-slate-500 text-xs">
       <div className="flex gap-6 justify-center mb-3">
-        {[['https://github.com/Al-jwharah/Aj-Crew', 'Source'], ['https://github.com/Al-jwharah/Aj-Crew/wiki', 'Wiki'], ['https://github.com/Al-jwharah/Aj-Crew/issues', 'Issues']].map(([href, label]) => (
+        {[['https://github.com/Al-jwharah/Aj-Crew', 'Source'], ['https://github.com/Al-jwharah/Aj-Crew/blob/main/docs/README.md', 'Docs'], ['https://github.com/Al-jwharah/Aj-Crew/issues', 'Issues']].map(([href, label]) => (
           <a key={label} href={href} target="_blank" rel="noopener noreferrer" className="text-amber-400 no-underline hover:underline">{label}</a>
         ))}
       </div>
       <p>Aj Crew — Persistent, self-learning AI agent for engineers</p>
+      <p className="mt-2">An independent fork of Kiro Crew under the Apache 2.0 license. Not affiliated with or endorsed by the upstream project or Amazon.</p>
     </footer>
   );
 }

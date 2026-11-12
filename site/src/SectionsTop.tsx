@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, useScroll, useTransform, useInView, AnimatePresence } from 'framer-motion';
-import { FadeUp, Counter, useScrollProgress } from './animations';
+import { FadeUp, useScrollProgress } from './animations';
 import { TERMINAL_LINES } from './data';
 import { X, Check, Sun, Moon } from 'lucide-react';
 import { useTheme } from './ThemeContext';
@@ -76,7 +76,7 @@ export function Hero() {
         Persistent, self-learning AI agent that runs on your machine. Remembers across sessions, learns from corrections, runs 24/7 — accessible through Slack and a web dashboard.
       </motion.p>
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.65 }} className="flex gap-3 justify-center flex-wrap">
-        <a href="#how-it-works" className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl text-[15px] font-semibold bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-[0_0_24px_rgba(245,158,11,0.35),0_4px_16px_rgba(0,0,0,0.4)] hover:-translate-y-0.5 hover:shadow-[0_0_40px_rgba(245,158,11,0.4)] transition-all no-underline font-space">Install in 3 Minutes</a>
+        <a href="#how-it-works" className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl text-[15px] font-semibold bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-[0_0_24px_rgba(245,158,11,0.35),0_4px_16px_rgba(0,0,0,0.4)] hover:-translate-y-0.5 hover:shadow-[0_0_40px_rgba(245,158,11,0.4)] transition-all no-underline font-space">Build from Source</a>
         <a href="https://github.com/Al-jwharah/Aj-Crew" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl text-[15px] font-semibold bg-slate-100 dark:bg-white/5 text-slate-800 dark:text-white border border-amber-500/15 hover:bg-slate-200 dark:hover:bg-white/8 hover:border-amber-500/30 hover:-translate-y-0.5 transition-all no-underline font-space">View Source</a>
       </motion.div>
     </motion.section>
@@ -120,27 +120,6 @@ export function TerminalDemo() {
   );
 }
 
-export function Stats() {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true });
-  const items = [
-    { end: 100, suffix: '+', label: 'MCP Tools' },
-    { end: 22, suffix: '', label: 'Themes' },
-    { end: 48, suffix: '', label: 'Backend Modules' },
-    { end: 17, suffix: '+', label: 'Agent Types' },
-  ];
-  return (
-    <div ref={ref} className="flex justify-center gap-14 flex-wrap px-6 pt-8 pb-6">
-      {items.map((s, i) => (
-        <motion.div key={s.label} initial={{ opacity: 0, y: 20 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ delay: i * 0.1 }} className="text-center">
-          <div className="text-4xl md:text-5xl font-bold gradient-text"><Counter end={s.end} suffix={s.suffix} visible={inView} /></div>
-          <div className="text-xs text-slate-500 mt-1 uppercase tracking-[2px]">{s.label}</div>
-        </motion.div>
-      ))}
-    </div>
-  );
-}
-
 export function SocialProof() {
   return (
     <FadeUp className="text-center px-6 pb-12 text-sm text-slate-500">
@@ -160,7 +139,7 @@ export function ProblemSolution() {
   const AFTER = [
     'Remembers everything across sessions',
     'Cron jobs brief you every morning',
-    '100+ tools wired via MCP',
+    'Your tools wired in via MCP',
     'Lessons persist forever, never repeats',
     'Parallel subagents fan out work',
   ];
